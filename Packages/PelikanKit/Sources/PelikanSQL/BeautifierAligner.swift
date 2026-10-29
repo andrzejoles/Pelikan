@@ -51,7 +51,7 @@ struct BeautifierAligner {
 
     var enabled: Bool {
         options.alignDeclarations || options.alignParameters || options.alignNamedArguments || options.alignAssignments
-            || options.alignAliases || options.alignSetValues || options.alignTrailingComments
+            || options.alignAliases || options.alignSetValues || options.alignTrailingComments || options.alignColumnDefinitions
     }
 
     func aligned() -> [String] {
@@ -62,6 +62,7 @@ struct BeautifierAligner {
         if options.alignAssignments { a.alignGroups(a.assignmentGroups()) }
         if options.alignParameters { a.alignGroups(a.listGroups(kind: .parameters)) }
         if options.alignNamedArguments { a.alignGroups(a.listGroups(kind: .namedArguments)) }
+        if options.alignColumnDefinitions { a.alignGroups(a.listGroups(kind: .columns)) }
         if options.alignAliases { a.alignGroups(a.clauseItemGroups(["SELECT", "FROM"], anchor: aliasAnchor)) }
         if options.alignSetValues { a.alignGroups(a.clauseItemGroups(["SET"], anchor: setAnchor)) }
         if options.alignTrailingComments { a.alignGroups(a.trailingCommentGroups()) }
@@ -180,7 +181,7 @@ struct BeautifierAligner {
 
     // MARK: Listy parametrów i parametrów nazwanych
 
-    enum ListKind { case parameters, namedArguments }
+    enum ListKind { case parameters, namedArguments, columns }
 
     static let modes: Set<String> = ["IN", "OUT", "NOCOPY"]
 
@@ -224,8 +225,19 @@ struct BeautifierAligner {
         case .namedArguments:
             guard let open = t.firstIndex(where: { $0.kind == .leftParen }), open + 2 < e, t[open + 2].text == "=>" else { return nil }
             return open
+        case .columns:
+            // CREATE TABLE [właściciel.]t (, ALTER TABLE … ADD/MODIFY (, … IS RECORD (, … AS OBJECT (.
+            guard let open = t.firstIndex(where: { $0.kind == .leftParen }), open >= 1, open + 2 <= e else { return nil }
+            let p = t[open - 1].upper
+            if ["ADD", "MODIFY", "RECORD", "OBJECT"].contains(p) { return open }
+            var j = open - 1
+            while j >= 2, t[j - 1].kind == .dot { j -= 2 }
+            return j >= 1 && t[j - 1].upper == "TABLE" && t.contains { $0.upper == "CREATE" } ? open : nil
         }
     }
+
+    /// Ograniczenia wewnątrzwierszowe kolumny (kotwica NOT NULL / NULL).
+    static let nullability: Set<String> = ["NOT", "NULL"]
 
     /// Kotwice elementu od indeksu `from`: parametr — tryb, typ, DEFAULT/`:=`; parametr nazwany — `=>`.
     func anchors(_ t: [Tok], from: Int, kind: ListKind) -> [Int?]? {
@@ -233,6 +245,19 @@ struct BeautifierAligner {
         switch kind {
         case .namedArguments:
             return t[from + 1].text == "=>" ? [from + 1] : nil
+        case .columns:
+            // nazwa typ … [DEFAULT …] [NOT NULL] — kotwice: typ, DEFAULT, NOT/NULL (constrainty i metody — bez kotwic).
+            guard t[from + 1].isWord, t[from + 1].upper != "AS" else { return nil }
+            var j = from + 2, depth = 0
+            var def: Int?, null: Int?
+            while j < t.count {
+                if t[j].kind == .leftParen { depth += 1 } else if t[j].kind == .rightParen { if depth == 0 { break }; depth -= 1 }
+                if depth == 0, t[j].kind == .comma { break }
+                if depth == 0, def == nil, t[j].upper == "DEFAULT" || t[j].text == ":=" { def = j }
+                if depth == 0, null == nil, Self.nullability.contains(t[j].upper), t[j].upper == "NOT" ? j + 1 < t.count && t[j + 1].upper == "NULL" : t[j - 1].upper != "NOT" { null = j }
+                j += 1
+            }
+            return [from + 1, def, null]
         case .parameters:
             var j = from + 1
             let mode: Int? = Self.modes.contains(t[j].upper) ? j : nil

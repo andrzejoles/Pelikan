@@ -6,7 +6,7 @@ import Testing
 @Suite("Formater — opcje")
 struct BeautifierOptionsTests {
     func f(_ s: String, _ change: (inout BeautifierOptions) -> Void) throws -> String {
-        var o = BeautifierOptions()
+        var o = BeautifierOptions.legacy
         change(&o)
         return try Beautifier.format(s, options: o)
     }
@@ -34,25 +34,29 @@ struct BeautifierOptionsTests {
                 let now = try Beautifier.format(e.snippet, options: base)
                 let other = try Beautifier.format(e.snippet, options: e.variant(base))
                 #expect(now != other, "przykład \(e.id) bez zmiany")
-                // Podgląd: przypisany przykład (PL/SQL, Zapytania, DML, DDL) przy każdej innej wartości opcji.
-                let sample = try #require(BeautifierExamples.previewOf[e.id].flatMap(BeautifierExamples.previewSample), "\(e.id) bez przykładu podglądu")
-                let prepared = BeautifierExamples.prepared(e.id, base)
+            }
+            // Podgląd: przypisany przykład (PL/SQL, Zapytania, DML, DDL) przy każdej innej wartości każdej opcji i każdej
+            // reguły AND/OR każdego miejsca.
+            for key in BeautifierExamples.previewKeys {
+                let sample = try #require(BeautifierExamples.previewOf[key].flatMap(BeautifierExamples.previewSample), "\(key) bez przykładu podglądu")
+                let prepared = BeautifierExamples.prepared(key, base)
                 let shown = try Beautifier.format(sample.code, options: prepared)
-                let values = BeautifierExamples.alternatives(e.id, base)
-                #expect(!values.isEmpty, "\(e.id) bez wartości")
+                let values = BeautifierExamples.alternatives(key, base)
+                #expect(!values.isEmpty, "\(key) bez wartości")
                 for v in values {
                     let changed = try Beautifier.format(sample.code, options: v)
-                    #expect(changed != shown, "podgląd \(sample.id) nie pokazuje opcji \(e.id) = \(v)")
-                    #expect(!BeautifierExamples.marks(baseline: shown, current: changed).isEmpty, "\(e.id): zmiana bez zaznaczenia")
+                    #expect(changed != shown, "podgląd \(sample.id) nie pokazuje opcji \(key) = \(v)")
+                    #expect(!BeautifierExamples.marks(baseline: shown, current: changed).isEmpty, "\(key): zmiana bez zaznaczenia")
                 }
             }
         }
-        // Każda opcja wpływająca na wynik ma przykład i przykład podglądu.
+        // Każda opcja wpływająca na wynik ma przykład i przykład podglądu; każde miejsce warunków — trzy reguły.
         let documented = Set(BeautifierExamples.all.map(\.id))
         let mirror = Mirror(reflecting: BeautifierOptions()).children.compactMap(\.label)
         let automatic: Set<String> = ["afterLoad", "beforeCompile", "beforeSave"]
         #expect(Set(mirror).subtracting(automatic) == documented)
-        #expect(Set(BeautifierExamples.previewOf.keys) == documented)
+        #expect(documented.isSubset(of: Set(BeautifierExamples.previewOf.keys)))
+        #expect(BeautifierExamples.previewKeys.count == documented.count - 1 + 3 * BeautifierOptions.ConditionContext.allCases.count)
     }
 
     @Test("znaczniki podglądu: zmienione, dodane i miejsce usuniętych linii")
@@ -235,6 +239,6 @@ struct BeautifierOptionsTests {
         let h = Self.heavy
         #expect(try JSONDecoder().decode(BeautifierOptions.self, from: JSONEncoder().encode(h)) == h)
         let old = try JSONDecoder().decode(BeautifierOptions.self, from: Data(#"{"indent":4,"keywordCase":"lower"}"#.utf8))
-        #expect(old.indent == 4 && old.keywordCase == .lower && old.clauseLayout == .leftAligned && old.dataTypeCase == nil && !old.alignDeclarations)
+        #expect(old.indent == 4 && old.keywordCase == .lower && old.clauseLayout == .rightAligned && old.dataTypeCase == nil && old.alignDeclarations && old.caseLayout == .auto)
     }
 }

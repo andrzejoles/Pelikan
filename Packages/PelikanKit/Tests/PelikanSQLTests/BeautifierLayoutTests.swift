@@ -7,7 +7,7 @@ import Testing
 @Suite("Formater — poprawki układu")
 struct BeautifierLayoutTests {
     func f(_ s: String, _ change: (inout BeautifierOptions) -> Void = { _ in }) throws -> String {
-        var o = BeautifierOptions()
+        var o = BeautifierOptions.legacy
         change(&o)
         let out = try Beautifier.format(s, options: o)
         #expect(try Beautifier.format(out, options: o) == out, "nieidempotentne:\n\(out)")
@@ -107,7 +107,7 @@ struct BeautifierLayoutTests {
             ORDER BY 1;
             """)
         let out = try f("with h (id, lvl) as (select id, 1 from t union all select t.id, h.lvl + 1 from t join h on t.p = h.id) search depth first by id set o cycle id set c to 'Y' default 'N' select id from h;")
-        #expect(out.contains("                      UNION ALL\n                      SELECT t.id,\n"))
+        #expect(out.contains("                       UNION ALL\n                       SELECT t.id,\n"))
         #expect(out.hasSuffix(")\n       SEARCH DEPTH FIRST BY id SET o\n       CYCLE id SET c TO 'Y' DEFAULT 'N'\nSELECT id\nFROM   h;"))
     }
 
@@ -148,10 +148,10 @@ struct BeautifierLayoutTests {
         #expect(try f("insert all when sal > 3000 then into hi (id) values (id) else into lo (id) values (id) select id, sal from emp;") == """
             INSERT ALL
             WHEN sal > 3000 THEN
-            INTO   hi(id)
+            INTO   hi (id)
             VALUES (id)
             ELSE
-            INTO   lo(id)
+            INTO   lo (id)
             VALUES (id)
             SELECT id,
                    sal
@@ -173,13 +173,15 @@ struct BeautifierLayoutTests {
         #expect(m == "BEGIN\n  x := aaaaaaaaaa * bbbbbbbbbb + cccccccccc * dddddddddd\n       + eeeeeeeeee * ffffffffff;\nEND;")
     }
 
-    @Test("F8: długi warunek IF/ELSIF/WHILE — AND/OR w nowej linii pod początkiem warunku; BETWEEN … AND bez łamania")
+    @Test("F8: długi warunek IF/ELSIF/WHILE (reguła „gdy się nie mieści”) — każdy AND/OR w nowej linii pod pierwszym warunkiem; BETWEEN … AND bez łamania")
     func longConditions() throws {
         let out = try f("begin if v_suma > c_limit and p_tryb = 'N' and p_data between 1 and 10 or p_procent is null and g_licznik < 10 then null; end if; end;") { $0.rightMargin = 60 }
         #expect(out == """
             BEGIN
-              IF v_suma > c_limit AND p_tryb = 'N'
-                 AND p_data BETWEEN 1 AND 10 OR p_procent IS NULL
+              IF v_suma > c_limit
+                 AND p_tryb = 'N'
+                 AND p_data BETWEEN 1 AND 10
+                 OR p_procent IS NULL
                  AND g_licznik < 10 THEN
                 NULL;
               END IF;
@@ -224,13 +226,13 @@ struct BeautifierLayoutTests {
     func tableOptions() throws {
         let out = try f("create table t (a number(10), b varchar2(30)) tablespace data_ts pctfree 10 storage (initial 1m next 1m) partition by range (a) interval (1000) (partition p0 values less than (1000));")
         #expect(out == """
-            CREATE TABLE t(a NUMBER(10), b VARCHAR2(30))
+            CREATE TABLE t (a NUMBER(10), b VARCHAR2(30))
             TABLESPACE data_ts
             PCTFREE 10
             STORAGE (INITIAL 1m NEXT 1m)
             PARTITION BY RANGE (a) INTERVAL (1000) (PARTITION p0 VALUES LESS THAN (1000));
             """)
-        #expect(try f("create index ix on t(a) tablespace idx_ts compress 1;") == "CREATE INDEX ix ON t(a) TABLESPACE idx_ts COMPRESS 1;")
+        #expect(try f("create index ix on t(a) tablespace idx_ts compress 1;") == "CREATE INDEX ix ON t (a) TABLESPACE idx_ts COMPRESS 1;")
     }
 
     @Test("F11: DML po nagłówku FORALL w nowej linii, sformatowany")
@@ -273,8 +275,8 @@ struct BeautifierLayoutTests {
     @Test("F14: słowa kluczowe niezastrzeżone jako nazwy — wielkość jak identyfikator; atrybuty kursora i słowa DDL — jak słowa kluczowe")
     func keywordsAsNames() throws {
         #expect(try f("select h.path, trunc(d) day, path from hier h where c%notfound;") == "SELECT h.path,\n       trunc(d) day,\n       path\nFROM   hier h\nWHERE  c%NOTFOUND;")
-        #expect(try f("with h (id, path) as (select 1, 'x' from dual) select id from h;").hasPrefix("WITH   h(id, path) AS"))
-        #expect(try f("create bitmap index ix on t(a) local parallel 4;") == "CREATE BITMAP INDEX ix ON t(a) LOCAL PARALLEL 4;")
+        #expect(try f("with h (id, path) as (select 1, 'x' from dual) select id from h;").hasPrefix("WITH   h (id, path) AS"))
+        #expect(try f("create bitmap index ix on t(a) local parallel 4;") == "CREATE BITMAP INDEX ix ON t (a) LOCAL PARALLEL 4;")
         #expect(try f("begin l.delete; x := l.first; end;") == "BEGIN\n  l.delete;\n  x := l.first;\nEND;")
     }
 

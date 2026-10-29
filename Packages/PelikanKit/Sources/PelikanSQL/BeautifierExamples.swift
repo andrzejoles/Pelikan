@@ -35,14 +35,19 @@ public enum BeautifierExamples {
             begin
             if v_suma > c_limit and p_tryb = 'N' and p_data_od < sysdate or p_procent is null and g_Licznik < 10 then
             v_opis := 'Dział ' || to_char(p_dzial) || ': suma ' || to_char(v_suma, 'FM999G990D00') || ' przekracza limit ' || c_limit;
-            elsif v_suma between 1 and c_limit then
+            elsif v_suma between 1 and c_limit and p_tryb = 'T' then
             v_opis := case when v_suma > 500 then 'średnia' else 'niska' end;
             end if;
+            while g_Licznik < 10 and v_suma > 0 loop
+            g_Licznik := g_Licznik + 1;
+            exit when v_suma is null or g_Licznik > 5;
+            end loop;
             g_Licznik := g_Licznik+1;
             v_opis := v_opis || '!';
             v_suma := round(v_suma, 2);
             Dbms_output.put_line(v_opis);
             zapisz_log(p_dzial => p_dzial, p_opis => v_opis, p_kiedy => systimestamp);
+            wyslij_powiadomienie(p_odbiorca => 'kadry@firma.pl', p_temat => 'Podwyżka w dziale ' || p_dzial, p_tresc => v_opis, p_priorytet => 1);
             exception
             when no_data_found then
             v_opis := null;
@@ -56,32 +61,35 @@ public enum BeautifierExamples {
             /
             """),
         PreviewSample(id: "queries", code: """
-            with dzialy as (select deptno, sum(sal) suma from emp group by deptno), duze as (select deptno from dzialy where suma > 9000)
+            with dzialy as (select deptno, sum(sal) suma from emp group by deptno having count(*) > 1 and sum(sal) > 0), duze as (select deptno from dzialy where suma > 9000)
             select e.ename imie, d.dname dzial, nvl(e.comm,0) prowizja, -- bez NULL
             To_char(e.hiredate,'YYYY') rok,
-            case when e.sal > 3000 then 'wysoka' when e.sal > 1500 then 'średnia' else 'niska' end poziom,
+            case when e.sal > 3000 and e.comm is null then 'wysoka' when e.sal > 1500 then 'średnia' else 'niska' end poziom,
+            case when e.comm > 0 then 'T' else 'N' end premia,
             rank() over (partition by e.deptno order by e.sal desc) ranking
             from emp e join dept d on d.deptno = e.deptno and d.loc is not null
-            where (e.job = 'CLERK' or e.job = 'ANALYST') and e.deptno in (select deptno from duze)
+            where (e.job = 'CLERK' or e.job = 'ANALYST') and e.deptno in (select deptno from duze) and e.mgr in (7566, 7698, 7839)
             and e.ename not in ('SMITH', 'ALLEN', 'WARD', 'JONES', 'MARTIN', 'BLAKE', 'CLARK', 'SCOTT', 'KING', 'TURNER', 'ADAMS')
+            and (e.hiredate > date '2020-01-01' and e.hiredate < date '2025-01-01' or e.mgr is null and e.sal between 1000 and 5000)
             union all
-            select ename, null, 0, null, null, null from emp_hist where sal > 0
+            select ename, null, 0, null, null, null, null from emp_hist where sal > 0 and comm is null
             order by 1, 2 desc;
+            select level, ename from emp start with mgr is null and deptno = 10 connect by prior empno = mgr and level < 5;
             """),
         PreviewSample(id: "dml", code: """
             update emp set sal = sal * (1 + p_procent / 100), comm = nvl(comm, 0) + 10, data_zmiany = sysdate where deptno = p_dzial and job <> 'PRESIDENT';
-            insert into log_zmian (dzial, procent, kiedy, kto) values (p_dzial, p_procent, sysdate, user);
+            insert into log_zmian (dzial, procent, kiedy, kto, opis) values (p_dzial, p_procent, sysdate, user, 'Zmiana płac w dziale ' || p_dzial || ' o ' || p_procent || ' procent');
             insert into emp_hist (empno, ename, sal) select empno, ename, sal from emp where deptno = p_dzial;
-            merge into emp t using (select empno, sal from emp_stage) s on (t.empno = s.empno) when matched then update set t.sal = s.sal, t.data_zmiany = sysdate when not matched then insert (empno, sal) values (s.empno, s.sal);
+            merge into emp t using (select empno, sal from emp_stage) s on (t.empno = s.empno and t.deptno = s.deptno) when matched then update set t.sal = s.sal, t.data_zmiany = sysdate when not matched then insert (empno, sal) values (s.empno, s.sal);
             delete from emp where deptno = p_dzial and sal is null;
             """),
         PreviewSample(id: "ddl", code: """
-            create table log_zmian (id number generated always as identity, dzial number(2) not null, procent number(5,2) default 0 not null, kiedy date default sysdate, kto varchar2(128 char), constraint log_zmian_pk primary key (id), constraint log_zmian_dzial_fk foreign key (dzial) references dept (deptno) on delete cascade, constraint log_zmian_proc_ck check (procent between -100 and 100)) tablespace users;
+            create table log_zmian (id number generated always as identity, dzial number(2) not null, procent number(5,2) default 0 not null, kiedy date default sysdate, kto varchar2(128 char), constraint log_zmian_pk primary key (id), constraint log_zmian_dzial_fk foreign key (dzial) references dept (deptno) on delete cascade, constraint log_zmian_proc_ck check (procent <> 0 and procent < 100), constraint log_zmian_kto_ck check (kto is null or kto = upper(kto) and length(kto) > 2 and kto not like 'SYS%' and kto <> 'ADMIN')) tablespace users;
             comment on table log_zmian is 'Historia podwyżek';
             create index log_zmian_ix on log_zmian (dzial, kiedy) compress 1;
             alter table log_zmian add (uwagi varchar2(4000), zrodlo varchar2(30) default 'APP');
             create or replace view v_log (dzial, procent, kiedy) as select dzial, procent, kiedy from log_zmian where procent <> 0 with read only;
-            create or replace trigger log_zmian_bi before insert or update of procent on log_zmian for each row when (new.procent > 50) begin :new.kto := user; end;
+            create or replace trigger log_zmian_bi before insert or update of procent on log_zmian for each row when (new.procent > 50 and new.kto is null) begin :new.kto := user; end;
             /
             create or replace type t_zmiana as object (dzial number(2), procent number(5,2), kiedy date, member function opis return varchar2);
             /
@@ -104,7 +112,29 @@ public enum BeautifierExamples {
         "alignNamedArguments": "plsql", "alignAssignments": "plsql", "alignAliases": "queries", "alignSetValues": "dml",
         "alignTrailingComments": "plsql", "keywordCase": "plsql", "identifierCase": "plsql", "dataTypeCase": "plsql",
         "functionCase": "queries", "packageCase": "plsql", "specialCase": "plsql",
-    ]
+        "setList": "dml", "groupOrderList": "queries", "parenthesisLists": "queries", "ddlColumns": "ddl", "conditions": "queries",
+        "caseInlineLimit": "queries", "subqueryLayout": "queries", "operatorPosition": "plsql", "alignColumnDefinitions": "ddl",
+    ].merging(conditionPreviewOf) { a, _ in a }
+
+    /// Przykład podglądu każdego miejsca warunków AND/OR (klucze `conditions.<miejsce>.<breaks|position|align>`).
+    static let conditionPreviewOf: [String: String] = {
+        var out: [String: String] = [:]
+        for c in BeautifierOptions.ConditionContext.allCases {
+            let sample = switch c {
+            case .mergeOn: "dml"
+            case .ifCondition, .whileLoop, .exitWhen: "plsql"
+            case .triggerWhen, .check: "ddl"
+            default: "queries"
+            }
+            for part in ["breaks", "position", "align"] { out["conditions.\(c.rawValue).\(part)"] = sample }
+        }
+        return out
+    }()
+
+    /// Klucze podglądu: opcje i osobno każda reguła AND/OR każdego miejsca (opcja `conditions` jako całość — przez nie).
+    public static var previewKeys: [String] {
+        all.map(\.id).filter { $0 != "conditions" } + conditionPreviewOf.keys.sorted()
+    }
 
     /// Ustawienia, przy których opcja ma widoczny skutek (np. wyrównanie parametrów wymaga parametrów w osobnych liniach).
     public static func prepared(_ id: String, _ o: BeautifierOptions) -> BeautifierOptions {
@@ -114,9 +144,21 @@ public enum BeautifierExamples {
         case "alignNamedArguments": o.callParameters = .onePerLine
         case "alignAliases", "alignSetValues", "commaBefore": o.listLayout = .onePerLine
         case "maxBlankLines": o.keepBlankLines = true
-        default: break
+        case "caseInlineLimit": o.caseLayout = .auto
+        case "alignColumnDefinitions": o.ddlColumns = .onePerLine
+        default:
+            // Położenie i wyrównanie AND/OR widać tylko, gdy warunek jest łamany.
+            if id.hasPrefix("conditions."), !id.hasSuffix(".breaks"), let c = conditionContext(id) {
+                var r = o.condition(c)
+                if r.breaks != .always { r.breaks = .always; o.setCondition(c, r) }
+            }
         }
         return o
+    }
+
+    static func conditionContext(_ key: String) -> BeautifierOptions.ConditionContext? {
+        let parts = key.split(separator: ".")
+        return parts.count == 3 ? BeautifierOptions.ConditionContext(rawValue: String(parts[1])) : nil
     }
 
     /// Wszystkie inne wartości opcji (z `prepared`), które zmieniają wynik — liczby: wartości reprezentatywne; reguły
@@ -129,6 +171,11 @@ public enum BeautifierExamples {
         func altCase(_ kp: WritableKeyPath<BeautifierOptions, BeautifierOptions.WordCase?>, inherited: BeautifierOptions.WordCase) -> [BeautifierOptions] {
             let effective = o[keyPath: kp] ?? inherited
             return ([nil] + BeautifierOptions.WordCase.allCases.map(Optional.some)).filter { ($0 ?? inherited) != effective }
+                .map { var x = o; x[keyPath: kp] = $0; return x }
+        }
+        func altList(_ kp: WritableKeyPath<BeautifierOptions, BeautifierOptions.ListLayout?>) -> [BeautifierOptions] {
+            let effective = o[keyPath: kp] ?? o.listLayout
+            return ([nil, .onePerLine, .fit] as [BeautifierOptions.ListLayout?]).filter { ($0 ?? o.listLayout) != effective }
                 .map { var x = o; x[keyPath: kp] = $0; return x }
         }
         switch id {
@@ -164,8 +211,34 @@ public enum BeautifierExamples {
         case "functionCase": return altCase(\.functionCase, inherited: o.identifierCase)
         case "packageCase": return altCase(\.packageCase, inherited: o.identifierCase)
         case "specialCase": return alt(\.specialCase, [[], ["DBMS_Output"], ["dbms_%"]])
-        default: return []
+        case "setList": return altList(\.setList)
+        case "groupOrderList": return altList(\.groupOrderList)
+        case "parenthesisLists": return alt(\.parenthesisLists, BeautifierOptions.ListLayout.allCases)
+        case "ddlColumns": return alt(\.ddlColumns, BeautifierOptions.ListLayout.allCases)
+        case "caseInlineLimit": return alt(\.caseInlineLimit, [30, 50])
+        case "subqueryLayout": return alt(\.subqueryLayout, BeautifierOptions.SubqueryLayout.allCases)
+        case "operatorPosition": return alt(\.operatorPosition, BeautifierOptions.OperatorPosition.allCases)
+        case "alignColumnDefinitions": return alt(\.alignColumnDefinitions, [false, true])
+        default:
+            guard let c = conditionContext(id) else { return [] }
+            let r = o.condition(c)
+            func with(_ change: (inout BeautifierOptions.ConditionLayout) -> Void) -> BeautifierOptions {
+                var x = o
+                var l = r
+                change(&l)
+                x.setCondition(c, l)
+                return x
+            }
+            if id.hasSuffix(".breaks") {
+                return BeautifierOptions.ConditionBreak.allCases.filter { $0 != r.breaks }.map { v in with { $0.breaks = v } }
+            }
+            if id.hasSuffix(".position") {
+                let effective = r.position ?? o.andOrPosition
+                return BeautifierOptions.OperatorPosition.allCases.filter { $0 != effective }.map { v in with { $0.position = v } }
+            }
+            return BeautifierOptions.ConditionAlign.allCases.filter { $0 != r.align }.map { v in with { $0.align = v } }
         }
+
     }
 
     /// Znaczniki zmian w podglądzie: linie wyniku (od 0) zmienione albo dodane i miejsca usuniętych linii (indeks linii
@@ -287,6 +360,39 @@ public enum BeautifierExamples {
         },
         Example(id: "specialCase", snippet: "begin dbms_output.put_line('x'); end;") {
             var o = $0; o.specialCase = o.specialCase.isEmpty ? ["DBMS_Output"] : []; return o
+        },
+        Example(id: "setList", snippet: "update emp set sal = 1, comm = 2 where empno = 1;") {
+            var o = $0; o.setList = (o.setList ?? o.listLayout) == .onePerLine ? .fit : .onePerLine; return o
+        },
+        Example(id: "groupOrderList", snippet: "select a, b from t group by a, b order by a, b;") {
+            var o = $0; o.groupOrderList = (o.groupOrderList ?? o.listLayout) == .onePerLine ? .fit : .onePerLine; return o
+        },
+        Example(id: "parenthesisLists", snippet: "select a from t where b in (1, 2, 3);") {
+            var o = $0; o.parenthesisLists = o.parenthesisLists == .onePerLine ? .fit : .onePerLine; return o
+        },
+        Example(id: "ddlColumns", snippet: "create table t (a number, b varchar2(10));") {
+            var o = $0; o.ddlColumns = o.ddlColumns == .onePerLine ? .fit : .onePerLine; return o
+        },
+        Example(id: "conditions", snippet: "select a from t where b = 1 and c = 2;") {
+            var o = $0
+            var r = o.condition(.whereClause)
+            r.breaks = r.breaks == .never ? .always : .never
+            o.setCondition(.whereClause, r)
+            return o
+        },
+        Example(id: "caseInlineLimit", snippet: "select case when a = 1 then 'x' else 'y' end b from t;") {
+            var o = $0
+            let inline = o.caseLayout == .inline || o.caseLayout == .auto && o.caseInlineLimit >= 40
+            o.caseLayout = .auto; o.caseInlineLimit = inline ? 20 : 60; return o
+        },
+        Example(id: "subqueryLayout", snippet: "select a from (select a from t) x;") {
+            var o = $0; o.subqueryLayout = o.subqueryLayout == .indented ? .hanging : .indented; return o
+        },
+        Example(id: "operatorPosition", snippet: "begin v := 'aaaaaaaaaaaaaaaaaaaa' || 'bbbbbbbbbbbbbbbbbbbbbbbb' || 'cccccccccccccccccccccc' || 'dddddddddddddddddddddddd'; end;") {
+            var o = $0; o.rightMargin = 60; o.operatorPosition = o.operatorPosition == .lineStart ? .lineEnd : .lineStart; return o
+        },
+        Example(id: "alignColumnDefinitions", snippet: "create table t (id number not null, nazwa varchar2(100) default 'x');") {
+            var o = $0; o.ddlColumns = .onePerLine; o.alignColumnDefinitions.toggle(); return o
         },
     ]
 

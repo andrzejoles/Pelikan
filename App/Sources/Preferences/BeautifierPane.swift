@@ -26,6 +26,7 @@ struct BeautifierPane: View {
                 layout
                 lists
                 clauses
+                conditions
                 alignment
                 spacing
                 letterCase
@@ -209,16 +210,28 @@ struct BeautifierPane: View {
     private var lists: some View {
         Section(L10n.tr("Listy i przecinki")) {
             row("listLayout") {
-                Picker(L10n.tr("Listy (SELECT, SET, ORDER BY)"), selection: setting(workspace, \.beautifier.listLayout)) { layoutOptions }
+                Picker(L10n.tr("Listy SELECT, INTO, FROM"), selection: setting(workspace, \.beautifier.listLayout)) { layoutOptions }
+            }
+            row("setList") {
+                Picker(L10n.tr("UPDATE … SET"), selection: setting(workspace, \.beautifier.setList)) { inheritedLayoutOptions }
+            }
+            row("groupOrderList") {
+                Picker(L10n.tr("GROUP BY, ORDER BY"), selection: setting(workspace, \.beautifier.groupOrderList)) { inheritedLayoutOptions }
             }
             row("parameterDeclarations") {
-                Picker(L10n.tr("Deklaracje parametrów"), selection: setting(workspace, \.beautifier.parameterDeclarations)) { layoutOptions }
+                Picker(L10n.tr("Deklaracje parametrów"), selection: setting(workspace, \.beautifier.parameterDeclarations)) { parenLayoutOptions }
             }
             row("callParameters") {
-                Picker(L10n.tr("Parametry wywołań"), selection: setting(workspace, \.beautifier.callParameters)) { layoutOptions }
+                Picker(L10n.tr("Parametry wywołań"), selection: setting(workspace, \.beautifier.callParameters)) { parenLayoutOptions }
             }
             row("insertLists") {
-                Picker(L10n.tr("Listy INSERT (kolumny, VALUES)"), selection: setting(workspace, \.beautifier.insertLists)) { layoutOptions }
+                Picker(L10n.tr("Listy INSERT (kolumny, VALUES)"), selection: setting(workspace, \.beautifier.insertLists)) { parenLayoutOptions }
+            }
+            row("parenthesisLists") {
+                Picker(L10n.tr("Listy w nawiasach (IN, argumenty funkcji)"), selection: setting(workspace, \.beautifier.parenthesisLists)) { parenLayoutOptions }
+            }
+            row("ddlColumns") {
+                Picker(L10n.tr("Kolumny tabel, pola rekordów i typów"), selection: setting(workspace, \.beautifier.ddlColumns)) { parenLayoutOptions }
             }
             row("commaBefore") { Toggle(L10n.tr("Przecinek na początku linii"), isOn: setting(workspace, \.beautifier.commaBefore)) }
         }
@@ -247,6 +260,25 @@ struct BeautifierPane: View {
                 Picker(L10n.tr("Wyrażenie CASE"), selection: setting(workspace, \.beautifier.caseLayout)) {
                     Text(L10n.tr("W jednej linii")).tag(BeautifierOptions.CaseLayout.inline)
                     Text(L10n.tr("WHEN, ELSE, END w osobnych liniach")).tag(BeautifierOptions.CaseLayout.multiline)
+                    Text(L10n.tr("W osobnych liniach, krótkie w jednej")).tag(BeautifierOptions.CaseLayout.auto)
+                }
+            }
+            row("caseInlineLimit") {
+                Stepper(value: setting(workspace, \.beautifier.caseInlineLimit), in: 20...120, step: 5) {
+                    Text(L10n.tr("Krótkie CASE (jedna gałąź WHEN) w jednej linii do znaków: \(options.caseInlineLimit)"))
+                }
+                .disabled(options.caseLayout != .auto)
+            }
+            row("subqueryLayout") {
+                Picker(L10n.tr("Podzapytania i CTE"), selection: setting(workspace, \.beautifier.subqueryLayout)) {
+                    Text(L10n.tr("Za nawiasem")).tag(BeautifierOptions.SubqueryLayout.hanging)
+                    Text(L10n.tr("Wcięte, „)” w osobnej linii")).tag(BeautifierOptions.SubqueryLayout.indented)
+                }
+            }
+            row("operatorPosition") {
+                Picker(L10n.tr("Długie wyrażenia: operator (||, +, -)"), selection: setting(workspace, \.beautifier.operatorPosition)) {
+                    Text(L10n.tr("Na początku linii")).tag(BeautifierOptions.OperatorPosition.lineStart)
+                    Text(L10n.tr("Na końcu linii")).tag(BeautifierOptions.OperatorPosition.lineEnd)
                 }
             }
         }
@@ -266,6 +298,9 @@ struct BeautifierPane: View {
             row("alignAssignments") { Toggle(L10n.tr("Kolejne przypisania: :="), isOn: setting(workspace, \.beautifier.alignAssignments)) }
             row("alignAliases") { Toggle(L10n.tr("Aliasy w SELECT i FROM"), isOn: setting(workspace, \.beautifier.alignAliases)) }
             row("alignSetValues") { Toggle(L10n.tr("UPDATE … SET: ="), isOn: setting(workspace, \.beautifier.alignSetValues)) }
+            row("alignColumnDefinitions") {
+                Toggle(L10n.tr("Kolumny tabel i pola rekordów: typ, DEFAULT, NOT NULL"), isOn: setting(workspace, \.beautifier.alignColumnDefinitions))
+            }
             row("alignTrailingComments") {
                 Toggle(L10n.tr("Komentarze na końcu kolejnych linii"), isOn: setting(workspace, \.beautifier.alignTrailingComments))
             }
@@ -320,7 +355,8 @@ struct BeautifierPane: View {
     private func row<Content: View>(_ id: String, @ViewBuilder _ content: () -> Content) -> some View {
         content()
             .simultaneousGesture(TapGesture().onEnded {
-                if let p = BeautifierExamples.previewOf[id] { sampleID = p }
+                let key = id == "conditions" ? "conditions.\(conditionContext.rawValue).breaks" : id
+                if let p = BeautifierExamples.previewOf[key] { sampleID = p }
             })
     }
 
@@ -342,6 +378,86 @@ struct BeautifierPane: View {
     @ViewBuilder private var layoutOptions: some View {
         Text(L10n.tr("Element w linii")).tag(BeautifierOptions.ListLayout.onePerLine)
         Text(L10n.tr("Do marginesu")).tag(BeautifierOptions.ListLayout.fit)
+    }
+
+    @ViewBuilder private var inheritedLayoutOptions: some View {
+        Text(L10n.tr("Jak listy SELECT")).tag(BeautifierOptions.ListLayout?.none)
+        Text(L10n.tr("Element w linii")).tag(BeautifierOptions.ListLayout?.some(.onePerLine))
+        Text(L10n.tr("Do marginesu")).tag(BeautifierOptions.ListLayout?.some(.fit))
+    }
+
+    /// Listy w nawiasach: „do marginesu” z PL/SQL Developera (Fit) to `wrap`; `fit` — w jednej linii, jeśli się mieści.
+    @ViewBuilder private var parenLayoutOptions: some View {
+        Text(L10n.tr("Element w linii")).tag(BeautifierOptions.ListLayout.onePerLine)
+        Text(L10n.tr("W jednej linii, jeśli się mieści")).tag(BeautifierOptions.ListLayout.fit)
+        Text(L10n.tr("Do marginesu")).tag(BeautifierOptions.ListLayout.wrap)
+    }
+
+    // MARK: Warunki AND / OR
+
+    /// Miejsce warunków, którego reguły AND/OR są pokazane.
+    @State private var conditionContext = BeautifierOptions.ConditionContext.whereClause
+
+    private func conditionBinding<T>(_ key: WritableKeyPath<BeautifierOptions.ConditionLayout, T>) -> Binding<T> {
+        let c = conditionContext
+        return Binding(get: { workspace.settings.beautifier.condition(c)[keyPath: key] }, set: { value in
+            var r = workspace.settings.beautifier.condition(c)
+            r[keyPath: key] = value
+            workspace.settings.beautifier.setCondition(c, r)
+        })
+    }
+
+    static func contextName(_ c: BeautifierOptions.ConditionContext) -> String {
+        switch c {
+        case .whereClause: "WHERE"
+        case .having: "HAVING"
+        case .joinOn: "JOIN … ON"
+        case .mergeOn: "MERGE … ON"
+        case .hierarchical: "START WITH, CONNECT BY"
+        case .caseWhen: "CASE … WHEN"
+        case .ifCondition: "IF, ELSIF"
+        case .whileLoop: "WHILE"
+        case .exitWhen: "EXIT, CONTINUE WHEN"
+        case .triggerWhen: L10n.tr("WHEN wyzwalacza")
+        case .check: "CHECK"
+        case .nested: L10n.tr("Nawiasy zagnieżdżone")
+        }
+    }
+
+    private var conditions: some View {
+        Section(L10n.tr("Warunki AND / OR")) {
+            row("conditions") {
+                Picker(L10n.tr("Miejsce warunku"), selection: $conditionContext) {
+                    ForEach(BeautifierOptions.ConditionContext.allCases, id: \.self) { Text(verbatim: Self.contextName($0)).tag($0) }
+                }
+                .onChange(of: conditionContext) { _, c in
+                    if let p = BeautifierExamples.previewOf["conditions.\(c.rawValue).breaks"] { sampleID = p }
+                }
+            }
+            row("conditions") {
+                Picker(L10n.tr("Łamanie przed AND / OR"), selection: conditionBinding(\.breaks)) {
+                    Text(L10n.tr("Każdy w osobnej linii")).tag(BeautifierOptions.ConditionBreak.always)
+                    Text(L10n.tr("Tylko gdy warunek się nie mieści")).tag(BeautifierOptions.ConditionBreak.ifLong)
+                    Text(L10n.tr("Nie łam")).tag(BeautifierOptions.ConditionBreak.never)
+                }
+            }
+            row("conditions") {
+                Picker(L10n.tr("Położenie AND / OR"), selection: conditionBinding(\.position)) {
+                    Text(L10n.tr("Jak AND / OR ogólnie")).tag(BeautifierOptions.OperatorPosition?.none)
+                    Text(L10n.tr("Na początku linii")).tag(BeautifierOptions.OperatorPosition?.some(.lineStart))
+                    Text(L10n.tr("Na końcu linii")).tag(BeautifierOptions.OperatorPosition?.some(.lineEnd))
+                }
+            }
+            row("conditions") {
+                Picker(L10n.tr("Wyrównanie AND / OR"), selection: conditionBinding(\.align)) {
+                    Text(L10n.tr("Do słowa kluczowego (rzeka)")).tag(BeautifierOptions.ConditionAlign.keyword)
+                    Text(L10n.tr("Pod pierwszym warunkiem")).tag(BeautifierOptions.ConditionAlign.firstCondition)
+                    Text(L10n.tr("Pod pierwszym warunkiem, z wcięciem")).tag(BeautifierOptions.ConditionAlign.indent)
+                }
+            }
+            Text(L10n.tr("Reguły osobno dla każdego miejsca; AND w BETWEEN … AND nie jest łamany."))
+                .font(.uiSecondary).foregroundStyle(.secondary)
+        }
     }
 
     @ViewBuilder private var caseOptions: some View {
