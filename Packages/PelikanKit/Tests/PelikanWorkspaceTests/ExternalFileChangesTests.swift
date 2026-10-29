@@ -198,4 +198,62 @@ struct ExternalFileChangesTests {
         let d = try #require(r.documents.first)
         #expect(r.externalChanges(of: d).first?.windowModified == true)
     }
+
+    @Test("Para: plik, który po zmianie nie daje się wczytać do karty (komentarz za END) — odmowa, bez ponownego pytania")
+    func pairReloadRefusedOnSplitChange() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let spec = "CREATE OR REPLACE PACKAGE k AS\n  PROCEDURE p;\nEND k;\n"
+        let body = "CREATE OR REPLACE PACKAGE BODY k AS\n  PROCEDURE p IS BEGIN NULL; END;\nEND k;\n"
+        let s = try write(spec, "k.pks")
+        _ = try write(body, "k.pkb")
+        let doc = try ws.openFile(s)
+        let before = doc.text
+        try Data((spec + "-- koniec specyfikacji\n").utf8).write(to: s)
+        ui.answers = [0]                                     // Wczytaj ponownie
+        #expect(throws: (any Error).self) { try ws.reloadFromDisk(doc, url: s) }
+        #expect(await ws.checkExternalChanges(of: doc) == 1)
+        #expect(doc.text == before)
+        #expect(await ws.checkExternalChanges(of: doc) == 0)
+        // Tryb bez pytania — ta sama odmowa, bez pytania przy każdej aktywacji.
+        ws.settings.reloadExternalChangesSilently = true
+        try Data((spec + "-- inny komentarz\n").utf8).write(to: s)
+        #expect(await ws.checkExternalChanges(of: doc) == 1)
+        #expect(await ws.checkExternalChanges(of: doc) == 0 && doc.text == before)
+    }
+
+    @Test("⌘S: preferencja wykrywania wyłączona — bez ostrzeżenia; tryb skryptu — zapis bez pytania (wpis w dzienniku)")
+    func saveWarningRespectsPreferenceAndScriptMode() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let u = try write("select 1 from dual;\n", "p.sql")
+        let doc = try ws.openFile(u)
+        doc.text = "select 'moje' from dual;\n"
+        try Data("select 'git' from dual;\n".utf8).write(to: u)
+        ws.settings.detectExternalFileChanges = false
+        try await ws.invoke("file.save")
+        #expect(ui.asked.isEmpty)
+        #expect(try text(u) == "select 'moje' from dual;\n")
+        ws.settings.detectExternalFileChanges = true
+        try Data("select 'git' from dual;\n".utf8).write(to: u)
+        doc.text = "select 'skrypt' from dual;\n"
+        ws.externalChangePromptsEnabled = false
+        try await ws.invoke("file.save")
+        #expect(ui.asked.isEmpty && !doc.isModified)
+        #expect(try text(u) == "select 'skrypt' from dual;\n")
+    }
+
+    @Test("Wiszące dowiązanie (cel usunięty) — plik usunięty")
+    func danglingLinkIsDeleted() throws {
+        let ws = Workspace()
+        let target = try write("select 1 from dual;\n", "cel.sql")
+        let link = dir.appendingPathComponent("link.sql")
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: target)
+        let doc = try ws.openFile(link)
+        #expect(ws.externalChanges(of: doc).isEmpty)
+        try FileManager.default.removeItem(at: target)
+        #expect(ws.externalChanges(of: doc).first?.kind == .deleted)
+    }
 }

@@ -1500,4 +1500,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
         return index < buttons.count ? index : nil
     }
+
+    /// Pytanie bez dodatkowego „Anuluj” (D197): Esc wybiera bezpieczny przycisk `escapeButton`.
+    func ask(_ title: String, message: String, buttons: [String], escapeButton: Int) async -> Int? {
+        if Self.scriptSkipsDialog(title) { return escapeButton }
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        for b in buttons { alert.addButton(withTitle: b) }
+        if alert.buttons.indices.contains(escapeButton), escapeButton > 0 { alert.buttons[escapeButton].keyEquivalent = "\u{1b}" }
+        let response = alert.runModal()
+        let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
+        return buttons.indices.contains(index) ? index : escapeButton
+    }
 }

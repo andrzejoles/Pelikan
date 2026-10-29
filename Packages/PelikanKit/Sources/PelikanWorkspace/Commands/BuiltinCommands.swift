@@ -60,13 +60,20 @@ public enum BuiltinCommands {
         // Zapis do pliku okna (para — każda jednostka do swojego pliku, D194): plik zmieniony na dysku od otwarcia albo
         // zapisu (inny program, git checkout, „Zostaw” przy pytaniu, D197) — bez cichego nadpisania.
         if !askForName, !singleFile, let url = doc.fileURL {
-            let changed = ws.externallyChangedUnitFiles(doc)
+            // Preferencja „Wykrywaj zmiany plików na dysku” wyłączona — bez sprawdzania (D197).
+            let changed = ws.settings.detectExternalFileChanges ? await ws.externallyChangedUnitFiles(doc) : []
             if !changed.isEmpty {
                 let names = changed.map(\.lastPathComponent).joined(separator: ", ")
-                let choice = await ws.ui?.ask(L10n.tr("Pliki zmieniły się na dysku: \(names)"),
+                if let ui = ws.ui, ws.externalChangePromptsEnabled {
+                    let choice = await ui.ask(L10n.tr("Pliki zmieniły się na dysku: \(names)"),
                                               message: L10n.tr("Zapis zastąpi zmiany wprowadzone poza tym oknem."),
                                               buttons: [L10n.tr("Zapisz mimo to"), L10n.tr("Anuluj")])
-                guard choice == 0 else { return false }
+                    guard choice == 0 else { return false }
+                } else {
+                    // Tryb skryptu albo bez interfejsu: zapis jak zlecono, zmiana z dysku tylko w dzienniku — bez cichego
+                    // anulowania zapisu.
+                    Log.files.notice("Zapis nadpisuje plik zmieniony na dysku przez inny program: \(names, privacy: .hash)")
+                }
             }
             try ws.save(doc, to: url)
             return true

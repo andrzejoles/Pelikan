@@ -353,17 +353,39 @@ extension Workspace {
     /// którego jednostka w oknie się nie zmieniła, nie jest zapisywany, więc nie pyta (i jego `savedText` zostaje — gdy
     /// jednostka zmieni się później, zapis zapyta wtedy). Porównanie skrótu bajtów z ostatniego odczytu albo zapisu — bez
     /// dekodowania (pliki jednobajtowe bez fałszywych alarmów, sprawdzenie działa też po zmianie kodowania okna).
-    public func externallyChangedUnitFiles(_ doc: Document) -> [URL] {
-        // Okno z jednym plikiem (D197): skrót z otwarcia albo zapisu — „Zostaw” przy pytaniu o zmianę tego nie zmienia.
+    public func externallyChangedUnitFiles(_ doc: Document) async -> [URL] {
+        // Pliki do sprawdzenia i skrót z zapisu; okno pary — tylko pliki, które ten zapis zapisze.
+        var candidates: [(url: URL, saved: UInt64)] = []
         if doc.unitFiles.isEmpty {
-            guard let url = doc.fileURL, let hash = doc.savedFileHash, let data = try? Data(contentsOf: url) else { return [] }
-            return UnitFile.fingerprint(data) == hash ? [] : [url.standardizedFileURL]
+            if let url = doc.fileURL?.standardizedFileURL, let hash = doc.savedFileHash { candidates.append((url, hash)) }
+        } else {
+            for f in doc.unitFiles {
+                guard let hash = f.savedHash, f.needsRewrite || doc.currentText(of: f.url).map({ $0 != f.savedText }) == true else { continue }
+                candidates.append((f.url, hash))
+            }
         }
-        return doc.unitFiles.filter { f in
-            guard let hash = f.savedHash, f.needsRewrite || doc.currentText(of: f.url).map({ $0 != f.savedText }) == true,
-                  let data = try? Data(contentsOf: f.url) else { return false }
-            return UnitFile.fingerprint(data) != hash
-        }.map(\.url)
+        var changed: [URL] = []
+        var toHash: [(url: URL, saved: UInt64)] = []
+        for c in candidates {
+            // Szybka ścieżka: znany stan dysku to stan zapisu, a data i rozmiar się nie zmieniły (wolumin lokalny).
+            if let stamp = doc.diskStamps[c.url], stamp.hash == c.saved, Self.isLocalVolume(c.url),
+               let a = try? FileManager.default.attributesOfItem(atPath: c.url.resolvingSymlinksInPath().path),
+               a[.modificationDate] as? Date == stamp.modified, (a[.size] as? NSNumber)?.intValue == stamp.size {
+                continue
+            }
+            toHash.append(c)
+        }
+        guard !toHash.isEmpty else { return [] }
+        // Odczyt i skrót poza wątkiem głównym (duże pakiety).
+        let list = toHash
+        let different = await Task.detached { () -> [URL] in
+            list.compactMap { c in
+                guard let data = try? Data(contentsOf: c.url) else { return nil }
+                return UnitFile.fingerprint(data) == c.saved ? nil : c.url
+            }
+        }.value
+        changed.append(contentsOf: different)
+        return changed
     }
 
     /// Czy ścieżka istnieje (bez podążania za dowiązaniem — wiszące dowiązanie też istnieje).

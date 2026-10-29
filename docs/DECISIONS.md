@@ -2215,7 +2215,9 @@ edytor), Pelikan to wykrywa i pyta.
 - **Stan pliku:** przy otwarciu, zapisie i wczytaniu ponownym okno zapamiętuje dla każdego pliku (okno pary — dla
   `.pks` i `.pkb` osobno) datę modyfikacji, rozmiar i skrót bajtów (`Document.diskStamps`, `FileStamp`). Sprawdzenie
   czyta plik tylko, gdy zmieniła się data albo rozmiar; ten sam skrót (np. `touch`, `git checkout` bez zmiany treści)
-  uaktualnia stan bez pytania. Dowiązanie — stan pliku docelowego.
+  uaktualnia stan bez pytania. Dowiązanie — stan pliku docelowego; wiszące dowiązanie (cel usunięty) to plik usunięty.
+  Na woluminie nielokalnym (SMB, NFS — `volumeIsLocalKey`) treść jest porównywana zawsze, bo daty bywają zaokrąglane
+  albo z innego zegara.
 - **Kiedy:** przy aktywacji okna z plikiem, karty pliku w oknie pary i aplikacji (okno na wierzchu). Jedno sprawdzenie
   naraz i jedno pytanie naraz (zmiany kilku plików okna po kolei), pytania tylko dla aktywowanego okna — inne okna
   zapytają, gdy się je aktywuje. Nie w trakcie zapisu okna (także okna wyboru nazwy), nie w trybie skryptu
@@ -2227,13 +2229,23 @@ edytor), Pelikan to wykrywa i pyta.
   **Wczytaj ponownie (utracisz zmiany)** / **Zachowaj moje zmiany**. „Zostaw” i „Zachowaj” zapamiętują nowy stan dysku
   jako znany (bez pytania do następnej zmiany), ale nie treść zapisaną okna — późniejsze ⌘S ostrzega „Pliki zmieniły
   się na dysku… Zapisz mimo to / Anuluj” (dla wszystkich okien z plikiem, nie tylko par: `Document.savedFileHash`).
-  Tekst sprzed wczytania okna ze zmianami trafia do historii lokalnej.
+  Ostrzeżenie przy zapisie najpierw porównuje datę i rozmiar ze znanym stanem (gdy to stan zapisu), skrót liczy tylko
+  przy różnicy, odczyt i skrót poza wątkiem głównym. Z wyłączoną preferencją **Wykrywaj zmiany plików na dysku** — bez
+  ostrzeżenia; w trybie skryptu i bez interfejsu zapis odbywa się (bez cichego anulowania), a nadpisanie zmiany z dysku
+  trafia do dziennika. Tekst sprzed wczytania ponownego zawsze trafia do historii lokalnej (także okno bez zmian
+  i wczytanie bez pytania). Pytania nie mają dodatkowego przycisku „Anuluj”: Esc wybiera bezpieczną odpowiedź
+  (**Zostaw**, **Zachowaj moje zmiany**; przy pliku usuniętym domyślny jest **Zachowaj w oknie**) —
+  `UIServices.ask(_:message:buttons:escapeButton:)`. Nieudane wczytanie (np. plik nie do odczytu, para o innym
+  podziale) — także w trybie bez pytania — zapamiętuje stan dysku jako znany (bez pytania przy każdej aktywacji),
+  a błąd pokazuje użytkownikowi i zapisuje w dzienniku.
 - **Plik usunięty albo przeniesiony:** „Plik „…” nie istnieje na dysku” — **Zachowaj w oknie** (okno oznaczone jako
   zmienione, zapis utworzy plik ponownie; bez ponownego pytania) albo **Zamknij okno** (okno ze zmianami — zwykłe
   pytanie o zapis).
 - **Para `.pks`/`.pkb`:** wczytywany jest tylko zmieniony plik (jego karta), druga karta zostaje bez zmian, także
-  niezapisana; kursor zostaje w tym samym miejscu karty, karty i Zawartość kodu odświeżają się z tekstu. Plik, który
-  po zmianie nie zawiera już jednostki swojej karty, nie jest wczytywany (komunikat: otwórz go osobno).
+  niezapisana; kursor zostaje w tym samym miejscu karty, karty i Zawartość kodu odświeżają się z tekstu. Wczytanie
+  sprawdza obieg jak otwarcie pary — podział nowego tekstu na karty musi dać te same pliki, każdy z jedną jednostką
+  swojej karty; inaczej (np. komentarz za `END` specyfikacji przeszedłby do karty ciała) odmowa z komunikatem „otwórz
+  go osobno”.
 - **Wczytanie ponowne** okna z jednym plikiem odtwarza je jak otwarcie (kodowanie, BOM, końce linii; okno testu `.tst`
   ze zmiennymi, raport, diagram, notatnik); kursor na tej samej pozycji, jeśli się mieści.
 - **Komenda `file.reload`** „Wczytaj ponownie z dysku” (menu Plik, wstążka Start › Plik › Więcej; agent: Za zgodą,
@@ -2249,4 +2261,7 @@ edytor), Pelikan to wykrywa i pyta.
 - **Ograniczenia:** brak obserwacji systemu plików w tle (FSEvents) — zmiana jest wykrywana dopiero przy aktywacji
   okna, karty albo aplikacji (jak we wzorcu); zmiana pliku okna w tle, gdy Pelikan jest aktywny i okno na wierzchu,
   zostanie zauważona przy następnej aktywacji (np. przełączeniu okna albo aplikacji) albo przez **Wczytaj ponownie
-  z dysku**.
+  z dysku**. Pliki w iCloud Drive (i innych dostawcach plików): synchronizacja może zmieniać datę bez zmiany treści
+  (bez pytania — porównanie skrótu), a plik usunięty z dysku lokalnego przez „Optymalizuj miejsce” (zastąpiony
+  symbolem zastępczym) bywa widziany jako usunięty albo jest pobierany przy odczycie — Pelikan nie odróżnia tych stanów
+  od zwykłej zmiany pliku.

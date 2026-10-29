@@ -52,13 +52,16 @@ extension Workspace {
         var out: [ExternalFileChange] = []
         for url in doc.fileURLs {
             guard let stamp = doc.diskStamps[url] else { continue }
-            guard let attrs = try? FileManager.default.attributesOfItem(atPath: url.resolvingSymlinksInPath().path) else {
+            // `fileExists` podąża za dowiązaniem — wiszące dowiązanie (cel usunięty) to plik usunięty.
+            guard FileManager.default.fileExists(atPath: url.path),
+                  let attrs = try? FileManager.default.attributesOfItem(atPath: url.resolvingSymlinksInPath().path) else {
                 out.append(ExternalFileChange(url: url, kind: .deleted, windowModified: doc.hasUnsavedChanges(for: url)))
                 continue
             }
             let modified = attrs[.modificationDate] as? Date
             let size = (attrs[.size] as? NSNumber)?.intValue ?? -1
-            if modified == stamp.modified, size == stamp.size { continue }
+            // Wolumin sieciowy (SMB, NFS): daty bywają zaokrąglane albo z innego zegara — zawsze porównanie treści.
+            if modified == stamp.modified, size == stamp.size, Self.isLocalVolume(url) { continue }
             guard let data = try? Data(contentsOf: url) else { continue }
             let hash = UnitFile.fingerprint(data)
             if hash == stamp.hash {
@@ -69,6 +72,15 @@ extension Workspace {
             out.append(ExternalFileChange(url: url, kind: .modified, windowModified: doc.hasUnsavedChanges(for: url)))
         }
         return out
+    }
+
+    /// Czy plik leży na woluminie lokalnym (na Linuksie i przy braku informacji — tak).
+    nonisolated static func isLocalVolume(_ url: URL) -> Bool {
+        #if canImport(Darwin)
+        return (try? url.resourceValues(forKeys: [.volumeIsLocalKey]))?.volumeIsLocal ?? true
+        #else
+        return true
+        #endif
     }
 
     /// „Zostaw” / „Zachowaj moje zmiany”: obecny stan dysku jako znany — bez ponownego pytania do następnej zmiany;
@@ -85,7 +97,8 @@ extension Workspace {
         let target = (url ?? doc.fileURL)?.standardizedFileURL
         guard let target, doc.fileURLs.contains(target) else { throw CommandError.notAvailable(L10n.tr("Aktywne okno nie ma pliku")) }
         let data = try Data(contentsOf: target)
-        if doc.isModified { recordHistory(doc, text: doc.text, label: L10n.tr("przed: wczytanie z dysku")) }
+        // Tekst sprzed wczytania zawsze w historii lokalnej (także okno bez zmian i wczytanie bez pytania).
+        recordHistory(doc, text: doc.text, label: L10n.tr("przed: wczytanie z dysku"))
         if doc.unitFiles.isEmpty {
             try reloadSingleFile(doc, url: target, data: data)
         } else {
@@ -135,8 +148,13 @@ extension Workspace {
         let text = SpecBodyFiles.join(spec: texts[0], body: texts[1])
         let units = ProgramCompiler.units(in: text)
         let newTabs = ProgramUnitTabs.tabs(units, in: text)
-        guard SpecBodyFiles.parts(units, tabs: newTabs) == parts else {
-            throw CommandError.notAvailable(L10n.tr("Plik \(url.lastPathComponent) nie zawiera już jednostki tej karty — otwórz go osobno."))
+        // Obieg jak przy otwarciu pary: podział nowego tekstu na karty musi dać te same pliki (np. komentarz za END
+        // specyfikacji przeszedłby do karty ciała), a każdy plik — jedną jednostkę swojej karty.
+        let endings = parts.map { p in p == doc.unitFiles[k].part ? SpecBodyFiles.splitEnding(decoded.text).ending : doc.unitFiles.first { $0.part == p }?.ending ?? "\n" }
+        guard SpecBodyFiles.parts(units, tabs: newTabs) == parts,
+              SpecBodyFiles.fileTexts(text, tabs: newTabs, endings: endings) == texts,
+              SpecBodyFiles.mismatch(texts, units: units) == nil else {
+            throw CommandError.notAvailable(L10n.tr("Pliku \(url.lastPathComponent) nie da się wczytać do karty okna pary (inny podział na jednostki) — otwórz go osobno."))
         }
         // Kursor w tej samej karcie i w tym samym miejscu karty.
         let tab = doc.activeUnitTab ?? 0
@@ -181,7 +199,7 @@ extension Workspace {
                 Log.files.notice("Plik okna usunięty albo przeniesiony poza Pelikanem: \(name, privacy: .hash)")
                 let choice = await ui.ask(L10n.tr("Plik „\(name)” nie istnieje na dysku"),
                                           message: L10n.tr("Inny program usunął albo przeniósł plik. Tekst zostaje w oknie — zapis utworzy plik ponownie."),
-                                          buttons: [L10n.tr("Zachowaj w oknie"), L10n.tr("Zamknij okno")])
+                                          buttons: [L10n.tr("Zachowaj w oknie"), L10n.tr("Zamknij okno")], escapeButton: 0)
                 doc.diskStamps[c.url] = nil
                 if choice == 1 {
                     // Okno ze zmianami — zwykłe pytanie o zapis (zapis utworzy plik ponownie).
@@ -191,24 +209,31 @@ extension Workspace {
                 doc.isModified = true
             case .modified:
                 Log.files.info("Plik okna zmieniony przez inny program: \(name, privacy: .hash)")
-                if !c.windowModified, settings.reloadExternalChangesSilently {
-                    try? reloadFromDisk(doc, url: c.url)
+                var reload = !c.windowModified && settings.reloadExternalChangesSilently
+                if !reload {
+                    // Bez dodatkowego „Anuluj”: Esc — bezpieczny wybór (Zostaw / Zachowaj moje zmiany).
+                    let choice: Int?
+                    if c.windowModified {
+                        choice = await ui.ask(L10n.tr("Plik „\(name)” został zmieniony przez inny program. Wczytać go ponownie?"),
+                                              message: L10n.tr("Okno ma niezapisane zmiany."),
+                                              buttons: [L10n.tr("Wczytaj ponownie (utracisz zmiany)"), L10n.tr("Zachowaj moje zmiany")], escapeButton: 1)
+                    } else {
+                        choice = await ui.ask(L10n.tr("Plik „\(name)” został zmieniony przez inny program. Wczytać go ponownie?"),
+                                              message: L10n.tr("Okno nie ma niezapisanych zmian."),
+                                              buttons: [L10n.tr("Wczytaj ponownie"), L10n.tr("Zostaw")], escapeButton: 1)
+                    }
+                    reload = choice == 0
+                }
+                guard reload else {
+                    acceptDiskState(doc, url: c.url)
                     continue
                 }
-                let choice: Int?
-                if c.windowModified {
-                    choice = await ui.ask(L10n.tr("Plik „\(name)” został zmieniony przez inny program. Wczytać go ponownie?"),
-                                          message: L10n.tr("Okno ma niezapisane zmiany."),
-                                          buttons: [L10n.tr("Wczytaj ponownie (utracisz zmiany)"), L10n.tr("Zachowaj moje zmiany")])
-                } else {
-                    choice = await ui.ask(L10n.tr("Plik „\(name)” został zmieniony przez inny program. Wczytać go ponownie?"),
-                                          message: L10n.tr("Okno nie ma niezapisanych zmian."),
-                                          buttons: [L10n.tr("Wczytaj ponownie"), L10n.tr("Zostaw")])
-                }
-                if choice == 0 {
-                    do { try reloadFromDisk(doc, url: c.url) } catch { ui.showError(error.localizedDescription) }
-                } else {
+                do { try reloadFromDisk(doc, url: c.url) } catch {
+                    // Nieudane wczytanie (także bez pytania): stan dysku jako znany — bez pytania przy każdej aktywacji;
+                    // błąd widoczny dla użytkownika i w dzienniku.
                     acceptDiskState(doc, url: c.url)
+                    Log.files.error("Nie udało się wczytać ponownie pliku okna \(name, privacy: .hash): \(error)")
+                    ui.showError(error.localizedDescription)
                 }
             }
         }

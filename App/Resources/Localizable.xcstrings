@@ -56281,34 +56281,6 @@
         }
       }
     },
-    "Plik %@ nie zawiera już jednostki tej karty — otwórz go osobno." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The file %@ no longer contains this tab's unit — open it separately."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Datei %@ enthält die Einheit dieses Reiters nicht mehr — öffnen Sie sie separat."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El archivo %@ ya no contiene la unidad de esta pestaña: ábralo por separado."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Файл %@ більше не містить одиниці цієї вкладки — відкрийте його окремо."
-          }
-        }
-      }
-    },
     "Plik %@: %@" : {
       "localizations" : {
         "en" : {
@@ -57369,6 +57341,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Файли змінилися на диску: %@"
+          }
+        }
+      }
+    },
+    "Pliku %@ nie da się wczytać do karty okna pary (inny podział na jednostki) — otwórz go osobno." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file %@ cannot be loaded into the pair window tab (different split into units) — open it separately."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei %@ kann nicht in den Reiter des Paarfensters geladen werden (andere Aufteilung in Einheiten) — öffnen Sie sie separat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo %@ no se puede cargar en la pestaña de la ventana de par (otra división en unidades): ábralo por separado."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл %@ не вдається завантажити до вкладки вікна пари (інший поділ на одиниці) — відкрийте його окремо."
           }
         }
       }
