@@ -2120,3 +2120,9 @@ i 65: obraz zgodny z dawnymi zrzutami, a WKWebView (instrukcja) wreszcie z treś
 `NSTabViewController` (szkło Liquid Glass, warstwy portalowe) wychodzi bez etykiety, rogi okna są proste (bez
 przezroczystych zaokrągleń); w takich przypadkach `scripts/screenshots.sh --screen` — dawny sposób z widocznymi oknami
 (`PELIKAN_UI_SCRIPT_VISIBLE=1`).
+Skrypt zawsze buduje aplikację (przyrostowo) i przerywa, gdy klon nie ma haków ukrywania (stara binarka pokazałaby
+okna); każdy przebieg ma własny katalog `mktemp` (klon, dane — równoległe przebiegi w worktree agentów się nie mieszają),
+sprzątany w `trap` razem z niewidocznymi instancjami (sesje w bazie testowej); katalogi przebiegów przerwanych bez
+sprzątania (właściciel z `owner.pid` już nie działa) są usuwane przy następnym starcie. Scenariusz bez żadnego zrzutu
+kończy skrypt błędem; okna modalne i arkusze w trybie skryptu trafiają do dziennika `.log`, a zrzut treści WKWebView ma
+limit 5 s. Klon jest bez rozszerzeń (`PlugIns`, Quick Look nie rejestruje się drugi raz).

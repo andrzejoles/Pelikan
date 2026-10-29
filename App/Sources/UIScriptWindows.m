@@ -17,6 +17,20 @@ static void PKConceal(NSWindow *window) {
     window.animationBehavior = NSWindowAnimationBehaviorNone;
 }
 
+// Okno modalne albo arkusz w trybie skryptu — nikt go nie zamknie, przebieg może utknąć: wpis w dzienniku skryptu.
+static void PKLogModal(NSWindow *window, const char *how) {
+    const char *script = getenv("PELIKAN_UI_SCRIPT");
+    if (script == NULL) return;
+    char path[PATH_MAX];
+    if (snprintf(path, sizeof path, "%s.log", script) >= (int)sizeof path) return;
+    FILE *f = fopen(path, "a");
+    if (f == NULL) return;
+    NSString *stamp = [[NSISO8601DateFormatter new] stringFromDate:[NSDate date]];
+    NSString *what = [NSString stringWithFormat:@"%@ „%@”", NSStringFromClass([window class]), window.title];
+    fprintf(f, "%s okno modalne (%s): %s\n", stamp.UTF8String, how, what.UTF8String);
+    fclose(f);
+}
+
 static void PKSwap(Class cls, SEL original, SEL replacement) {
     Method m1 = class_getInstanceMethod(cls, original);
     Method m2 = class_getInstanceMethod(cls, replacement);
@@ -51,7 +65,10 @@ static void PKSwap(Class cls, SEL original, SEL replacement) {
 }
 
 - (void)pk_orderWindow:(NSWindowOrderingMode)place relativeTo:(NSInteger)other {
-    if (place != NSWindowOut) PKConceal(self);
+    if (place != NSWindowOut) {
+        PKConceal(self);
+        if (!self.isVisible && (self.isModalPanel || NSApp.modalWindow == self)) PKLogModal(self, "modalne");
+    }
     [self pk_orderWindow:place relativeTo:other];
 }
 
@@ -92,11 +109,13 @@ static void PKSwap(Class cls, SEL original, SEL replacement) {
 
 - (void)pk_beginSheet:(NSWindow *)sheet completionHandler:(void (^)(NSModalResponse))handler {
     PKConceal(sheet);
+    PKLogModal(sheet, "arkusz");
     [self pk_beginSheet:sheet completionHandler:handler];
 }
 
 - (void)pk_beginCriticalSheet:(NSWindow *)sheet completionHandler:(void (^)(NSModalResponse))handler {
     PKConceal(sheet);
+    PKLogModal(sheet, "arkusz");
     [self pk_beginCriticalSheet:sheet completionHandler:handler];
 }
 @end

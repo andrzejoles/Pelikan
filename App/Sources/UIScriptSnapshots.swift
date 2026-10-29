@@ -58,7 +58,8 @@ enum UIScriptSnapshots {
         let scale = max(window.backingScaleFactor, 2)
         guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int((bounds.width * scale).rounded()),
                                          pixelsHigh: Int((bounds.height * scale).rounded()), bitsPerSample: 8, samplesPerPixel: 4,
-                                         hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)
+                                         hasAlpha: true, isPlanar: false, colorSpaceName: .calibratedRGB, bytesPerRow: 0, bitsPerPixel: 0)?
+            .retagging(with: .sRGB)
         else { return nil }
         rep.size = bounds.size
         frameView.cacheDisplay(in: bounds, to: rep)
@@ -70,13 +71,38 @@ enum UIScriptSnapshots {
                                   space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
         ctx.draw(base, in: CGRect(x: 0, y: 0, width: rep.pixelsWide, height: rep.pixelsHigh))
         for wv in webViews {
-            guard let image = try? await wv.takeSnapshot(configuration: nil),
-                  let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { continue }
+            guard let cg = await webSnapshot(wv) else { continue }
             let r = wv.convert(wv.bounds, to: nil)  // współrzędne okna = ramki okna, początek w lewym dolnym rogu
             ctx.draw(cg, in: CGRect(x: r.minX * scale, y: r.minY * scale, width: r.width * scale, height: r.height * scale))
         }
         guard let out = ctx.makeImage() else { return nil }
-        return NSBitmapImageRep(cgImage: out).representation(using: .png, properties: [:])
+        let outRep = NSBitmapImageRep(cgImage: out)
+        outRep.size = rep.size  // ta sama gęstość (DPI) co zrzut bez WKWebView
+        return outRep.representation(using: .png, properties: [:])
+    }
+
+    /// Treść WKWebView z limitem czasu — zawieszony proces WebKit nie może zatrzymać przebiegu zrzutów.
+    private static func webSnapshot(_ webView: WKWebView, timeout: Duration = .seconds(5)) async -> CGImage? {
+        let once = Once()
+        return await withCheckedContinuation { (cont: CheckedContinuation<CGImage?, Never>) in
+            once.continuation = cont
+            webView.takeSnapshot(with: nil) { image, _ in
+                MainActor.assumeIsolated { once.finish(image?.cgImage(forProposedRect: nil, context: nil, hints: nil)) }
+            }
+            Task { @MainActor in
+                try? await Task.sleep(for: timeout)
+                once.finish(nil)
+            }
+        }
+    }
+
+    /// Kontynuacja wznawiana raz — przez zrzut albo przez limit czasu.
+    private final class Once {
+        var continuation: CheckedContinuation<CGImage?, Never>?
+        func finish(_ image: CGImage?) {
+            continuation?.resume(returning: image)
+            continuation = nil
+        }
     }
 
     private static func webViews(in view: NSView) -> [WKWebView] {
