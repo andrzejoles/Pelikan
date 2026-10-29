@@ -2457,3 +2457,66 @@ a **Widok › Zawartość kodu** przełączała globalne ustawienie — wyłącz
   Zawartość kodu”, wciśnięty przy widocznym panelu; VoiceOver: „Zawartość kodu”, wartość „widoczna”/„ukryta”); okno testu dostało pasek pod blokiem (przycisk i pozycja kursora).
   Wstążka bez zmian — komenda już jest w Widok › Panele, Edycja › Zwijanie › Zawartość kodu i na karcie Program.
   Bez skrótu (wzorzec nie ma domyślnego).
+
+### D203 · 2026-10-29 — Struktury sterujące w Zawartości kodu
+
+Prośba właściciela: „W drzewku struktury kodu brakuje mi jeszcze wszystkich tych elementów/bloków, które kończą się END
+(IF .. END IF, LOOP .. END LOOP, każde BEGIN .. END, CASE .. END, jeżeli jest instrukcją PL/SQL, a nie w SQL itd.)”.
+
+- **Parser** (`PLSQLOutline.parse(_:controlFlow:)`, `parseScriptOutline(…controlFlow:)`): blok czytany instrukcja po
+  instrukcji — nowe rodzaje elementów `ifStatement` (dzieci: struktury gałęzi THEN oraz gałęzie `elsifBranch`
+  i `elseBranch` jako węzły podrzędne — skok do ELSE jednym kliknięciem), `loop` (LOOP, FOR liczbowa i kursorowa, także
+  `FOR r IN (SELECT …) LOOP`, WHILE — nazwa to słowo otwierające), `forall` (bez END — element do średnika),
+  `caseStatement` z `whenBranch`/`elseBranch`, `exceptionSection` z `exceptionHandler` (WHEN wyjątek [OR …]),
+  `beginSection` (inicjalizacja ciała pakietu), `timingPoint` (punkty czasowe wyzwalacza złożonego). Bloki zagnieżdżone
+  (`block`, także z DECLARE) jak dotąd. Etykieta `<<nazwa>>` w nowym polu `OutlineNode.label`. Nazwa węzła to słowo
+  otwierające wielkimi literami, szczegóły — dalszy nagłówek z białymi znakami zwiniętymi (do 1000 znaków). Zakres: od
+  słowa otwierającego do `END …;` (z etykietą); gałąź — do następnej gałęzi.
+- **Instrukcja CASE a wyrażenie:** strukturą jest tylko CASE na początku instrukcji (po `;`, THEN, ELSE, LOOP, BEGIN,
+  etykiecie), zamykana `END CASE`. Wewnątrz instrukcji (przypisanie, RETURN, SQL, nagłówek pętli, warunek IF) wyrażenia
+  `CASE … END` są liczone i ich END nie zamyka bloku.
+- **Odporność:** stos otwartych struktur — słowo, którego bieżąca struktura nie obsługuje, a obsługuje zewnętrzna
+  (np. `END` bloku przy braku `END IF`, ELSE przy bloku bez END w gałęzi IF), kończy bieżącą jako niedokończoną
+  (zakres do poprzedniego tokenu); słowo bez żadnej struktury (`END IF` bez IF) jest pomijane. Na początku instrukcji
+  granica jednostki — `/`, `CREATE`, nagłówek `PROCEDURE`/`FUNCTION` (także z MEMBER, STATIC…) — kończy wszystkie
+  struktury i blok, więc niedokończony podprogram nie zabiera następnych (także w zarysie bez struktur — poprawa
+  dotychczasowego zachowania; deklaracje kończą się też na `CREATE`). IF bez THEN i FOR/WHILE bez LOOP (pisany kod) to
+  zwykła instrukcja. Instrukcja bez średnika kończy się przed END, BEGIN, DECLARE, IF, ELSIF, EXCEPTION, CREATE.
+  Kompilacja warunkowa: dyrektywy `$IF … $THEN`, `$ELSIF … $THEN`, `$ELSE`, `$END`, `$ERROR … $END` są usuwane z tokenów
+  przed parsowaniem (kod obu gałęzi zostaje); obsłużone oba zapisy — `$` sklejony ze słowem (dzisiejszy lekser) i jeden
+  token `$IF` (równoległa zmiana leksera formatera) — Lekser bez zmian. Dotąd `$END` kończył blok w każdym zarysie.
+- **Zgodność:** bez `controlFlow` (domyślnie — analiza kodu, podpowiedzi, refaktoryzacja, Przejdź do deklaracji,
+  hierarchia kodu) zarys jest dokładnie `withoutControlFlow` zarysu ze strukturami: struktura zastąpiona swoimi dziećmi,
+  bloki zagnieżdżone należą do podprogramu jak dotąd (test na wszystkich przykładach). `PLSQLOutline.path` (Code
+  Hierarchy) przechodzi przez struktury bez dodawania ich do ścieżki — ścieżka i poziomy komend `codeHierarchy.*` bez
+  zmian. Struktury nie mają znacznika publiczny/prywatny.
+- **Panel:** zarys zawsze liczony ze strukturami (okno programu razem z kartami, okna SQL i testu w tle jak w D199);
+  przełącznik tylko przycina gotowe drzewo (`withoutControlFlow`, ok. 1 ms dla 50 000 linii) — bez ponownej analizy.
+  Tytuł (`CodeContents.controlTitle`): „IF warunek…” (warunek w jednej linii, do 60 znaków z „…”), „ELSIF …”, „ELSE”,
+  „FOR r in c LOOP”, „WHILE warunek LOOP”, „LOOP”, „FORALL i in 1..n”, „CASE wybór”, „WHEN NO_DATA_FOUND”,
+  „EXCEPTION”, „BEGIN”, z „<<etykieta>> ” na początku; podpowiedź — pełny nagłówek z THEN/LOOP (VoiceOver czyta tytuł).
+  Ikony i kolory: rozgałęzienia (`arrow.triangle.branch`, gałęzie `arrow.turn.down.right`) — indygo, pętle (`repeat`,
+  FORALL `square.stack.3d.up`) — róż, EXCEPTION (`exclamationmark.octagon`) i obsługi — czerwień, punkt czasowy
+  (`clock`) — niebieski, bloki jak dotąd. Klik/Enter zaznacza słowo otwierające (`CodeContents.selection`; przy okazji
+  blok z DECLARE zaznacza całe „DECLARE”, nie pięć liter); śledzenie kursora schodzi przez struktury do najgłębszej
+  zawierającej kursor. Filtr nazw dopasowuje też warunek/nagłówek i etykietę; przy filtrze z ponad 3000 trafień drzewo
+  rozwinięte tylko do poziomu podprogramów (np. „if” w dużym pakiecie). Sortowanie alfabetyczne i według rodzaju nie
+  przestawia struktur — zostają w kolejności źródła za deklaracjami i podprogramami. Rozwinięcie domyślne bez zmian
+  (rozwinięte tylko korzenie, więc struktury są zwinięte; klucze z numerem kolejnym wśród rodzeństwa — D199).
+- **Przełącznik — globalnie, nie w oknie:** ustawienie `codeContentsControlFlow` (**Ustawienia › Edytor › Struktury
+  sterujące w Zawartości kodu**, domyślnie włączone, w zestawie preferencji Edytor), przycisk z symbolem rozgałęzienia
+  obok filtra panelu i **Pokaż struktury sterujące** w menu panelu — jak kolejność sortowania (też w Ustawieniach
+  i menu panelu). Prościej niż stan w oknie i worksecie (D199), a wybór „mniej szczegółów” dotyczy raczej stylu pracy niż
+  jednego okna. Komenda `codeContents.controlFlow` (argument `visible`, bez niego przełącza; makro zapisuje stan; agent:
+  Brak; skutek: ustawienia — jak `codeContents.sort`, bo zmienia Ustawienia, a nie tylko interfejs). Komendy menu
+  elementu (zaznacz, kopiuj, wytnij) liczą zarys z tym samym ustawieniem — działają na strukturze wskazanej w panelu.
+- **Wydajność (R4-01), Release, `PELIKAN_PERF_STRICT=1 swift test -c release --filter "SQLPerformanceTests|PLSQLOutlineTests"`:**
+  pakiet 50 000 linii gęsto wypełniony strukturami (2500 procedur, 13 struktur i blok w każdej — 32 500 elementów
+  sterujących): zarys ze strukturami 72,7 ms (cel < 400 ms), ukrycie struktur 1,25 ms (< 30 ms), w oknie SQL 104,7 ms
+  (< 600 ms), zarys bez struktur 73,2 ms (< 400 ms); dotychczasowe pomiary bez zmian (skrypt 50 000 poleceń 164 ms,
+  pakiet 50 000 linii w oknie SQL 183 ms). Drzewo z dziesiątkami tysięcy węzłów: zwinięte struktury nie są rozwijane
+  przy odświeżeniu, filtr z wieloma trafieniami nie rozwija wszystkiego.
+- **Zrzut:** `docs/screenshots/74-zawartosc-sterowanie-glowne.png` (scenariusz `74-zawartosc-sterowanie.json`, przebieg
+  ukryty D196, przykład `fixtures/zamowienia_api.pkb`).
+- **Pominięte:** instrukcje bez END (EXIT, RETURN, GOTO, RAISE) nie są węzłami; etykieta przed zwykłą instrukcją (cel
+  GOTO) nie jest pokazywana; struktury w kodzie Java/MLE — nie dotyczy.

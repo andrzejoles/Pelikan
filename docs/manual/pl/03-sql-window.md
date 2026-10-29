@@ -42,6 +42,9 @@ domyślny stan nowych okien ustawisz w **Ustawienia › Edytor › Zawartość k
 ma tego panelu. W skrypcie z ponad 5000 poleceń SQL panel pokazuje tylko jednostki i bloki PL/SQL (z dopiskiem o
 liczbie poleceń).
 
+W blokach anonimowych i jednostkach skryptu panel pokazuje też **struktury sterujące** (IF, pętle, CASE, bloki,
+obsługę wyjątków — opis w rozdziale o oknie programu); przycisk z symbolem rozgałęzienia obok filtra je ukrywa.
+
 ## Zmienne
 
 - **Zmienne podstawiania** `&nazwa` i `&&nazwa` — przed wykonaniem Pelikan pokazuje okno **Zmienne** z polami na

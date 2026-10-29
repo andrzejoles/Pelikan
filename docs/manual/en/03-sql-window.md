@@ -41,6 +41,9 @@ hide the panel in this window with **View › Code Contents** or the sidebar but
 bar; the choice stays with the window, and the default for new windows is **Settings › Editor › Code Contents visible by default**. The SQL*Plus console has no such panel. In a script with more than 5000 SQL statements, the panel shows only PL/SQL
 units and blocks (with a note giving the number of statements).
 
+In anonymous blocks and units of the script the panel also shows **control structures** (IF, loops, CASE, blocks,
+exception handlers — see the program window chapter); the branch button next to the filter hides them.
+
 ## Variables
 
 - **Substitution variables** `&name` and `&&name` — before execution Pelikan shows the **Variables** window with fields
