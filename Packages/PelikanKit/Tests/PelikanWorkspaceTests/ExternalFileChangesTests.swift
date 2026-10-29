@@ -257,7 +257,7 @@ struct ExternalFileChangesTests {
         #expect(await ws.externalChanges(of: doc).first?.kind == .deleted)
     }
 
-    @Test("Podmiana pliku z tą samą datą i rozmiarem (nowy i-węzeł) — wykryta; drugi ⌘S w trakcie zapisu pomijany")
+    @Test("Podmiana pliku z tą samą datą i rozmiarem (nowy i-węzeł) — wykryta; drugi ⌘S w trakcie zapisu — komunikat, bez zapisu")
     func replacedFileSameDateAndSize() async throws {
         let ws = Workspace()
         let ui = FakeUI()
@@ -271,7 +271,7 @@ struct ExternalFileChangesTests {
         // Zapis w toku — drugi zapis tego okna nic nie robi.
         doc.text = "select 'moje' from dual;\n"
         doc.isSaving = true
-        try await ws.invoke("file.save")
+        await #expect(throws: CommandError.self) { try await ws.invoke("file.save") }
         #expect(try text(u) == "select 9 from dual;\n" && doc.isModified)
         doc.isSaving = false
     }
@@ -306,5 +306,73 @@ struct ExternalFileChangesTests {
         #expect(try text(target) == "select 1 from dual;\n")
         #expect((try FileManager.default.attributesOfItem(atPath: link.path))[.type] as? FileAttributeType == .typeSymbolicLink)
         #expect(await ws.externalChanges(of: doc).isEmpty)
+    }
+
+    @Test("Własny zapis w trakcie odczytu przy wykrywaniu — bez fałszywego alarmu; dwa wyzwalacze naraz — jedno pytanie")
+    func saveDuringReadAndConcurrentTriggers() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let u = try write("select 1 from dual;\n", "s.sql")
+        let doc = try ws.openFile(u)
+        doc.text = "select 'moje' from dual;\n"
+        try Data("select 'agent' from dual;\n".utf8).write(to: u)
+        // Zapis okna po odczycie pliku, przed porównaniem: odczytana treść („agent”) jest już nieaktualna.
+        ws.afterExternalRead = { try? ws.save(doc, to: u) }
+        #expect(await ws.externalChanges(of: doc).isEmpty)
+        ws.afterExternalRead = nil
+        #expect(try text(u) == "select 'moje' from dual;\n")
+        // Dwa sprawdzenia naraz (aktywacja okna i aplikacji) — jedno pytanie.
+        try Data("select 'git' from dual;\n".utf8).write(to: u)
+        ui.answers = [1, 1]
+        async let a = ws.checkExternalChanges(of: doc)
+        async let b = ws.checkExternalChanges(of: doc)
+        let (ra, rb) = await (a, b)
+        #expect(ra + rb == 1 && ui.asked.count == 1)
+    }
+
+    @Test("Plik odłączony w trakcie zapisu — Zapisz jako zamiast starej ścieżki; zamknięcie czeka na zapis w toku")
+    func detachedDuringSave() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let u = try write("select 1 from dual;\n", "o.sql")
+        let doc = try ws.openFile(u)
+        doc.text = "select 'moje' from dual;\n"
+        try Data("select 'agent' from dual;\n".utf8).write(to: u)
+        // Pytanie „Pliki zmieniły się na dysku” — w jego trakcie plik zostaje odłączony (usunięty w Przeglądarce plików).
+        try FileManager.default.removeItem(at: u)
+        doc.fileURL = nil
+        doc.diskStamps = [:]
+        ui.saveURL = dir.appendingPathComponent("nowy.sql")
+        try await ws.invoke("file.save")
+        #expect(!FileManager.default.fileExists(atPath: u.path))
+        #expect(try text(ui.saveURL!) == "select 'moje' from dual;\n")
+        // Zapis w toku: drugi zapis — komunikat; zamknięcie czeka na koniec zapisu.
+        doc.isSaving = true
+        await #expect(throws: CommandError.self) { try await ws.invoke("file.save") }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            doc.isSaving = false
+        }
+        try await ws.invoke("file.close")
+        #expect(!ws.documents.contains { $0.id == doc.id })
+    }
+
+    @Test("Łańcuch dowiązań bez celu — zapis tworzy plik na końcu łańcucha, dowiązania zostają")
+    func saveThroughLinkChain() async throws {
+        let ws = Workspace()
+        let target = try write("select 1 from dual;\n", "cel3.sql")
+        let mid = dir.appendingPathComponent("mid.sql"), link = dir.appendingPathComponent("link3.sql")
+        try FileManager.default.createSymbolicLink(atPath: mid.path, withDestinationPath: "cel3.sql")
+        try FileManager.default.createSymbolicLink(atPath: link.path, withDestinationPath: "mid.sql")
+        let doc = try ws.openFile(link)
+        try FileManager.default.removeItem(at: target)
+        doc.text = "select 2 from dual;\n"
+        try ws.save(doc, to: link)
+        #expect(try text(target) == "select 2 from dual;\n")
+        for l in [mid, link] {
+            #expect((try FileManager.default.attributesOfItem(atPath: l.path))[.type] as? FileAttributeType == .typeSymbolicLink)
+        }
     }
 }

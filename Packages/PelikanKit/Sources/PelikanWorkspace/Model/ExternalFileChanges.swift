@@ -51,6 +51,8 @@ public struct ExternalFileChange: Sendable, Hashable {
     public var kind: Kind
     /// Okno (albo karta pliku w oknie pary) ma niezapisane zmiany.
     public var windowModified: Bool
+    /// Stan pliku znany oknu w chwili wykrycia — zmieniony do chwili pytania (np. własny zapis) — zmiana nieaktualna.
+    var known: FileStamp?
 }
 
 extension Document {
@@ -81,7 +83,7 @@ extension Workspace {
             guard let stamp = doc.diskStamps[url] else { continue }
             // `fileExists` podąża za dowiązaniem — wiszące dowiązanie (cel usunięty) to plik usunięty.
             guard FileManager.default.fileExists(atPath: url.path), let m = FileStamp.metadata(url) else {
-                out.append(ExternalFileChange(url: url, kind: .deleted, windowModified: doc.hasUnsavedChanges(for: url)))
+                out.append(ExternalFileChange(url: url, kind: .deleted, windowModified: doc.hasUnsavedChanges(for: url), known: stamp))
                 continue
             }
             if stamp.sameMetadata(m) {
@@ -92,17 +94,21 @@ extension Workspace {
         }
         guard !toRead.isEmpty else { return out }
         let list = toRead
+        // Stan sprzed odczytu: własny zapis (albo wczytanie) w trakcie odczytu zmienia go — wtedy odczytana treść jest
+        // nieaktualna i nie jest zmianą z zewnątrz.
+        let before = Dictionary(uniqueKeysWithValues: list.map { ($0, doc.diskStamps[$0]) })
         let read = await Task.detached { () -> [(URL, Data?)] in list.map { ($0, try? Data(contentsOf: $0)) } }.value
+        afterExternalRead?()
         for (url, data) in read {
             doc.contentChecks[url] = now
-            guard let data, let stamp = doc.diskStamps[url] else { continue }
+            guard let data, let stamp = doc.diskStamps[url], stamp == before[url] ?? nil else { continue }
             let hash = UnitFile.fingerprint(data)
             if hash == stamp.hash {
                 // Bez zmiany treści (touch, git bez zmiany) — nowy stan bez pytania.
                 doc.diskStamps[url] = FileStamp.of(url, data: data)
                 continue
             }
-            out.append(ExternalFileChange(url: url, kind: .modified, windowModified: doc.hasUnsavedChanges(for: url)))
+            out.append(ExternalFileChange(url: url, kind: .modified, windowModified: doc.hasUnsavedChanges(for: url), known: stamp))
         }
         return out
     }
@@ -224,13 +230,18 @@ extension Workspace {
     public func checkExternalChanges(of doc: Document) async -> Int {
         guard settings.detectExternalFileChanges, externalChangePromptsEnabled, savingDocuments == 0, !checkingExternalChanges,
               documents.contains(where: { $0.id == doc.id }), let ui else { return 0 }
-        let changes = await externalChanges(of: doc)
-        guard !changes.isEmpty else { return 0 }
+        // Flaga przed pierwszym await — drugi wyzwalacz w tym czasie (aktywacja okna i aplikacji naraz) nie pyta drugi raz.
         checkingExternalChanges = true
         defer { checkingExternalChanges = false }
+        let changes = await externalChanges(of: doc)
+        guard !changes.isEmpty else { return 0 }
         var handled = 0
-        for c in changes {
-            guard documents.contains(where: { $0.id == doc.id }) else { break }
+        for var c in changes {
+            // Po każdym await: zapis w toku, okno zamknięte albo stan pliku zmieniony w międzyczasie (własny zapis,
+            // wczytanie) — bez pytania o nieaktualną zmianę.
+            guard savingDocuments == 0, documents.contains(where: { $0.id == doc.id }) else { break }
+            guard doc.diskStamps[c.url] == c.known else { continue }
+            c.windowModified = doc.hasUnsavedChanges(for: c.url)
             let name = c.url.lastPathComponent
             handled += 1
             switch c.kind {

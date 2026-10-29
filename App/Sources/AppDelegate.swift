@@ -1514,7 +1514,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         // Esc kończy pytanie bezpieczną odpowiedzią — także gdy to przycisk z Enter (jeden przycisk ma jeden klawisz).
         let first = NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
         let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            guard event.keyCode == 53, NSApp.modalWindow === alert.window else { return event }
+            // Esc albo ⌘. (anulowanie w macOS).
+            let cancel = event.keyCode == 53
+                || (event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command && event.charactersIgnoringModifiers == ".")
+            guard cancel, NSApp.modalWindow === alert.window else { return event }
             NSApp.stopModal(withCode: NSApplication.ModalResponse(rawValue: first + escapeButton))
             return nil
         }

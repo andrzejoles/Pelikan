@@ -308,10 +308,12 @@ extension Workspace {
     /// zostaje) i przywraca uprawnienia istniejącego pliku (0600, bit wykonywania) — zapis `.atomic` podmienia plik nowym.
     nonisolated static func writeKeepingFile(_ data: Data, to url: URL) throws {
         var target = url.resolvingSymlinksInPath()
-        // Wiszące dowiązanie (cel usunięty, „Zachowaj w oknie” — D197): zapis tworzy plik docelowy, dowiązanie zostaje.
-        if (try? FileManager.default.attributesOfItem(atPath: target.path))?[.type] as? FileAttributeType == .typeSymbolicLink,
-           let dest = try? FileManager.default.destinationOfSymbolicLink(atPath: target.path) {
-            target = dest.hasPrefix("/") ? URL(fileURLWithPath: dest) : target.deletingLastPathComponent().appendingPathComponent(dest)
+        // Wiszące dowiązanie (cel usunięty, „Zachowaj w oknie” — D197), także łańcuch dowiązań: zapis tworzy plik docelowy
+        // na końcu łańcucha, dowiązania zostają (najwyżej 32 kroki — pętla dowiązań).
+        for _ in 0..<32 {
+            guard (try? FileManager.default.attributesOfItem(atPath: target.path))?[.type] as? FileAttributeType == .typeSymbolicLink,
+                  let dest = try? FileManager.default.destinationOfSymbolicLink(atPath: target.path) else { break }
+            target = (dest.hasPrefix("/") ? URL(fileURLWithPath: dest) : target.deletingLastPathComponent().appendingPathComponent(dest)).standardizedFileURL
         }
         let permissions = (try? FileManager.default.attributesOfItem(atPath: target.path))?[.posixPermissions] as? NSNumber
         try data.write(to: target, options: .atomic)

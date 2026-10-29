@@ -50597,6 +50597,34 @@
         }
       }
     },
+    "Okno „%@” jest właśnie zapisywane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window “%@” is being saved"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster „%@“ wird gerade gespeichert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana «%@» se está guardando"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно «%@» саме зберігається"
+          }
+        }
+      }
+    },
     "Okno „%@” wykonuje polecenie — najpierw przerwij wykonanie." : {
       "localizations" : {
         "en" : {

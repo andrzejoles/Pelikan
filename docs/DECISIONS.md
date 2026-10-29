@@ -2241,10 +2241,17 @@ edytor), Pelikan to wykrywa i pyta.
   (`UIServices.ask(_:message:buttons:escapeButton:defaultButton:destructiveButton:)`). Nieudane wczytanie (np. plik nie
   do odczytu, para o innym podziale) — także w trybie bez pytania — zapamiętuje stan dysku jako znany (plik nie do
   odczytu: data i rozmiar z atrybutów, skrót dotychczasowy), więc nie pyta przy każdej aktywacji, a błąd pokazuje
-  użytkownikowi i zapisuje w dzienniku. Zapis okna jest chroniony przed ponownym wejściem (drugi ⌘S w trakcie pytania
-  albo sprawdzania — pomijany), a sprawdzenie zmian na dysku przed zapisem powtarza się, gdy tekst albo pliki okna
-  zmieniły się w trakcie (najwyżej trzy razy); zapis idzie do bieżącego pliku okna. Wiszące dowiązanie zachowane
-  w oknie („Zachowaj w oknie”): zapis tworzy plik docelowy z `destinationOfSymbolicLink`, dowiązanie zostaje.
+  użytkownikowi i zapisuje w dzienniku. Zapis okna jest chroniony przed ponownym wejściem: drugi zapis w trakcie
+  pytania albo sprawdzania kończy się komunikatem „Okno „…” jest właśnie zapisywane”, a zamknięcie okna i wyjście
+  z aplikacji czekają na koniec zapisu (najwyżej minutę) zamiast przerywać się po cichu. Sprawdzenie zmian na dysku przed
+  zapisem powtarza się, gdy tekst albo pliki okna zmieniły się w trakcie (najwyżej trzy razy); zapis idzie do bieżącego
+  pliku okna, a plik odłączony w tym czasie (usunięty albo przeniesiony w Przeglądarce plików) — dalej jak okno bez
+  pliku (Zapisz jako), bez odtwarzania starej ścieżki. Wiszące dowiązanie zachowane w oknie („Zachowaj w oknie”), także
+  łańcuch dowiązań: zapis tworzy plik docelowy na końcu łańcucha (najwyżej 32 kroki), dowiązania zostają. Esc i ⌘.
+  wybierają bezpieczną odpowiedź. Sprawdzenie przy aktywacji ustawia blokadę przed pierwszym odczytem (dwa wyzwalacze
+  naraz — jedno pytanie), pomija pliki, których stan zmienił się w trakcie odczytu albo pytania (własny zapis,
+  wczytanie), przerywa się, gdy w międzyczasie zaczął się zapis albo okno zamknięto, i przed każdym pytaniem liczy
+  ponownie, czy okno ma niezapisane zmiany.
 - **Plik usunięty albo przeniesiony:** „Plik „…” nie istnieje na dysku” — **Zachowaj w oknie** (okno oznaczone jako
   zmienione, zapis utworzy plik ponownie; bez ponownego pytania) albo **Zamknij okno** (okno ze zmianami — zwykłe
   pytanie o zapis).

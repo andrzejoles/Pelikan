@@ -414,6 +414,8 @@ public final class Workspace {
     @ObservationIgnored public var externalChangePromptsEnabled = true
     @ObservationIgnored public internal(set) var savingDocuments = 0
     @ObservationIgnored var checkingExternalChanges = false
+    /// Punkt zaczepienia testów: wywoływany po odczycie plików przy wykrywaniu zmian (zapis w trakcie odczytu).
+    @ObservationIgnored var afterExternalRead: (() -> Void)?
     /// Okna edytowane programem zewnętrznym (PD-EDIT-028) i odzyskiwanie po awarii (PD-FILE-001).
     @ObservationIgnored public var externalEdits: [DocumentID: ExternalDocumentEdit] = [:]
     @ObservationIgnored public private(set) lazy var recovery = RecoveryStore(directory: dataDirectory?.appendingPathComponent("Recovery", isDirectory: true))
