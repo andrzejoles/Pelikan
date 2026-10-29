@@ -72,6 +72,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         // Kapsułki grup kart (D200): na pasku narzędzi; pasek ukryty, element usunięty albo pełny ekran — mała kapsułka
         // na początku paska kart.
         toolbarController?.ensureTabGroupsItem()
+        toolbarController?.ensureFormatOnEnterItem()
         toolbarController?.onTabGroupsChange = { [weak self] in self?.updateGroupPill() }
         // Pokazanie/ukrycie paska (Widok › Pokaż pasek narzędzi) — przez MainWindow.toggleToolbarShown (NSToolbar
         // nie gwarantuje KVO dla isVisible); zmiana rozmiaru okna — element może trafić do menu przepełnienia paska.

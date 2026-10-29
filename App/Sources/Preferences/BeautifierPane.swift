@@ -34,6 +34,11 @@ struct BeautifierPane: View {
                 alignment
                 spacing
                 letterCase
+                Section(L10n.tr("Podczas pisania")) {
+                    Toggle(L10n.tr("Formatuj linię przy Enter"), isOn: setting(workspace, \.beautifier.formatOnEnter))
+                    Text(L10n.tr("Enter w oknie SQL, programu i testu formatuje opuszczaną linię (wielkość liter, odstępy, wyrównanie klauzul i AND/OR) i wcina nową według tych reguł; tekst nie przechodzi między liniami. Istniejący kod formatuje się tylko na żądanie. Pierwsze ⌘Z cofa samo formatowanie. Przełącznik także na pasku narzędzi i w menu Edycja."))
+                        .font(.uiSecondary).foregroundStyle(.secondary)
+                }
                 Section(L10n.tr("Formatuj automatycznie")) {
                     Toggle(L10n.tr("Po otwarciu źródła z bazy"), isOn: setting(workspace, \.beautifier.afterLoad))
                     Toggle(L10n.tr("Przed kompilacją"), isOn: setting(workspace, \.beautifier.beforeCompile))

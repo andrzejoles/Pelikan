@@ -133,6 +133,8 @@ public struct BeautifierOptions: Sendable, Codable, Hashable {
     public var afterLoad = false
     public var beforeCompile = false
     public var beforeSave = false
+    /// Formatowanie podczas pisania (D205): po Enter opuszczana linia w swoich granicach i wcięcie nowej linii.
+    public var formatOnEnter = true
 
     public init() {}
 
@@ -144,7 +146,7 @@ public struct BeautifierOptions: Sendable, Codable, Hashable {
         keywordCase = v(.keywordCase, keywordCase); identifierCase = v(.identifierCase, identifierCase)
         listLayout = v(.listLayout, listLayout); commaBefore = v(.commaBefore, commaBefore); keepBlankLines = v(.keepBlankLines, keepBlankLines)
         specialCase = v(.specialCase, specialCase); afterLoad = v(.afterLoad, afterLoad); beforeCompile = v(.beforeCompile, beforeCompile)
-        beforeSave = v(.beforeSave, beforeSave)
+        beforeSave = v(.beforeSave, beforeSave); formatOnEnter = v(.formatOnEnter, formatOnEnter)
         parameterDeclarations = v(.parameterDeclarations, parameterDeclarations); callParameters = v(.callParameters, callParameters)
         insertLists = v(.insertLists, insertLists)
         maxBlankLines = v(.maxBlankLines, maxBlankLines); blankLineBetweenSubprograms = v(.blankLineBetweenSubprograms, blankLineBetweenSubprograms)
@@ -172,11 +174,11 @@ public struct BeautifierOptions: Sendable, Codable, Hashable {
     public static let currentDefaultsVersion = 1
     public var defaultsVersion = BeautifierOptions.currentDefaultsVersion
 
-    /// Ustawienia domyślne z zachowaniem formatowania automatycznego i — opcjonalnie — pisowni specjalnej (przycisk
+    /// Ustawienia domyślne z zachowaniem formatowania automatycznego (także przy Enter) i — opcjonalnie — pisowni specjalnej (przycisk
     /// „Przywróć domyślne”).
     public func restoringDefaults(keepSpecialCase: Bool = true) -> BeautifierOptions {
         var o = BeautifierOptions()
-        o.afterLoad = afterLoad; o.beforeCompile = beforeCompile; o.beforeSave = beforeSave
+        o.afterLoad = afterLoad; o.beforeCompile = beforeCompile; o.beforeSave = beforeSave; o.formatOnEnter = formatOnEnter
         if keepSpecialCase { o.specialCase = specialCase }
         return o
     }
@@ -377,6 +379,15 @@ struct Formatter {
         var multiline = false
         /// SQL: szerokość „rzeki” — najdłuższe (pierwsze) słowo klauzuli instrukcji, co najmniej 6 (SELECT).
         var river = 6
+        /// Indeks tokenu, przy którym ramka powstała (formatowanie linii przy Enter — kotwica wyrównania, D205).
+        var opener = -1
+    }
+
+    /// Nowa ramka (z tokenem, który ją otworzył).
+    mutating func push(_ frame: Frame) {
+        var f = frame
+        f.opener = i
+        frames.append(f)
     }
 
     /// Warunek logiczny w toku: miejsce, kolumna i długość słowa kluczowego, kolumna pierwszego warunku, czy cały
@@ -391,6 +402,38 @@ struct Formatter {
         var sqlClause = false
         var river = true
     }
+
+    /// Śledzenie przebiegu dla formatowania linii przy Enter (D205): miejsce każdego tokenu w wyniku, ramka w chwili
+    /// tokenów obserwowanych, stan po ostatnim tokenie opuszczanej linii i fragmenty kopiowane bez zmian.
+    struct Trace {
+        struct Placed {
+            var line: Int
+            var column: Int
+            var text: String
+            var startsLine: Bool
+        }
+        struct State {
+            var nextColumn: Int
+        }
+        var placed: [Placed?]
+        /// Tokeny, dla których zapisać token otwierający bieżącą ramkę i to, czy zaczynały instrukcję.
+        var watch: Set<Int> = []
+        /// Ramka w chwili tokenu obserwowanego: token otwierający, czy to instrukcja SQL, jej kolumna (przed przesunięciem
+        /// słowa otwierającego do rzeki).
+        struct FrameInfo {
+            var opener: Int
+            var isSQL: Bool
+            var column: Int
+        }
+        var frame: [Int: FrameInfo] = [:]
+        var statementStart: [Int: Bool] = [:]
+        /// Stan zapisywany po przetworzeniu tokenu `after` (przed następnym); przebieg kończy się po tokenie `stop`.
+        var after = -1
+        var stop = Int.max
+        var state: State?
+        var raw: [Range<Int>] = []
+    }
+    var trace: Trace?
 
     let source: NSString
     let options: BeautifierOptions
@@ -462,6 +505,7 @@ struct Formatter {
     /// w bieżącej, otwartej linii (`sameLine` i bez znaku nowej linii).
     @discardableResult
     mutating func copyRaw(from start: Int, to end: Int, sameLine: Bool = false) -> Bool {
+        trace?.raw.append(start..<max(start, end))
         var from = start
         if !sameLine {
             let lineStart = source.lineRange(for: NSRange(location: start, length: 0)).location
@@ -541,7 +585,30 @@ struct Formatter {
             pendingBreak = nil
         }
         if !cur.isEmpty, space { cur += " " }
+        if trace != nil { place(s, column: column, startsLine: cur.isEmpty) }
         cur += s
+    }
+
+    /// Zapis położenia tokenów tekstu `s` (jeden albo kilka tokenów, np. `END IF`, `UNION ALL`, `<<x>>`) — przy
+    /// bieżącym tokenie albo kończący się na nim (UNION ALL przesuwa indeks przed wstawieniem).
+    mutating func place(_ s: String, column col: Int, startsLine: Bool) {
+        guard i < toks.count else { return }
+        // Zwykle jeden token (bez leksowania).
+        if s.utf16.count == toks[i].end - toks[i].start, s.uppercased() == toks[i].upper {
+            trace?.placed[i] = Trace.Placed(line: lines.count, column: col, text: s, startsLine: startsLine)
+            return
+        }
+        let lexer = Lexer(s)
+        let pieces = lexer.tokenize().filter { $0.kind != .whitespace && $0.kind != .newline }
+        guard !pieces.isEmpty else { return }
+        func matches(_ base: Int) -> Bool {
+            guard base >= 0, base + pieces.count <= toks.count else { return false }
+            return pieces.indices.allSatisfy { lexer.string(pieces[$0]).uppercased() == toks[base + $0].upper }
+        }
+        guard let base = [i, i - pieces.count + 1].first(where: matches) else { return }
+        for (k, p) in pieces.enumerated() {
+            trace?.placed[base + k] = Trace.Placed(line: lines.count, column: col + p.start, text: lexer.string(p), startsLine: startsLine && k == 0)
+        }
     }
 
     func cased(_ t: Tok) -> String {
@@ -778,6 +845,7 @@ struct Formatter {
     mutating func step() {
         let t = toks[i]
         defer { i += 1 }
+        if trace != nil { observe() }
 
         // Polecenia SQL*Plus (kończy je koniec linii, tekst bywa dowolny, np. PROMPT): kopiowane bez zmian.
         if let end = sqlplusEnds[t.start] {
@@ -842,6 +910,7 @@ struct Formatter {
             var j = i
             while j < toks.count, !Self.isFormatMarker(toks[j], start: false) { j += 1 }
             let end = j < toks.count ? toks[j].end : source.length
+            trace?.raw.append(t.start..<end)
             let from = sameLine ? t.start : source.lineRange(for: NSRange(location: t.start, length: 0)).location
             var raw = source.substring(with: NSRange(location: from, length: end - from)).components(separatedBy: "\n")
             if sameLine { cur += (cur.isEmpty ? "" : " ") + raw.removeFirst() }
@@ -980,7 +1049,7 @@ struct Formatter {
                 let shift = max(0, frame.river - t.text.count)
                 if let p = pendingBreak { pendingBreak = p + shift } else { curIndentColumns += shift }
             }
-            frames.append(frame)
+            push(frame)
             put(cased(t), space: needsSpace(prev, t))
             if w == "SELECT", let n = peek(), ["DISTINCT", "UNIQUE", "ALL"].contains(n.upper) { i += 1; put(cased(n), space: true) }
             statementStart = false
@@ -1416,7 +1485,7 @@ struct Formatter {
             let (length, whens) = caseExtent(from: i)
             frame.multiline = whens > 1 || length > options.caseInlineLimit
         }
-        frames.append(frame)
+        push(frame)
     }
 
     /// Długość wyrażenia CASE … END w jednej linii i liczba jego gałęzi WHEN (bez zagnieżdżonych CASE).
@@ -1514,6 +1583,7 @@ struct Formatter {
         if options.commaBefore {
             cur.removeLast()
             lineBreak(max(0, col - 2))
+            if trace != nil { place(",", column: column, startsLine: true) }
             cur = ","
         } else {
             pendingBreak = col
@@ -1593,7 +1663,7 @@ struct Formatter {
             }
         }
         if options.spaceInsideParentheses, next?.kind != .rightParen, frame.indentedFrom == nil { frame.column += 1 }
-        frames.append(frame)
+        push(frame)
     }
 
     mutating func closeParen(_ t: Tok) {
@@ -1691,7 +1761,7 @@ struct Formatter {
                 return false
             }
             put(cased(t), space: true)
-            frames.append(Frame(kind: .declare, level: h))
+            push(Frame(kind: .declare, level: h))
             headerLevel = nil
             statementStart = true
             pendingBreak = indentColumns(h + 1)
@@ -1707,7 +1777,7 @@ struct Formatter {
                     put(cased(toks[i]), space: true)
                     unitKind = "COMPOUND"
                 }
-                frames.append(Frame(kind: .declare, level: h))
+                push(Frame(kind: .declare, level: h))
                 statementStart = true
                 pendingBreak = indentColumns(h + 1)
                 return true
@@ -1727,7 +1797,7 @@ struct Formatter {
         case "DECLARE" where statementStart:
             beginStatementLine(t)
             put(cased(t), space: false)
-            frames.append(Frame(kind: .declare, level: level))
+            push(Frame(kind: .declare, level: level))
             pendingBreak = indentColumns(level)
             return true
         case "BEGIN":
@@ -1737,7 +1807,7 @@ struct Formatter {
                 lineBreak(indentColumns(f.level))
             } else {
                 beginStatementLine(t)
-                frames.append(Frame(kind: .block, level: level))
+                push(Frame(kind: .block, level: level))
             }
             put(cased(t), space: false)
             statementStart = true
@@ -1777,7 +1847,7 @@ struct Formatter {
             return false
         case "IF" where statementStart:
             beginStatementLine(t)
-            frames.append(Frame(kind: .ifStmt, level: level))
+            push(Frame(kind: .ifStmt, level: level))
             put(cased(t), space: false)
             plCond = newCond(.ifCondition, keywordLength: 2, stops: ["THEN"])
             statementStart = false
@@ -1796,7 +1866,7 @@ struct Formatter {
                 lineBreak(indentColumns(f.level + 1))
                 put(cased(t), space: false)
                 statementStart = true
-                frames.append(Frame(kind: .branch, level: f.level + 1))
+                push(Frame(kind: .branch, level: f.level + 1))
                 pendingBreak = indentColumns(f.level + 2)
                 return true
             }
@@ -1812,7 +1882,7 @@ struct Formatter {
                 }
                 statementStart = true
                 // Treść gałęzi WHEN … THEN (wyjątki, instrukcja CASE): wszystkie instrukcje o poziom głębiej niż WHEN.
-                if f.kind != .ifStmt { frames.append(Frame(kind: .branch, level: f.level + 1)) }
+                if f.kind != .ifStmt { push(Frame(kind: .branch, level: f.level + 1)) }
                 pendingBreak = indentColumns(f.kind == .ifStmt ? f.level + 1 : f.level + 2)
                 return true
             }
@@ -1830,7 +1900,7 @@ struct Formatter {
             return false
         case "CASE" where statementStart:
             beginStatementLine(t)
-            frames.append(Frame(kind: .caseStmt, level: level))
+            push(Frame(kind: .caseStmt, level: level))
             put(cased(t), space: false)
             statementStart = false
             return true
@@ -1842,7 +1912,7 @@ struct Formatter {
             if prevUpper == "END" { return false }
             plCond = nil
             if !statementStart { put(cased(t), space: true) } else { beginStatementLine(t); put(cased(t), space: false) }
-            frames.append(Frame(kind: .loop, level: statementLevelForLoop()))
+            push(Frame(kind: .loop, level: statementLevelForLoop()))
             statementStart = true
             pendingBreak = indentColumns(frames.last!.level + 1)
             return true

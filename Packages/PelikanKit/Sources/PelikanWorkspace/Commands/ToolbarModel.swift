@@ -8,11 +8,13 @@ public enum ToolbarModel {
     public static let flexibleSpaceItem = "-"
     /// Kapsułki grup kart (D200) — na początku paska, w wolnym miejscu obok tytułu okna.
     public static let tabGroupsItem = "tabGroups"
+    /// Przełącznik formatowania przy Enter (D205) — u góry po prawej, przed logowaniem.
+    public static let formatOnEnterItem = "edit.formatOnEnter"
 
     /// Domyślny układ paska (identyfikatory komend, `-` — elastyczny odstęp, `quickAccess` — grupa szybkiego dostępu).
     public static let defaultItems: [String] = [
         "tabGroups", "file.new.sql", "file.open", "file.save", "-", "sql.execute", "sql.break", "session.commit", "session.rollback", "-",
-        "quickAccess", "-", "session.logon",
+        "quickAccess", "-", "edit.formatOnEnter", "session.logon",
     ]
 
     /// Komendy w palecie dostosowania paska (najczęstsze czynności wzorca).
@@ -21,7 +23,7 @@ public enum ToolbarModel {
         "file.open", "file.save", "file.saveAs", "file.print",
         "sql.execute", "sql.break", "sql.historyBack", "sql.historyForward",
         "session.commit", "session.rollback", "session.logon",
-        "edit.find", "edit.beautify", "edit.commentLine",
+        "edit.find", "edit.beautify", "edit.formatOnEnter", "edit.commentLine",
         "tools.explainPlan", "tools.findObjects", "tools.sessions",
         "debug.start", "debug.stepInto", "debug.stepOver", "debug.stepOut", "debug.stop", "debug.toggleBreakpoint",
         "view.commandPalette", "view.objectBrowser", "view.snippets",

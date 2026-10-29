@@ -1,4 +1,5 @@
 import AppKit
+import PelikanSQL
 import PelikanWorkspace
 
 /// Pasek narzędzi okna głównego (PD-UI-006): komendy z rejestru (`ToolbarModel`), dostosowanie standardowe macOS
@@ -10,6 +11,9 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
     private let workspace: Workspace
     private weak var toolbar: NSToolbar?
     private var token: ObservationToken?
+    private var formatToken: ObservationToken?
+    /// Przełączniki formatowania przy Enter (pasek i szybki dostęp) — stan odświeżany przy zmianie ustawienia.
+    private var formatButtons: [WeakButton] = []
 
     init(workspace: Workspace, toolbar: NSToolbar) {
         self.workspace = workspace
@@ -22,6 +26,12 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
             guard let self else { return }
             _ = self.workspace.settings.quickAccessCommands
             self.refreshQuickAccess()
+        }
+        formatToken = trackChanges { [weak self] in
+            guard let self else { return }
+            _ = self.workspace.settings.beautifier.formatOnEnter
+            _ = self.workspace.keymap
+            self.refreshFormatButtons()
         }
     }
 
@@ -72,6 +82,7 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
 
     private func commandItem(_ command: String, identifier: NSToolbarItem.Identifier) -> NSToolbarItem? {
         guard let c = workspace.registry.command(CommandID(rawValue: command)) else { return nil }
+        if command == ToolbarModel.formatOnEnterItem { return formatToggleItem(c.descriptor, identifier: identifier) }
         let item = NSToolbarItem(itemIdentifier: identifier)
         item.label = c.descriptor.title.replacingOccurrences(of: "…", with: "")
         item.paletteLabel = c.descriptor.title
@@ -80,6 +91,73 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
         item.target = self
         item.action = #selector(runCommand(_:))
         return item
+    }
+
+    /// Przełącznik formatowania przy Enter (D205): przycisk ze stanem (włączony — wciśnięty, wyłączony — przekreślona
+    /// różdżka), podpowiedź ze stanem i skrótem, dla VoiceOver wartość „włączone/wyłączone”.
+    private func formatToggleItem(_ d: CommandDescriptor, identifier: NSToolbarItem.Identifier) -> NSToolbarItem {
+        let item = NSToolbarItem(itemIdentifier: identifier)
+        item.label = L10n.tr("Formatowanie przy Enter")
+        item.paletteLabel = L10n.tr("Formatowanie przy Enter")
+        let button = NSButton(image: NSImage(), target: self, action: #selector(toggleFormatOnEnter(_:)))
+        button.setButtonType(.pushOnPushOff)
+        button.bezelStyle = .toolbar
+        button.imagePosition = .imageOnly
+        button.setAccessibilityLabel(L10n.tr("Formatowanie przy Enter"))
+        item.view = button
+        item.autovalidates = false
+        let form = NSMenuItem(title: L10n.tr("Formatowanie przy Enter"), action: #selector(toggleFormatOnEnter(_:)), keyEquivalent: "")
+        form.target = self
+        item.menuFormRepresentation = form
+        formatButtons.removeAll { $0.button == nil }
+        formatButtons.append(WeakButton(button: button, menuItem: form))
+        refreshFormatButtons()
+        return item
+    }
+
+    private func refreshFormatButtons() {
+        let on = workspace.settings.beautifier.formatOnEnter
+        let state = on ? L10n.tr("włączone") : L10n.tr("wyłączone")
+        var tip = L10n.tr("Formatowanie przy Enter: \(state)") + "\n"
+            + L10n.tr("Enter formatuje opuszczaną linię i wcina nową według reguł formatera; istniejący kod — tylko na żądanie (Formatuj kod).")
+        if let chord = workspace.keymap.chords(for: CommandID(rawValue: ToolbarModel.formatOnEnterItem)).first {
+            tip += "\n" + L10n.tr("Skrót: \(chord.displayString)")
+        }
+        let image = Self.formatImage(on: on)
+        for ref in formatButtons {
+            guard let b = ref.button else { continue }
+            b.state = on ? .on : .off
+            b.image = image
+            b.toolTip = tip
+            b.setAccessibilityValue(state)
+            ref.menuItem?.state = on ? .on : .off
+        }
+    }
+
+    /// Różdżka; wyłączone — przekreślona (symbol bez wariantu z kreską).
+    static func formatImage(on: Bool) -> NSImage {
+        let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
+        guard let base = NSImage(systemSymbolName: "wand.and.stars", accessibilityDescription: nil)?.withSymbolConfiguration(config) else { return NSImage() }
+        guard !on else { return base }
+        let size = base.size
+        let image = NSImage(size: size, flipped: false) { rect in
+            base.draw(in: rect)
+            let slash = NSBezierPath()
+            slash.lineWidth = 1.6
+            slash.lineCapStyle = .round
+            // Kreska w poprzek różdżki (ta biegnie od lewej u góry w prawo w dół).
+            slash.move(to: NSPoint(x: rect.minX + 1, y: rect.minY + 1))
+            slash.line(to: NSPoint(x: rect.maxX - 1, y: rect.maxY - 1))
+            NSColor.black.setStroke()
+            slash.stroke()
+            return true
+        }
+        image.isTemplate = true
+        return image
+    }
+
+    @objc private func toggleFormatOnEnter(_ sender: Any?) {
+        workspace.perform(CommandID(rawValue: ToolbarModel.formatOnEnterItem))
     }
 
     private func quickAccessItems() -> [NSToolbarItem] {
@@ -137,8 +215,26 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
         }
     }
 
+    /// Przełącznik formatowania przy Enter dodany raz do zapamiętanego układu paska (sprzed D205) — przed logowaniem
+    /// albo na końcu; usunięty potem przez użytkownika — zostaje usunięty.
+    func ensureFormatOnEnterItem() {
+        let key = "Pelikan.toolbar.formatOnEnterAdded"
+        let id = NSToolbarItem.Identifier(ToolbarModel.formatOnEnterItem)
+        guard let toolbar, !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        guard !toolbar.items.contains(where: { $0.itemIdentifier == id }) else { return }
+        let logon = toolbar.items.firstIndex { $0.itemIdentifier.rawValue == "session.logon" }
+        toolbar.insertItem(withItemIdentifier: id, at: logon ?? toolbar.items.count)
+    }
+
     /// Okno dostosowania paska (komenda `view.customizeToolbar`).
     func customize() {
         toolbar?.runCustomizationPalette(nil)
     }
+}
+
+/// Słabe odwołanie do przełącznika na pasku (element usunięty z paska znika z listy).
+private struct WeakButton {
+    weak var button: NSButton?
+    weak var menuItem: NSMenuItem?
 }

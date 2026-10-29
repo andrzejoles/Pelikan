@@ -27,7 +27,7 @@ public enum CommandSymbols {
         "cmd.executeLine": "text.line.first.and.arrowtriangle.forward", "cmd.pause": "pause.fill",
         // Szukaj, edycja
         "tools.findObjects": "doc.text.magnifyingglass", "edit.find": "magnifyingglass", "edit.searchBar": "text.magnifyingglass",
-        "project.find": "folder.badge.questionmark", "edit.beautify": "text.alignleft", "edit.uppercase": "textformat.size.larger",
+        "project.find": "folder.badge.questionmark", "edit.beautify": "text.alignleft", "edit.formatOnEnter": "wand.and.stars", "edit.uppercase": "textformat.size.larger",
         "edit.lowercase": "textformat.size.smaller", "edit.commentLine": "text.bubble", "edit.indent": "increase.indent",
         "edit.outdent": "decrease.indent", "edit.removeTrailingSpaces": "eraser", "edit.codeAssistant": "text.cursor",
         "edit.insertSnippet": "text.badge.plus", "edit.insertTemplate": "doc.text", "edit.pasteFromHistory": "list.clipboard",

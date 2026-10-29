@@ -574,6 +574,18 @@ public enum BuiltinCommands {
                 ctx.workspace.recordAgentEdit(ctx, doc, before: before)
                 return CommandResult(message: L10n.tr("Sformatowano"))
             },
+            // Ustawienie formatera (D205); stan pokazują menu (zaznaczenie) i przełącznik na pasku narzędzi.
+            Command(CommandDescriptor(id: "edit.formatOnEnter", title: L10n.tr("Formatuj linię przy Enter"), category: .edit,
+                                      parameters: [CommandParameter("enabled", .boolean, L10n.tr("Włącz (true) albo wyłącz (false); bez argumentu — przełącza"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Włącza lub wyłącza formatowanie podczas pisania: Enter w oknie SQL, programu i testu formatuje opuszczaną linię (wielkość liter, odstępy, wyrównanie klauzul) i wcina nową według reguł formatera; istniejący kod formatuje się tylko na żądanie."),
+                                      feature: "PD-BEAU-003")) { ctx in
+                let on = ctx.arguments.bool("enabled") ?? !ctx.workspace.settings.beautifier.formatOnEnter
+                ctx.workspace.settings.beautifier.formatOnEnter = on
+                // Makro odtwarza stan, a nie przełączenie (menu, pasek narzędzi i wstążka wywołują bez argumentu).
+                return CommandResult(message: on ? L10n.tr("Formatowanie przy Enter włączone") : L10n.tr("Formatowanie przy Enter wyłączone"),
+                                     value: .bool(on), resolvedArguments: CommandArguments(["enabled": .bool(on)]))
+            },
             Command(CommandDescriptor(id: "edit.codeAssistant", title: L10n.tr("Pokaż podpowiedzi kodu"), category: .edit,
                                       pd: ["ctrl+space"], mac: ["alt+escape", "ctrl+space"], agent: .none, effect: .none,
                                       summary: L10n.tr("Lista kolumn, elementów pakietu, pól rekordu, deklaracji i obiektów pasujących do pozycji kursora."),

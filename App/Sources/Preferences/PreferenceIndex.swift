@@ -129,6 +129,8 @@ enum PreferenceIndex {
         ("EditorPane", "Wstawiaj znak tabulacji zamiast spacji"),
         ("EditorPane", "Tekst"),
         ("EditorPane", "Tło"),
+        ("BeautifierPane", "Podczas pisania"),
+        ("BeautifierPane", "Formatuj linię przy Enter"),
         ("BeautifierPane", "Formatuj automatycznie"),
         ("BeautifierPane", "Po otwarciu źródła z bazy"),
         ("BeautifierPane", "Przed kompilacją"),

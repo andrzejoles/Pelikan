@@ -152,6 +152,8 @@ final class MenuBuilder: NSObject, NSMenuItemValidation, NSMenuDelegate {
         guard let raw = menuItem.representedObject as? String else { return true }
         if raw == "file.close", let key = NSApp.keyWindow, key.identifier != MainWindowController.windowID { return true }
         if raw == "file.close", ToolDockManager.shared.focusedDockedKey() != nil { return true }
+        // Przełącznik (np. Formatuj linię przy Enter) — zaznaczenie w menu według stanu.
+        if let on = workspace.toggleState(CommandID(rawValue: raw)) { menuItem.state = on ? .on : .off }
         return workspace.isEnabled(CommandID(rawValue: raw))
     }
 

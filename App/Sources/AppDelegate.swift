@@ -1351,6 +1351,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                     try? await Task.sleep(for: .seconds(s.delay ?? 1))
                     continue
                 }
+                // Pasek narzędzi pokazany na czas zrzutu bez zapisu stanu (ustawienia paska są wspólne z aplikacją Debug —
+                // ukryty pasek właściciela zostaje ukryty).
+                if s.command == "debug.showToolbar", let toolbar = mainWindow?.window?.toolbar {
+                    toolbar.autosavesConfiguration = false
+                    toolbar.isVisible = true
+                    log("ok debug.showToolbar")
+                    try? await Task.sleep(for: .seconds(s.delay ?? 1))
+                    continue
+                }
                 // Okno preferencji na wskazanym panelu (np. "BrowserPane").
                 if s.command == "debug.preferences" {
                     let pane = s.args?["pane"].flatMap { if case .string(let v) = $0 { v } else { nil } }

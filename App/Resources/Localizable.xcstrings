@@ -19769,6 +19769,62 @@
         }
       }
     },
+    "Enter formatuje opuszczaną linię i wcina nową według reguł formatera; istniejący kod — tylko na żądanie (Formatuj kod)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter formats the line you leave and indents the new one using the formatter rules; existing code is formatted only on request (Format code)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter formatiert die verlassene Zeile und rückt die neue nach den Regeln des Formatierers ein; vorhandener Code wird nur auf Anforderung formatiert (Code formatieren)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intro formatea la línea que abandona y sangra la nueva según las reglas del formateador; el código existente solo se formatea a petición (Formatear código)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter форматує рядок, який ви залишаєте, і робить відступ нового за правилами форматувальника; наявний код форматується лише на вимогу (Форматувати код)."
+          }
+        }
+      }
+    },
+    "Enter w oknie SQL, programu i testu formatuje opuszczaną linię (wielkość liter, odstępy, wyrównanie klauzul i AND/OR) i wcina nową według tych reguł; tekst nie przechodzi między liniami. Istniejący kod formatuje się tylko na żądanie. Pierwsze ⌘Z cofa samo formatowanie. Przełącznik także na pasku narzędzi i w menu Edycja." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In SQL, program and test windows, Enter formats the line you leave (letter case, spacing, alignment of clauses and AND/OR) and indents the new one using these rules; text never moves between lines. Existing code is formatted only on request. The first ⌘Z undoes just the formatting. The switch is also on the toolbar and in the Edit menu."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In SQL-, Programm- und Testfenstern formatiert Enter die verlassene Zeile (Groß-/Kleinschreibung, Abstände, Ausrichtung von Klauseln und AND/OR) und rückt die neue nach diesen Regeln ein; Text wandert nie zwischen Zeilen. Vorhandener Code wird nur auf Anforderung formatiert. Das erste ⌘Z macht nur die Formatierung rückgängig. Der Schalter befindet sich auch in der Symbolleiste und im Menü Bearbeiten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En las ventanas SQL, de programa y de prueba, Intro formatea la línea que abandona (mayúsculas y minúsculas, espacios, alineación de cláusulas y AND/OR) y sangra la nueva según estas reglas; el texto nunca pasa de una línea a otra. El código existente solo se formatea a petición. El primer ⌘Z deshace solo el formateo. El interruptor también está en la barra de herramientas y en el menú Edición."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У вікнах SQL, програми й тесту Enter форматує рядок, який ви залишаєте (регістр літер, пробіли, вирівнювання речень і AND/OR), і робить відступ нового за цими правилами; текст ніколи не переходить між рядками. Наявний код форматується лише на вимогу. Перше ⌘Z скасовує лише форматування. Перемикач є також на панелі інструментів і в меню Редагування."
+          }
+        }
+      }
+    },
     "Etykiety, listy, wstążka, karty okien, pasek stanu, okna narzędzi i Ustawień. Tekst pomocniczy jest o 2 pt mniejszy; menu i tytuły okien rysuje macOS." : {
       "localizations" : {
         "en" : {
@@ -21337,6 +21393,118 @@
         }
       }
     },
+    "Formatowanie przy Enter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format on Enter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatieren bei Enter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatear al pulsar Intro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Форматування за Enter"
+          }
+        }
+      }
+    },
+    "Formatowanie przy Enter wyłączone" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format on Enter turned off"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatieren bei Enter ausgeschaltet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formateo al pulsar Intro desactivado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Форматування за Enter вимкнено"
+          }
+        }
+      }
+    },
+    "Formatowanie przy Enter włączone" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format on Enter turned on"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatieren bei Enter eingeschaltet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formateo al pulsar Intro activado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Форматування за Enter увімкнено"
+          }
+        }
+      }
+    },
+    "Formatowanie przy Enter: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format on Enter: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatieren bei Enter: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatear al pulsar Intro: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Форматування за Enter: %@"
+          }
+        }
+      }
+    },
     "Formatuj" : {
       "localizations" : {
         "en" : {
@@ -21501,6 +21669,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "PL/SQL-Code formatieren"
+          }
+        }
+      }
+    },
+    "Formatuj linię przy Enter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format line on Enter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeile bei Enter formatieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatear la línea al pulsar Intro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Форматувати рядок за Enter"
+          }
+        }
+      }
+    },
+    "Formatuj przy Enter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format on Enter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Enter formatieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatear con Intro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Форматувати за Enter"
           }
         }
       }
@@ -59749,6 +59973,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Укажіть тип константи"
+          }
+        }
+      }
+    },
+    "Podczas pisania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "While typing"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim Tippen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al escribir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Під час введення"
           }
         }
       }
@@ -104749,6 +105001,34 @@
         }
       }
     },
+    "Włącz (true) albo wyłącz (false); bez argumentu — przełącza" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on (true) or off (false); without an argument it toggles"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einschalten (true) oder ausschalten (false); ohne Argument wird umgeschaltet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activar (true) o desactivar (false); sin argumento, alterna"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увімкнути (true) або вимкнути (false); без аргументу — перемикає"
+          }
+        }
+      }
+    },
     "Włącz REST dla obiektu…" : {
       "localizations" : {
         "en" : {
@@ -105165,6 +105445,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktiviert oder deaktiviert SQL Trace der Fenstersitzung."
+          }
+        }
+      }
+    },
+    "Włącza lub wyłącza formatowanie podczas pisania: Enter w oknie SQL, programu i testu formatuje opuszczaną linię (wielkość liter, odstępy, wyrównanie klauzul) i wcina nową według reguł formatera; istniejący kod formatuje się tylko na żądanie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turns formatting while typing on or off: in SQL, program and test windows, Enter formats the line you leave (letter case, spacing, clause alignment) and indents the new one using the formatter rules; existing code is formatted only on request."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schaltet das Formatieren beim Tippen ein oder aus: In SQL-, Programm- und Testfenstern formatiert Enter die verlassene Zeile (Groß-/Kleinschreibung, Abstände, Ausrichtung der Klauseln) und rückt die neue nach den Regeln des Formatierers ein; vorhandener Code wird nur auf Anforderung formatiert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa o desactiva el formateo al escribir: en las ventanas SQL, de programa y de prueba, Intro formatea la línea que abandona (mayúsculas y minúsculas, espacios, alineación de cláusulas) y sangra la nueva según las reglas del formateador; el código existente solo se formatea a petición."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вмикає або вимикає форматування під час введення: у вікнах SQL, програми й тесту Enter форматує рядок, який ви залишаєте (регістр літер, пробіли, вирівнювання речень), і робить відступ нового за правилами форматувальника; наявний код форматується лише на вимогу."
           }
         }
       }
@@ -126309,6 +126617,34 @@
         }
       }
     },
+    "wyłączone" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "off"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "desactivado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "вимкнено"
+          }
+        }
+      }
+    },
     "wyłączony" : {
       "localizations" : {
         "en" : {
@@ -126333,6 +126669,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "deaktiviert"
+          }
+        }
+      }
+    },
+    "włączone" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "on"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ein"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "activado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "увімкнено"
           }
         }
       }

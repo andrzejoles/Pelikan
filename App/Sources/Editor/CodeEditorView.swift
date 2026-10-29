@@ -93,6 +93,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         tokens.append(trackChanges { [weak self] in
             guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
             self.textView.indentMode = ws.settings.indentMode
+            self.configureEnterFormatting(ws)
             self.textView.rightMarginColumn = ws.settings.rightMarginColumn
             self.textView.showSpecialCharacters = ws.settings.showSpecialCharacters
             self.ruler.interval = ws.settings.lineNumberInterval
@@ -900,6 +901,27 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         return line.maxY > textView.visibleRect.minY && line.minY < textView.visibleRect.maxY
     }
 
+    // MARK: Formatowanie przy Enter (D205)
+
+    /// Pamięć podziału na polecenia — Enter dzieli tylko od ostatniego znanego początku polecenia.
+    private var statementStarts = StatementStartMemory()
+
+    /// Plan Entera z ustawień formatera (okno SQL, programu, testu; konsola i okna bez kodu — zwykły Enter).
+    private func configureEnterFormatting(_ ws: Workspace) {
+        let options = ws.settings.beautifier
+        let kind = document.kind
+        guard FormatOnEnter.applies(to: kind, options: options) else {
+            textView.enterPlan = nil
+            return
+        }
+        let tabWidth = max(1, ws.settings.tabSize)
+        textView.enterPlan = { [weak self] text, caret in
+            guard let self, self.document.additionalSelections.isEmpty else { return nil }
+            return FormatOnEnter.plan(text: text, caret: caret, kind: kind, options: options, indentMode: self.textView.indentMode,
+                                      unit: self.textView.indentUnit, tabWidth: tabWidth, memory: &self.statementStarts)
+        }
+    }
+
     // MARK: Podświetlanie przyrostowe (po każdej edycji magazynu tekstu)
 
     /// Zmiana obejmująca granicę kart wykryta przed przetworzeniem edycji (karty liczone potem od razu).
@@ -930,6 +952,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         guard let storage = note.object as? NSTextStorage, storage.editedMask.contains(.editedCharacters) else { return }
         textEdits &+= 1
         let editedRange = storage.editedRange
+        statementStarts.invalidate(from: editedRange.location)
         let delta = storage.changeInLength
         // Obszary zwijania przesuwane od razu, tak jak klucze zwinięć w modelu (`Document.text`) — do przeliczenia
         // w tle `applyFolds` dopasowuje przesunięte klucze do przesuniętych obszarów, bez rozwijania i zwijania.
@@ -1491,7 +1514,15 @@ final class CodeTextView: NSTextView {
         return SmartIndent.backspaceUnindent(lineBeforeCaret: ns.substring(with: NSRange(location: lineStart, length: caret - lineStart)), unit: indentUnit)
     }
 
+    /// Formatowanie przy Enter (D205): plan Entera w miejscu kursora albo nil (wyłączone, konsola, okno bez kodu,
+    /// linia w literale…) — wtedy zwykły Enter z wcięciem wg trybu. Ustawia edytor kodu.
+    var enterPlan: ((String, Int) -> FormatOnEnter.Plan?)?
+
     override func insertNewline(_ sender: Any?) {
+        if selectedRanges.count == 1, selectedRange().length == 0, let plan = enterPlan?(string, selectedRange().location) {
+            insertFormattedNewline(plan, sender)
+            return
+        }
         // Wcięcie nowej linii wg trybu (UG 23.12 None / Automatic / Smart, PD-EDIT-004).
         var ns = string as NSString
         let caret = selectedRange().location
@@ -1522,6 +1553,28 @@ final class CodeTextView: NSTextView {
         let indent = SmartIndent.newlineIndent(lineBeforeCaret: before, mode: indentMode, unit: indentUnit)
         super.insertNewline(sender)
         if !indent.isEmpty { insertText(indent, replacementRange: selectedRange()) }
+    }
+
+    /// Enter z formatowaniem: najpierw zwykły Enter z wcięciem automatycznym (pisanie), potem formatowanie opuszczanej
+    /// linii i wcięcia nowej w osobnej grupie cofania — pierwsze ⌘Z cofa formatowanie, drugie Enter.
+    private func insertFormattedNewline(_ plan: FormatOnEnter.Plan, _ sender: Any?) {
+        breakUndoCoalescing()
+        super.insertNewline(sender)
+        let indent = String(plan.enter.text.dropFirst())
+        if !indent.isEmpty { insertText(indent, replacementRange: selectedRange()) }
+        guard let format = plan.format, format.range.upperBound <= textLength else { return }
+        breakUndoCoalescing()
+        // Grupa cofania zdarzenia (Enter) zamknięta, formatowanie w nowej — zamyka ją menedżer cofania na końcu zdarzenia.
+        if let undo = undoManager, undo.groupsByEvent, undo.groupingLevel == 1 {
+            undo.endUndoGrouping()
+            undo.beginUndoGrouping()
+        }
+        let range = NSRange(location: format.range.lowerBound, length: format.range.count)
+        guard shouldChangeText(in: range, replacementString: format.text) else { return }
+        replaceCharacters(in: range, with: format.text)
+        didChangeText()
+        setSelectedRange(NSRange(location: min(plan.caret, textLength), length: 0))
+        breakUndoCoalescing()
     }
 
     override func insertTab(_ sender: Any?) {

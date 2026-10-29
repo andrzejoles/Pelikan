@@ -819,6 +819,14 @@ public final class Workspace {
         return c.validate?(self) ?? true
     }
 
+    /// Stan komendy-przełącznika (zaznaczenie w menu, przełącznik na pasku narzędzi); nil — komenda bez stanu.
+    public func toggleState(_ id: CommandID) -> Bool? {
+        switch id.rawValue {
+        case "edit.formatOnEnter": settings.beautifier.formatOnEnter
+        default: nil
+        }
+    }
+
     /// Jedyny punkt wywołania komendy — menu, skróty, paleta, linia poleceń i agent.
     @discardableResult
     public func invoke(_ id: CommandID, _ arguments: CommandArguments = .empty, invoker: Invoker = .user) async throws -> CommandResult {
