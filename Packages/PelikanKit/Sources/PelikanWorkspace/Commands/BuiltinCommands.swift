@@ -53,14 +53,42 @@ public enum BuiltinCommands {
 
     /// Zapis (z oknem wyboru nazwy dla nowego okna albo „Zapisz jako”). false — anulowano.
     @MainActor
-    static func saveDocument(_ doc: Document, in ws: Workspace, askForName: Bool) async throws -> Bool {
+    static func saveDocument(_ doc: Document, in ws: Workspace, askForName: Bool, singleFile: Bool = false) async throws -> Bool {
+        // Okno pary (D194): Zapisz — każda jednostka do swojego pliku.
+        if !askForName, !singleFile, let url = doc.fileURL, !doc.unitFiles.isEmpty {
+            try ws.save(doc, to: url)
+            return true
+        }
+        // Okno ze specyfikacją i ciałem pakietu albo typu — nowe okno albo Zapisz jako: para plików `nazwa.pks` +
+        // `nazwa.pkb` (rozszerzenia z Preferencji), bez „/”. Okno z innym plikiem (np. .pck) Zapisz zapisuje jak dotąd.
+        if !singleFile, askForName || doc.fileURL == nil, let type = ws.specBodyPairType(doc), let ext = ws.settings.specBodyExtensions.pair(for: type) {
+            let (base, _) = suggestedFileName(doc)
+            guard let chosen = await ws.ui?.chooseSaveURL(suggestedName: base, fileExtension: ext.spec),
+                  let urls = ws.specBodyURLs(for: chosen, type: type) else { return false }
+            // Okno zapisu potwierdziło zastąpienie pliku specyfikacji; plik ciała, który już istnieje, a nie należy do okna — pytanie.
+            if FileManager.default.fileExists(atPath: urls.body.path), !doc.fileURLs.contains(urls.body) {
+                let choice = await ws.ui?.ask(L10n.tr("Plik „\(urls.body.lastPathComponent)” już istnieje. Zastąpić go?"),
+                                              message: L10n.tr("Ciało jednostki zostanie zapisane w tym pliku."),
+                                              buttons: [L10n.tr("Zastąp"), L10n.tr("Anuluj")])
+                guard choice == 0 else { return false }
+            }
+            try ws.saveUnitFiles(doc, spec: urls.spec, body: urls.body)
+            return true
+        }
         var url = doc.fileURL
         if askForName || url == nil {
-            let (base, ext) = suggestedFileName(doc)
+            var (base, ext) = suggestedFileName(doc)
+            // Zapisz jako jeden plik… okna pary: rozszerzenie pliku z wieloma jednostkami (UG 23.29).
+            if singleFile, let u = ProgramCompiler.units(in: doc.text).first, !doc.unitFiles.isEmpty { ext = ObjectCommands.fileExtension(u.type) }
             guard let chosen = await ws.ui?.chooseSaveURL(suggestedName: base, fileExtension: ext) else { return false }
             url = chosen
         }
-        try ws.save(doc, to: url!)
+        let unitFiles = doc.unitFiles
+        if singleFile { doc.unitFiles = [] }
+        do { try ws.save(doc, to: url!) } catch {
+            doc.unitFiles = unitFiles
+            throw error
+        }
         return true
     }
 
@@ -169,6 +197,15 @@ public enum BuiltinCommands {
                 _ = try await saveDocument(doc, in: ctx.workspace, askForName: true)
                 return .ok
             },
+            Command(CommandDescriptor(id: "file.saveAsSingleFile", title: L10n.tr("Zapisz jako jeden plik…"), category: .file,
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Zapisuje okno programu ze specyfikacją i ciałem w jednym pliku (np. .pck) zamiast w parze plików specyfikacji i ciała."),
+                                      feature: "PD-PROG-007"),
+                    validate: { $0.activeDocument?.kind == .program }) { ctx in
+                guard let doc = ctx.workspace.activeDocument, doc.kind == .program else { return .ok }
+                let ok = try await saveDocument(doc, in: ctx.workspace, askForName: true, singleFile: true)
+                return CommandResult(message: ok ? L10n.tr("Zapisano \(doc.title)") : nil)
+            },
             Command(CommandDescriptor(id: "file.encoding", title: L10n.tr("Kodowanie pliku…"), category: .file,
                                       parameters: [CommandParameter("encoding", .string, L10n.tr("Kodowanie (bez argumentu — wybór z listy)"), allowed: TextFileCodec.encodingNames)],
                                       agent: .none, effect: .modifiesEditor,
@@ -186,6 +223,12 @@ public enum BuiltinCommands {
                 let resolved: [String: JSONValue] = ctx.arguments.string("encoding") == nil ? ["encoding": .string(name)] : [:]
                 doc.fileFormat.encoding = enc
                 doc.fileFormat.hasBOM = false
+                // Okno pary (D194): oba pliki w nowym kodowaniu — zapisywane przy następnym Zapisz.
+                for i in doc.unitFiles.indices {
+                    doc.unitFiles[i].format.encoding = enc
+                    doc.unitFiles[i].format.hasBOM = false
+                    doc.unitFiles[i].savedText = ""
+                }
                 doc.isModified = true
                 if let bad = TextFileCodec.firstUnencodable(doc.text, encoding: enc) {
                     return CommandResult(message: L10n.tr("Kodowanie \(name); znak „\(bad.character)” (linia \(bad.line), kolumna \(bad.column)) trzeba zmienić przed zapisem"))

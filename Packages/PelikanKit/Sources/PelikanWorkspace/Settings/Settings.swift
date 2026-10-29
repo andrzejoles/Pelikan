@@ -163,6 +163,11 @@ public struct Settings: Sendable, Codable, Hashable {
     /// Dodatkowe rozszerzenia plików otwieranych jako okno programu albo testu (PD-PREF-006).
     public var programExtensions: [String] = []
     public var testExtensions: [String] = []
+    /// Rozszerzenia plików specyfikacji i ciała pakietu i typu (D194): okno programu z oboma jednostkami zapisuje każdą
+    /// do jej pliku, a eksport „plik na obiekt” tworzy pary plików.
+    public var specBodyExtensions = SpecBodyExtensions()
+    /// Otwarcie pliku specyfikacji albo ciała otwiera parę z tego samego katalogu w jednym oknie (D194).
+    public var openSpecBodyPair = true
     public var tabSize = 2
     /// Wielkość liter słów kluczowych przy pisaniu (UG 23.12 Keyword case).
     public var keywordCase: KeywordCase = .unchanged
@@ -413,6 +418,8 @@ public struct Settings: Sendable, Codable, Hashable {
         startDirectories = v(.startDirectories, startDirectories)
         programExtensions = v(.programExtensions, programExtensions)
         testExtensions = v(.testExtensions, testExtensions)
+        specBodyExtensions = v(.specBodyExtensions, specBodyExtensions)
+        openSpecBodyPair = v(.openSpecBodyPair, openSpecBodyPair)
         tabSize = v(.tabSize, tabSize)
         useTabCharacter = v(.useTabCharacter, useTabCharacter)
         shortcutProfile = v(.shortcutProfile, shortcutProfile)

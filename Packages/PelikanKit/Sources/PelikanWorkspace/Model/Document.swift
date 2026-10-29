@@ -65,6 +65,9 @@ public final class Document: Identifiable {
     public var fileURL: URL?
     /// Kodowanie i zakończenia linii pliku (zapis w tym samym formacie, w jakim plik otwarto).
     public var fileFormat = TextFileFormat()
+    /// Okno programu powiązane z plikami specyfikacji i ciała (D194): każda jednostka zapisywana do swojego pliku;
+    /// `fileURL` to wtedy plik specyfikacji (klucz stanu okna, historii lokalnej, workseta). Puste — jeden plik okna.
+    public var unitFiles: [UnitFile] = []
     public var text: String {
         didSet {
             if text != oldValue {
@@ -274,6 +277,11 @@ public final class Document: Identifiable {
 
     public var title: String {
         if let customTitle { return customTitle }
+        if unitFiles.count == 2, let s = unitFiles.first(where: { $0.part == .spec }), let b = unitFiles.first(where: { $0.part == .body }) {
+            // Para plików: „emp_api.pks + .pkb” (ta sama nazwa), inaczej obie nazwy.
+            let same = s.url.deletingPathExtension().lastPathComponent == b.url.deletingPathExtension().lastPathComponent
+            return s.url.lastPathComponent + " + " + (same ? "." + b.url.pathExtension : b.url.lastPathComponent)
+        }
         if let fileURL { return fileURL.lastPathComponent }
         return ordinal > 1 ? L10n.tr("Nowe \(ordinal)") : L10n.tr("Nowe")
     }

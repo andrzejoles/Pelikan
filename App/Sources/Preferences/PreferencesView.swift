@@ -217,6 +217,16 @@ struct GeneralPane: View {
                 TextField(L10n.tr("Dodatkowe rozszerzenia testów"), text: Binding(get: { workspace.settings.testExtensions.joined(separator: ", ") },
                     set: { workspace.settings.testExtensions = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.filter { !$0.isEmpty } }))
             }
+            // D194: specyfikacja i ciało w osobnych plikach (zapis okna programu, otwieranie pary, eksport obiektów).
+            Section(L10n.tr("Specyfikacja i ciało w osobnych plikach")) {
+                Toggle(L10n.tr("Otwieraj parę specyfikacja/ciało w jednym oknie"), isOn: setting(workspace, \.openSpecBodyPair))
+                TextField(L10n.tr("Rozszerzenie specyfikacji pakietu"), text: setting(workspace, \.specBodyExtensions.packageSpec), prompt: Text("pks"))
+                TextField(L10n.tr("Rozszerzenie ciała pakietu"), text: setting(workspace, \.specBodyExtensions.packageBody), prompt: Text("pkb"))
+                TextField(L10n.tr("Rozszerzenie specyfikacji typu"), text: setting(workspace, \.specBodyExtensions.typeSpec), prompt: Text("tps"))
+                TextField(L10n.tr("Rozszerzenie ciała typu"), text: setting(workspace, \.specBodyExtensions.typeBody), prompt: Text("tpb"))
+                Text(L10n.tr("Okno programu ze specyfikacją i ciałem zapisuje każdą jednostkę do jej pliku, bez „/”; Zapisz jako tworzy parę plików. Eksport obiektów (plik na obiekt) używa tych rozszerzeń."))
+                    .font(.uiSecondary).foregroundStyle(.secondary)
+            }
             Section(L10n.tr("Pliki")) {
                 Toggle(L10n.tr("Przywracaj okna po ponownym uruchomieniu (także niezapisane)"), isOn: setting(workspace, \.worksetAutosave))
                 Toggle(L10n.tr("Autozapis układu okna"), isOn: setting(workspace, \.autosaveLayout))

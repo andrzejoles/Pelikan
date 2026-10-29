@@ -10081,6 +10081,34 @@
         }
       }
     },
+    "Ciało jednostki zostanie zapisane w tym pliku." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The unit body will be saved to this file."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Body der Einheit wird in dieser Datei gespeichert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El cuerpo de la unidad se guardará en este archivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тіло одиниці буде збережено в цьому файлі."
+          }
+        }
+      }
+    },
     "Ciemny" : {
       "localizations" : {
         "en" : {
@@ -33965,6 +33993,34 @@
         }
       }
     },
+    "Kończ jednostki znakiem /" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End units with /"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheiten mit / abschließen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminar las unidades con /"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершувати одиниці знаком /"
+          }
+        }
+      }
+    },
     "Kończy proces CLI, unieważnia token sesji, wycofuje niezatwierdzone zmiany agenta i zamyka jego sesje bazy." : {
       "localizations" : {
         "en" : {
@@ -49645,6 +49701,34 @@
         }
       }
     },
+    "Okno jest powiązane z plikami %@ i %@, ale nie zawiera dokładnie specyfikacji i ciała jednego pakietu albo typu — zapis zablokowany. Przywróć jednostki albo zapisz okno w innym pliku (Zapisz jako jeden plik…)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window is linked to the files %@ and %@ but does not contain exactly the specification and body of one package or type — saving is blocked. Restore the units or save the window to another file (Save as single file…)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster ist mit den Dateien %@ und %@ verknüpft, enthält aber nicht genau die Spezifikation und den Body eines Pakets oder Typs — Speichern blockiert. Stellen Sie die Einheiten wieder her oder speichern Sie das Fenster in einer anderen Datei (Als eine Datei speichern …)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana está vinculada a los archivos %@ y %@, pero no contiene exactamente la especificación y el cuerpo de un paquete o tipo: guardado bloqueado. Restaure las unidades o guarde la ventana en otro archivo (Guardar como un solo archivo…)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно пов'язане з файлами %@ і %@, але не містить рівно специфікацію й тіло одного пакета або типу — збереження заблоковано. Відновіть одиниці або збережіть вікно в іншому файлі (Зберегти як один файл…)."
+          }
+        }
+      }
+    },
     "Okno jest tylko do odczytu" : {
       "localizations" : {
         "en" : {
@@ -50005,6 +50089,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вікно програми має лише одну одиницю"
+          }
+        }
+      }
+    },
+    "Okno programu ze specyfikacją i ciałem zapisuje każdą jednostkę do jej pliku, bez „/”; Zapisz jako tworzy parę plików. Eksport obiektów (plik na obiekt) używa tych rozszerzeń." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A program window with a specification and body saves each unit to its own file, without “/”; Save as creates a pair of files. Export of objects (file per object) uses these extensions."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Programmfenster mit Spezifikation und Body speichert jede Einheit in ihrer eigenen Datei, ohne „/“; Speichern unter erstellt ein Dateipaar. Der Objektexport (Datei pro Objekt) verwendet diese Erweiterungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una ventana de programa con especificación y cuerpo guarda cada unidad en su propio archivo, sin «/»; Guardar como crea un par de archivos. La exportación de objetos (un archivo por objeto) usa estas extensiones."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно програми зі специфікацією й тілом зберігає кожну одиницю в її власний файл, без «/»; «Зберегти як» створює пару файлів. Експорт об'єктів (файл на об'єкт) використовує ці розширення."
           }
         }
       }
@@ -53197,6 +53309,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffnet die Programmquelle (oder DDL eines anderen Objekts) in einem neuen Fenster, ohne Kompilierung; Rückgängigmachen der Agentensitzung schließt das Fenster."
+          }
+        }
+      }
+    },
+    "Otwieraj parę specyfikacja/ciało w jednym oknie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the specification/body pair in one window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paar aus Spezifikation und Body in einem Fenster öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir el par especificación/cuerpo en una sola ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкривати пару специфікація/тіло в одному вікні"
           }
         }
       }
@@ -56837,6 +56977,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Файл «%@» пошкоджений або створений новішою версією застосунку — зміни до нього не зберігатимуться."
+          }
+        }
+      }
+    },
+    "Plik „%@” już istnieje. Zastąpić go?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file “%@” already exists. Replace it?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei „%@“ existiert bereits. Ersetzen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo «%@» ya existe. ¿Reemplazarlo?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл «%@» уже існує. Замінити його?"
           }
         }
       }
@@ -71709,6 +71877,118 @@
         }
       }
     },
+    "Rozszerzenie ciała pakietu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Package body extension"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterung für Paket-Body"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensión del cuerpo del paquete"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розширення тіла пакета"
+          }
+        }
+      }
+    },
+    "Rozszerzenie ciała typu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type body extension"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterung für Typ-Body"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensión del cuerpo del tipo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розширення тіла типу"
+          }
+        }
+      }
+    },
+    "Rozszerzenie specyfikacji pakietu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Package specification extension"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterung für Paketspezifikation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensión de la especificación del paquete"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розширення специфікації пакета"
+          }
+        }
+      }
+    },
+    "Rozszerzenie specyfikacji typu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type specification extension"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterung für Typspezifikation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensión de la especificación del tipo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розширення специфікації типу"
+          }
+        }
+      }
+    },
     "Rozwija wszystkie zwinięte bloki." : {
       "localizations" : {
         "en" : {
@@ -76465,6 +76745,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spezifikation und Body in einer Datei"
+          }
+        }
+      }
+    },
+    "Specyfikacja i ciało w osobnych plikach" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Specification and body in separate files"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spezifikation und Body in getrennten Dateien"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Especificación y cuerpo en archivos separados"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Специфікація й тіло в окремих файлах"
           }
         }
       }
@@ -106681,6 +106989,34 @@
         }
       }
     },
+    "Zapisuje okno programu ze specyfikacją i ciałem w jednym pliku (np. .pck) zamiast w parze plików specyfikacji i ciała." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saves a program window with a specification and body to a single file (e.g. .pck) instead of a pair of specification and body files."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichert ein Programmfenster mit Spezifikation und Body in einer einzigen Datei (z. B. .pck) statt in einem Paar aus Spezifikations- und Body-Datei."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda una ventana de programa con especificación y cuerpo en un solo archivo (p. ej. .pck) en lugar de un par de archivos de especificación y cuerpo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає вікно програми зі специфікацією й тілом в одному файлі (напр. .pck) замість пари файлів специфікації й тіла."
+          }
+        }
+      }
+    },
     "Zapisuje okno testu jako szablon testu standardowego; %%CALL%% w bloku oznacza miejsce wywołania programu." : {
       "localizations" : {
         "en" : {
@@ -107293,6 +107629,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Зберегти як SQL*Plus"
+          }
+        }
+      }
+    },
+    "Zapisz jako jeden plik…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save as single file…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als eine Datei speichern …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar como un solo archivo…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти як один файл…"
           }
         }
       }
@@ -108581,6 +108945,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Im Raster anwenden"
+          }
+        }
+      }
+    },
+    "Zastąp" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reemplazar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінити"
           }
         }
       }

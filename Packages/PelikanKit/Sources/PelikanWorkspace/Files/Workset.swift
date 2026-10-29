@@ -28,20 +28,54 @@ public struct WorksetDocument: Sendable, Codable, Hashable {
     public var encoding: UInt?
     public var bom: Bool?
     public var lineEnding: String?
+    /// Okno programu powiązane z plikami specyfikacji i ciała (D194) — `filePath` to plik specyfikacji.
+    public var unitFiles: [WorksetUnitFile]?
 
     /// Format zapisany w worksecie (nil — starszy workset).
     var fileFormat: TextFileFormat? {
         guard let encoding else { return nil }
-        var f = TextFileFormat()
-        f.encoding = String.Encoding(rawValue: encoding)
-        f.hasBOM = bom ?? false
-        f.lineEnding = lineEnding.flatMap(TextFileFormat.LineEnding.init(rawValue:)) ?? .lf
-        return f
+        return TextFileFormat(encodingRaw: encoding, bom: bom, lineEnding: lineEnding)
     }
 
     /// Puste okno edytora bez pliku (np. okno SQL otwarte przy starcie) — nie warto go dopisywać do cudzego workseta.
     var isBlank: Bool {
         filePath == nil && consoleConnectionID == nil && !modified && (text ?? "").isEmpty && [.sql, .program, .command].contains(kind)
+    }
+}
+
+/// Plik jednostki okna pary w worksecie (D194): ścieżka, część, format i zakończenie treści pliku.
+public struct WorksetUnitFile: Sendable, Codable, Hashable {
+    public var part: UnitFile.Part
+    public var path: String
+    public var encoding: UInt
+    public var bom: Bool
+    public var lineEnding: String
+    public var ending: String
+
+    init(_ f: UnitFile) {
+        part = f.part
+        path = f.url.path
+        encoding = f.format.encoding.rawValue
+        bom = f.format.hasBOM
+        lineEnding = f.format.lineEnding.rawValue
+        ending = f.ending
+    }
+
+    /// Plik jednostki; treść zapisana — z pliku na dysku (zapis pomija niezmienione pliki), brak pliku — pusta.
+    var unitFile: UnitFile {
+        let url = URL(fileURLWithPath: path)
+        let format = TextFileFormat(encodingRaw: encoding, bom: bom, lineEnding: lineEnding)
+        let saved = (try? Data(contentsOf: url)).map { TextFileCodec.decode($0).text } ?? ""
+        return UnitFile(part: part, url: url, format: format, ending: ending, savedText: saved)
+    }
+}
+
+extension TextFileFormat {
+    init(encodingRaw: UInt, bom: Bool?, lineEnding: String?) {
+        self.init()
+        encoding = String.Encoding(rawValue: encodingRaw)
+        hasBOM = bom ?? false
+        self.lineEnding = lineEnding.flatMap(LineEnding.init(rawValue:)) ?? .lf
     }
 }
 
@@ -272,6 +306,7 @@ extension Workspace {
                     e.lineEnding = d.fileFormat.lineEnding.rawValue
                 }
             }
+            if !d.unitFiles.isEmpty { e.unitFiles = d.unitFiles.map(WorksetUnitFile.init) }
             if let c = d.consoleConnectionID {
                 e.consoleConnectionID = c
                 e.text = nil
@@ -341,7 +376,12 @@ extension Workspace {
                 if let x = e.diagram { doc.diagram = x }
                 if let x = e.notebook { doc.notebook = x }
                 if let x = e.report { doc.report = x }
+                if let files = e.unitFiles, e.kind == .program { doc.unitFiles = files.map(\.unitFile) }
                 doc.isModified = e.modified
+            } else if let files = e.unitFiles, let spec = files.first(where: { $0.part == .spec }), let body = files.first(where: { $0.part == .body }),
+                      let d = try? openUnitFiles(spec: URL(fileURLWithPath: spec.path), body: URL(fileURLWithPath: body.path), show: .spec) {
+                // Okno pary bez zmian (D194): oba pliki czytane ponownie, niezależnie od preferencji otwierania pary.
+                doc = d
             } else if let url, FileManager.default.fileExists(atPath: url.path), let d = try? openFile(url, as: e.kind) {
                 doc = d
             } else {

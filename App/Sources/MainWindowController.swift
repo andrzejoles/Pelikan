@@ -617,7 +617,7 @@ final class DocumentAreaViewController: NSViewController {
             statusLabel.stringValue = [doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil, workspace.coverageStatus(in: doc),
                                        doc.isExecuting ? nil : doc.resultSummary,
                                        doc.isExecuting ? L10n.tr("Wykonywanie…") : doc.statusText?.components(separatedBy: "\n").first].compactMap { $0 }.joined(separator: "   ·   ")
-            refreshGit(file: doc.fileURL, modified: doc.isModified)
+            refreshGit(file: doc.activeFileURL, modified: doc.isModified)
         } else {
             installedID = nil
             refreshGit(file: nil, modified: false)

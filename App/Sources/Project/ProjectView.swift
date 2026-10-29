@@ -185,7 +185,7 @@ struct ProjectView: View {
             switch item.kind {
             case .file:
                 if let f = ProjectEngine.url(of: item, projectURL: url), let d = try? workspace.openFile(f), line > 0 {
-                    let off = ProgramCompiler.offset(line: line, column: 1, in: d.text)
+                    let off = d.offset(line: line, inFile: f)
                     d.selectedRange = off..<off
                 }
             case .object:

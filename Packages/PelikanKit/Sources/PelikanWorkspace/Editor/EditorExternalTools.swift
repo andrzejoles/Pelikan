@@ -206,7 +206,8 @@ extension Workspace {
     /// w `External/` katalogu danych; zapamiętuje datę modyfikacji do wykrycia zmian po powrocie.
     public func prepareExternalEdit(_ doc: Document) throws -> URL {
         let edit: ExternalDocumentEdit
-        if let url = doc.fileURL {
+        // Okno pary plików (D194) — jak okno bez pliku: program zewnętrzny edytuje cały tekst okna w pliku tymczasowym.
+        if let url = doc.fileURL, doc.unitFiles.isEmpty {
             if doc.isModified { try save(doc, to: url) }
             edit = ExternalDocumentEdit(url: url, modified: Self.modificationDate(url), temporary: false)
         } else {
