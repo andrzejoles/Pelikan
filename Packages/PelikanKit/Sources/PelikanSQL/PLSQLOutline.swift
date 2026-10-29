@@ -150,7 +150,9 @@ public enum PLSQLOutline {
                     if e.word == stop { i += e.count }
                     break
                 }
-                if t[i].kind == .semicolon || directiveStops.contains(t[i].upper) { break }
+                // Słowo sklejone z `$` to flaga zapytania (`$$begin`, `$$loop`), nie koniec warunku.
+                let inquiry = i > 0 && t[i - 1].upper == "$" && t[i - 1].end == t[i].start
+                if t[i].kind == .semicolon || (!inquiry && directiveStops.contains(t[i].upper)) { break }
                 i += 1
             }
         }

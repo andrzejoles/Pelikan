@@ -325,6 +325,9 @@ struct PLSQLOutlineControlFlowTests {
         #expect(Self.dump(n1) == ["procedure p", "  ifStatement IF a", "  loop FOR i in 1..2", "procedure q"])
         let typo = "begin\n  $IF $$x IS NULL $THN null; $END\n  while b loop null; end loop;\nend;"
         #expect(Self.dump(PLSQLOutline.parse(typo, controlFlow: true)) == ["block BEGIN", "  loop WHILE b"])
+        // Flagi zapytania o nazwach słów kluczowych ($$begin, $$loop) nie kończą warunku.
+        let flags = "begin\n  $IF $$begin AND NOT $$loop $THEN\n    if a then null; end if;\n  $END\n  for i in 1..2 loop null; end loop;\nend;"
+        #expect(Self.dump(PLSQLOutline.parse(flags, controlFlow: true)) == ["block BEGIN", "  ifStatement IF a", "  loop FOR i in 1..2"])
         let error = "begin\n  $ERROR 'brak' \n  if c then null; end if;\nend;"
         #expect(Self.dump(PLSQLOutline.parse(error, controlFlow: true)) == ["block BEGIN", "  ifStatement IF c"])
     }
