@@ -2,7 +2,7 @@ import Foundation
 import PelikanDB
 import PelikanSQL
 
-/// Rozszerzenia plików specyfikacji i ciała pakietu i typu (D194, Preferencje › Ogólne). W repozytoriach właściciela
+/// Rozszerzenia plików specyfikacji i ciała pakietu i typu (D194, Ustawienia › Ogólne). W repozytoriach właściciela
 /// specyfikacja i ciało leżą w osobnych plikach, bez „/” na końcu.
 public struct SpecBodyExtensions: Sendable, Hashable, Codable {
     public var packageSpec = "pks"

@@ -9,7 +9,7 @@ public struct ObjectExportOptions: Sendable, Hashable, Codable {
     /// Specyfikacja i ciało pakietu/typu w jednym pliku `.pck`/`.typ` (przy pliku na obiekt). Domyślnie osobne pliki
     /// `.pks`/`.pkb` i `.tps`/`.tpb` (D194 — konwencja repozytoriów właściciela).
     public var specAndBodyTogether = false
-    /// Rozszerzenia plików specyfikacji i ciała (Preferencje › Ogólne, D194).
+    /// Rozszerzenia plików specyfikacji i ciała (Ustawienia › Ogólne, D194).
     public var extensions = SpecBodyExtensions()
     /// Pliki na obiekt: jednostki PL/SQL zakończone „/” w osobnej linii. Domyślnie bez „/” w osobnych plikach DDL
     /// w repozytorium („/” psuje proces wdrożenia, D192/D194); jeden plik (skrypt SQL*Plus) i pliki `.pck`/`.typ`

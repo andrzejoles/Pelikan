@@ -198,7 +198,7 @@ public enum ObjectCommands {
                 let (o, m) = try await target(ctx)
                 guard let sql = compileStatement(o) else { throw CommandError.notAvailable(L10n.tr("Tego obiektu nie da się kompilować")) }
                 try await ctx.workspace.confirmOracleMaintained(objects: [o])
-                // Potwierdzanie rekompilacji (Preferencje › Object Browser, PD-OB-025).
+                // Potwierdzanie rekompilacji (Ustawienia › Przeglądarka obiektów, PD-OB-025).
                 if ctx.workspace.settings.confirmRecompile, ctx.invoker == .user, let ui = ctx.ui {
                     guard await ui.ask(L10n.tr("Rekompilować \(o.name)?"), message: sql, buttons: [L10n.tr("Rekompiluj"), L10n.tr("Anuluj")]) == 0 else {
                         throw CommandError.cancelledByUser

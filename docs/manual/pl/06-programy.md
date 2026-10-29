@@ -43,7 +43,7 @@ także źródeł Java i modułów MLE (JavaScript). Otworzysz je przez **Plik �
   otwartego pliku; tytuł okna to `nazwa.pks + .pkb`. Działa to także z Findera, Przeglądarki plików, listy ostatnich
   plików, projektu i workseta. Pliki, które nie są specyfikacją i ciałem jednego pakietu albo typu, otwierają się
   osobno — także plik `.pks` z komentarzem za `END` specyfikacji (przy zapisie przeszedłby do pliku ciała). Gdy plik
-  pary zmienił się na dysku od otwarcia (inny program, `git checkout`), **Zapisz** pyta przed nadpisaniem. Rozszerzenia i otwieranie pary ustawisz w **Preferencje › Ogólne › Specyfikacja i ciało w osobnych
+  pary zmienił się na dysku od otwarcia (inny program, `git checkout`), **Zapisz** pyta przed nadpisaniem. Rozszerzenia i otwieranie pary ustawisz w **Ustawienia › Ogólne › Specyfikacja i ciało w osobnych
   plikach**.
 
 ### Bezpieczna praca z kodem w bazie
@@ -190,7 +190,7 @@ Komentarze `TODO` i `DONE` (z właścicielem, priorytetem i kategorią) są zbie
   zmianami ostrzega, że je utracisz (**Zachowaj moje zmiany** zostawia tekst okna, a późniejsze **Zapisz** jeszcze raz
   ostrzega przed nadpisaniem). Sama zmiana daty pliku (np. `touch`) nie wywołuje pytania. W oknie pary `.pks`/`.pkb`
   wczytywany jest tylko zmieniony plik. Plik usunięty albo przeniesiony: **Zachowaj w oknie** albo **Zamknij okno**.
-  **Plik › Wczytaj ponownie z dysku** robi to na żądanie. W **Preferencje › Ogólne › Pliki** wyłączysz wykrywanie
+  **Plik › Wczytaj ponownie z dysku** robi to na żądanie. W **Ustawienia › Ogólne › Pliki** wyłączysz wykrywanie
   albo włączysz wczytywanie bez pytania, gdy okno nie ma zmian.
 - **Plik › Otwórz z połączeniem…** otwiera plik z od razu przypiętym połączeniem.
 - **Edycja › Otwórz w zewnętrznym edytorze** przekazuje tekst do programu wskazanego w **Ustawienia › Narzędzia**

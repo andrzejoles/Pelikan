@@ -2149,7 +2149,7 @@ miało jeden plik — specyfikacja i ciało trafiały do jednego pliku.
   specyfikacją i ciałem jednego pakietu/typu (usunięte ciało, dodana procedura), nie zapisuje się — komunikat
   wskazuje **Zapisz jako jeden plik…**. **Kodowanie pliku…** zmienia oba pliki.
 - **Zapisz jako… i pierwsze Zapisz nowego okna** ze specyfikacją i ciałem: okno zapisu z nazwą `nazwa.pks`
-  (rozszerzenie specyfikacji z Preferencji), ciało obok jako `nazwa.pkb`; istniejący plik ciała spoza okna — pytanie
+  (rozszerzenie specyfikacji z Ustawień), ciało obok jako `nazwa.pkb`; istniejący plik ciała spoza okna — pytanie
   „Zastąpić?”. Okno z innym plikiem (np. `.pck`) ⌘S zapisuje jak dotąd do tego pliku. Nowa komenda
   `file.saveAsSingleFile` „Zapisz jako jeden plik…” (agent: Brak, wstążka Start › Plik › Więcej) zapisuje całe okno
   w jednym pliku i zdejmuje powiązanie z parą. Okno z jedną jednostką albo innymi jednostkami — bez zmian.
@@ -2157,28 +2157,28 @@ miało jeden plik — specyfikacja i ciało trafiały do jednego pliku.
   otwartego pliku — Plik › Otwórz, ostatnie pliki, Przeglądarka plików, Finder, przeciągnięcie, projekt; wielkość
   liter rozszerzenia jak w otwieranym pliku. Ponowne otwarcie któregoś z plików aktywuje okno i jego kartę. Para
   tylko, gdy w plikach jest dokładnie specyfikacja i ciało tego samego obiektu, a drugi plik nie jest już otwarty
-  w innym oknie (jeden plik w dwóch oknach rozjechałby się przy zapisie). Preferencja **Otwieraj parę
+  w innym oknie (jeden plik w dwóch oknach rozjechałby się przy zapisie). Ustawienie **Otwieraj parę
   specyfikacja/ciało w jednym oknie** (domyślnie włączona).
 - **Worksety i odzyskiwanie:** `WorksetDocument.unitFiles` (pole opcjonalne — starsze worksety bez zmian): ścieżki,
-  części, formaty i zakończenia. Okno bez zmian wraca jako para z plików (niezależnie od preferencji), ze zmianami —
+  części, formaty i zakończenia. Okno bez zmian wraca jako para z plików (niezależnie od ustawień), ze zmianami —
   tekst z workseta, powiązanie i formaty z workseta, treść zapisana z dysku. Migawka odzyskiwania to ten sam workset.
 - **Pozostałe miejsca:** Przeglądarka plików (otwarte i zmienione — oba pliki), zmiana nazwy i usunięcie pliku albo
   katalogu (powiązanie przeniesione albo zdjęte), stan Git i **Porównaj z HEAD** (plik karty z kursorem, treść karty),
   użycia i refaktoryzacja (oba pliki jako otwarte), skok do linii pliku z wyników i projektu (linia pliku ciała
   przeliczona na linię okna), edycja w programie zewnętrznym (plik tymczasowy z całym tekstem, jak okno bez pliku),
   blokada kompilacji pliku tylko do odczytu (którykolwiek z pary).
-- **Preferencje › Ogólne › Specyfikacja i ciało w osobnych plikach:** otwieranie pary i rozszerzenia specyfikacji
+- **Ustawienia › Ogólne › Specyfikacja i ciało w osobnych plikach:** otwieranie pary i rozszerzenia specyfikacji
   i ciała pakietu (`pks`/`pkb`) i typu (`tps`/`tpb`) — bez kropki, małymi literami; pliki z nimi otwierają się jako
   okno programu.
 - **Eksport obiektów użytkownika (PD-TOOL-007):** „plik na obiekt” zapisuje specyfikację i ciało osobno z
-  rozszerzeniami z Preferencji (dotąd `.spc`/`.bdy`); **Specyfikacja i ciało w jednym pliku** (`.pck`/`.typ`) domyślnie
+  rozszerzeniami z Ustawień (dotąd `.spc`/`.bdy`); **Specyfikacja i ciało w jednym pliku** (`.pck`/`.typ`) domyślnie
   wyłączona, a takie pliki mają „/” jak w PL/SQL Developerze. Jednostki PL/SQL w osobnych plikach na obiekt bez „/” —
   nowa opcja **Kończ jednostki znakiem /** (domyślnie wyłączona). DBMS_METADATA dalej z SQLTERMINATOR (tabele i inne
   DDL zachowują „;”); „/” zdejmowany za jednostką, gdy za nią nic nie ma; `ALTER TRIGGER … ENABLE` (wyzwalacz i tak
   powstaje włączony) jest pomijane, a `… DISABLE` zastępuje klauzula `DISABLE` w `CREATE TRIGGER` (11g+, przed
   `WHEN (…)` albo treścią wyzwalacza) — plik bez „/” i bez ALTER. Gdy za jednostką jest inne polecenie (np. `ALTER
   TYPE` ewolucji typu), „/” zostaje, a okno eksportu wymienia takie pliki. Bez zmian, z „/”: tryb „jeden plik” (skrypt
-  SQL*Plus), skrypt wdrożenia koszyka, kopia schematu, porównanie schematów, eksport w oknie poleceń, Duplikuj obiekt,
+  SQL*Plus), skrypt wdrożenia koszyka, kopia schematu, porównanie schematów, eksport w konsoli SQL*Plus, Duplikuj obiekt,
   okno testu, ORDS. Testy na bazie: EMP_API → `emp_api.pks`/`emp_api.pkb` bez linii „/”, otwarte jako para
   i skompilowane F8 — oba VALID; wyłączony wyzwalacz → plik z `DISABLE`, wykonany ponownie daje wyzwalacz DISABLED.
 - **Uprawnienia (decyzja właściciela: „GRANT'y zawsze w osobnych plikach”):** w trybie „plik na obiekt” pliki DDL
@@ -2197,10 +2197,10 @@ miało jeden plik — specyfikacja i ciało trafiały do jednego pliku.
   („Foo” i „FOO”) dostaje przyrostek `_2` we wszystkich swoich plikach. Kolejność eksportu: typ, właściciel, nazwa.
 - **Poprawki po przeglądzie (zapis i otwieranie):** Zapisz jako z nazwą `.pck`, bez rozszerzenia albo `.pkb` pyta raz
   o wszystkie istniejące pliki pary spoza okna (plik wybrany w oknie zapisu potwierdza okno zapisu), zamiast nadpisać
-  specyfikację bez pytania. Rozszerzenia z Preferencji: cztery różne, z liter, cyfr i „_”, inne niż rozszerzenia
+  specyfikację bez pytania. Rozszerzenia z Ustawień: cztery różne, z liter, cyfr i „_”, inne niż rozszerzenia
   skryptów, testów, raportów i plików `.pck`/`.typ`; rozszerzenia specyfikacji różne od rozszerzeń ciała; pakiet
   i typ mogą mieć wspólne (np. `.spc`/`.bdy`), ale tylko oba naraz — wspólna specyfikacja z różnymi ciałami dawałaby
-  niejednoznaczny plik pary — inaczej używane są domyślne (Preferencje pokazują ostrzeżenie), a zapis
+  niejednoznaczny plik pary — inaczej używane są domyślne (Ustawienia pokazują ostrzeżenie), a zapis
   odmawia, gdy plik specyfikacji i ciała to ten sam plik. Przed zapisem każdy plik pary musi zawierać dokładnie
   jedną jednostkę o tym samym tekście co w oknie (dwie jednostki w jednej linii dzielą kartę w środku polecenia) —
   inaczej odmowa z komunikatem. Plik pary, który ten zapis zapisze (jego jednostka zmieniła się w oknie), a zmienił się
@@ -2223,7 +2223,7 @@ miało jeden plik — specyfikacja i ciało trafiały do jednego pliku.
   argumentu w oknie pary dodaje oba pliki; pulpit projektu, **Dodaj plik okna do projektu**, zmienna `#file` narzędzi
   użytkownika (plik karty z kursorem) i scalanie workseta nieotwartego przy starcie uwzględniają oba pliki; treść
   zapisana plików z workseta czytana w kodowaniu projektu. `GRANT` sam w linii i `GRANT …; -- komentarz` należą do
-  karty jednostki przed nimi. Nowe ustawienia w zestawach preferencji (sekcja Ogólne).
+  karty jednostki przed nimi. Nowe ustawienia w zestawach ustawień (sekcja Ogólne).
 - **Ograniczenia:** komentarz za `END` specyfikacji w pliku `.pks` (bez pustej linii przed ciałem) przeniósłby się przy
   zapisie do ciała — taki plik otwiera się sam, bez pary. Para w oknie ma tę samą nazwę bazową plików przy Zapisz jako;
   zmiana nazwy jednego pliku w Przeglądarce plików zachowuje powiązanie z inną nazwą. Workset z oknem pary otwarty
@@ -2337,13 +2337,13 @@ edytor), Pelikan to wykrywa i pyta.
   (`PELIKAN_UI_SCRIPT`), nie bez interfejsu. Zmiana z edytora zewnętrznego (PD-EDIT-028) jest wczytywana jak dotąd
   i nie pyta drugi raz.
 - **Okno bez zmian:** „Plik „…” został zmieniony przez inny program. Wczytać go ponownie?” — **Wczytaj ponownie** /
-  **Zostaw**; preferencja **Wczytuj bez pytania pliki zmienione na zewnątrz, gdy okno nie ma zmian** (domyślnie
+  **Zostaw**; ustawienie **Wczytuj bez pytania pliki zmienione na zewnątrz, gdy okno nie ma zmian** (domyślnie
   wyłączona). **Okno ze zmianami** (w oknie pary — karta tego pliku): ostrzeżenie „Okno ma niezapisane zmiany” —
   **Wczytaj ponownie (utracisz zmiany)** / **Zachowaj moje zmiany**. „Zostaw” i „Zachowaj” zapamiętują nowy stan dysku
   jako znany (bez pytania do następnej zmiany), ale nie treść zapisaną okna — późniejsze ⌘S ostrzega „Pliki zmieniły
   się na dysku… Zapisz mimo to / Anuluj” (dla wszystkich okien z plikiem, nie tylko par: `Document.savedFileHash`).
   Ostrzeżenie przy zapisie najpierw porównuje datę i rozmiar ze znanym stanem (gdy to stan zapisu), skrót liczy tylko
-  przy różnicy, odczyt i skrót poza wątkiem głównym. Z wyłączoną preferencją **Wykrywaj zmiany plików na dysku** — bez
+  przy różnicy, odczyt i skrót poza wątkiem głównym. Z wyłączonym ustawieniem **Wykrywaj zmiany plików na dysku** — bez
   ostrzeżenia; w trybie skryptu i bez interfejsu zapis odbywa się (bez cichego anulowania), a nadpisanie zmiany z dysku
   trafia do dziennika. Tekst sprzed wczytania ponownego zawsze trafia do historii lokalnej (także okno bez zmian
   i wczytanie bez pytania). Pytania nie mają dodatkowego przycisku „Anuluj”: Esc wybiera bezpieczną odpowiedź
@@ -2364,8 +2364,8 @@ edytor), Pelikan to wykrywa i pyta.
 - **Komenda `file.reload`** „Wczytaj ponownie z dysku” (menu Plik, wstążka Start › Plik › Więcej; agent: Za zgodą,
   skutek: tekst edytora; na liście komend aplikacji dla agenta) — okno pary: oba pliki. Okno ze zmianami: użytkownik
   potwierdza utratę zmian, agent dostaje odmowę.
-- **Preferencje › Ogólne › Pliki:** **Wykrywaj zmiany plików na dysku** (domyślnie włączona) i wczytywanie bez
-  pytania; obie w zestawach preferencji (sekcja Ogólne).
+- **Ustawienia › Ogólne › Pliki:** **Wykrywaj zmiany plików na dysku** (domyślnie włączona) i wczytywanie bez
+  pytania; obie w zestawach ustawień (sekcja Ogólne).
 - **Worksety:** okno ze zmianami zapisuje skrót pliku z otwarcia albo zapisu (pole opcjonalne `fileHash`, para —
   `hash` każdego pliku) — po przywróceniu zmiana pliku z czasu, gdy Pelikan był zamknięty, jest wykrywana przy
   aktywacji i przy zapisie. Okno bez zmian i tak czyta plik ponownie przy przywróceniu.

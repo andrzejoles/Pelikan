@@ -365,7 +365,7 @@ public enum RibbonModel {
                 ]),
                 .menu(L10n.tr("Ustawienia"), symbol: "gearshape", commands: ["prefs.sets", "prefs.export", "prefs.import", separator, "localTasks.runNow"]),
             ]),
-            // Komendy panelu agenta rejestruje aplikacja (AgentUICommands); uruchamianie — po profilu z Preferencji › Agenci.
+            // Komendy panelu agenta rejestruje aplikacja (AgentUICommands); uruchamianie — po profilu z Ustawień › Agenci.
             RibbonGroup(L10n.tr("Agent AI"), [
                 .large("agent.togglePane"),
                 .menu(L10n.tr("Uruchom agenta"), symbol: "sparkles", commands: ["agent.launch.*"], large: true),

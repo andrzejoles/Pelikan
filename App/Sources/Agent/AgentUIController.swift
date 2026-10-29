@@ -30,7 +30,7 @@ final class AgentUIController: ApprovalPresenter {
         pane.onClose = { [weak self] id in self?.endSession(id) }
         pane.onShowLog = { [weak self] in self?.showLog() }
         workspace.register(commands())
-        // Lista CLI jest konfigurowalna (Preferencje › Agenci) — komendy uruchamiania nadążają za nią.
+        // Lista CLI jest konfigurowalna (Ustawienia › Agenci) — komendy uruchamiania nadążają za nią.
         profilesToken = trackChanges { [weak self] in
             guard let self else { return }
             let profiles = self.workspace.settings.agent.profiles

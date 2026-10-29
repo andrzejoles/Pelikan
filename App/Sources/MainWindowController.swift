@@ -167,7 +167,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         if wasCollapsed || size > current + 1 { area.setDockSize(size) }
     }
 
-    /// Autoukrywanie (Preferencje › Panele narzędzi): fokus w edytorze okna chowa panele z narzędziami.
+    /// Autoukrywanie (Ustawienia › Panele narzędzi): fokus w edytorze okna chowa panele z narzędziami.
     private func autoHideDocks() {
         guard workspace.settings.toolDock.autoHide, let responder = window?.firstResponder as? NSView,
               responder.isDescendant(of: documentArea.view) else { return }

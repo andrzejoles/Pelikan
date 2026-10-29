@@ -167,7 +167,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         })
     }
 
-    /// Czcionka drzewa: własna z Preferencji › Edytor albo czcionka interfejsu o 1 pt mniejsza.
+    /// Czcionka drzewa: własna z Ustawień › Edytor albo czcionka interfejsu o 1 pt mniejsza.
     var browserFont: NSFont {
         let s = workspace.settings, ui = InterfaceFonts.shared
         return AppFonts.font(family: s.browserFontName.isEmpty ? ui.family : s.browserFontName,

@@ -31,7 +31,7 @@ public enum OracleNet {
         let wallet = walletDirectory.map { ($0 as NSString).expandingTildeInPath }.flatMap { $0.isEmpty ? nil : $0 }
         guard user != nil || wallet != nil else { return nil }
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        var sqlnet = "# " + "Pelikan — plik generowany; zmiany w Preferencjach › Oracle Net" + "\n"
+        var sqlnet = "# " + "Pelikan — plik generowany; zmiany w Ustawieniach › Oracle Net" + "\n"
         if let u = user, FileManager.default.fileExists(atPath: u + "/sqlnet.ora") { sqlnet += "IFILE=\(quoted(u + "/sqlnet.ora"))\n" }
         if let w = wallet {
             sqlnet += "WALLET_LOCATION=(SOURCE=(METHOD=FILE)(METHOD_DATA=(DIRECTORY=\(quoted(w)))))\n"

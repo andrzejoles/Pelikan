@@ -44,7 +44,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
             for r in roots { reloadRow(r) }
         }
     }
-    /// Kolejność elementów (Preferencje › Edytor, menu panelu).
+    /// Kolejność elementów (Ustawienia › Edytor, menu panelu).
     var order: CodeContents.Order = .source {
         didSet { if order != oldValue { update(rawNodes) } }
     }

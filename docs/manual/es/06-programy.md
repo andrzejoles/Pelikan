@@ -49,7 +49,7 @@ o con **Editar** sobre un objeto en el Object Browser (el código se carga direc
   comentario tras el `END` de la especificación (al guardar pasaría al archivo del cuerpo). Si un archivo del par ha
   cambiado en el disco desde que se abrió (otro programa, `git checkout`), **Guardar** pregunta antes de
   sobrescribirlo. Las extensiones y la apertura del par se
-  configuran en **Preferencias › General › Especificación y cuerpo en archivos separados**.
+  configuran en **Ajustes › General › Especificación y cuerpo en archivos separados**.
 
 ### Trabajar con seguridad con el código de la base de datos
 
@@ -208,7 +208,7 @@ To-Do**. **Edición › Insertar tarea To-Do** inserta un comentario, y **Cerrar
   de la ventana, y un **Guardar** posterior vuelve a avisar antes de sobrescribir). Un simple cambio de la fecha del
   archivo (p. ej., `touch`) no pregunta. En una ventana de par `.pks`/`.pkb` solo se vuelve a cargar el archivo
   modificado. Archivo eliminado o movido: **Conservar en la ventana** o **Cerrar ventana**. **Archivo › Volver a cargar
-  desde el disco** lo hace a petición. En **Preferencias › General › Archivos** puede desactivar la detección o volver a
+  desde el disco** lo hace a petición. En **Ajustes › General › Archivos** puede desactivar la detección o volver a
   cargar sin preguntar cuando la ventana no tiene cambios.
 - **Archivo › Abrir con conexión…** abre un archivo con la conexión ya fijada.
 - **Edición › Abrir en un editor externo** pasa el texto al programa indicado en **Ajustes › Herramientas** (p.

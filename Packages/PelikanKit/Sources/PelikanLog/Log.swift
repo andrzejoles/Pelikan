@@ -117,7 +117,7 @@ public enum Log {
         configuration.withLock { $0.extraSinks[id] = nil }
     }
 
-    /// Poziom i jawne nazwy (`LogPrivacy.hash`; Preferencje › Ogólne › Dziennik aplikacji). Wartości prywatne
+    /// Poziom i jawne nazwy (`LogPrivacy.hash`; Ustawienia › Ogólne › Dziennik aplikacji). Wartości prywatne
     /// (komunikaty błędów, treści) zostają ukryte także przy jawnych nazwach.
     public static func configure(level: LogLevel, revealNames: Bool) {
         configuration.withLock { $0.level = level; $0.revealNames = revealNames }
