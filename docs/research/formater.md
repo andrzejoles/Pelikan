@@ -2,6 +2,11 @@
 
 Stan na 2026-10-29, gałąź `p3/formater-rozpoznanie`, kod z `main` po PR #119. Etap rozpoznania — bez zmian w kodzie.
 
+> **Wdrożone (D202, gałąź `p3/formater-poprawki`):** P0 i P1 (F1–F20), decyzje właściciela z rozdz. 7, reguły AND/OR
+> osobno dla miejsc warunków, część opcji P2 i podgląd z rozdz. 6. Wynik formatera na korpusie po zmianach:
+> [`formater/wynik-po-D202-domyslne.txt`](formater/wynik-po-D202-domyslne.txt) (pliki `wynik-*.txt` poniżej to stan
+> sprzed zmian). Pominięte opcje P3 — w D202.
+
 Materiały w katalogu [`formater/`](formater/):
 
 | Plik | Zawartość |

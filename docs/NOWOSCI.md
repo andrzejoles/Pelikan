@@ -2,6 +2,30 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.6.1 — poprawki formatera
+
+- **Bezpieczeństwo:** formater nie psuje już kompilacji warunkowej (`$IF … $END`, `$$PLSQL_UNIT`) ani operatorów
+  odległości wektorów (`<=>`, `<->`, `<#>`); kontrola po formatowaniu wykrywa rozdzielenie znaków, które Oracle czyta
+  jako całość.
+- **Poprawki układu:** wcięcie wszystkich instrukcji w gałęzi `WHEN … THEN` obsługi wyjątków i CASE, zapytania
+  kursorów i widoków od nowej linii, UNION/MINUS w osobnej linii, MERGE (`ON`, `DELETE WHERE`), INSERT ALL, długie
+  wyrażenia łamane przed `||`, długie nagłówki wyzwalaczy i opcje tabel w osobnych liniach, COMPOUND TRIGGER, FORALL,
+  komentarze w listach, `RETURN SELF AS RESULT`, etykiety `<<nazwa>>`, wielkość liter słów kluczowych użytych jako
+  nazwy, wzorce `%` i `*` w pisowni specjalnej.
+- **Nowy domyślny wygląd** (nowe instalacje; zapisane ustawienia zostają): słowa klauzul i AND/OR wyrównane „rzeką”
+  (`  FROM`, ` WHERE`, `   AND`), CASE w osobnych liniach (bardzo krótkie w jednej), podzapytania i CTE wcięte z `)` w
+  osobnej linii, `INSERT INTO emp (…)`, `DELETE FROM` w jednej linii, kolumny tabel po jednej w linii z wyrównanymi
+  typami, DEFAULT i NOT NULL, wyrównane deklaracje i przypisania. Domyślny wynik formatowania się zmienia.
+- **AND / OR osobno dla każdego miejsca:** WHERE, HAVING, JOIN … ON, MERGE … ON, START WITH / CONNECT BY,
+  CASE … WHEN, IF / ELSIF, WHILE, EXIT WHEN, WHEN wyzwalacza, CHECK i nawiasy zagnieżdżone — łamanie (każdy w osobnej
+  linii, tylko gdy się nie mieści, nigdy), położenie (początek albo koniec linii) i wyrównanie (rzeka, pod pierwszym
+  warunkiem, z wcięciem).
+- **Nowe opcje list:** UPDATE … SET, GROUP BY / ORDER BY, listy w nawiasach (IN, argumenty) i kolumny tabel — także
+  „do marginesu”; próg krótkiego CASE; położenie operatora w długich wyrażeniach.
+- **Podgląd w Ustawieniach › Formater:** cztery przykłady (PL/SQL, Zapytania, DML, DDL) z kolorami składni, numerami
+  linii i linią prawego marginesu; zmienione linie podświetlone przez 5 s, usunięte zaznaczone czerwoną kreską; zmiana
+  opcji pokazuje przykład, w którym ją widać, i przewija do zmiany.
+
 ## 1.6.0 — Zawartość kodu w oknie SQL i oknie testu
 
 - **Zawartość kodu w każdym oknie z kodem:** panel struktury kodu jest teraz także w oknie SQL i oknie testu, nie tylko
