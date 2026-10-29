@@ -1,0 +1,1 @@
+[{"command": "debug.openFile", "args": {"path": "@ROOT@/scripts/screenshots/fixtures/zamowienia_api.pkb"}, "delay": 2}, {"command": "view.codeContents", "args": {"visible": true}, "delay": 1}, {"command": "codeContents.controlFlow", "args": {"visible": true}, "delay": 1}, {"command": "edit.gotoLine", "args": {"line": 24}, "delay": 2}]

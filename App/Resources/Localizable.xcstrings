@@ -24949,6 +24949,34 @@
         }
       }
     },
+    "IF, pętle, CASE i obsługa wyjątków jako węzły drzewa (domyślnie zwinięte); bloki BEGIN są widoczne zawsze." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IF, loops, CASE and exception handlers as tree nodes (collapsed by default); BEGIN blocks are always shown."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IF, Schleifen, CASE und Ausnahmebehandlungen als Baumknoten (standardmäßig eingeklappt); BEGIN-Blöcke werden immer angezeigt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IF, bucles, CASE y manejadores de excepciones como nodos del árbol (contraídos por defecto); los bloques BEGIN se muestran siempre."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IF, цикли, CASE і обробники винятків як вузли дерева (типово згорнуті); блоки BEGIN показуються завжди."
+          }
+        }
+      }
+    },
     "INFO+ obiekt" : {
       "localizations" : {
         "en" : {
@@ -61293,6 +61321,34 @@
         }
       }
     },
+    "Pokazuje lub ukrywa w panelu Zawartość kodu struktury sterujące (IF, pętle, CASE, obsługę wyjątków; bloki BEGIN zostają) we wszystkich oknach (zapamiętane w Ustawieniach)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows or hides control structures (IF, loops, CASE, exception handlers; BEGIN blocks stay) in the Code Contents panel in all windows (saved in Settings)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blendet im Bereich Codeinhalt die Kontrollstrukturen (IF, Schleifen, CASE, Ausnahmebehandlungen; BEGIN-Blöcke bleiben) in allen Fenstern ein oder aus (in den Einstellungen gespeichert)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra u oculta las estructuras de control (IF, bucles, CASE, manejadores de excepciones; los bloques BEGIN se mantienen) en el panel Contenido del código en todas las ventanas (se guarda en Ajustes)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує або приховує в панелі «Вміст коду» керувальні структури (IF, цикли, CASE, обробники винятків; блоки BEGIN залишаються) в усіх вікнах (зберігається в Налаштуваннях)."
+          }
+        }
+      }
+    },
     "Pokazuje lub ukrywa wstążkę z kartami czynności pod paskiem narzędzi." : {
       "localizations" : {
         "en" : {
@@ -61569,6 +61625,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показати (true) або приховати (false) панель; без аргументу — перемикає"
+          }
+        }
+      }
+    },
+    "Pokaż (true) albo ukryj (false) struktury sterujące; bez argumentu — przełącza" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show (true) or hide (false) control structures; without an argument — toggles"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrollstrukturen einblenden (true) oder ausblenden (false); ohne Argument — umschalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar (true) u ocultar (false) las estructuras de control; sin argumento — alterna"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати (true) або приховати (false) керувальні структури; без аргументу — перемикає"
           }
         }
       }
@@ -62017,6 +62101,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unterschiede anzeigen"
+          }
+        }
+      }
+    },
+    "Pokaż struktury sterujące" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show control structures"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrollstrukturen anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar estructuras de control"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати керувальні структури"
+          }
+        }
+      }
+    },
+    "Pokaż struktury sterujące (IF, pętle, CASE, obsługę wyjątków)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show control structures (IF, loops, CASE, exception handlers)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrollstrukturen anzeigen (IF, Schleifen, CASE, Ausnahmebehandlungen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar estructuras de control (IF, bucles, CASE, manejadores de excepciones)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати керувальні структури (IF, цикли, CASE, обробники винятків)"
           }
         }
       }
@@ -66137,30 +66277,30 @@
         }
       }
     },
-    "Pozycja elementu w tekście (domyślnie kursor)" : {
+    "Pozycja elementu w tekście — element w tym miejscu, także struktura sterująca; bez argumentu — podprogram, deklaracja, blok albo jednostka pod kursorem" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Element position in the text (default: cursor)"
+            "value" : "Position of the element in the text — the element at that place, including a control structure; without an argument — the subprogram, declaration, block or unit at the cursor"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Position des Elements im Text (Standard: Cursor)"
+            "value" : "Position des Elements im Text — das Element an dieser Stelle, auch eine Kontrollstruktur; ohne Argument — Unterprogramm, Deklaration, Block oder Einheit am Cursor"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Posición del elemento en el texto (por defecto, el cursor)"
+            "value" : "Posición del elemento en el texto — el elemento en ese lugar, también una estructura de control; sin argumento — el subprograma, la declaración, el bloque o la unidad bajo el cursor"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Позиція елемента в тексті (типово — курсор)"
+            "value" : "Позиція елемента в тексті — елемент у цьому місці, також керувальна структура; без аргументу — підпрограма, оголошення, блок або одиниця під курсором"
           }
         }
       }
@@ -80525,6 +80665,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Структура й дані"
+          }
+        }
+      }
+    },
+    "Struktury sterujące" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control structures"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrollstrukturen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estructuras de control"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Керувальні структури"
+          }
+        }
+      }
+    },
+    "Struktury sterujące w Zawartości kodu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control structures in Code Contents"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrollstrukturen im Codeinhalt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estructuras de control en Contenido del código"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Керувальні структури у вмісті коду"
           }
         }
       }
@@ -124853,6 +125049,34 @@
         }
       }
     },
+    "ukryte" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hidden"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ausgeblendet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ocultas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "приховані"
+          }
+        }
+      }
+    },
     "uprawnienia debugera" : {
       "localizations" : {
         "en" : {
@@ -125997,6 +126221,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "видимий"
+          }
+        }
+      }
+    },
+    "widoczne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "visible"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sichtbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "visibles"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "видимі"
           }
         }
       }

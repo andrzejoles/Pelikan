@@ -48,7 +48,8 @@ final class CodeContentsPanel {
         contents.onSelect = { [weak self] n, focus in
             guard let self else { return }
             self.workspace.recordJump()
-            self.document.selectedRange = n.nameOffset..<(n.nameOffset + (n.name as NSString).length)
+            // Nazwa elementu; blok i struktura sterująca — słowo otwierające (D203).
+            self.document.selectedRange = CodeContents.selection(of: n, in: self.document.text)
             if focus, let tv = self.editor?.textView { self.split.window?.makeFirstResponder(tv) }
         }
         tokens.append(trackChanges { [weak self] in self?.applyVisibility() })
@@ -122,7 +123,13 @@ final class CodeContentsPanel {
         // Każda zmiana Ustawień uruchamia ten przebieg — bez zmiany widoczności i kolejności nic się nie dzieje.
         let show = workspace.showsCodeContents(document)
         let order = workspace.settings.codeContentsOrder
-        if contents.order != order { contents.order = order }
+        let flow = workspace.settings.codeContentsControlFlow
+        if contents.order != order || contents.showsControlFlow != flow {
+            contents.order = order
+            contents.showsControlFlow = flow
+            // Drzewo przebudowane — zaznaczenie wraca do elementu z kursorem.
+            caretMoved()
+        }
         guard show != shown else { return }
         if shown == true, contents.frame.width >= 120 { width = contents.frame.width }
         shown = show
@@ -154,7 +161,8 @@ final class CodeContentsPanel {
         analysis = AnalysisHandle(Task.detached(priority: .userInitiated) { [weak self] in
             if !immediate { try? await Task.sleep(for: .milliseconds(400)) }
             guard !Task.isCancelled else { return }
-            let result = CodeContents.analyze(text, kind: kind) { Task.isCancelled }
+            // Zawsze ze strukturami sterującymi — przełącznik panelu tylko je ukrywa, bez ponownej analizy.
+            let result = CodeContents.analyze(text, kind: kind, controlFlow: true) { Task.isCancelled }
             guard !Task.isCancelled else { return }
             await self?.finishAnalysis(result, revision: revision)
         })

@@ -92,6 +92,18 @@ kilkadziesiąt tysięcy linii.
   Panel pokazujesz i ukrywasz w każdym oknie osobno — **Widok › Zawartość kodu** albo przycisk z symbolem
   paska bocznego na lewym końcu paska okna; wybór zostaje w oknie (także w worksecie). **Ustawienia › Edytor ›
   Zawartość kodu domyślnie widoczna** decyduje o oknach, w których panelu nie przełączano.
+- **Struktury sterujące** w Zawartości kodu: `IF` z gałęziami `ELSIF` i `ELSE`, pętle `LOOP`, `FOR` (liczbowe
+  i kursorowe, także `FOR r IN (SELECT …) LOOP`) i `WHILE`, `FORALL`, instrukcja `CASE` z gałęziami `WHEN`
+  (wyrażenie `CASE … END` w SQL i w przypisaniu nie jest węzłem), sekcja
+  `EXCEPTION` z obsługami `WHEN wyjątek`, sekcja inicjalizacji ciała pakietu i punkty czasowe wyzwalacza złożonego.
+  Węzeł pokazuje słowo otwierające, etykietę `<<nazwa>>` i skrócony warunek (np. „IF v_kwota > 0…”, „FOR r IN c_emp
+  LOOP”), pełny nagłówek jest w podpowiedzi. Struktury są domyślnie zwinięte; klik przenosi kursor do słowa
+  otwierającego, a drzewo zaznacza najgłębszą strukturę z kursorem. Filtr nazw szuka też w warunkach i etykietach.
+  Niedokończona struktura (np. bez `END IF` w trakcie pisania) kończy się na `END` bloku albo przed następnym
+  podprogramem, a `$IF … $END` (kompilacja warunkowa) nie jest instrukcją `IF`. Przycisk z symbolem rozgałęzienia obok
+  filtra albo **Pokaż struktury sterujące** w menu panelu ukrywa je we wszystkich oknach (np. w dużym pakiecie);
+  bloki `BEGIN … END` (także z `DECLARE`) są widoczne zawsze;
+  to samo ustawienie: **Ustawienia › Edytor › Struktury sterujące w Zawartości kodu** (domyślnie włączone).
 - Menu kontekstowe na nazwie obiektu bazy w edytorze oferuje te same czynności co Przeglądarka obiektów.
 - **F1** otwiera dokumentację Oracle dla słowa pod kursorem.
 

@@ -103,6 +103,19 @@ von Zeilen ohne Verzögerung.
   Seitenleisten-Taste am linken Ende der Fensterleiste; die Auswahl bleibt im Fenster (auch im Workset).
   **Einstellungen › Editor › Codeinhalt standardmäßig sichtbar** gilt für Fenster, in denen der Bereich nicht
   umgeschaltet wurde.
+- **Kontrollstrukturen** im Codeinhalt: `IF` mit den Zweigen `ELSIF` und `ELSE`, Schleifen `LOOP`, `FOR` (Zähl-
+  und Cursorschleifen, auch `FOR r IN (SELECT …) LOOP`) und `WHILE`, `FORALL`, die `CASE`-Anweisung mit ihren
+  `WHEN`-Zweigen (ein `CASE … END`-Ausdruck in SQL oder in einer Zuweisung ist kein Knoten), der `EXCEPTION`-Abschnitt mit den Behandlungen `WHEN Ausnahme`, der Initialisierungsabschnitt
+  des Package Body und die Zeitpunkte eines Compound Triggers. Ein Knoten zeigt das öffnende Schlüsselwort, das Label
+  `<<name>>` und eine gekürzte Bedingung (z. B. „IF v_betrag > 0…“, „FOR r IN c_emp LOOP“); der vollständige Kopf
+  steht im Tooltip. Strukturen sind standardmäßig eingeklappt; ein Klick setzt den Cursor auf das öffnende
+  Schlüsselwort, und der Baum markiert die innerste Struktur mit dem Cursor. Der Namensfilter sucht auch in
+  Bedingungen und Labels. Eine unvollständige Struktur (z. B. noch ohne `END IF` beim Tippen) endet am `END` des
+  Blocks oder vor dem nächsten Unterprogramm, und `$IF … $END` (bedingte Kompilierung) ist keine `IF`-Anweisung. Die
+  Verzweigungs-Taste neben dem Filter oder **Kontrollstrukturen anzeigen** im Menü des Bereichs blendet sie in allen
+  Fenstern aus (z. B. in einem großen Package); `BEGIN … END`-Blöcke (auch mit `DECLARE`) bleiben immer sichtbar;
+  dieselbe Einstellung: **Einstellungen › Editor › Kontrollstrukturen
+  im Codeinhalt** (standardmäßig eingeschaltet).
 - Das Kontextmenü auf dem Namen eines Datenbankobjekts im Editor bietet dieselben Aktionen wie der Object Browser.
 - **F1** öffnet die Oracle-Dokumentation zum Wort unter dem Cursor.
 

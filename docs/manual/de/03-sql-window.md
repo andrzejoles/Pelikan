@@ -44,6 +44,9 @@ der Fensterleiste ein und aus; die Auswahl bleibt im Fenster, den Standard für 
 **Einstellungen › Editor › Codeinhalt standardmäßig sichtbar** fest. Die SQL*Plus-Konsole hat diesen Bereich nicht. In einem Skript mit mehr als 5000 SQL-Anweisungen zeigt der Bereich
 nur PL/SQL-Einheiten und -Blöcke (mit einem Hinweis auf die Anzahl der Anweisungen).
 
+In anonymen Blöcken und Einheiten des Skripts zeigt der Bereich auch **Kontrollstrukturen** (IF, Schleifen, CASE,
+Ausnahmebehandlungen — siehe Kapitel zum Programmfenster); die Verzweigungs-Taste neben dem Filter blendet sie aus.
+
 ## Variablen
 
 - **Substitutionsvariablen** `&name` und `&&name` — vor der Ausführung zeigt Pelikan das Fenster **Variablen** mit
