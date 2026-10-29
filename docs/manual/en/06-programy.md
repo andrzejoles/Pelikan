@@ -100,15 +100,14 @@ thousands of lines.
   Code Contents visible by default** decides for windows where the panel was not toggled.
 - **Control structures** in Code Contents: `IF` with `ELSIF` and `ELSE` branches, `LOOP`, `FOR` (numeric and
   cursor loops, also `FOR r IN (SELECT …) LOOP`) and `WHILE` loops, `FORALL`, the `CASE` statement with its `WHEN`
-  branches (a `CASE … END` expression in SQL or an assignment is not a node), `BEGIN … END` blocks (also with
-  `DECLARE`), the `EXCEPTION` section with `WHEN exception` handlers, the package body initialization section and the
+  branches (a `CASE … END` expression in SQL or an assignment is not a node), the `EXCEPTION` section with `WHEN exception` handlers, the package body initialization section and the
   timing points of a compound trigger. A node shows the opening keyword, the `<<label>>` and a shortened condition
   (e.g. "IF v_amount > 0…", "FOR r IN c_emp LOOP"); the full header is in the tooltip. Structures are collapsed by
   default; a click moves the cursor to the opening keyword, and the tree selects the innermost structure containing the
   cursor. The name filter also searches conditions and labels. An unfinished structure (e.g. no `END IF` yet while
   typing) ends at the block's `END` or before the next subprogram, and `$IF … $END` (conditional compilation) is not an
   `IF` statement. The branch button next to the filter or **Show control structures** in the panel menu hides them in
-  all windows (e.g. in a large package); the same setting: **Settings › Editor › Control structures in Code Contents**
+  all windows (e.g. in a large package); `BEGIN … END` blocks (also with `DECLARE`) are always shown; the same setting: **Settings › Editor › Control structures in Code Contents**
   (on by default).
 - The context menu on a database object name in the editor offers the same actions as the Object Browser.
 - **F1** opens the Oracle documentation for the word under the cursor.

@@ -104,7 +104,7 @@ struct PLSQLOutlineControlFlowTests {
         let elseNode = ifNode.children.first { $0.kind == .elseBranch }!
         #expect(Self.text(src, elseNode.range).hasSuffix("end loop wew;"))
         let loop = elseNode.children[0]
-        #expect(Self.text(src, loop.range).hasPrefix("while x < 10 loop") && Self.text(src, loop.range).hasSuffix("end loop wew;"))
+        #expect(Self.text(src, loop.range).hasPrefix("<<wew>>\n    while x < 10 loop") && Self.text(src, loop.range).hasSuffix("end loop wew;"))
         let forall = Self.flat([p]).first { $0.kind == .forall }!
         #expect(Self.text(src, forall.range) == "forall i in 1..10 insert into t values (i);")
         let caseNode = p.children.first { $0.kind == .caseStatement }!
@@ -197,7 +197,11 @@ struct PLSQLOutlineControlFlowTests {
             "  block <<Etykieta>> BEGIN",
         ])
         let block = nodes[0].children[0].children[0]
-        #expect(Self.text(src, block.range).hasPrefix("declare") && Self.text(src, block.range).hasSuffix("end blok;"))
+        // Zakres od „<<” etykiety, nazwa (przejście) — słowo otwierające.
+        #expect(Self.text(src, block.range).hasPrefix("<<blok>>\n    declare") && Self.text(src, block.range).hasSuffix("end blok;"))
+        #expect(block.nameOffset == (src as NSString).range(of: "declare").location)
+        let outer = nodes[0].children[0]
+        #expect(Self.text(src, outer.range).hasPrefix("<<zewn>>") && outer.nameOffset == (src as NSString).range(of: "for i").location)
         #expect(Self.text(src, nodes[0].range).hasSuffix("end;"))
     }
 
@@ -304,6 +308,72 @@ struct PLSQLOutlineControlFlowTests {
         let nodes = PLSQLOutline.parse(src, controlFlow: true)
         #expect(Self.dump(nodes) == ["procedure p", "  ifStatement IF a", "  loop FOR i in 1..2"])
         #expect(Self.text(src, nodes[0].range).hasSuffix("end p;"))
+    }
+
+    @Test("niedomknięta dyrektywa: $IF bez $THEN i literówka $THN nie pochłaniają reszty")
+    func unfinishedDirectives() {
+        let noThen = """
+        create procedure p is
+        begin
+          $IF $$dbg
+          if a then null; end if;
+          for i in 1..2 loop null; end loop;
+        end p;
+        create procedure q is begin null; end;
+        """
+        let n1 = PLSQLOutline.parse(noThen, controlFlow: true)
+        #expect(Self.dump(n1) == ["procedure p", "  ifStatement IF a", "  loop FOR i in 1..2", "procedure q"])
+        let typo = "begin\n  $IF $$x IS NULL $THN null; $END\n  while b loop null; end loop;\nend;"
+        #expect(Self.dump(PLSQLOutline.parse(typo, controlFlow: true)) == ["block BEGIN", "  loop WHILE b"])
+        let error = "begin\n  $ERROR 'brak' \n  if c then null; end if;\nend;"
+        #expect(Self.dump(PLSQLOutline.parse(error, controlFlow: true)) == ["block BEGIN", "  ifStatement IF c"])
+    }
+
+    @Test("pisany kod bez średnika: instrukcja kończy się przed ELSE i WHEN gałęzi (poza INSERT ALL, MERGE, EXIT WHEN), deklaracja — przed podprogramem")
+    func missingSemicolons() {
+        let src = """
+        begin
+          if a then
+            x := 1
+          else
+            insert all when c > 0 then into t values (1) else into u values (2) select c from s;
+          end if;
+          case b
+            when 1 then y := 2
+            when 2 then exit when z > 0;
+          end case;
+          loop exit when q; end loop;
+        end;
+        """
+        #expect(Self.dump(PLSQLOutline.parse(src, controlFlow: true)) == [
+            "block BEGIN",
+            "  ifStatement IF a",
+            "    elseBranch ELSE",
+            "  caseStatement CASE b",
+            "    whenBranch WHEN 1",
+            "    whenBranch WHEN 2",
+            "  loop LOOP",
+        ])
+        let decl = """
+        create or replace package body pk is
+          g number
+          procedure a is
+            x varchar2(10)
+          function f return number is begin return 1; end;
+          begin null; end a;
+          procedure b accessible by (function inny, procedure p2) is begin null; end b;
+        end pk;
+        create or replace package pk2 is
+          procedure c(p number)
+          function d return number;
+        end;
+        """
+        let nodes = PLSQLOutline.parse(decl)
+        #expect(nodes[0].children.map(\.name) == ["g", "a", "b"])
+        #expect(nodes[0].children[1].children.map(\.name) == ["x", "f"])
+        #expect(Self.text(decl, nodes[0].children[0].range) == "g number")
+        #expect(nodes[1].children.map(\.name) == ["c", "d"])
+        #expect(Self.text(decl, nodes[1].children[0].range) == "procedure c(p number)")
     }
 
     static let compound = """

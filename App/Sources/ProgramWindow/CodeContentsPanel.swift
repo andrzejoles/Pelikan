@@ -123,9 +123,13 @@ final class CodeContentsPanel {
         // Każda zmiana Ustawień uruchamia ten przebieg — bez zmiany widoczności i kolejności nic się nie dzieje.
         let show = workspace.showsCodeContents(document)
         let order = workspace.settings.codeContentsOrder
-        if contents.order != order { contents.order = order }
         let flow = workspace.settings.codeContentsControlFlow
-        if contents.showsControlFlow != flow { contents.showsControlFlow = flow }
+        if contents.order != order || contents.showsControlFlow != flow {
+            contents.order = order
+            contents.showsControlFlow = flow
+            // Drzewo przebudowane — zaznaczenie wraca do elementu z kursorem.
+            caretMoved()
+        }
         guard show != shown else { return }
         if shown == true, contents.frame.width >= 120 { width = contents.frame.width }
         shown = show

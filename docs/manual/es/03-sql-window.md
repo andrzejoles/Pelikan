@@ -46,7 +46,7 @@ La consola SQL*Plus no tiene este panel. En un script con más de 5000 sentencia
 unidades y bloques PL/SQL (con una nota con el número de sentencias).
 
 En los bloques anónimos y las unidades del script el panel muestra también **estructuras de control** (IF, bucles,
-CASE, bloques, manejadores de excepciones — véase el capítulo de la ventana de programa); el botón de bifurcación
+CASE, manejadores de excepciones — véase el capítulo de la ventana de programa); el botón de bifurcación
 junto al filtro las oculta.
 
 ## Variables

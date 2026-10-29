@@ -61,8 +61,10 @@ public enum CodeContents {
             n.children = n.children.filter { $0.kind == .parameter } + sorted(n.children.filter { $0.kind != .parameter }, order: order)
             return n
         }
-        if order != .source, children.contains(where: \.kind.isControlFlow) {
-            return sorted(children.filter { !$0.kind.isControlFlow }, order: order, sortedChildren: true) + children.filter(\.kind.isControlFlow)
+        // Bloki jak struktury — w kolejności źródła.
+        func inSourceOrder(_ n: OutlineNode) -> Bool { n.kind.isControlFlow || n.kind == .block }
+        if order != .source, children.contains(where: inSourceOrder) {
+            return sorted(children.filter { !inSourceOrder($0) }, order: order, sortedChildren: true) + children.filter(inSourceOrder)
         }
         return sorted(children, order: order, sortedChildren: true)
     }
@@ -178,6 +180,14 @@ public enum CodeContents {
         return start..<end
     }
 
+    /// Argumenty `ob.test` dla najbliższej procedury albo funkcji obejmującej pozycję (także z bloku zagnieżdżonego
+    /// albo struktury sterującej w jej ciele).
+    public static func testTarget(at offset: Int, in text: String, kind: DocumentKind) -> (object: String, member: String?)? {
+        let roots = outline(text, kind: kind)
+        guard let node = PLSQLOutline.path(at: offset, in: roots).last(where: { [.procedure, .function].contains($0.kind) }) else { return nil }
+        return testTarget(for: node, in: roots)
+    }
+
     /// Argumenty komendy `ob.test` dla podprogramu: samodzielny — obiekt; w pakiecie — pakiet i element.
     public static func testTarget(for node: OutlineNode, in roots: [OutlineNode]) -> (object: String, member: String?)? {
         guard [.procedure, .function].contains(node.kind) else { return nil }
@@ -200,7 +210,9 @@ extension Workspace {
 
 /// Komendy menu Code Contents (PD-CA-010) — element wskazany pozycją (`offset`, domyślnie kursor).
 enum CodeContentsCommands {
-    static let params = [CommandParameter("offset", .integer, L10n.tr("Pozycja elementu w tekście (domyślnie kursor)"))]
+    /// Pozycja wskazana (menu panelu) — element w tym miejscu, także struktura sterująca (gdy pokazywane); bez niej —
+    /// element pod kursorem z zarysu bez struktur: podprogram, deklaracja, blok albo jednostka (D203).
+    static let params = [CommandParameter("offset", .integer, L10n.tr("Pozycja elementu w tekście — element w tym miejscu, także struktura sterująca; bez argumentu — podprogram, deklaracja, blok albo jednostka pod kursorem"))]
 
     @MainActor static var all: [Command] {
         [
@@ -219,7 +231,7 @@ enum CodeContentsCommands {
                                       submenu: L10n.tr("Zawartość kodu"),
                                       parameters: [CommandParameter("visible", .boolean, L10n.tr("Pokaż (true) albo ukryj (false) struktury sterujące; bez argumentu — przełącza"))],
                                       agent: .none, effect: .settings,
-                                      summary: L10n.tr("Pokazuje lub ukrywa w panelu Zawartość kodu struktury sterujące (IF, pętle, CASE, bloki, obsługę wyjątków) we wszystkich oknach (zapamiętane w Ustawieniach)."),
+                                      summary: L10n.tr("Pokazuje lub ukrywa w panelu Zawartość kodu struktury sterujące (IF, pętle, CASE, obsługę wyjątków; bloki BEGIN zostają) we wszystkich oknach (zapamiętane w Ustawieniach)."),
                                       inMenu: false, feature: "PD-CA-010")) { ctx in
                 let show = ctx.arguments.bool("visible") ?? !ctx.workspace.settings.codeContentsControlFlow
                 ctx.workspace.settings.codeContentsControlFlow = show
@@ -262,8 +274,10 @@ enum CodeContentsCommands {
                                       summary: L10n.tr("Otwiera okno testu procedury lub funkcji wskazanej w Zawartości kodu (z pakietem jako obiektem)."),
                                       inMenu: false, feature: "PD-CA-010"),
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
-                let (doc, node) = try target(ctx)
-                guard let t = CodeContents.testTarget(for: node, in: PLSQLOutline.parse(doc.text)) else {
+                // Najbliższa procedura albo funkcja obejmująca pozycję (także z bloku zagnieżdżonego albo struktury).
+                guard let doc = BuiltinCommands.editable(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Brak aktywnego okna z tekstem")) }
+                let offset = ctx.arguments.int("offset").map(Int.init) ?? doc.selectedRange.lowerBound
+                guard let t = CodeContents.testTarget(at: offset, in: doc.text, kind: doc.kind) else {
                     throw CommandError.notAvailable(L10n.tr("Element nie jest procedurą ani funkcją"))
                 }
                 var args: [String: JSONValue] = ["object": .string(t.object)]
@@ -308,8 +322,12 @@ enum CodeContentsCommands {
     @MainActor
     static func target(_ ctx: CommandContext) throws -> (Document, OutlineNode) {
         guard let doc = BuiltinCommands.editable(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Brak aktywnego okna z tekstem")) }
-        let offset = ctx.arguments.int("offset").map(Int.init) ?? doc.selectedRange.lowerBound
-        let outline = CodeContents.outline(doc.text, kind: doc.kind, controlFlow: ctx.workspace.settings.codeContentsControlFlow)
+        let given = ctx.arguments.int("offset").map(Int.init)
+        let offset = given ?? doc.selectedRange.lowerBound
+        // Z pozycją (menu panelu) — węzeł panelu, także struktura sterująca; bez niej (paleta, skrót, makro) — jak
+        // dotąd podprogram, deklaracja albo jednostka pod kursorem (D203).
+        let controlFlow = given != nil && ctx.workspace.settings.codeContentsControlFlow
+        let outline = CodeContents.outline(doc.text, kind: doc.kind, controlFlow: controlFlow)
         guard let node = CodeContents.element(at: offset, in: outline) else {
             throw CommandError.notAvailable(L10n.tr("Brak elementu w tym miejscu"))
         }

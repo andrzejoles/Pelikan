@@ -2471,7 +2471,8 @@ Prośba właściciela: „W drzewku struktury kodu brakuje mi jeszcze wszystkich
   `beginSection` (inicjalizacja ciała pakietu), `timingPoint` (punkty czasowe wyzwalacza złożonego). Bloki zagnieżdżone
   (`block`, także z DECLARE) jak dotąd. Etykieta `<<nazwa>>` w nowym polu `OutlineNode.label`. Nazwa węzła to słowo
   otwierające wielkimi literami, szczegóły — dalszy nagłówek z białymi znakami zwiniętymi (do 1000 znaków). Zakres: od
-  słowa otwierającego do `END …;` (z etykietą); gałąź — do następnej gałęzi.
+  słowa otwierającego do `END …;` (z etykietą); struktura i blok z etykietą — od `<<` etykiety (Wytnij, Zaznacz i Kopiuj
+  biorą też linię etykiety), przejście dalej do słowa otwierającego; gałąź — do następnej gałęzi.
 - **Instrukcja CASE a wyrażenie:** strukturą jest tylko CASE na początku instrukcji (po `;`, THEN, ELSE, LOOP, BEGIN,
   etykiecie), zamykana `END CASE`. Wewnątrz instrukcji (przypisanie, RETURN, SQL, nagłówek pętli, warunek IF) wyrażenia
   `CASE … END` są liczone i ich END nie zamyka bloku.
@@ -2481,10 +2482,18 @@ Prośba właściciela: „W drzewku struktury kodu brakuje mi jeszcze wszystkich
   granica jednostki — `/`, `CREATE`, nagłówek `PROCEDURE`/`FUNCTION` (także z MEMBER, STATIC…) — kończy wszystkie
   struktury i blok, więc niedokończony podprogram nie zabiera następnych (także w zarysie bez struktur — poprawa
   dotychczasowego zachowania; deklaracje kończą się też na `CREATE`). IF bez THEN i FOR/WHILE bez LOOP (pisany kod) to
-  zwykła instrukcja. Instrukcja bez średnika kończy się przed END, BEGIN, DECLARE, IF, ELSIF, EXCEPTION, CREATE.
+  zwykła instrukcja. Instrukcja bez średnika kończy się przed END, BEGIN, DECLARE, IF, ELSIF, EXCEPTION, CREATE, a także
+  przed ELSE i WHEN gałęzi struktury — poza instrukcjami, w których te słowa są częścią składni: ELSE w INSERT ALL/FIRST,
+  WHEN w INSERT ALL/FIRST, MERGE, EXIT WHEN, CONTINUE WHEN (wyrażenia CASE liczone osobno). Nagłówek struktury nie
+  przechodzi przez ELSE/WHEN poza nawiasami. Deklaracja (zmienna, kursor, typ, pragma, nagłówek podprogramu w
+  specyfikacji) bez średnika kończy się przed PROCEDURE, FUNCTION, BEGIN, CREATE — w nagłówku podprogramu tylko poza
+  nawiasami (`ACCESSIBLE BY (FUNCTION f, PROCEDURE p)`). Pusta instrukcja (sam „;”) nie pochłania następnej.
   Kompilacja warunkowa: dyrektywy `$IF … $THEN`, `$ELSIF … $THEN`, `$ELSE`, `$END`, `$ERROR … $END` są usuwane z tokenów
   przed parsowaniem (kod obu gałęzi zostaje); obsłużone oba zapisy — `$` sklejony ze słowem (dzisiejszy lekser) i jeden
   token `$IF` (równoległa zmiana leksera formatera) — Lekser bez zmian. Dotąd `$END` kończył blok w każdym zarysie.
+  Niedomknięta dyrektywa (`$IF` bez `$THEN`, literówka `$THN`, `$ERROR` bez `$END`) nie pochłania reszty: pomijanie
+  kończy się przed średnikiem, inną dyrektywą albo słowem, którego nie ma w warunku statycznym (BEGIN, END, DECLARE,
+  LOOP, IF, THEN, ELSIF, ELSE, PROCEDURE, FUNCTION, CREATE, EXCEPTION; IS zostaje — `$IF $$x IS NULL`).
 - **Zgodność:** bez `controlFlow` (domyślnie — analiza kodu, podpowiedzi, refaktoryzacja, Przejdź do deklaracji,
   hierarchia kodu) zarys jest dokładnie `withoutControlFlow` zarysu ze strukturami: struktura zastąpiona swoimi dziećmi,
   bloki zagnieżdżone należą do podprogramu jak dotąd (test na wszystkich przykładach). `PLSQLOutline.path` (Code
@@ -2501,22 +2510,33 @@ Prośba właściciela: „W drzewku struktury kodu brakuje mi jeszcze wszystkich
   blok z DECLARE zaznacza całe „DECLARE”, nie pięć liter); śledzenie kursora schodzi przez struktury do najgłębszej
   zawierającej kursor. Filtr nazw dopasowuje też warunek/nagłówek i etykietę; przy filtrze z ponad 3000 trafień drzewo
   rozwinięte tylko do poziomu podprogramów (np. „if” w dużym pakiecie). Sortowanie alfabetyczne i według rodzaju nie
-  przestawia struktur — zostają w kolejności źródła za deklaracjami i podprogramami. Rozwinięcie domyślne bez zmian
+  przestawia struktur ani bloków — zostają w kolejności źródła za deklaracjami i podprogramami. Opóźnienie filtra liczone
+  od łącznej liczby węzłów (z strukturami), nie od liczby korzeni; po przełączeniu struktur albo kolejności zaznaczenie
+  wraca do elementu z kursorem. Rozwinięcie domyślne bez zmian
   (rozwinięte tylko korzenie, więc struktury są zwinięte; klucze z numerem kolejnym wśród rodzeństwa — D199).
 - **Przełącznik — globalnie, nie w oknie:** ustawienie `codeContentsControlFlow` (**Ustawienia › Edytor › Struktury
   sterujące w Zawartości kodu**, domyślnie włączone, w zestawie preferencji Edytor), przycisk z symbolem rozgałęzienia
   obok filtra panelu i **Pokaż struktury sterujące** w menu panelu — jak kolejność sortowania (też w Ustawieniach
   i menu panelu). Prościej niż stan w oknie i worksecie (D199), a wybór „mniej szczegółów” dotyczy raczej stylu pracy niż
   jednego okna. Komenda `codeContents.controlFlow` (argument `visible`, bez niego przełącza; makro zapisuje stan; agent:
-  Brak; skutek: ustawienia — jak `codeContents.sort`, bo zmienia Ustawienia, a nie tylko interfejs). Komendy menu
-  elementu (zaznacz, kopiuj, wytnij) liczą zarys z tym samym ustawieniem — działają na strukturze wskazanej w panelu.
+  Brak; skutek: ustawienia — jak `codeContents.sort`, bo zmienia Ustawienia, a nie tylko interfejs). Przełącznik ukrywa
+  struktury sterujące, nie bloki `BEGIN … END` (te są w drzewie zawsze, jak przed D203).
+- **Komendy elementu** (`codeContents.select`, `copy`, `cut`): z argumentem `offset` (menu panelu) — węzeł w tym miejscu,
+  także struktura sterująca (gdy pokazywane); bez argumentu (paleta, skrót, makro) — jak dotąd element pod kursorem
+  z zarysu bez struktur: podprogram, deklaracja, blok albo jednostka (decyzja przeglądu). `codeContents.test` bierze
+  najbliższą procedurę albo funkcję obejmującą pozycję (`CodeContents.testTarget(at:in:kind:)`) — działa też z kursorem
+  w bloku zagnieżdżonym albo strukturze (dotąd z bloku zagnieżdżonego odmawiał).
 - **Wydajność (R4-01), Release, `PELIKAN_PERF_STRICT=1 swift test -c release --filter "SQLPerformanceTests|PLSQLOutlineTests"`:**
   pakiet 50 000 linii gęsto wypełniony strukturami (2500 procedur, 13 struktur i blok w każdej — 32 500 elementów
   sterujących): zarys ze strukturami 72,7 ms (cel < 400 ms), ukrycie struktur 1,25 ms (< 30 ms), w oknie SQL 104,7 ms
   (< 600 ms), zarys bez struktur 73,2 ms (< 400 ms); dotychczasowe pomiary bez zmian (skrypt 50 000 poleceń 164 ms,
-  pakiet 50 000 linii w oknie SQL 183 ms). Drzewo z dziesiątkami tysięcy węzłów: zwinięte struktury nie są rozwijane
+  pakiet 50 000 linii w oknie SQL 183 ms). Drzewo panelu (`CodeContentsPerformanceTests`, Release): sortowanie
+  alfabetyczne całego drzewa ze strukturami 7,9 ms (< 100 ms), filtr z 2500 trafieniami w warunkach 46,2 ms (< 150 ms),
+  filtr z jednym trafieniem 46,9 ms (< 100 ms). Drzewo z dziesiątkami tysięcy węzłów: zwinięte struktury nie są rozwijane
   przy odświeżeniu, filtr z wieloma trafieniami nie rozwija wszystkiego.
 - **Zrzut:** `docs/screenshots/74-zawartosc-sterowanie-glowne.png` (scenariusz `74-zawartosc-sterowanie.json`, przebieg
   ukryty D196, przykład `fixtures/zamowienia_api.pkb`).
 - **Pominięte:** instrukcje bez END (EXIT, RETURN, GOTO, RAISE) nie są węzłami; etykieta przed zwykłą instrukcją (cel
-  GOTO) nie jest pokazywana; struktury w kodzie Java/MLE — nie dotyczy.
+  GOTO) nie jest pokazywana; struktury w kodzie Java/MLE — nie dotyczy. Kompilacja warunkowa z niezrównoważonymi
+  strukturami w gałęziach (np. `$IF … $THEN IF a THEN $ELSE IF b THEN $END … END IF;`) daje mylące zagnieżdżenie — kod
+  obu gałęzi jest czytany jak jeden.

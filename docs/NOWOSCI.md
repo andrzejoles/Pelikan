@@ -2,17 +2,17 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## 1.7.1 — struktury sterujące w Zawartości kodu
+## 1.9.0 — struktury sterujące w Zawartości kodu
 
 - **Struktury sterujące w drzewie:** Zawartość kodu pokazuje teraz także `IF` z gałęziami `ELSIF` i `ELSE`, pętle
-  `LOOP`, `FOR` (także `FOR r IN (SELECT …) LOOP`) i `WHILE`, `FORALL`, instrukcję `CASE` z gałęziami `WHEN`, bloki
-  `BEGIN … END`, sekcję `EXCEPTION` z obsługami wyjątków, sekcję inicjalizacji pakietu i punkty czasowe wyzwalacza
+  `LOOP`, `FOR` (także `FOR r IN (SELECT …) LOOP`) i `WHILE`, `FORALL`, instrukcję `CASE` z gałęziami `WHEN`,
+  sekcję `EXCEPTION` z obsługami wyjątków, sekcję inicjalizacji pakietu i punkty czasowe wyzwalacza
   złożonego — w oknie programu, SQL i testu. Węzeł ma słowo otwierające, etykietę i skrócony warunek (pełny w
   podpowiedzi), klik przenosi do słowa otwierającego, a drzewo zaznacza najgłębszą strukturę z kursorem. Struktury są
   domyślnie zwinięte; niedokończony `IF` przy pisaniu nie psuje reszty drzewa.
 - **Przełącznik:** przycisk obok filtra panelu, **Pokaż struktury sterujące** w menu panelu i **Ustawienia › Edytor ›
   Struktury sterujące w Zawartości kodu** (domyślnie włączone) — w dużych pakietach drzewo może pokazywać same
-  podprogramy.
+  podprogramy (i bloki `BEGIN … END`, widoczne zawsze).
 
 ## 1.6.0 — Zawartość kodu w oknie SQL i oknie testu
 

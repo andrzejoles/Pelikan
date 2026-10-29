@@ -114,6 +114,49 @@ struct CodeContentsControlFlowTests {
         #expect((doc.text as NSString).substring(with: NSRange(doc.selectedRange)).hasPrefix("  procedure zeta"))
     }
 
+    @Test("komendy elementu bez pozycji — element z zarysu bez struktur; z pozycją — węzeł panelu; Testuj — najbliższy podprogram")
+    func commandsWithoutOffset() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let doc = ws.newDocument(.program)
+        doc.text = Self.source
+        ws.activate(doc.id)
+        let ns = Self.source as NSString
+        // Kursor w gałęzi ELSE: bez argumentu zaznaczana cała procedura (jak przed D203).
+        let inElse = ns.range(of: "else null").location + 5
+        doc.selectedRange = inElse..<inElse
+        let r = try await ws.invoke("codeContents.copy")
+        #expect(r.value?.stringValue?.hasPrefix("  procedure zeta") == true && r.value?.stringValue?.hasSuffix("end zeta;\n") == true)
+        // Kursor w bloku zagnieżdżonym — blok.
+        let inBlock = ns.range(of: "while x < 10").location
+        doc.selectedRange = inBlock..<inBlock
+        #expect(try await ws.invoke("codeContents.copy").value?.stringValue?.hasPrefix("    declare") == true)
+        // Testuj: najbliższa procedura także z bloku zagnieżdżonego i struktury.
+        #expect(CodeContents.testTarget(at: inBlock, in: Self.source, kind: .program)?.member == "alfa")
+        #expect(CodeContents.testTarget(at: inElse, in: Self.source, kind: .program).map { "\($0.object).\($0.member ?? "")" } == "pk.zeta")
+        #expect(CodeContents.testTarget(at: ns.range(of: "g number").location, in: Self.source, kind: .program) == nil)
+    }
+
+    @Test("Wytnij strukturę z etykietą w osobnej linii — razem z etykietą")
+    func cutWithLabel() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let doc = ws.newDocument(.program)
+        doc.text = Self.source
+        ws.activate(doc.id)
+        let forOffset = (Self.source as NSString).range(of: "for r in").location
+        let r = try await ws.invoke("codeContents.cut", CommandArguments(["offset": .int(Int64(forOffset))]))
+        let cut = r.value?.stringValue ?? ""
+        #expect(cut.hasPrefix("    <<glowna>>\n    for r in") && cut.hasSuffix("end loop glowna;\n"))
+        #expect(!doc.text.contains("glowna") && doc.text.contains("  begin\n  exception"))
+    }
+
+    @Test("sortowanie: bloki zagnieżdżone jak struktury — w kolejności źródła")
+    func sortBlocks() {
+        let src = "create procedure p is\n  z number;\n  a number;\nbegin\n  begin null; end;\n  if x then null; end if;\n  <<b2>> begin null; end;\nend;"
+        let sorted = CodeContents.sorted(PLSQLOutline.parse(src, controlFlow: true), order: .name)[0].children
+        #expect(sorted.map(\.kind) == [.variable, .variable, .block, .ifStatement, .block])
+        #expect(sorted.map(\.name).prefix(2) == ["a", "z"] && sorted[4].label == "b2")
+    }
+
     @Test("ustawienie: zapis bez pola — domyślnie włączone")
     func settingsDefault() throws {
         var s = Settings()

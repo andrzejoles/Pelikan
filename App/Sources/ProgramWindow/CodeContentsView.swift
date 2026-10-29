@@ -113,7 +113,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         controlFlowButton.imagePosition = .imageOnly
         controlFlowButton.controlSize = .small
         controlFlowButton.state = .on
-        controlFlowButton.toolTip = L10n.tr("Pokaż struktury sterujące (IF, pętle, CASE, bloki, obsługę wyjątków)")
+        controlFlowButton.toolTip = L10n.tr("Pokaż struktury sterujące (IF, pętle, CASE, obsługę wyjątków)")
         controlFlowButton.setAccessibilityLabel(L10n.tr("Struktury sterujące"))
         controlFlowButton.setAccessibilityValue(L10n.tr("widoczne"))
         controlFlowButton.target = self
@@ -249,7 +249,8 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         filterWork?.cancel()
         let work = DispatchWorkItem { [weak self] in self?.applyFilter() }
         filterWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + (rawNodes.count > 1000 ? 0.45 : 0.18), execute: work)
+        // Liczba wszystkich węzłów (także struktur sterujących), nie samych korzeni.
+        DispatchQueue.main.asyncAfter(deadline: .now() + (Self.count(rawNodes, limit: 1000) > 1000 ? 0.45 : 0.18), execute: work)
     }
 
     private func applyFilter() {

@@ -127,6 +127,10 @@ public enum PLSQLOutline {
         return directiveWords.contains(w) ? (w, 1) : nil
     }
 
+    /// Słowa kończące pomijanie warunku `$IF`/`$ELSIF` i komunikatu `$ERROR` bez dyrektywy zamykającej.
+    static let directiveStops: Set<String> = ["BEGIN", "END", "DECLARE", "LOOP", "IF", "THEN", "ELSIF", "ELSE", "PROCEDURE",
+                                              "FUNCTION", "CREATE", "EXCEPTION"]
+
     /// Tokeny bez dyrektyw kompilacji warunkowej (`$IF warunek $THEN`, `$ELSIF warunek $THEN`, `$ELSE`, `$END`,
     /// `$ERROR … $END`) — kod obu gałęzi zostaje, `$END` nie zamyka bloku, a `$IF` nie jest instrukcją IF.
     static func withoutDirectives(_ t: [Tok]) -> [Tok] {
@@ -139,8 +143,15 @@ public enum PLSQLOutline {
             i += d.count
             // Warunek do $THEN, komunikat $ERROR do $END — pomijane razem z dyrektywą.
             guard let stop = ["IF": "THEN", "ELSIF": "THEN", "ERROR": "END"][d.word] else { continue }
+            // Niedomknięta dyrektywa (pisany kod, literówka „$THN”) nie pochłania reszty: pomijanie kończy się przed
+            // średnikiem, inną dyrektywą albo słowem, które nie występuje w warunku statycznym ani komunikacie.
             while i < t.count {
-                if let e = directive(t, i) { i += e.count; if e.word == stop { break } } else { i += 1 }
+                if let e = directive(t, i) {
+                    if e.word == stop { i += e.count }
+                    break
+                }
+                if t[i].kind == .semicolon || directiveStops.contains(t[i].upper) { break }
+                i += 1
             }
         }
         return out
@@ -566,7 +577,8 @@ public enum PLSQLOutline {
                     node.detail = text(from: t[i], to: t[i + 2])
                     i += 3
                 } else {
-                    while let k = peek(), k.kind != .semicolon, !(["IS", "AS", "AUTHID", "ACCESSIBLE"] + PLSQLOutline.functionOptions).contains(k.upper) {
+                    while let k = peek(), k.kind != .semicolon, !(["IS", "AS", "AUTHID", "ACCESSIBLE"] + PLSQLOutline.functionOptions).contains(k.upper),
+                          !Self.declarationStops.contains(k.upper) {
                         if first == nil { first = k }
                         last = k
                         i += 1
@@ -574,7 +586,17 @@ public enum PLSQLOutline {
                     if let a = first, let b = last { node.detail = text(from: a, to: b) }
                 }
             }
-            while let k = peek(), k.kind != .semicolon, !["IS", "AS"].contains(k.upper) { i += 1 }
+            // ACCESSIBLE BY (PACKAGE a, FUNCTION b) — słowa podprogramów w nawiasie nie kończą nagłówka.
+            var depth = 0
+            while let k = peek(), k.kind != .semicolon, !["IS", "AS"].contains(k.upper), !(depth == 0 && Self.declarationStops.contains(k.upper)) {
+                if k.kind == .leftParen { depth += 1 } else if k.kind == .rightParen { depth = max(0, depth - 1) }
+                i += 1
+            }
+            // Deklaracja bez średnika przed następnym podprogramem albo blokiem (pisany kod) — kończy się przed nim.
+            if let k = peek(), Self.declarationStops.contains(k.upper) {
+                node.range = start..<previousEnd
+                return node
+            }
             if let k = peek(), k.kind == .semicolon {
                 // Deklaracja w specyfikacji.
                 node.range = start..<k.end
@@ -631,7 +653,7 @@ public enum PLSQLOutline {
                     let first = peek()
                     var last: Tok?
                     var d = 0
-                    while let c = peek(), c.kind != .semicolon, !(d == 0 && c.upper == "IS") {
+                    while let c = peek(), c.kind != .semicolon, !(d == 0 && c.upper == "IS"), !Self.declarationStops.contains(c.upper) {
                         if c.kind == .leftParen { d += 1 } else if c.kind == .rightParen { d -= 1 }
                         last = c
                         i += 1
@@ -679,7 +701,7 @@ public enum PLSQLOutline {
                         var last: Tok?
                         if isWord(0, "CONSTANT") { kind = .constant; i += 1 }
                         if isWord(0, "EXCEPTION") { kind = .exception }
-                        while let d = peek(), d.kind != .semicolon, d.upper != ":=", d.upper != "DEFAULT" {
+                        while let d = peek(), d.kind != .semicolon, d.upper != ":=", d.upper != "DEFAULT", !Self.declarationStops.contains(d.upper) {
                             if first == nil { first = d }
                             last = d
                             i += 1
@@ -698,9 +720,14 @@ public enum PLSQLOutline {
         }
 
         /// Do średnika na głębokości 0 (włącznie); zwraca koniec.
+        /// Słowa, przed którymi kończy się deklaracja bez średnika (pisany kod): nagłówek następnego podprogramu,
+        /// początek bloku, następna jednostka.
+        static let declarationStops: Set<String> = ["PROCEDURE", "FUNCTION", "BEGIN", "CREATE"]
+
         mutating func skipStatement() -> Int {
             var depth = 0
             while let k = peek() {
+                if Self.declarationStops.contains(k.upper) { return previousEnd }
                 if k.kind == .leftParen { depth += 1 }
                 if k.kind == .rightParen { depth -= 1 }
                 i += 1
@@ -801,6 +828,8 @@ public enum PLSQLOutline {
                 else if caseDepth == 0 {
                     if depth == 0, words.contains(k.upper) { i = consume ? j + 1 : j; return (first, last) }
                     if Self.statementStops.contains(k.upper) { return nil }
+                    // Gałąź struktury zewnętrznej (pisany kod: brak THEN/LOOP przed ELSE albo WHEN).
+                    if depth == 0, k.upper == "ELSE" || k.upper == "WHEN" { return nil }
                 }
                 if first == nil { first = k }
                 last = k
@@ -810,15 +839,25 @@ public enum PLSQLOutline {
         }
 
         /// Instrukcja bez struktury (przypisanie, wywołanie, SQL) do średnika; wyrażenia CASE … END w środku;
-        /// bez średnika — do END albo słowa z `statementStops` (pisany kod). Zawsze co najmniej jeden token.
+        /// bez średnika — do END albo słowa z `statementStops` (pisany kod), a także przed ELSE i WHEN gałęzi
+        /// struktury — poza instrukcjami, w których te słowa są częścią SQL albo instrukcji (INSERT ALL/FIRST … WHEN …
+        /// ELSE, MERGE … WHEN, EXIT/CONTINUE … WHEN). Zawsze co najmniej jeden token.
         mutating func skipSimpleStatement() {
+            let first = peek()?.upper ?? ""
+            let stopsAtElse = first != "INSERT"
+            let stopsAtWhen = !["INSERT", "MERGE", "EXIT", "CONTINUE"].contains(first)
+            // Pusta instrukcja (sam średnik, np. po pominiętej dyrektywie).
+            if peek()?.kind == .semicolon { i += 1; return }
             i += 1
             var caseDepth = 0
             while let k = peek() {
                 if k.kind == .semicolon { i += 1; return }
                 if k.upper == "CASE" { caseDepth += 1 }
                 else if k.upper == "END" { if caseDepth > 0 { caseDepth -= 1 } else { return } }
-                else if caseDepth == 0, Self.statementStops.contains(k.upper) { return }
+                else if caseDepth == 0 {
+                    if Self.statementStops.contains(k.upper) { return }
+                    if (k.upper == "ELSE" && stopsAtElse) || (k.upper == "WHEN" && stopsAtWhen) { return }
+                }
                 i += 1
             }
         }
@@ -839,17 +878,21 @@ public enum PLSQLOutline {
             return n
         }
 
+        /// Etykieta `<<nazwa>>` przed strukturą: nazwa i początek `<<` (początek zakresu struktury).
+        typealias Label = (name: String, start: Int)
+
         /// Instrukcje do słowa kończącego strukturę (END…, ELSIF, ELSE, WHEN, EXCEPTION), granicy jednostki albo końca
         /// tekstu: struktury sterujące (`emit`) i bloki zagnieżdżone; etykieta `<<nazwa>>` trafia do następnej struktury.
         mutating func statements() -> [OutlineNode] {
             var out: [OutlineNode] = []
-            var label: String?
+            var label: Label?
             while let k = peek() {
                 if closer() != nil || atBoundary() { break }
                 if k.upper == "<<" {
                     i += 1
                     if let n = peek(), n.upper != ">>", n.kind == .identifier || n.kind == .quotedIdentifier || n.kind == .keyword {
-                        label = n.kind == .quotedIdentifier ? String(n.text.dropFirst().dropLast()) : n.text
+                        // Kilka etykiet z rzędu — nazwa ostatniej, zakres od pierwszej.
+                        label = (n.kind == .quotedIdentifier ? String(n.text.dropFirst().dropLast()) : n.text, label?.start ?? k.start)
                         i += 1
                     }
                     if isWord(0, ">>") { i += 1 }
@@ -860,8 +903,9 @@ public enum PLSQLOutline {
                 switch k.upper {
                 case "DECLARE", "BEGIN":
                     let inner = parseBlockBody(allowDeclare: true)
-                    var node = OutlineNode(kind: .block, name: "BEGIN", range: k.start..<inner.end, nameOffset: k.start, children: inner.children)
-                    node.label = lbl
+                    var node = OutlineNode(kind: .block, name: "BEGIN", range: (lbl?.start ?? k.start)..<inner.end, nameOffset: k.start,
+                                           children: inner.children)
+                    node.label = lbl?.name
                     out.append(node)
                 case "IF":
                     if let n = parseIf(label: lbl) { emit(n, &out) } else { skipSimpleStatement() }
@@ -873,9 +917,9 @@ public enum PLSQLOutline {
                     let save = i
                     i += 1
                     if let h = header(until: ["INSERT", "UPDATE", "DELETE", "MERGE", "EXECUTE"], consume: false) {
-                        var n = control(.forall, k, h, label: lbl)
+                        var n = control(.forall, k, h, label: lbl?.name)
                         skipSimpleStatement()
-                        n.range = k.start..<previousEnd
+                        n.range = (lbl?.start ?? k.start)..<previousEnd
                         emit(n, &out)
                     } else {
                         i = save
@@ -890,12 +934,13 @@ public enum PLSQLOutline {
 
         /// IF warunek THEN … [ELSIF warunek THEN …] [ELSE …] END IF; — gałęzie ELSIF i ELSE jako dzieci. nil — bez THEN
         /// przed końcem instrukcji (pisany kod: instrukcja zwykła).
-        mutating func parseIf(label: String?) -> OutlineNode? {
+        mutating func parseIf(label: Label?) -> OutlineNode? {
             let kw = t[i]
+            let start = label?.start ?? kw.start
             let save = i
             i += 1
             guard let h = header(until: ["THEN"]) else { i = save; return nil }
-            var node = control(.ifStatement, kw, h, label: label)
+            var node = control(.ifStatement, kw, h, label: label?.name)
             open.append("IF")
             defer { open.removeLast() }
             var children = statements()
@@ -910,8 +955,8 @@ public enum PLSQLOutline {
                 branchChildren = []
             }
             while true {
-                if peek() == nil { finish(length); node.range = kw.start..<length; break }
-                guard !atBoundary(), let c = closer() else { finish(previousEnd); node.range = kw.start..<previousEnd; break }
+                if peek() == nil { finish(length); node.range = start..<length; break }
+                guard !atBoundary(), let c = closer() else { finish(previousEnd); node.range = start..<previousEnd; break }
                 if c == "ELSIF" || c == "ELSE" {
                     finish(previousEnd)
                     let b = t[i]
@@ -923,10 +968,10 @@ public enum PLSQLOutline {
                 }
                 if c == "END IF" {
                     finish(previousEnd)
-                    node.range = kw.start..<closeStructure(words: 2)
+                    node.range = start..<closeStructure(words: 2)
                     break
                 }
-                if belongsOutside(c) { finish(previousEnd); node.range = kw.start..<previousEnd; break }
+                if belongsOutside(c) { finish(previousEnd); node.range = start..<previousEnd; break }
                 skipStray(c)
                 if branch == nil { children += statements() } else { branchChildren += statements() }
             }
@@ -935,8 +980,9 @@ public enum PLSQLOutline {
         }
 
         /// LOOP …, FOR … LOOP …, WHILE … LOOP … END LOOP [etykieta]; nil — FOR/WHILE bez LOOP (instrukcja zwykła).
-        mutating func parseLoop(label: String?) -> OutlineNode? {
+        mutating func parseLoop(label: Label?) -> OutlineNode? {
             let kw = t[i]
+            let start = label?.start ?? kw.start
             let save = i
             i += 1
             var h: (first: Tok?, last: Tok?)?
@@ -944,15 +990,15 @@ public enum PLSQLOutline {
                 guard let x = header(until: ["LOOP"]) else { i = save; return nil }
                 h = x
             }
-            var node = control(.loop, kw, h, label: label)
+            var node = control(.loop, kw, h, label: label?.name)
             open.append("LOOP")
             defer { open.removeLast() }
             var children = statements()
             while true {
-                if peek() == nil { node.range = kw.start..<length; break }
-                guard !atBoundary(), let c = closer() else { node.range = kw.start..<previousEnd; break }
-                if c == "END LOOP" { node.range = kw.start..<closeStructure(words: 2); break }
-                if belongsOutside(c) { node.range = kw.start..<previousEnd; break }
+                if peek() == nil { node.range = start..<length; break }
+                guard !atBoundary(), let c = closer() else { node.range = start..<previousEnd; break }
+                if c == "END LOOP" { node.range = start..<closeStructure(words: 2); break }
+                if belongsOutside(c) { node.range = start..<previousEnd; break }
                 skipStray(c)
                 children += statements()
             }
@@ -962,12 +1008,13 @@ public enum PLSQLOutline {
 
         /// Instrukcja CASE [wybór] WHEN … THEN … [ELSE …] END CASE; (wyrażenie CASE … END w instrukcji pomija
         /// `skipSimpleStatement`). Gałęzie WHEN i ELSE jako dzieci. nil — bez WHEN (instrukcja zwykła).
-        mutating func parseCaseStatement(label: String?) -> OutlineNode? {
+        mutating func parseCaseStatement(label: Label?) -> OutlineNode? {
             let kw = t[i]
+            let start = label?.start ?? kw.start
             let save = i
             i += 1
             guard let h = header(until: ["WHEN"], consume: false) else { i = save; return nil }
-            var node = control(.caseStatement, kw, h, label: label)
+            var node = control(.caseStatement, kw, h, label: label?.name)
             open.append("CASE")
             defer { open.removeLast() }
             var children = statements()
@@ -982,8 +1029,8 @@ public enum PLSQLOutline {
                 branchChildren = []
             }
             while true {
-                if peek() == nil { finish(length); node.range = kw.start..<length; break }
-                guard !atBoundary(), let c = closer() else { finish(previousEnd); node.range = kw.start..<previousEnd; break }
+                if peek() == nil { finish(length); node.range = start..<length; break }
+                guard !atBoundary(), let c = closer() else { finish(previousEnd); node.range = start..<previousEnd; break }
                 if c == "WHEN" || c == "ELSE" {
                     finish(previousEnd)
                     let b = t[i]
@@ -995,10 +1042,10 @@ public enum PLSQLOutline {
                 }
                 if c == "END CASE" {
                     finish(previousEnd)
-                    node.range = kw.start..<closeStructure(words: 2)
+                    node.range = start..<closeStructure(words: 2)
                     break
                 }
-                if belongsOutside(c) { finish(previousEnd); node.range = kw.start..<previousEnd; break }
+                if belongsOutside(c) { finish(previousEnd); node.range = start..<previousEnd; break }
                 skipStray(c)
                 if branch == nil { children += statements() } else { branchChildren += statements() }
             }

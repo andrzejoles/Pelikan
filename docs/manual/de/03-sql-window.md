@@ -45,7 +45,7 @@ der Fensterleiste ein und aus; die Auswahl bleibt im Fenster, den Standard für 
 nur PL/SQL-Einheiten und -Blöcke (mit einem Hinweis auf die Anzahl der Anweisungen).
 
 In anonymen Blöcken und Einheiten des Skripts zeigt der Bereich auch **Kontrollstrukturen** (IF, Schleifen, CASE,
-Blöcke, Ausnahmebehandlungen — siehe Kapitel zum Programmfenster); die Verzweigungs-Taste neben dem Filter blendet sie aus.
+Ausnahmebehandlungen — siehe Kapitel zum Programmfenster); die Verzweigungs-Taste neben dem Filter blendet sie aus.
 
 ## Variablen
 

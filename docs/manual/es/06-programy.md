@@ -105,8 +105,7 @@ de varias decenas de miles de líneas.
   que no se ha alternado el panel.
 - **Estructuras de control** en Contenido del código: `IF` con las ramas `ELSIF` y `ELSE`, bucles `LOOP`, `FOR`
   (numéricos y de cursor, también `FOR r IN (SELECT …) LOOP`) y `WHILE`, `FORALL`, la sentencia `CASE` con sus ramas
-  `WHEN` (una expresión `CASE … END` en SQL o en una asignación no es un nodo), bloques `BEGIN … END` (también con
-  `DECLARE`), la sección `EXCEPTION` con los manejadores `WHEN excepción`, la sección de inicialización del cuerpo del
+  `WHEN` (una expresión `CASE … END` en SQL o en una asignación no es un nodo), la sección `EXCEPTION` con los manejadores `WHEN excepción`, la sección de inicialización del cuerpo del
   paquete y los puntos de tiempo de un disparador compuesto. Un nodo muestra la palabra de apertura, la etiqueta
   `<<nombre>>` y la condición abreviada (p. ej. «IF v_importe > 0…», «FOR r IN c_emp LOOP»); la cabecera completa
   está en la ayuda emergente. Las estructuras están contraídas por defecto; un clic lleva el cursor a la palabra de
@@ -114,7 +113,8 @@ de varias decenas de miles de líneas.
   en condiciones y etiquetas. Una estructura sin terminar (p. ej. aún sin `END IF` mientras se escribe) termina en el
   `END` del bloque o antes del siguiente subprograma, y `$IF … $END` (compilación condicional) no es una sentencia
   `IF`. El botón de bifurcación junto al filtro o **Mostrar estructuras de control** en el menú del panel las oculta
-  en todas las ventanas (p. ej. en un paquete grande); el mismo ajuste: **Ajustes › Editor › Estructuras de control
+  en todas las ventanas (p. ej. en un paquete grande); los bloques `BEGIN … END` (también con `DECLARE`) se muestran
+  siempre; el mismo ajuste: **Ajustes › Editor › Estructuras de control
   en Contenido del código** (activado por defecto).
 - El menú contextual sobre el nombre de un objeto de la base de datos en el editor ofrece las mismas acciones que el
   Object Browser.

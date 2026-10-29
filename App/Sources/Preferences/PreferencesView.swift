@@ -445,7 +445,7 @@ struct EditorPane: View {
                 // Wspólne dla wszystkich okien; przełącznik też w panelu (przycisk obok filtra, menu) — D203.
                 VStack(alignment: .leading, spacing: 2) {
                     Toggle(L10n.tr("Struktury sterujące w Zawartości kodu"), isOn: setting(workspace, \.codeContentsControlFlow))
-                    Text(L10n.tr("IF, pętle, CASE, bloki BEGIN i obsługa wyjątków jako węzły drzewa (domyślnie zwinięte)."))
+                    Text(L10n.tr("IF, pętle, CASE i obsługa wyjątków jako węzły drzewa (domyślnie zwinięte); bloki BEGIN są widoczne zawsze."))
                         .font(.uiSecondary).foregroundStyle(.secondary)
                 }
                 Picker(L10n.tr("Kolejność w Zawartości kodu"), selection: setting(workspace, \.codeContentsOrder)) {
