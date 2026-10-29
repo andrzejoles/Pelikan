@@ -114,7 +114,7 @@ struct BeautifierTests {
         #expect(out.contains("CREATE OR REPLACE TRIGGER trg BEFORE INSERT ON emp FOR EACH ROW\nDECLARE\n  v NUMBER;\nBEGIN\n"))
         #expect(out.contains("  CASE\n    WHEN :new.sal > 10 THEN\n      v := 1;\n    ELSE\n      v := 2;\n  END CASE;\n"))
         #expect(out.contains("  WITH   x AS (SELECT 1 a\n               FROM   dual)\n  SELECT a,\n"))
-        #expect(out.contains("  MERGE INTO t\n  USING  s ON (t.id = s.id)\n"))
+        #expect(out.contains("  MERGE INTO t\n  USING  s\n  ON     (t.id = s.id)\n"))
         #expect(out.contains("  FOR i IN 1..10 LOOP\n    NULL;\n  END LOOP;\n"))
     }
 

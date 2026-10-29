@@ -204,6 +204,14 @@ public enum Beautifier {
                 let glued = prev.map { $0.end == t.start } ?? false
                 let must = glued && prev.map { !separable($0.kind, $0.text, t.kind, x) } == true
                 switch t.kind {
+                case .comma where out.items.last?.hasPrefix("c:") == true:
+                    // Przecinek za komentarzem `--` jest równoważny przecinkowi przed nim (`a -- k\n, b` ≡ `a, -- k\n b`):
+                    // formater może przenieść przecinek na tę stronę komentarza, po której stoi element.
+                    var k = out.items.count
+                    while k > 0, out.items[k - 1].hasPrefix("c:") { k -= 1 }
+                    out.items.insert("\(t.kind.rawValue):,", at: k)
+                    out.glued.insert(false, at: k)
+                    out.mustGlue.insert(false, at: k)
                 case .identifier, .keyword: out.append("w:" + x.uppercased(), glued: glued, must: must)
                 case .lineComment: out.append("c:" + x.trimmingCharacters(in: .whitespaces), glued: glued, must: must)
                 default: out.append("\(t.kind.rawValue):" + x, glued: glued, must: must)
@@ -267,7 +275,8 @@ struct Formatter {
         var isWord: Bool { kind == .identifier || kind == .keyword }
     }
 
-    enum FrameKind { case unit, declare, block, exception, ifStmt, loop, caseStmt, caseExpr, sql, paren }
+    /// `branch` — treść gałęzi WHEN … THEN / ELSE obsługi wyjątków i instrukcji CASE (poziom gałęzi + 1).
+    enum FrameKind { case unit, declare, block, exception, ifStmt, loop, caseStmt, caseExpr, sql, paren, branch }
     struct Frame {
         var kind: FrameKind
         /// Poziom wcięcia linii BEGIN/END/ELSE (jednostki wcięcia).
@@ -281,6 +290,9 @@ struct Formatter {
         var subquery = false
         /// SQL: kolumna elementów bieżącej klauzuli (po słowie klauzuli).
         var itemColumn = 0
+        /// SQL: pierwsze słowo instrukcji (SELECT, INSERT, MERGE…) i INSERT ALL / FIRST.
+        var statement = ""
+        var multiInsert = false
     }
 
     let source: NSString
@@ -425,13 +437,68 @@ struct Formatter {
     func cased(_ t: Tok) -> String {
         guard t.isWord else { return t.text }
         if let special = options.specialCase.first(where: { $0.uppercased() == t.upper }) { return special }
-        return Self.apply(rule(for: t), to: t)
+        let normal = Self.apply(rule(for: t), to: t)
+        return Self.specialCasePattern(options.specialCase, word: normal) ?? normal
+    }
+
+    /// Pisownia specjalna ze wzorcem `%` albo `*` (UG 29.2, np. `DBA_%`): część stała wzorca w jego pisowni, reszta słowa
+    /// według zwykłych reguł. Pierwszy pasujący wzorzec (z jednym znakiem wieloznacznym).
+    static func specialCasePattern(_ patterns: [String], word: String) -> String? {
+        for p in patterns {
+            let parts = p.split(separator: "%", omittingEmptySubsequences: false).flatMap { $0.split(separator: "*", omittingEmptySubsequences: false) }
+            guard parts.count == 2 else { continue }
+            let prefix = String(parts[0]), suffix = String(parts[1])
+            let u = word.uppercased()
+            guard u.count >= prefix.count + suffix.count, u.hasPrefix(prefix.uppercased()), u.hasSuffix(suffix.uppercased()) else { continue }
+            return prefix + String(word.dropFirst(prefix.count).dropLast(suffix.count)) + suffix
+        }
+        return nil
+    }
+
+    /// Słowa kluczowe, które nawet w pozycji nazwy zostają słowami kluczowymi (wartości, struktura bloku).
+    static let keywordValues: Set<String> = [
+        "TRUE", "FALSE", "SQLCODE", "SQLERRM", "SYSTIMESTAMP", "CURRENT_DATE", "CURRENT_TIMESTAMP", "LOCALTIMESTAMP",
+        "DBTIMEZONE", "SESSIONTIMEZONE", "SELF", "OTHERS", "END", "CASE", "THEN", "ELSE", "LOOP", "IF", "BEGIN", "EXCEPTION",
+        "CONNECT_BY_ROOT", "CONNECT_BY_ISLEAF", "NULLS", "FIRST", "LAST", "ROWS", "ONLY",
+    ]
+
+    /// Słowo kluczowe niezastrzeżone użyte jako nazwa (wielkość liter jak identyfikator): przy kropce (`h.path`,
+    /// `l.DELETE`), etykieta w EXIT/CONTINUE/GOTO/END LOOP, nazwa kolumny albo alias w liście SELECT, element listy
+    /// w nawiasie (`(empno, path)`).
+    func keywordAsIdentifier(_ t: Tok) -> Bool {
+        let p = token(before: t), n = token(after: t)
+        if p?.text == "%" { return false }   // atrybut kursora: c%NOTFOUND, SQL%BULK_EXCEPTIONS
+        if p?.kind == .dot { return true }
+        if n?.kind == .dot, t.upper != "SELF", t.upper != "SQL" { return true }
+        if let p, p.isWord, ["EXIT", "CONTINUE", "GOTO"].contains(p.upper), t.upper != "WHEN" { return true }
+        if let p, p.upper == "LOOP", token(before: p)?.upper == "END" { return true }
+        guard !Keywords.reserved.contains(t.upper), !SQLWords.dataTypes.contains(t.upper), !Self.keywordValues.contains(t.upper),
+              let f = frames.last else { return false }
+        let pk = p?.kind, nk = n?.kind, nu = n?.upper ?? ""
+        if f.kind == .sql, f.clause == "SELECT" {
+            let after = pk == .comma || p?.upper == "SELECT" || pk == .rightParen || pk == .identifier || pk == .quotedIdentifier
+            return after && (nk == .comma || nu == "FROM" || nu == "INTO")
+        }
+        if f.kind == .paren {
+            return (pk == .comma || pk == .leftParen) && (nk == .comma || nk == .rightParen)
+        }
+        return false
+    }
+
+    /// Poprzedni token przed `t` (wyszukiwanie binarne).
+    func token(before t: Tok) -> Tok? {
+        var lo = 0, hi = toks.count
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            if toks[mid].start < t.start { lo = mid + 1 } else { hi = mid }
+        }
+        return lo > 0 ? toks[lo - 1] : nil
     }
 
     /// Reguła wielkości liter słowa: funkcja wbudowana (przed „(”), pakiet z bazą (przed „.”), typ danych, słowo
     /// kluczowe, identyfikator.
     func rule(for t: Tok) -> BeautifierOptions.WordCase {
-        let base = t.kind == .keyword ? options.keywordCase : options.identifierCase
+        let base = t.kind == .keyword && !keywordAsIdentifier(t) ? options.keywordCase : options.identifierCase
         let next = token(after: t)
         if let c = options.functionCase, next?.kind == .leftParen, SQLWords.functions.contains(t.upper) { return c }
         if let c = options.packageCase, next?.kind == .dot, SQLWords.isPackage(t.upper) { return c }
@@ -471,7 +538,9 @@ struct Formatter {
         "IN", "VALUES", "AND", "OR", "NOT", "EXISTS", "AS", "IS", "SELECT", "FROM", "WHERE", "ON", "USING", "INTO", "THEN",
         "ELSE", "RETURN", "WHEN", "CURSOR", "BY", "SET", "UNION", "ALL", "ANY", "SOME", "LIKE", "BETWEEN", "OF", "HAVING",
         "IF", "ELSIF", "WHILE", "TABLE", "JOIN", "CASE", "END", "LOOP", "DEFAULT", "PIVOT", "UNPIVOT", "OVER", "WITH",
-        "RECORD", "OBJECT", "INSERT", "VARRAY", "KEY", "CHECK", "REFERENCES", "UNIQUE", "PARTITION", "RANGE", "ROW", "ROWS",
+        "RECORD", "OBJECT", "INSERT", "KEY", "CHECK", "REFERENCES", "UNIQUE", "PARTITION", "RANGE", "ROW", "ROWS",
+        "GROUP", "SETS", "APPLY", "STORAGE", "INTERVAL", "THAN", "ADD", "MODIFY", "DROP", "UPDATE", "DELETE", "KEEP", "FILTER",
+        "MATCH_RECOGNIZE", "COLUMNS", "LIST", "HASH", "SUBPARTITION", "FOREIGN", "PRIMARY", "CONSTRAINT",
     ]
 
     func needsSpace(_ prev: Tok?, _ t: Tok) -> Bool {
@@ -486,6 +555,8 @@ struct Formatter {
         if t.text == ".." || p.text == ".." { return false }
         if t.kind == .leftParen {
             if p.kind == .identifier || p.kind == .quotedIdentifier { return false }
+            // Metoda kolekcji (`l.EXISTS(i)`, `l.DELETE(1)`) — jak wywołanie, bez spacji.
+            if p.kind == .keyword, prevPrev()?.kind == .dot { return false }
             if p.kind == .keyword { return Self.spacedBeforeParen.contains(p.upper) }
             return true
         }
@@ -624,6 +695,11 @@ struct Formatter {
                     cur = text
                 }
                 pendingBreak = statementStart ? indentColumns(level) : col
+            } else if options.commaBefore, cur == ",", t.kind == .lineComment, let last = lines.indices.last,
+                      !rawLines.contains(last), !lines[last].trimmingCharacters(in: .whitespaces).hasPrefix("--") {
+                // Przecinek na początku linii przeniesiony przed komentarz końca linii (`a, -- opis`): komentarz zostaje
+                // przy swoim elemencie w poprzedniej linii.
+                lines[last] += " " + text
             } else {
                 // Komentarz na końcu linii zostaje w niej (bez wykonania zaległego złamania linii).
                 cur += (cur.isEmpty ? "" : " ") + text
@@ -640,6 +716,7 @@ struct Formatter {
             frames.removeAll()
             headerLevel = nil
             unitKind = ""
+            ddlOptions = false
             statementStart = true
             pendingBreak = 0
             return
@@ -648,9 +725,43 @@ struct Formatter {
         let w = t.kind == .keyword || t.kind == .identifier ? t.upper : ""
         let prevUpper = prev?.upper ?? ""
 
+        // Etykieta `<<nazwa>>`: bez spacji, w osobnej linii przed instrukcją.
+        if t.text == "<<", statementStart, let name = peek(), name.isWord, peek(2)?.text == ">>" {
+            beginStatementLine(t)
+            put("<<" + Self.apply(options.identifierCase, to: name) + ">>", space: false)
+            i += 2
+            pendingBreak = indentColumns(level)
+            return
+        }
+
         // MARK: Struktura PL/SQL (poza nawiasami i SQL)
         if !frames.contains(where: { $0.kind == .sql || $0.kind == .paren }) {
             if handlePLSQL(t, w, prevUpper) { return }
+            if w == "FORALL", statementStart { forallPending = true }
+            if w == "BETWEEN" { betweenPending = true }
+            // Długi warunek IF/ELSIF/WHILE/EXIT WHEN: AND/OR w nowej linii, gdy reszta się nie mieści.
+            if ["AND", "OR"].contains(w), let col = conditionColumn {
+                if w == "AND", betweenPending {
+                    betweenPending = false
+                } else if column + 1 + segmentLength(from: i, stop: ["AND", "OR", "THEN", "LOOP"]) > options.rightMargin {
+                    if options.andOrPosition == .lineEnd {
+                        put(cased(t), space: true)
+                        pendingBreak = col
+                        return
+                    }
+                    lineBreak(col)
+                    put(cased(t), space: false)
+                    return
+                }
+            }
+        }
+        // Długie wyrażenie: łamanie przed operatorem (||, +, -), gdy następny składnik się nie mieści.
+        if isBinaryOperator(t), !cur.isEmpty,
+           column + 1 + t.text.count + 1 + segmentLength(from: i + 1, stop: []) > options.rightMargin,
+           column > curIndentColumns + options.indent {
+            lineBreak(expressionContinuationColumn())
+            put(t.text, space: false)
+            return
         }
 
         // MARK: SQL
@@ -667,9 +778,23 @@ struct Formatter {
             endStatement()
             return
         }
-        if ["SELECT", "WITH", "INSERT", "UPDATE", "DELETE", "MERGE"].contains(w), (statementStart || prev?.kind == .leftParen || ["IS", "AS"].contains(prevUpper) && t.upper == "SELECT"), !(w == "WITH" && !statementStart && prev?.kind != .leftParen) {
+        // Zapytanie po IS/AS (kursor, widok, MV, CREATE TABLE … AS) i DML po nagłówku FORALL.
+        let afterIsAs = ["IS", "AS"].contains(prevUpper) && ["SELECT", "WITH"].contains(w) && prev?.kind == .keyword
+            && !frames.contains(where: { $0.kind == .sql || $0.kind == .paren })
+        let afterForall = forallPending && ["INSERT", "UPDATE", "DELETE", "MERGE"].contains(w) && !frames.contains(where: { $0.kind == .sql || $0.kind == .paren })
+        if ["SELECT", "WITH", "INSERT", "UPDATE", "DELETE", "MERGE"].contains(w), (statementStart || prev?.kind == .leftParen || afterIsAs || afterForall), !(w == "WITH" && !statementStart && prev?.kind != .leftParen && !afterIsAs) {
             if statementStart { beginStatementLine(t) }
-            frames.append(Frame(kind: .sql, level: level, column: pendingBreak ?? column + (cur.isEmpty || prev?.kind == .leftParen ? 0 : 1), clause: w))
+            if afterIsAs {
+                // Kursor w PL/SQL: zapytanie o wcięcie głębiej; widok, MV, tabela: w kolumnie instrukcji.
+                lineBreak(frames.isEmpty ? indentColumns(level) : indentColumns(level + 1))
+            } else if afterForall {
+                lineBreak(curIndentColumns + options.indent)
+            }
+            forallPending = false
+            var frame = Frame(kind: .sql, level: level, column: pendingBreak ?? column + (cur.isEmpty || prev?.kind == .leftParen ? 0 : 1), clause: w)
+            frame.statement = w
+            frame.multiInsert = w == "INSERT" && ["ALL", "FIRST"].contains(nextSignificant(i)?.upper ?? "")
+            frames.append(frame)
             put(cased(t), space: needsSpace(prev, t))
             if w == "SELECT", let n = peek(), ["DISTINCT", "UNIQUE", "ALL"].contains(n.upper) { i += 1; put(cased(n), space: true) }
             statementStart = false
@@ -691,14 +816,118 @@ struct Formatter {
             beginStatementLine(t)
             statementStart = false
         }
+        // CREATE TABLE/INDEX/MV: klauzule fizyczne (TABLESPACE, STORAGE, PARTITION BY…) w nowych liniach, gdy reszta
+        // instrukcji nie mieści się w linii.
+        if ddlOptions, t.kind == .keyword, Self.physicalOptions.contains(w), w != "PARTITION" || peek()?.upper == "BY",
+           !frames.contains(where: { $0.kind == .sql || $0.kind == .paren }), column > indentColumns(level),
+           column + 1 + remainingLength(from: i) > options.rightMargin {
+            lineBreak(indentColumns(level))
+        }
         put(cased(t), space: needsSpace(prev, t))
+        if t.text == ":=" { operandColumn = column + 1 }
+        if w == "WHEN", ["EXIT", "CONTINUE"].contains(prevUpper) || ["EXIT", "CONTINUE"].contains(prevPrev()?.upper ?? "") {
+            conditionColumn = column + 1
+        }
+    }
+
+    // MARK: Długie wyrażenia i warunki
+
+    /// IF/ELSIF/WHILE/EXIT WHEN: kolumna początku warunku (kolejne AND/OR przy łamaniu).
+    var conditionColumn: Int?
+    /// Kolumna prawej strony `:=` (kontynuacja długiego wyrażenia).
+    var operandColumn: Int?
+    var forallPending = false
+    /// Instrukcja CREATE TABLE/INDEX/VIEW (klauzule fizyczne łamane przy marginesie).
+    var ddlOptions = false
+
+    static let physicalOptions: Set<String> = [
+        "TABLESPACE", "PCTFREE", "PCTUSED", "INITRANS", "MAXTRANS", "STORAGE", "LOGGING", "NOLOGGING", "COMPRESS",
+        "NOCOMPRESS", "PARTITION", "SUBPARTITION", "LOB", "ORGANIZATION", "CACHE", "NOCACHE", "PARALLEL", "NOPARALLEL",
+        "SEGMENT", "ONLINE", "LOCAL", "GLOBAL", "BUILD", "REFRESH",
+    ]
+
+    /// Długość reszty instrukcji od tokenu `start` w jednej linii (do średnika albo końca polecenia).
+    func remainingLength(from start: Int) -> Int {
+        let end = statementEnd(containing: toks[start].start)
+        var len = 0, j = start
+        while j < toks.count, toks[j].start < end, toks[j].kind != .semicolon {
+            if toks[j].kind == .lineComment { return 1000 }
+            len += toks[j].text.count + 1
+            j += 1
+        }
+        return len
+    }
+
+    /// Operator dwuargumentowy o najniższym priorytecie (`||`, `+`, `-`), przed którym wolno złamać długie wyrażenie
+    /// (nie minus jednoargumentowy).
+    func isBinaryOperator(_ t: Tok) -> Bool {
+        guard t.kind == .operator, ["||", "+", "-"].contains(t.text), let p = prev else { return false }
+        switch p.kind {
+        case .identifier, .number, .string, .rightParen, .bindVariable, .quotedIdentifier, .substitution, .directive: return true
+        case .keyword: return !Self.spacedBeforeParen.contains(p.upper) && !["SELECT", "DISTINCT", "UNIQUE"].contains(p.upper)
+        default: return false
+        }
+    }
+
+    /// Długość fragmentu od tokenu `start` do najbliższego (na tej samej głębokości nawiasów) słowa z `stop`, przecinka,
+    /// średnika albo nawiasu zamykającego; przy pustym `stop` — do następnego operatora dwuargumentowego albo słowa
+    /// kluczowego. Komentarz liniowy — „nie mieści się”.
+    func segmentLength(from start: Int, stop: Set<String>) -> Int {
+        var depth = 0, len = 0, j = start
+        var between = false
+        while j < toks.count {
+            let k = toks[j]
+            if depth == 0, j > start {
+                if k.kind == .comma || k.kind == .semicolon { break }
+                if stop.isEmpty {
+                    if k.kind == .operator, ["||", "+", "-"].contains(k.text) { break }
+                    if k.kind == .keyword, toks.indices.contains(j + 1), toks[j + 1].kind != .leftParen { break }
+                } else if k.isWord, stop.contains(k.upper), !(between && k.upper == "AND") {
+                    break
+                }
+                if k.upper == "BETWEEN" { between = true } else if k.upper == "AND" { between = false }
+            }
+            if k.kind == .leftParen { depth += 1 }
+            if k.kind == .rightParen { if depth == 0 { break }; depth -= 1 }
+            if k.kind == .lineComment { return 1000 }
+            len += k.text.count + (j > start ? 1 : 0)
+            j += 1
+        }
+        return len
+    }
+
+    /// Kolumna kontynuacji długiego wyrażenia: w SQL — elementy klauzuli z wcięciem, w nawiasie zawijanym — za nawiasem,
+    /// w PL/SQL — prawa strona `:=` albo wcięcie instrukcji.
+    func expressionContinuationColumn() -> Int {
+        if let f = frames.last {
+            switch f.kind {
+            case .sql: return listColumn(f) + options.indent
+            case .paren: return f.column
+            default: break
+            }
+        }
+        if let c = operandColumn, c < options.rightMargin / 2 { return c }
+        return indentColumns(level) + options.indent
+    }
+
+    /// Najbliższy token po `k` (albo przed) z pominięciem komentarzy i hintów.
+    func nextSignificant(_ k: Int) -> Tok? {
+        var j = k + 1
+        while j < toks.count, [.lineComment, .blockComment, .hint].contains(toks[j].kind) { j += 1 }
+        return j < toks.count ? toks[j] : nil
+    }
+
+    func prevSignificant(_ k: Int) -> Tok? {
+        var j = k - 1
+        while j >= 0, [.lineComment, .blockComment, .hint].contains(toks[j].kind) { j -= 1 }
+        return j >= 0 ? toks[j] : nil
     }
 
     /// Wyrównanie elementów po słowie klauzuli do kolumny (SELECT␣ = 7 znaków): `FROM   emp`.
     mutating func alignAfterKeyword() {
         guard let f = frames.last, f.kind == .sql else { return }
         // INSERT INTO / MERGE INTO — bez wyrównania przed INTO.
-        if peek()?.upper == "INTO", ["INSERT", "MERGE"].contains(toks[i].upper) { return }
+        if nextSignificant(i)?.upper == "INTO", ["INSERT", "MERGE"].contains(toks[i].upper) { return }
         if options.clauseLayout == .ownLine {
             // Słowo klauzuli w osobnej linii, elementy wcięte pod nim.
             let col = f.column + options.indent
@@ -742,28 +971,90 @@ struct Formatter {
         ["RETURNING"], ["RETURN"], ["LEFT", "OUTER", "JOIN"], ["RIGHT", "OUTER", "JOIN"], ["FULL", "OUTER", "JOIN"], ["LEFT", "JOIN"],
         ["RIGHT", "JOIN"], ["FULL", "JOIN"], ["INNER", "JOIN"], ["CROSS", "JOIN"], ["NATURAL", "JOIN"], ["JOIN"], ["USING"],
         ["WHEN", "MATCHED"], ["WHEN", "NOT", "MATCHED"], ["FETCH"], ["OFFSET"], ["FOR", "UPDATE"], ["WINDOW"], ["LOG", "ERRORS"],
+        ["CROSS", "APPLY"], ["OUTER", "APPLY"], ["PIVOT"], ["UNPIVOT"], ["MATCH_RECOGNIZE"],
     ]
 
     /// Słowo rozpoczynające klauzulę w instrukcji SQL na jej głębokości: nowa linia w kolumnie instrukcji.
     mutating func sqlClause(_ t: Tok, _ w: String, _ f: Frame) -> Bool {
         guard t.isWord else { return false }
         if w == "BETWEEN" { betweenPending = true }
-        // Główne zapytanie po definicjach WITH: SELECT w nowej linii w kolumnie instrukcji.
-        if w == "SELECT", prev?.kind == .rightParen || prev?.kind == .comma && f.clause == "WITH" {
+        let setOperators: Set<String> = ["UNION", "ALL", "MINUS", "INTERSECT", "EXCEPT"]
+        // Główne zapytanie po definicjach WITH (także po SEARCH/CYCLE), zapytanie po UNION/MINUS… i w INSERT … SELECT:
+        // SELECT w nowej linii w kolumnie instrukcji.
+        if w == "SELECT" || w == "WITH" && f.statement == "INSERT",
+           prev?.kind == .rightParen || prev?.kind == .comma && f.clause == "WITH" || ["SEARCH", "CYCLE"].contains(f.clause)
+            || f.kind == .sql && setOperators.contains(prevSignificant(i)?.upper ?? "") && setOperators.contains(f.clause)
+            || f.statement == "INSERT" && prev?.kind != .leftParen {
             lineBreak(clauseColumn(f, w))
             put(cased(t), space: false)
-            frames[frames.count - 1].clause = "SELECT"
+            frames[frames.count - 1].clause = w
             alignAfterKeyword()
             return true
         }
+        // SEARCH … SET / CYCLE … SET w zapytaniu rekurencyjnym — pod nazwą definicji WITH.
+        if ["SEARCH", "CYCLE"].contains(w), ["WITH", "SEARCH"].contains(f.clause), prev?.kind == .rightParen || prev?.kind == .string || prev?.isWord == true {
+            lineBreak(listColumn(f))
+            put(cased(t), space: false)
+            frames[frames.count - 1].clause = w
+            return true
+        }
+        // Operator zbiorowy w osobnej linii (następny SELECT — od nowej linii).
+        if setOperators.subtracting(["ALL"]).contains(w) {
+            var text = cased(t)
+            if w == "UNION", peek()?.upper == "ALL" { text += " " + cased(toks[i + 1]); i += 1 }
+            lineBreak(clauseColumn(f, text))
+            put(text, space: false)
+            frames[frames.count - 1].clause = w
+            if peek()?.kind != .leftParen { pendingBreak = clauseColumn(f, "SELECT") }
+            return true
+        }
+        // INSERT ALL / FIRST: WHEN … THEN i ELSE w kolumnie instrukcji.
+        if f.multiInsert, ["WHEN", "ELSE"].contains(w) {
+            lineBreak(clauseColumn(f, w))
+            put(cased(t), space: false)
+            frames[frames.count - 1].clause = "WHEN"
+            return true
+        }
+        // MERGE: ON (…) po USING — w osobnej linii jak klauzula; DELETE WHERE po UPDATE SET.
+        if w == "ON", f.statement == "MERGE", f.clause == "USING" {
+            lineBreak(clauseColumn(f, w))
+            put(cased(t), space: false)
+            frames[frames.count - 1].clause = "MERGEON"
+            alignAfterKeyword()
+            return true
+        }
+        if w == "DELETE", f.statement == "MERGE", peek()?.upper == "WHERE" {
+            lineBreak(clauseColumn(f, w))
+            put(cased(t) + " " + cased(toks[i + 1]), space: false)
+            i += 1
+            frames[frames.count - 1].clause = "WHERE"
+            frames[frames.count - 1].itemColumn = column + 1
+            return true
+        }
+        // WITH READ ONLY / WITH CHECK OPTION na końcu zapytania widoku.
+        if w == "WITH", ["READ", "CHECK"].contains(peek()?.upper ?? "") {
+            lineBreak(clauseColumn(f, w))
+            put(cased(t), space: false)
+            frames[frames.count - 1].clause = "WITHOPTION"
+            return true
+        }
+        // RETURNING … INTO / BULK COLLECT INTO — jedna klauzula.
+        if f.clause == "RETURNING", ["INTO", "BULK"].contains(w) { return false }
         if ["AND", "OR"].contains(w) {
             if w == "AND", betweenPending { betweenPending = false; return false }
             guard ["WHERE", "HAVING", "ON", "WHEN", "START", "CONNECT"].contains(f.clause) || f.clause.hasSuffix("JOIN") else { return false }
+            // Warunek złączenia: kolejne warunki pod ON (słowo ON w kolumnie wcięcia złączenia).
+            let onColumn = options.clauseLayout == .rightAligned ? clauseColumn(f, w) : f.column + options.indent
             // Na końcu linii — chyba że linię zamknął już komentarz (`-- …`): wtedy AND/OR nie zostaje sam w linii,
             // tylko jak przy układzie „na początku linii”.
             if options.andOrPosition == .lineEnd, prev?.kind != .lineComment {
                 put(cased(t), space: true)
-                pendingBreak = listColumn(f)
+                pendingBreak = f.clause == "ON" && options.clauseLayout != .ownLine ? onColumn + 3 : listColumn(f)
+                return true
+            }
+            if f.clause == "ON", options.clauseLayout != .ownLine {
+                lineBreak(onColumn)
+                put(cased(t), space: false)
                 return true
             }
             if options.clauseLayout == .ownLine {
@@ -787,7 +1078,7 @@ struct Formatter {
             return true
         }
         // INTO po INSERT/MERGE zostaje w linii instrukcji.
-        if w == "INTO", ["INSERT", "MERGE"].contains(prev?.upper ?? "") { put(cased(t), space: true); return true }
+        if w == "INTO", ["INSERT", "MERGE"].contains(prevSignificant(i)?.upper ?? "") { put(cased(t), space: true); return true }
         // USING w MERGE jest klauzulą; w JOIN … USING (…) — nie.
         if w == "USING", f.clause != "MERGE", f.clause != "INTO" { return false }
         // RETURN tylko w RETURNING … INTO (PL/SQL) — poza SQL nie trafia tutaj.
@@ -839,19 +1130,30 @@ struct Formatter {
         }
     }
 
+    static let listClauses: Set<String> = ["SELECT", "FROM", "BY", "SET", "INTO", "RETURNING", "VALUES", "WITH"]
+
     mutating func comma() {
+        // Przecinek za komentarzem `--` końca linii elementu (przecinek na końcu linii): przed komentarzem, przy
+        // elemencie (`b, -- opis`), nie sam w następnej linii — `verify` traktuje oba położenia jako równoważne.
+        if !options.commaBefore, let p = prev, p.kind == .lineComment, pendingBreak != nil {
+            let comment = p.text.trimmingCharacters(in: .whitespaces)
+            let before = String(cur.dropLast(comment.count)).trimmingCharacters(in: .whitespaces)
+            if cur.hasSuffix(comment), !before.isEmpty, !before.hasSuffix(",") {
+                cur = before + ", " + comment
+                return
+            }
+        }
         put(",", space: false)
         guard let f = frames.last else { return }
         switch f.kind {
         case .sql:
-            let listClauses: Set<String> = ["SELECT", "FROM", "BY", "SET", "INTO", "RETURNING", "VALUES", "WITH"]
-            guard listClauses.contains(f.clause) else { return }
+            guard Self.listClauses.contains(f.clause) else { return }
             if options.listLayout == .onePerLine || column > options.rightMargin {
                 breakForList(listColumn(f))
             }
         case .paren where f.wrap:
             breakForList(f.column)
-        case .unit, .declare, .block, .exception, .ifStmt, .loop, .caseStmt, .caseExpr, .paren:
+        case .unit, .declare, .block, .exception, .ifStmt, .loop, .caseStmt, .caseExpr, .paren, .branch:
             if column > options.rightMargin { pendingBreak = continuationColumn() }
         }
     }
@@ -894,6 +1196,9 @@ struct Formatter {
             } else if frames.last?.kind != .paren {
                 if headerLevel != nil { layout = options.parameterDeclarations } else if prev?.isWord == true { layout = options.callParameters }
             }
+            // Rozmiar typu (`NUMBER(14, 2)`) nigdy nie jest łamany; argumenty PRAGMA — tylko przy marginesie.
+            if let p = prev, p.isWord, Self.sizedTypes.contains(p.upper) { hasComma = false }
+            if prevPrev()?.upper == "PRAGMA" { layout = .fit }
             wrap = hasComma && (layout == .onePerLine || column + length > options.rightMargin)
         }
         let inner = options.spaceInsideParentheses && next?.kind != .rightParen ? 1 : 0
@@ -910,6 +1215,10 @@ struct Formatter {
     mutating func endStatement() {
         while let f = frames.last, f.kind == .sql || f.kind == .paren { frames.removeLast() }
         betweenPending = false
+        conditionColumn = nil
+        operandColumn = nil
+        forallPending = false
+        ddlOptions = false
         statementStart = true
         pendingBreak = indentColumns(level)
     }
@@ -934,15 +1243,18 @@ struct Formatter {
                 headerLevel = level
                 headerKind = toks[j].upper == "TYPE" && j + 1 < toks.count && toks[j + 1].upper != "BODY" ? "TYPESPEC" : toks[j].upper
                 unitKind = headerKind
+                if headerKind == "TRIGGER" { triggerHeaderLong = column + triggerHeaderLength(from: i) > options.rightMargin }
                 statementStart = false
                 put(cased(t), space: false)
                 return true
             }
             unitKind = ""
+            ddlOptions = toks[j...].prefix(4).contains { ["TABLE", "INDEX", "VIEW"].contains($0.upper) }
             return false
         }
-        // Podprogram w sekcji deklaracji.
-        if statementStart, ["PROCEDURE", "FUNCTION"].contains(w) || (["MEMBER", "STATIC", "CONSTRUCTOR", "MAP", "ORDER", "OVERRIDING", "FINAL"].contains(w) && unitKind == "TYPE") {
+        // Podprogram w sekcji deklaracji; w wyzwalaczu złożonym — sekcje BEFORE/AFTER/INSTEAD OF … IS.
+        if statementStart, ["PROCEDURE", "FUNCTION"].contains(w) || (["MEMBER", "STATIC", "CONSTRUCTOR", "MAP", "ORDER", "OVERRIDING", "FINAL"].contains(w) && unitKind == "TYPE")
+            || ["BEFORE", "AFTER", "INSTEAD"].contains(w) && unitKind == "COMPOUND" && frames.last?.kind == .declare {
             if options.blankLineBetweenSubprograms, frames.last?.kind == .declare {
                 flush()
                 if let last = lines.last?.trimmingCharacters(in: .whitespaces).uppercased(), !last.isEmpty,
@@ -959,7 +1271,7 @@ struct Formatter {
             return true
         }
         // W nagłówku wyzwalacza AS należy do REFERENCING … AS (ciało zaczyna DECLARE/BEGIN/COMPOUND).
-        if let h = headerLevel, headerKind != "TRIGGER", ["IS", "AS"].contains(w) {
+        if let h = headerLevel, headerKind != "TRIGGER", ["IS", "AS"].contains(w), !(w == "AS" && prevUpper == "SELF") {
             // Typ obiektowy / kolekcja / LANGUAGE / EXTERNAL — bez sekcji deklaracji (zwykła instrukcja do „;”).
             if headerKind == "TYPESPEC" || ["LANGUAGE", "EXTERNAL", "MLE"].contains(peek()?.upper ?? "") {
                 headerLevel = nil
@@ -980,15 +1292,27 @@ struct Formatter {
         }
         if headerKind == "TRIGGER", let h = headerLevel, ["DECLARE", "BEGIN", "COMPOUND"].contains(w) {
             headerLevel = nil
-            if w == "DECLARE" {
+            if w == "DECLARE" || w == "COMPOUND" {
                 lineBreak(indentColumns(h))
                 put(cased(t), space: false)
+                if w == "COMPOUND", peek()?.upper == "TRIGGER" {
+                    i += 1
+                    put(cased(toks[i]), space: true)
+                    unitKind = "COMPOUND"
+                }
                 frames.append(Frame(kind: .declare, level: h))
                 statementStart = true
                 pendingBreak = indentColumns(h + 1)
                 return true
             }
             statementStart = true
+        }
+        // Długi nagłówek wyzwalacza: zdarzenia, ON, REFERENCING, FOR EACH ROW, FOLLOWS, WHEN — w osobnych liniach.
+        if headerKind == "TRIGGER", let h = headerLevel, triggerHeaderLong, prevUpper != "INSTEAD",
+           ["BEFORE", "AFTER", "INSTEAD", "FOR", "ON", "REFERENCING", "FOLLOWS", "PRECEDES", "WHEN", "ENABLE", "DISABLE"].contains(w) {
+            lineBreak(indentColumns(h) + options.indent)
+            put(cased(t), space: false)
+            return true
         }
         if headerLevel != nil { return false }
 
@@ -1048,6 +1372,7 @@ struct Formatter {
             beginStatementLine(t)
             frames.append(Frame(kind: .ifStmt, level: level))
             put(cased(t), space: false)
+            conditionColumn = column + 1
             statementStart = false
             return true
         case "ELSIF", "ELSE":
@@ -1056,18 +1381,22 @@ struct Formatter {
                 put(cased(t), space: false)
                 statementStart = w == "ELSE"
                 if w == "ELSE" { pendingBreak = indentColumns(f.level + 1) }
+                conditionColumn = w == "ELSIF" ? column + 1 : nil
                 return true
             }
+            if w == "ELSE", statementStart { closeBranch() }
             if let f = frames.last, f.kind == .caseStmt {
                 lineBreak(indentColumns(f.level + 1))
                 put(cased(t), space: false)
                 statementStart = true
+                frames.append(Frame(kind: .branch, level: f.level + 1))
                 pendingBreak = indentColumns(f.level + 2)
                 return true
             }
             return false
         case "THEN":
             if let f = frames.last, [.ifStmt, .caseStmt, .exception].contains(f.kind) {
+                conditionColumn = nil
                 if options.thenOnNewLine, f.kind == .ifStmt {
                     lineBreak(indentColumns(f.level))
                     put(cased(t), space: false)
@@ -1075,11 +1404,14 @@ struct Formatter {
                     put(cased(t), space: true)
                 }
                 statementStart = true
+                // Treść gałęzi WHEN … THEN (wyjątki, instrukcja CASE): wszystkie instrukcje o poziom głębiej niż WHEN.
+                if f.kind != .ifStmt { frames.append(Frame(kind: .branch, level: f.level + 1)) }
                 pendingBreak = indentColumns(f.kind == .ifStmt ? f.level + 1 : f.level + 2)
                 return true
             }
             return false
         case "WHEN":
+            if statementStart { closeBranch() }
             if let f = frames.last, f.kind == .exception || f.kind == .caseStmt, statementStart || f.kind == .caseStmt {
                 lineBreak(indentColumns(f.level + 1))
                 put(cased(t), space: false)
@@ -1099,6 +1431,7 @@ struct Formatter {
             return true
         case "LOOP":
             if prevUpper == "END" { return false }
+            conditionColumn = nil
             if !statementStart { put(cased(t), space: true) } else { beginStatementLine(t); put(cased(t), space: false) }
             frames.append(Frame(kind: .loop, level: statementLevelForLoop()))
             statementStart = true
@@ -1108,6 +1441,7 @@ struct Formatter {
             beginStatementLine(t)
             loopStartLevel = level
             put(cased(t), space: false)
+            if w == "WHILE" { conditionColumn = column + 1 }
             statementStart = false
             return true
         default:
@@ -1116,6 +1450,31 @@ struct Formatter {
     }
 
     var loopStartLevel: Int?
+    /// Nagłówek wyzwalacza nie mieści się w linii (klauzule w osobnych liniach).
+    var triggerHeaderLong = false
+
+    /// Długość nagłówka wyzwalacza od CREATE do DECLARE/BEGIN/COMPOUND/CALL (poza nawiasami) w jednej linii.
+    func triggerHeaderLength(from start: Int) -> Int {
+        var depth = 0, len = 0, j = start
+        while j < toks.count {
+            let k = toks[j]
+            if depth == 0, j > start, k.isWord, ["DECLARE", "BEGIN", "COMPOUND", "CALL"].contains(k.upper) { break }
+            if k.kind == .semicolon { break }
+            if k.kind == .leftParen { depth += 1 }
+            if k.kind == .rightParen { depth = max(0, depth - 1) }
+            if k.kind == .lineComment { return 1000 }
+            len += k.text.count + 1
+            j += 1
+        }
+        return len
+    }
+
+    /// Koniec treści gałęzi WHEN/ELSE (następna gałąź tej samej obsługi wyjątków albo instrukcji CASE).
+    mutating func closeBranch() {
+        guard frames.count >= 2, frames[frames.count - 1].kind == .branch,
+              [.exception, .caseStmt].contains(frames[frames.count - 2].kind) else { return }
+        frames.removeLast()
+    }
 
     mutating func statementLevelForLoop() -> Int {
         defer { loopStartLevel = nil }
