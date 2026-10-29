@@ -20749,30 +20749,30 @@
         }
       }
     },
-    "Folder „%@” dobiera połączenia regułą (użytkownik, baza, rola) — takiego folderu nie można usunąć z listy." : {
+    "Folder „%@” dobiera połączenia regułą (użytkownik, baza, rola) — reguły nie da się odtworzyć w Pelikanie. Połączenia pasujące do reguły (%@) wrócą na poziom główny listy." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Folder “%@” picks connections by a rule (user, database, role) — such a folder cannot be removed from the list."
+            "value" : "Folder “%@” picks connections by a rule (user, database, role) — the rule cannot be recreated in Pelikan. Connections matching the rule (%@) will go back to the top level of the list."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Ordner „%@“ wählt Verbindungen per Regel aus (Benutzer, Datenbank, Rolle) — ein solcher Ordner kann nicht aus der Liste entfernt werden."
+            "value" : "Der Ordner „%@“ wählt Verbindungen per Regel aus (Benutzer, Datenbank, Rolle) — die Regel lässt sich in Pelikan nicht neu anlegen. Zur Regel passende Verbindungen (%@) kehren auf die oberste Ebene der Liste zurück."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La carpeta «%@» elige conexiones mediante una regla (usuario, base de datos, rol): una carpeta así no se puede eliminar de la lista."
+            "value" : "La carpeta «%@» elige conexiones mediante una regla (usuario, base de datos, rol): la regla no se puede volver a crear en Pelikan. Las conexiones que cumplen la regla (%@) volverán al nivel superior de la lista."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Тека «%@» добирає з'єднання за правилом (користувач, база, роль) — таку теку не можна вилучити зі списку."
+            "value" : "Тека «%@» добирає з'єднання за правилом (користувач, база, роль) — правило не можна відтворити в Pelikan. З'єднання, що відповідають правилу (%@), повернуться на верхній рівень списку."
           }
         }
       }
@@ -24697,62 +24697,6 @@
         }
       }
     },
-    "Identyfikator albo nazwa folderu (bez argumentu — poziom główny listy)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folder ID or name (no argument — top level of the list)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ordner-ID oder -Name (ohne Argument — oberste Ebene der Liste)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Identificador o nombre de la carpeta (sin argumento: nivel superior de la lista)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ідентифікатор або назва папки (без аргументу — верхній рівень списку)"
-          }
-        }
-      }
-    },
-    "Identyfikator albo nazwa folderu (bez argumentu — wybór z listy folderów)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folder ID or name (without an argument — choose from the list of folders)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID oder Name des Ordners (ohne Argument — Auswahl aus der Ordnerliste)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID o nombre de la carpeta (sin argumento: elegir de la lista de carpetas)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ідентифікатор або назва теки (без аргументу — вибір зі списку тек)"
-          }
-        }
-      }
-    },
     "Identyfikator albo nazwa połączenia" : {
       "localizations" : {
         "en" : {
@@ -25365,6 +25309,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Versions-ID (standardmäßig neueste)"
+          }
+        }
+      }
+    },
+    "Identyfikator, ścieżka („Zespół / Archiwum”) albo nazwa folderu (bez argumentu — poziom główny listy)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder ID, path (“Team / Archive”) or name (without an argument — the top level of the list)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID, Pfad („Team / Archiv“) oder Name des Ordners (ohne Argument — oberste Ebene der Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID, ruta («Equipo / Archivo») o nombre de la carpeta (sin argumento: el nivel superior de la lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор, шлях («Команда / Архів») або назва теки (без аргументу — верхній рівень списку)"
+          }
+        }
+      }
+    },
+    "Identyfikator, ścieżka („Zespół / Archiwum”) albo nazwa folderu (bez argumentu — wybór z listy pustych folderów)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder ID, path (“Team / Archive”) or name (without an argument — choose from the list of empty folders)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID, Pfad („Team / Archiv“) oder Name des Ordners (ohne Argument — Auswahl aus den leeren Ordnern)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID, ruta («Equipo / Archivo») o nombre de la carpeta (sin argumento: elegir de la lista de carpetas vacías)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор, шлях («Команда / Архів») або назва теки (без аргументу — вибір зі списку порожніх тек)"
           }
         }
       }
@@ -89069,6 +89069,34 @@
         }
       }
     },
+    "Usuń folder z regułą" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove folder with a rule"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner mit Regel entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar carpeta con regla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити теку з правилом"
+          }
+        }
+      }
+    },
     "Usuń folder „%@”" : {
       "localizations" : {
         "en" : {
@@ -106709,30 +106737,30 @@
         }
       }
     },
-    "Zapamiętuje położenie i rozmiar okna głównego, szerokość lewej kolumny, jej kartę i panel agenta." : {
+    "Zapamiętuje położenie i rozmiar okna głównego, szerokość lewej kolumny, jej kartę, schowanie kolumny i panel agenta." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remembers the position and size of the main window, the width of the left column, its tab and the agent panel."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Запам'ятовує положення й розмір головного вікна, ширину лівої колонки, її вкладку та панель агента."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recuerda la posición y el tamaño de la ventana principal, el ancho de la columna izquierda, su pestaña y el panel del agente."
+            "value" : "Remembers the position and size of the main window, the width of the left column, its tab, whether the column is hidden and the agent panel."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Merkt sich Position und Größe des Hauptfensters, die Breite der linken Spalte, deren Tab und den Agentenbereich."
+            "value" : "Merkt sich Position und Größe des Hauptfensters, die Breite der linken Spalte, deren Tab, ob die Spalte ausgeblendet ist, und den Agentenbereich."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recuerda la posición y el tamaño de la ventana principal, el ancho de la columna izquierda, su pestaña, si la columna está oculta y el panel del agente."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запам'ятовує положення й розмір головного вікна, ширину лівої колонки, її вкладку, приховання колонки та панель агента."
           }
         }
       }
@@ -119141,6 +119169,34 @@
         }
       }
     },
+    "niejednoznaczna nazwa folderu „%@” — podaj identyfikator albo ścieżkę (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ambiguous folder name “%@” — give the ID or the path (%@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mehrdeutiger Ordnername „%@“ — geben Sie die ID oder den Pfad an (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nombre de carpeta ambiguo «%@»: indica el ID o la ruta (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "неоднозначна назва теки «%@» — вкажіть ідентифікатор або шлях (%@)"
+          }
+        }
+      }
+    },
     "nieoczekiwane zamknięcie" : {
       "localizations" : {
         "en" : {
@@ -122277,6 +122333,34 @@
         }
       }
     },
+    "ukryty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hidden"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ausgeblendet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "oculto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "прихована"
+          }
+        }
+      }
+    },
     "uprawnienia debugera" : {
       "localizations" : {
         "en" : {
@@ -123421,6 +123505,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "видимий"
+          }
+        }
+      }
+    },
+    "widoczny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "visible"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sichtbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "visible"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "видима"
           }
         }
       }
@@ -125521,6 +125633,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Джерело в базі"
+          }
+        }
+      }
+    },
+    "Żaden folder nie jest pusty — usunąć można tylko folder bez połączeń i podfolderów." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No folder is empty — only a folder without connections and subfolders can be removed."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Ordner ist leer — entfernen lässt sich nur ein Ordner ohne Verbindungen und Unterordner."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ninguna carpeta está vacía: solo se puede eliminar una carpeta sin conexiones ni subcarpetas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жодна тека не порожня — вилучити можна лише теку без з'єднань і підтек."
           }
         }
       }

@@ -57,7 +57,7 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
         outline.delegate = self
         outline.target = self
         outline.doubleAction = #selector(doubleClicked)
-        outline.onDelete = { [weak self] in self?.deleteSelectedFolder() }
+        outline.onDelete = { [weak self] in self?.deleteSelected() }
         outline.setAccessibilityLabel(L10n.tr("Lista połączeń"))
         let menu = NSMenu()
         menu.delegate = self
@@ -301,15 +301,13 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
         }
     }
 
-    /// „Usuń folder” (D204): tylko pusty folder — przy niepustym pozycja wyłączona, podpowiedź mówi dlaczego.
+    /// „Usuń folder” (D204): tylko pusty folder. Przy niepustym pozycja zostaje włączona (dostępna dla VoiceOver
+    /// i klawiatury) — podpowiedź i komunikat po wybraniu mówią, dlaczego folder zostaje.
     private func deleteFolderItem(_ f: ConnectionFolder) -> NSMenuItem {
         let i = NSMenuItem(title: L10n.tr("Usuń folder"), action: #selector(deleteFolder(_:)), keyEquivalent: "")
         i.target = self
         i.representedObject = f.id.uuidString
-        if let reason = workspace.connections.deletionBlocker(folder: f.id) {
-            i.toolTip = reason
-            i.action = nil
-        }
+        i.toolTip = workspace.connections.deletionBlocker(folder: f.id)
         return i
     }
 
@@ -318,13 +316,14 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
         workspace.perform("connection.deleteFolder", CommandArguments(["folder": .string(id)]))
     }
 
-    /// Delete na zaznaczonym folderze — ta sama komenda; niepusty folder zostaje z komunikatem o powodzie.
-    private func deleteSelectedFolder() {
-        guard outline.selectedRow >= 0, let node = outline.item(atRow: outline.selectedRow) as? Node else { return }
+    /// Delete na zaznaczonym wierszu: folder — „Usuń folder” (niepusty zostaje z komunikatem o powodzie), połączenie —
+    /// „Usuń…” z jego pytaniem; „Ostatnie” i okno — sygnał dźwiękowy.
+    private func deleteSelected() {
+        guard outline.selectedRow >= 0, let node = outline.item(atRow: outline.selectedRow) as? Node else { return NSSound.beep() }
         switch node.kind {
         case .folder(let f): workspace.perform("connection.deleteFolder", CommandArguments(["folder": .string(f.id.uuidString)]))
-        case .recent: workspace.perform("connection.deleteFolder", CommandArguments(["folder": .string("recent")]))
-        default: NSSound.beep()
+        case .connection(let c): workspace.perform("connection.delete", CommandArguments(["connection": .string(c.id.uuidString)]))
+        case .recent, .window: NSSound.beep()
         }
     }
 
@@ -435,7 +434,7 @@ extension NSColor {
     }
 }
 
-/// Lista połączeń z klawiszem Delete (⌫ albo ⌦) dla zaznaczonego folderu (D204).
+/// Lista połączeń z klawiszem Delete (⌫ albo ⌦) dla zaznaczonego folderu albo połączenia (D204).
 private final class ConnectionOutlineView: NSOutlineView {
     var onDelete: (() -> Void)?
 

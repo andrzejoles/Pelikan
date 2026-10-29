@@ -160,21 +160,48 @@ public final class ConnectionStore {
         try save()
     }
 
+    /// Ścieżka folderu („Zespół / Archiwum”) — listy wyboru i makra (przenośna między instalacjami, D204).
+    public func path(of id: UUID) -> String? {
+        guard let folder = folders.first(where: { $0.id == id }) else { return nil }
+        var names = [folder.name]
+        var parent = folder.parentID
+        var seen: Set<UUID> = [folder.id]
+        while let p = parent, seen.insert(p).inserted, let f = folders.first(where: { $0.id == p }) {
+            names.insert(f.name, at: 0)
+            parent = f.parentID
+        }
+        return names.joined(separator: " / ")
+    }
+
+    /// Folder z argumentu komendy: identyfikator, ścieżka („Zespół / Archiwum”, odstępy wokół „/” dowolne) albo nazwa —
+    /// bez wielkości liter. Nazwa (albo ścieżka) kilku folderów — błąd z prośbą o identyfikator albo ścieżkę.
+    public func resolveFolder(_ spec: String) throws -> UUID {
+        if let id = UUID(uuidString: spec), folders.contains(where: { $0.id == id }) { return id }
+        func parts(_ s: String) -> [String] { s.split(separator: "/").map { $0.trimmingCharacters(in: .whitespaces).lowercased() } }
+        let wanted = parts(spec)
+        let byPath = folders.filter { f in path(of: f.id).map(parts) == wanted }
+        if byPath.count == 1 { return byPath[0].id }
+        let byName = folders.filter { $0.name.caseInsensitiveCompare(spec.trimmingCharacters(in: .whitespaces)) == .orderedSame }
+        if byPath.isEmpty, byName.count == 1 { return byName[0].id }
+        guard byPath.isEmpty, byName.isEmpty else {
+            let examples = (byPath.isEmpty ? byName : byPath).compactMap { path(of: $0.id) }.sorted().map { "„\($0)”" }.joined(separator: ", ")
+            throw CommandError.invalidArgument("folder", L10n.tr("niejednoznaczna nazwa folderu „\(spec)” — podaj identyfikator albo ścieżkę (\(examples))"))
+        }
+        throw CommandError.invalidArgument("folder", L10n.tr("nieznany folder"))
+    }
+
     /// Dlaczego folderu nie można usunąć z listy (D204); nil — folder pusty, można usunąć. Usuwany jest tylko folder bez
-    /// połączeń i bez podfolderów (nic nie znika razem z nim). Folder z regułą dopasowania (UG 19.2) zostaje zawsze —
-    /// reguły nie da się odtworzyć w Pelikanie (przychodzi z importu definicji).
+    /// połączeń przypisanych jawnie i bez podfolderów (nic nie znika razem z nim). Folder z regułą dopasowania (UG 19.2)
+    /// też — komenda pyta wtedy o potwierdzenie (połączenia dopasowane regułą wracają na poziom główny).
     public func deletionBlocker(folder id: UUID) -> String? {
         guard let f = folders.first(where: { $0.id == id }) else { return L10n.tr("nieznany folder") }
-        if f.hasRule {
-            return L10n.tr("Folder „\(f.name)” dobiera połączenia regułą (użytkownik, baza, rola) — takiego folderu nie można usunąć z listy.")
-        }
         let conns = connections.filter { $0.folderID == id }.count
         let subs = folders.filter { $0.parentID == id }.count
         guard conns + subs > 0 else { return nil }
         return L10n.tr("Folder „\(f.name)” nie jest pusty (połączenia: \(conns), podfoldery: \(subs)) — przenieś albo usuń najpierw jego połączenia i podfoldery.")
     }
 
-    /// Usuwa pusty folder (D204); niepusty, z regułą albo nieznany — błąd z powodem, lista bez zmian.
+    /// Usuwa pusty folder (D204); niepusty albo nieznany — błąd z powodem, lista bez zmian.
     public func removeEmpty(folder id: UUID) throws {
         if let reason = deletionBlocker(folder: id) {
             guard folders.contains(where: { $0.id == id }) else { throw CommandError.invalidArgument("folder", reason) }
