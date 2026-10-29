@@ -32,7 +32,22 @@ well as Java sources and MLE modules (JavaScript). You open it with **File › N
   description in the Oracle documentation.
 - The status bar shows whether the text has been changed and not saved, and whether it is not compiled.
 - **File › Save** (⌘S) saves the window text unchanged (no `/` is added), with a name and extension according to
-  the unit (e.g. `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
+  the unit (e.g. `.prc`, `.fnc`, `.trg`).
+- **Specification and body in separate files.** A window with the specification and body of a package is saved to a
+  pair of files `name.pks` (specification) and `name.pkb` (body), a type to `name.tps` and `name.tpb`, without “/”.
+  **Save as…** (and the first **Save** of a new window) asks for a name and creates both files in the chosen folder;
+  when the body file already exists, it asks whether to replace it. Each file keeps its own encoding and line
+  endings, and **Save** writes only the file whose unit has changed. A file contains the text of its tab (with comments
+  above `CREATE` and `GRANT` statements after the unit). A pair window from which you remove the body or to which you
+  add another unit is not saved to these files — **File › Save as single file…** saves the whole window to one file
+  (e.g. `.pck`), as before.
+- Opening `name.pks` or `name.pkb` when the pair file lies next to it opens both units in one window, on the tab of
+  the opened file; the window title is `name.pks + .pkb`. This also works from the Finder, the file browser, recent
+  files, projects and worksets. Files that are not the specification and body of one package or type open separately —
+  also a `.pks` file with a comment after the specification's `END` (saving would move it to the body file). When a
+  pair file has changed on disk since it was opened (another program, `git checkout`), **Save** asks before
+  overwriting it.
+  Set the extensions and pair opening in **Preferences › General › Specification and body in separate files**.
 
 ### Working safely with code in the database
 
@@ -177,6 +192,13 @@ region without formatting can also be marked with the `-- @formatter:off` and `-
   file's encoding blocks saving, with the exact line and column indicated — you change the encoding only deliberately
   with **File › File encoding…**.
 - **File › Read Only** locks the window for editing.
+- An open file is not locked — other programs (an agent, git, an editor) can change it. When you return to the window,
+  a pair tab or Pelikan and the file has changed on disk, Pelikan asks whether to **reload** it; a window with unsaved
+  changes warns that you will lose them (**Keep my changes** keeps the window text, and a later **Save** warns once
+  more before overwriting). A change of the file date alone (e.g. `touch`) does not ask. In a `.pks`/`.pkb` pair window
+  only the changed file is reloaded. A deleted or moved file: **Keep in window** or **Close window**. **File › Reload
+  from disk** does it on demand. In **Preferences › General › Files** you can turn detection off or reload without
+  asking when the window has no changes.
 - **File › Open with Connection…** opens a file with a connection pinned right away.
 - **Edit › Open in External Editor** passes the text to the program set in **Settings › Tools** (e.g. Visual Studio
   Code); when you return to Pelikan, the changes are loaded.

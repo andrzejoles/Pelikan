@@ -237,14 +237,15 @@ public enum ProjectEngine {
 
     /// Pulpit: okna z plikami w katalogu projektu (zapis) i ich ponowne otwarcie.
     public static func captureDesktop(_ project: inout Project, projectURL: URL, ws: Workspace) {
-        project.desktop = ws.documents.compactMap { d in d.fileURL.map { ProjectWindow(path: relativePath($0, projectURL: projectURL), kind: d.kind) } }
+        // Okno pary (D194): oba pliki — przy otwarciu drugi trafia do tego samego okna.
+        project.desktop = ws.documents.flatMap { d in d.fileURLs.map { ProjectWindow(path: relativePath($0, projectURL: projectURL), kind: d.kind) } }
     }
 
     public static func restoreDesktop(_ project: Project, projectURL: URL, ws: Workspace) -> Int {
         var n = 0
         for w in project.desktop {
             let url = w.path.hasPrefix("/") ? URL(fileURLWithPath: w.path) : projectURL.deletingLastPathComponent().appendingPathComponent(w.path)
-            if ws.documents.contains(where: { $0.fileURL?.standardizedFileURL == url.standardizedFileURL }) { continue }
+            if ws.documents.contains(where: { $0.fileURLs.contains(url.standardizedFileURL) }) { continue }
             if (try? ws.openFile(url, as: w.kind)) != nil { n += 1 }
         }
         return n
@@ -424,9 +425,12 @@ enum ProjectCommands {
             Command(CommandDescriptor(id: "project.addActiveFile", title: L10n.tr("Dodaj plik okna do projektu"), category: .project,
                                       agent: .none, effect: .external, summary: L10n.tr("Dodaje plik aktywnego okna do projektu."), feature: "PD-PROJ-001"),
                     validate: { $0.project != nil && $0.activeDocument?.fileURL != nil }) { ctx in
-                guard case (var p, let url)? = try? current(ctx.workspace), let f = ctx.workspace.activeDocument?.fileURL else { return .ok }
-                let rel = ProjectEngine.relativePath(f, projectURL: url)
-                if !p.items.contains(where: { $0.path == rel }) { p.items.append(.file(rel)) }
+                guard case (var p, let url)? = try? current(ctx.workspace), let d = ctx.workspace.activeDocument, d.fileURL != nil else { return .ok }
+                // Okno pary (D194): oba pliki.
+                for f in d.fileURLs {
+                    let rel = ProjectEngine.relativePath(f, projectURL: url)
+                    if !p.items.contains(where: { $0.path == rel }) { p.items.append(.file(rel)) }
+                }
                 ctx.workspace.project = p
                 try save(ctx.workspace)
                 return .ok

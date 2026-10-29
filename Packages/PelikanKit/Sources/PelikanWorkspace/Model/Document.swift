@@ -65,6 +65,13 @@ public final class Document: Identifiable {
     public var fileURL: URL?
     /// Kodowanie i zakończenia linii pliku (zapis w tym samym formacie, w jakim plik otwarto).
     public var fileFormat = TextFileFormat()
+    /// Okno programu powiązane z plikami specyfikacji i ciała (D194): każda jednostka zapisywana do swojego pliku;
+    /// `fileURL` to wtedy plik specyfikacji (klucz stanu okna, historii lokalnej, workseta). Puste — jeden plik okna.
+    public var unitFiles: [UnitFile] = []
+    /// Stan plików okna na dysku z otwarcia, zapisu albo wczytania ponownego (D197) — wykrywanie zmian przez inny program.
+    @ObservationIgnored public var diskStamps: [URL: FileStamp] = [:]
+    /// Skrót bajtów pliku okna (bez pary) z otwarcia albo zapisu — zapis ostrzega, gdy plik zmienił się na dysku.
+    @ObservationIgnored public var savedFileHash: UInt64?
     public var text: String {
         didSet {
             if text != oldValue {
@@ -140,6 +147,18 @@ public final class Document: Identifiable {
 
     /// Karta aktywna — karta odcinka z kursorem (nil — okno bez kart).
     public var activeUnitTab: Int? { ProgramUnitTabs.index(of: selectedRange.lowerBound, in: programUnitTabs) }
+
+    /// Karta widoczna w edytorze okna programu (ustawia widok przy zmianie karty) — do odczytu w śledzonym odświeżaniu
+    /// bez obserwacji tekstu i kursora.
+    public var shownUnitTab: Int?
+
+    /// Plik karty widocznej w oknie pary (D194), inaczej plik okna — stan repozytorium na pasku okna. Z pamięci kart,
+    /// bez odczytu tekstu: odświeżanie okna głównego nie dzieli tekstu na jednostki przy każdym znaku (R4-01).
+    public var shownFileURL: URL? {
+        guard unitFiles.count == 2, let i = shownUnitTab, let tabs = tabsCache?.tabs, tabs.indices.contains(i) else { return fileURL }
+        let part: UnitFile.Part = tabs[i].key.hasSuffix(" body") ? .body : .spec
+        return unitFiles.first { $0.part == part }?.url ?? fileURL
+    }
 
     /// Ostatnia pozycja kursora na karcie (klucz karty → odległość od początku odcinka) — powrót na kartę wraca w to
     /// samo miejsce, jak w oknie programu wzorca.
@@ -290,6 +309,11 @@ public final class Document: Identifiable {
 
     public var title: String {
         if let customTitle { return customTitle }
+        if unitFiles.count == 2, let s = unitFiles.first(where: { $0.part == .spec }), let b = unitFiles.first(where: { $0.part == .body }) {
+            // Para plików: „emp_api.pks + .pkb” (ta sama nazwa), inaczej obie nazwy.
+            let same = s.url.deletingPathExtension().lastPathComponent == b.url.deletingPathExtension().lastPathComponent
+            return s.url.lastPathComponent + " + " + (same ? "." + b.url.pathExtension : b.url.lastPathComponent)
+        }
         if let fileURL { return fileURL.lastPathComponent }
         return ordinal > 1 ? L10n.tr("Nowe \(ordinal)") : L10n.tr("Nowe")
     }

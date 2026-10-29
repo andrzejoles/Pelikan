@@ -121,7 +121,7 @@ public enum RibbonModel {
                 .small("file.open"), .small("file.save"), .small("file.saveAs"),
                 .small("file.print"), .small("file.restoreRecovery", label: L10n.tr("Odzyskaj okna")),
                 .menu(L10n.tr("Więcej"), symbol: "ellipsis.circle", commands: [
-                    "file.readOnly", "file.encoding", separator, "file.localHistory", "file.localHistoryList", "file.localHistoryCheckpoint",
+                    "file.saveAsSingleFile", "file.reload", "file.readOnly", "file.encoding", separator, "file.localHistory", "file.localHistoryList", "file.localHistoryCheckpoint",
                     "file.localHistoryCompare", "file.localHistoryRestore", separator, "app.openStartupParameters",
                 ]),
             ]),

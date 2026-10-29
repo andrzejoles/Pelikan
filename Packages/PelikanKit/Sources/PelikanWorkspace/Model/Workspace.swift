@@ -14,6 +14,8 @@ public protocol UIServices: AnyObject {
     func showCommandPalette()
     /// Pytanie z wyborem (np. zapis zmian przy zamykaniu). Zwraca indeks wybranego przycisku albo nil (anuluj).
     func ask(_ title: String, message: String, buttons: [String]) async -> Int?
+    /// Pytanie bez dodatkowego przycisku „Anuluj”: Esc wybiera przycisk `escapeButton` (bezpieczny wybór, D197).
+    func ask(_ title: String, message: String, buttons: [String], escapeButton: Int) async -> Int?
     /// Okno definicji połączenia (nil = nowe).
     func showConnectionEditor(connectionID: UUID?)
     /// Okno logowania (wybór połączenia).
@@ -192,6 +194,9 @@ public protocol UIServices: AnyObject {
 }
 
 extension UIServices {
+    public func ask(_ title: String, message: String, buttons: [String], escapeButton: Int) async -> Int? {
+        await ask(title, message: message, buttons: buttons) ?? escapeButton
+    }
     public func showStage7Tool(_ tool: Stage7Tool) {}
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
     public func showUsages(title: String, hits: [UsageHit]) {}
@@ -400,6 +405,11 @@ public final class Workspace {
     /// Stany okien plików (PD-EDIT-029).
     @ObservationIgnored public private(set) lazy var fileStates = FileStateStore(directory: dataDirectory?.appendingPathComponent("WindowState", isDirectory: true))
     @ObservationIgnored public private(set) lazy var consoles = QueryConsoles(directory: dataDirectory?.appendingPathComponent("Consoles", isDirectory: true))
+    /// Pytania o pliki zmienione przez inny program (D197): wyłączone w trybie skryptu (bez okien dialogowych), jedno
+    /// sprawdzenie naraz, żadne w trakcie zapisu okna.
+    @ObservationIgnored public var externalChangePromptsEnabled = true
+    @ObservationIgnored public internal(set) var savingDocuments = 0
+    @ObservationIgnored var checkingExternalChanges = false
     /// Okna edytowane programem zewnętrznym (PD-EDIT-028) i odzyskiwanie po awarii (PD-FILE-001).
     @ObservationIgnored public var externalEdits: [DocumentID: ExternalDocumentEdit] = [:]
     @ObservationIgnored public private(set) lazy var recovery = RecoveryStore(directory: dataDirectory?.appendingPathComponent("Recovery", isDirectory: true))

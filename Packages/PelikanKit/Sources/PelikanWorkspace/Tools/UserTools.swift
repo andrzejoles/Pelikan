@@ -178,7 +178,8 @@ extension Workspace {
     public func userToolContext() -> UserToolContext {
         var c = UserToolContext()
         if let d = activeDocument {
-            c.file = d.fileURL?.path ?? ""
+            // Okno pary (D194): plik karty z kursorem.
+            c.file = d.activeFileURL?.path ?? ""
             c.text = d.text
             let ns = d.text as NSString
             let sel = d.selectedRange

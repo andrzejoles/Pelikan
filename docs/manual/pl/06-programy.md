@@ -31,7 +31,20 @@ także źródeł Java i modułów MLE (JavaScript). Otworzysz je przez **Plik �
   w dokumentacji Oracle.
 - Pasek stanu pokazuje, czy tekst jest zmieniony i niezapisany oraz czy jest nieskompilowany.
 - **Plik › Zapisz** (⌘S) zapisuje tekst okna bez zmian (bez dopisywania `/`), z nazwą i rozszerzeniem według
-  jednostki (np. `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
+  jednostki (np. `.prc`, `.fnc`, `.trg`).
+- **Specyfikacja i ciało w osobnych plikach.** Okno ze specyfikacją i ciałem pakietu zapisuje się do pary plików
+  `nazwa.pks` (specyfikacja) i `nazwa.pkb` (ciało), typu — `nazwa.tps` i `nazwa.tpb`, bez „/”. **Zapisz jako…** (i
+  pierwsze **Zapisz** nowego okna) pyta o nazwę i tworzy oba pliki w wybranym katalogu; gdy plik ciała już istnieje,
+  pyta, czy go zastąpić. Każdy plik zachowuje swoje kodowanie i końce linii, a **Zapisz** zapisuje tylko plik, którego
+  jednostka się zmieniła. Plik zawiera tekst swojej karty (z komentarzami nad `CREATE` i poleceniami `GRANT` za
+  jednostką). Okno pary, z którego usuniesz ciało albo dodasz inną jednostkę, nie zapisze się do tych plików —
+  **Plik › Zapisz jako jeden plik…** zapisuje całe okno w jednym pliku (np. `.pck`), jak dawniej.
+- Otwarcie `nazwa.pks` albo `nazwa.pkb`, gdy obok leży plik pary, otwiera obie jednostki w jednym oknie na karcie
+  otwartego pliku; tytuł okna to `nazwa.pks + .pkb`. Działa to także z Findera, Przeglądarki plików, listy ostatnich
+  plików, projektu i workseta. Pliki, które nie są specyfikacją i ciałem jednego pakietu albo typu, otwierają się
+  osobno — także plik `.pks` z komentarzem za `END` specyfikacji (przy zapisie przeszedłby do pliku ciała). Gdy plik
+  pary zmienił się na dysku od otwarcia (inny program, `git checkout`), **Zapisz** pyta przed nadpisaniem. Rozszerzenia i otwieranie pary ustawisz w **Preferencje › Ogólne › Specyfikacja i ciało w osobnych
+  plikach**.
 
 ### Bezpieczna praca z kodem w bazie
 
@@ -172,6 +185,13 @@ Komentarze `TODO` i `DONE` (z właścicielem, priorytetem i kategorią) są zbie
   kodowaniu pliku, blokuje zapis z dokładnym wskazaniem linii i kolumny — kodowanie zmienisz tylko świadomie przez
   **Plik › Kodowanie pliku…**.
 - **Plik › Tylko do odczytu** blokuje edycję okna.
+- Otwarty plik nie jest blokowany — inne programy (agent, git, edytor) mogą go zmieniać. Gdy wrócisz do okna, karty
+  pary albo do Pelikana, a plik zmienił się na dysku, Pelikan pyta, czy **wczytać go ponownie**; okno z niezapisanymi
+  zmianami ostrzega, że je utracisz (**Zachowaj moje zmiany** zostawia tekst okna, a późniejsze **Zapisz** jeszcze raz
+  ostrzega przed nadpisaniem). Sama zmiana daty pliku (np. `touch`) nie wywołuje pytania. W oknie pary `.pks`/`.pkb`
+  wczytywany jest tylko zmieniony plik. Plik usunięty albo przeniesiony: **Zachowaj w oknie** albo **Zamknij okno**.
+  **Plik › Wczytaj ponownie z dysku** robi to na żądanie. W **Preferencje › Ogólne › Pliki** wyłączysz wykrywanie
+  albo włączysz wczytywanie bez pytania, gdy okno nie ma zmian.
 - **Plik › Otwórz z połączeniem…** otwiera plik z od razu przypiętym połączeniem.
 - **Edycja › Otwórz w zewnętrznym edytorze** przekazuje tekst do programu wskazanego w **Ustawienia › Narzędzia**
   (np. Visual Studio Code); po powrocie do Pelikana zmiany są wczytywane.

@@ -32,6 +32,26 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
 - **Plan wykonania:** nowy plan pojawia się rozwinięty w całości, a strzałki **Rozwiń wszystkie gałęzie** i **Zwiń
   wszystkie gałęzie** obok wyboru widoku (także na karcie **Plan** wstążki) rozwijają naraz wszystkie gałęzie albo
   zwijają drzewo do korzenia. Przejście do kroku przyciskami kolejności wykonania odsłania go w zwiniętej gałęzi.
+- **Specyfikacja i ciało w osobnych plikach:** okno programu z pakietem albo typem zapisuje specyfikację do pliku
+  `.pks`, a ciało do `.pkb` (typy: `.tps` / `.tpb`), bez „/” — każdy plik w swoim kodowaniu i z własnymi końcami linii,
+  a zapisywany jest tylko plik, którego jednostka się zmieniła. **Zapisz jako…** pyta o nazwę i tworzy oba pliki;
+  **Plik › Zapisz jako jeden plik…** zapisuje okno jak dawniej, w jednym pliku `.pck`. Otwarcie `nazwa.pks` albo
+  `nazwa.pkb` (także z Findera, Przeglądarki plików, listy ostatnich plików i workseta) otwiera obie jednostki w jednym
+  oknie, na karcie otwartego pliku. Rozszerzenia i otwieranie pary ustawisz w **Ustawienia › Ogólne ›
+  Specyfikacja i ciało w osobnych plikach**.
+- **Eksport obiektów użytkownika** w trybie „plik na obiekt” zapisuje specyfikację i ciało pakietu albo typu
+  w osobnych plikach `.pks` / `.pkb` (`.tps` / `.tpb`) bez „/” — gotowe do repozytorium; nowa opcja **Kończ jednostki
+  znakiem /** przywraca „/”. Pliki DDL zawierają wyłącznie CREATE: uprawnienia trafiają do osobnego pliku
+  `nazwa.grants.sql` (albo są pomijane), wyłączony wyzwalacz ma `DISABLE` w `CREATE TRIGGER`, a komentarz z datą
+  eksportu jest tylko na życzenie (**Nagłówek z datą eksportu**). Eksport do jednego pliku (skrypt SQL*Plus) zostaje
+  z „/” i uprawnieniami za obiektami.
+- **Pliki zmienione przez inny program:** otwarty plik nie jest blokowany, a gdy agent, git albo inny edytor zmieni
+  go na dysku, Pelikan przy powrocie do okna (karty pary, aplikacji) pyta, czy wczytać go ponownie — z ostrzeżeniem,
+  gdy okno ma niezapisane zmiany. Sama zmiana daty pliku nie wywołuje pytania; plik usunięty można zachować w oknie
+  albo zamknąć okno. Nowa komenda **Plik › Wczytaj ponownie z dysku**; ustawienia w **Ustawienia › Ogólne › Pliki**.
+- **Uwaga przy powrocie do starszej wersji:** workset z oknem pary plików otwarty w Pelikanie sprzed 1.4.0 przywróci
+  okno z obiema jednostkami i plikiem specyfikacji — zapis zapisałby wtedy obie jednostki do pliku `.pks`. Przed
+  powrotem do starszej wersji zapisz takie okna albo je zamknij.
 
 ## 1.3.1 — poprawki zgłoszeń
 

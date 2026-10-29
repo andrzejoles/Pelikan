@@ -72,8 +72,8 @@ final class FileTreeModel {
     }
 
     private func currentDocuments() -> (open: Set<String>, modified: Set<String>) {
-        (Set(workspace.documents.compactMap { $0.fileURL?.standardizedFileURL.path }),
-         Set(workspace.documents.filter(\.isModified).compactMap { $0.fileURL?.standardizedFileURL.path }))
+        (Set(workspace.documents.flatMap { $0.fileURLs.map(\.path) }),
+         Set(workspace.documents.flatMap { $0.modifiedFileURLs.map(\.path) }))
     }
 
     nonisolated static func modificationDate(_ path: String) -> Date? {

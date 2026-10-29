@@ -33,7 +33,23 @@ o con **Editar** sobre un objeto en el Object Browser (el código se carga direc
   descripción del error en la documentación de Oracle.
 - La barra de estado muestra si el texto se ha modificado y no se ha guardado, y si está sin compilar.
 - **Archivo › Guardar** (⌘S) guarda el texto de la ventana sin cambios (sin añadir `/`), con el nombre y la extensión
-  según la unidad (p. ej., `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
+  según la unidad (p. ej., `.prc`, `.fnc`, `.trg`).
+- **Especificación y cuerpo en archivos separados.** Una ventana con la especificación y el cuerpo de un paquete se
+  guarda en un par de archivos `nombre.pks` (especificación) y `nombre.pkb` (cuerpo); un tipo, en `nombre.tps` y
+  `nombre.tpb`, sin «/». **Guardar como…** (y el primer **Guardar** de una ventana nueva) pide el nombre y crea ambos
+  archivos en la carpeta elegida; si el archivo del cuerpo ya existe, pregunta si reemplazarlo. Cada archivo conserva
+  su codificación y sus finales de línea, y **Guardar** escribe solo el archivo cuya unidad ha cambiado. Un archivo
+  contiene el texto de su pestaña (con los comentarios sobre `CREATE` y las sentencias `GRANT` tras la unidad). Una
+  ventana de par de la que quite el cuerpo o a la que añada otra unidad no se guarda en esos archivos: **Archivo ›
+  Guardar como un solo archivo…** guarda toda la ventana en un archivo (p. ej., `.pck`), como antes.
+- Abrir `nombre.pks` o `nombre.pkb` cuando el archivo del par está al lado abre ambas unidades en una ventana, en la
+  pestaña del archivo abierto; el título de la ventana es `nombre.pks + .pkb`. Funciona también desde el Finder, el
+  explorador de archivos, los archivos recientes, los proyectos y los worksets. Los archivos que no son la
+  especificación y el cuerpo de un mismo paquete o tipo se abren por separado, también un archivo `.pks` con un
+  comentario tras el `END` de la especificación (al guardar pasaría al archivo del cuerpo). Si un archivo del par ha
+  cambiado en el disco desde que se abrió (otro programa, `git checkout`), **Guardar** pregunta antes de
+  sobrescribirlo. Las extensiones y la apertura del par se
+  configuran en **Preferencias › General › Especificación y cuerpo en archivos separados**.
 
 ### Trabajar con seguridad con el código de la base de datos
 
@@ -186,6 +202,14 @@ To-Do**. **Edición › Insertar tarea To-Do** inserta un comentario, y **Cerrar
   puede guardar en la codificación del archivo bloquea el guardado e indica exactamente la línea y la columna; la
   codificación solo se cambia de forma consciente con **Archivo › Codificación del archivo…**.
 - **Archivo › Solo lectura** bloquea la edición de la ventana.
+- Un archivo abierto no se bloquea: otros programas (un agente, git, un editor) pueden cambiarlo. Al volver a la
+  ventana, a una pestaña del par o a Pelikan, si el archivo ha cambiado en el disco, Pelikan pregunta si **volver a
+  cargarlo**; una ventana con cambios sin guardar avisa de que se perderán (**Conservar mis cambios** mantiene el texto
+  de la ventana, y un **Guardar** posterior vuelve a avisar antes de sobrescribir). Un simple cambio de la fecha del
+  archivo (p. ej., `touch`) no pregunta. En una ventana de par `.pks`/`.pkb` solo se vuelve a cargar el archivo
+  modificado. Archivo eliminado o movido: **Conservar en la ventana** o **Cerrar ventana**. **Archivo › Volver a cargar
+  desde el disco** lo hace a petición. En **Preferencias › General › Archivos** puede desactivar la detección o volver a
+  cargar sin preguntar cuando la ventana no tiene cambios.
 - **Archivo › Abrir con conexión…** abre un archivo con la conexión ya fijada.
 - **Edición › Abrir en un editor externo** pasa el texto al programa indicado en **Ajustes › Herramientas** (p.
   ej., Visual Studio Code); al volver a Pelikan se cargan los cambios.

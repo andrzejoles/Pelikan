@@ -94,6 +94,29 @@ public enum ProgramUnitTabs {
                     boundary = min(end, unitLine)
                 }
             }
+            // Polecenia między jednostkami, które nie doklejają się do jednostki bez „/” (GRANT, REVOKE, SHOW ERRORS —
+            // D192), należą do jednostki przed nimi (D194): plik specyfikacji z uprawnieniami za jednostką zapisuje się
+            // razem z nimi. Komentarze, puste linie i inny tekst przed CREATE zostają przy następnej.
+            var q = boundary, grants = boundary
+            while q < unitLine {
+                let line = ns.lineRange(for: NSRange(location: q, length: 0))
+                let t = ns.substring(with: line).trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+                if t.isEmpty { q = NSMaxRange(line); continue }
+                let word = t.prefix { $0.isLetter }
+                if word == "SHOW", t.dropFirst(4).trimmingCharacters(in: .whitespaces).hasPrefix("ERR") { q = NSMaxRange(line); grants = q; continue }
+                guard word == "GRANT" || word == "REVOKE" else { break }
+                // Polecenie do linii, której ostatni znak kodu (bez komentarza) to „;”.
+                func endsStatement(_ r: NSRange) -> Bool {
+                    Lexer(ns.substring(with: r)).tokenize().last(where: { !$0.isTrivia })?.kind == .semicolon
+                }
+                var e = line
+                while !endsStatement(e), NSMaxRange(e) < unitLine {
+                    e = ns.lineRange(for: NSRange(location: NSMaxRange(e), length: 0))
+                }
+                q = NSMaxRange(e)
+                grants = q
+            }
+            boundary = min(max(boundary, grants), unitLine)
             // Odcinki niepuste i rosnące (tekst niepoprawny: dwie jednostki w jednej linii — linia należy do pierwszej).
             starts.append(max(boundary, starts.last! + 1))
         }

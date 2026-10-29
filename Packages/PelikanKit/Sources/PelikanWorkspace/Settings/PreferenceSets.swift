@@ -124,7 +124,8 @@ public enum PreferenceSets {
     static let definitions: [(name: String, polish: String, synonyms: [String], keys: [String])] = [
         (L10n.tr("Ogólne"), "Ogólne", ["General"], ["sessionMode", "logoffWithOpenTransaction", "checkConnectionIntervalSeconds", "pinWindowConnectionsByDefault",
                              "appearance", "uiFontName", "uiFontSize", "uiFontWeight", "language", "confirmSaveNewWindows", "worksetAutosave", "autosaveLayout",
-                             "quickAccessCommands", "showRibbon", "ribbonCollapsed", "toolDock", "logLevel", "logIncludeNames"]),
+                             "quickAccessCommands", "showRibbon", "ribbonCollapsed", "toolDock", "logLevel", "logIncludeNames",
+                             "specBodyExtensions", "openSpecBodyPair", "detectExternalFileChanges", "reloadExternalChangesSilently"]),
         (L10n.tr("Okno SQL"), "Okno SQL", ["SQL Window"], ["autoCommitSQL", "autoCommitTestWindow", "autoSelectStatement", "recordsPerPage", "maximumResultSetMegabytes",
                                  "fetchLOBsOnDemand", "dbmsOutputEnabled", "dbmsOutputClearBeforeExecute", "dbmsOutputBufferSize",
                                  "dateFormat", "timestampFormat", "standardQueries", "gridFontSize", "gridFontName", "gridFontWeight", "gridColors", "rowNumbersInCopyExport", "gridNumberLayout",

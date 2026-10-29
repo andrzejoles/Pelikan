@@ -26265,6 +26265,34 @@
         }
       }
     },
+    "Inny program usunął albo przeniósł plik. Tekst zostaje w oknie — zapis utworzy plik ponownie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another program deleted or moved the file. The text stays in the window — saving creates the file again."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein anderes Programm hat die Datei gelöscht oder verschoben. Der Text bleibt im Fenster — Speichern legt die Datei neu an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otro programa eliminó o movió el archivo. El texto se queda en la ventana; al guardar se vuelve a crear el archivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інша програма видалила або перемістила файл. Текст залишається у вікні — збереження створить файл знову."
+          }
+        }
+      }
+    },
     "Inspekcje kodu (nieużywane zmienne i parametry, kod nieosiągalny, UPDATE/DELETE bez WHERE, niejawne konwersje) i nieznane tabele, kolumny, aliasy wg słownika połączenia; lista problemów." : {
       "localizations" : {
         "en" : {
@@ -33993,6 +34021,34 @@
         }
       }
     },
+    "Kończ jednostki znakiem /" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End units with /"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheiten mit / abschließen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminar las unidades con /"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершувати одиниці знаком /"
+          }
+        }
+      }
+    },
     "Kończy proces CLI, unieważnia token sesji, wycofuje niezatwierdzone zmiany agenta i zamyka jego sesje bazy." : {
       "localizations" : {
         "en" : {
@@ -38721,6 +38777,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kopfzeile in der ersten Zeile"
+          }
+        }
+      }
+    },
+    "Nagłówek z datą eksportu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Header with the export date"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopfzeile mit Exportdatum"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encabezado con la fecha de exportación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заголовок із датою експорту"
           }
         }
       }
@@ -49533,6 +49617,34 @@
         }
       }
     },
+    "Okno jest powiązane z plikami %@ i %@, ale nie zawiera dokładnie specyfikacji i ciała jednego pakietu albo typu — zapis zablokowany. Przywróć jednostki albo zapisz okno w innym pliku (Zapisz jako jeden plik…)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window is linked to the files %@ and %@ but does not contain exactly the specification and body of one package or type — saving is blocked. Restore the units or save the window to another file (Save as single file…)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster ist mit den Dateien %@ und %@ verknüpft, enthält aber nicht genau die Spezifikation und den Body eines Pakets oder Typs — Speichern blockiert. Stellen Sie die Einheiten wieder her oder speichern Sie das Fenster in einer anderen Datei (Als eine Datei speichern …)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana está vinculada a los archivos %@ y %@, pero no contiene exactamente la especificación y el cuerpo de un paquete o tipo: guardado bloqueado. Restaure las unidades o guarde la ventana en otro archivo (Guardar como un solo archivo…)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно пов'язане з файлами %@ і %@, але не містить рівно специфікацію й тіло одного пакета або типу — збереження заблоковано. Відновіть одиниці або збережіть вікно в іншому файлі (Зберегти як один файл…)."
+          }
+        }
+      }
+    },
     "Okno jest tylko do odczytu" : {
       "localizations" : {
         "en" : {
@@ -49617,6 +49729,62 @@
         }
       }
     },
+    "Okno ma niezapisane zmiany — wczytanie z dysku zastąpiłoby je; zrobi to tylko użytkownik." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window has unsaved changes — reloading from disk would replace them; only the user can do that."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster hat ungespeicherte Änderungen — Neuladen von der Festplatte würde sie ersetzen; das kann nur der Benutzer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana tiene cambios sin guardar: recargar desde el disco los reemplazaría; solo puede hacerlo el usuario."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно має незбережені зміни — повторне завантаження з диска замінило б їх; це може зробити лише користувач."
+          }
+        }
+      }
+    },
+    "Okno ma niezapisane zmiany." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window has unsaved changes."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster hat ungespeicherte Änderungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana tiene cambios sin guardar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно має незбережені зміни."
+          }
+        }
+      }
+    },
     "Okno ma otwartą transakcję — zatwierdź albo wycofaj ją przed ponownym połączeniem" : {
       "localizations" : {
         "en" : {
@@ -49669,6 +49837,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Das Fenster hat keinen lokalen Verlauf (Datei speichern oder Objekt kompilieren)"
+          }
+        }
+      }
+    },
+    "Okno nie ma niezapisanych zmian." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window has no unsaved changes."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster hat keine ungespeicherten Änderungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana no tiene cambios sin guardar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно не має незбережених змін."
           }
         }
       }
@@ -49865,6 +50061,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вікно програми має лише одну одиницю"
+          }
+        }
+      }
+    },
+    "Okno programu ze specyfikacją i ciałem zapisuje każdą jednostkę do jej pliku, bez „/”; Zapisz jako tworzy parę plików. Eksport obiektów (plik na obiekt) używa tych rozszerzeń." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A program window with a specification and body saves each unit to its own file, without “/”; Save as creates a pair of files. Export of objects (file per object) uses these extensions."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Programmfenster mit Spezifikation und Body speichert jede Einheit in ihrer eigenen Datei, ohne „/“; Speichern unter erstellt ein Dateipaar. Der Objektexport (Datei pro Objekt) verwendet diese Erweiterungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una ventana de programa con especificación y cuerpo guarda cada unidad en su propio archivo, sin «/»; Guardar como crea un par de archivos. La exportación de objetos (un archivo por objeto) usa estas extensiones."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно програми зі специфікацією й тілом зберігає кожну одиницю в її власний файл, без «/»; «Зберегти як» створює пару файлів. Експорт об'єктів (файл на об'єкт) використовує ці розширення."
           }
         }
       }
@@ -53085,6 +53309,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffnet die Programmquelle (oder DDL eines anderen Objekts) in einem neuen Fenster, ohne Kompilierung; Rückgängigmachen der Agentensitzung schließt das Fenster."
+          }
+        }
+      }
+    },
+    "Otwieraj parę specyfikacja/ciało w jednym oknie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the specification/body pair in one window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paar aus Spezifikation und Body in einem Fenster öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir el par especificación/cuerpo en una sola ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкривати пару специфікація/тіло в одному вікні"
           }
         }
       }
@@ -56701,6 +56953,62 @@
         }
       }
     },
+    "Plik „%@” nie istnieje na dysku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file “%@” does not exist on disk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei „%@“ existiert nicht auf dem Datenträger"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo «%@» no existe en el disco"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл «%@» не існує на диску"
+          }
+        }
+      }
+    },
+    "Plik „%@” został zmieniony przez inny program. Wczytać go ponownie?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file “%@” was changed by another program. Reload it?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei „%@“ wurde von einem anderen Programm geändert. Neu laden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otro programa ha modificado el archivo «%@». ¿Volver a cargarlo?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл «%@» змінено іншою програмою. Завантажити його знову?"
+          }
+        }
+      }
+    },
     "Pliki" : {
       "localizations" : {
         "en" : {
@@ -56813,6 +57121,34 @@
         }
       }
     },
+    "Pliki już istnieją: %@. Zastąpić je?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The files already exist: %@. Replace them?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Dateien existieren bereits: %@. Ersetzen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los archivos ya existen: %@. ¿Reemplazarlos?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файли вже існують: %@. Замінити їх?"
+          }
+        }
+      }
+    },
     "Pliki w katalogach" : {
       "localizations" : {
         "en" : {
@@ -56837,6 +57173,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Файли в каталогах"
+          }
+        }
+      }
+    },
+    "Pliki zmieniły się na dysku: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The files changed on disk: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Dateien wurden auf dem Datenträger geändert: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los archivos han cambiado en el disco: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файли змінилися на диску: %@"
+          }
+        }
+      }
+    },
+    "Pliku %@ nie da się wczytać do karty okna pary (inny podział na jednostki) — otwórz go osobno." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file %@ cannot be loaded into the pair window tab (different split into units) — open it separately."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei %@ kann nicht in den Reiter des Paarfensters geladen werden (andere Aufteilung in Einheiten) — öffnen Sie sie separat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo %@ no se puede cargar en la pestaña de la ventana de par (otra división en unidades): ábralo por separado."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл %@ не вдається завантажити до вкладки вікна пари (інший поділ на одиниці) — відкрийте його окремо."
           }
         }
       }
@@ -58349,6 +58741,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Підзапит"
+          }
+        }
+      }
+    },
+    "Podział okna na pliki dałby w pliku %@ inny tekst niż jedna jednostka (np. dwie jednostki w jednej linii) — zapis zablokowany. Rozdziel jednostki w osobnych liniach albo zapisz okno w jednym pliku (Zapisz jako jeden plik…)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Splitting the window into files would put text other than one unit into the file %@ (e.g. two units on one line) — saving is blocked. Put the units on separate lines or save the window to one file (Save as single file…)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Aufteilung des Fensters auf Dateien ergäbe in der Datei %@ anderen Text als eine Einheit (z. B. zwei Einheiten in einer Zeile) — Speichern blockiert. Setzen Sie die Einheiten in getrennte Zeilen oder speichern Sie das Fenster in einer Datei (Als eine Datei speichern …)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dividir la ventana en archivos dejaría en el archivo %@ un texto distinto de una unidad (p. ej., dos unidades en una línea): guardado bloqueado. Ponga las unidades en líneas separadas o guarde la ventana en un archivo (Guardar como un solo archivo…)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поділ вікна на файли дав би у файлі %@ інший текст, ніж одна одиниця (напр. дві одиниці в одному рядку) — збереження заблоковано. Розділіть одиниці в окремі рядки або збережіть вікно в одному файлі (Зберегти як один файл…)."
           }
         }
       }
@@ -71597,6 +72017,146 @@
         }
       }
     },
+    "Rozszerzenia specyfikacji muszą różnić się od rozszerzeń ciała (pakiet i typ mogą mieć wspólne), składać się z liter, cyfr albo „_” i być inne niż sql, tst, pck, typ, rep, pdd, sqlnb i txt — do czasu poprawki używane są domyślne pks, pkb, tps i tpb." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Specification extensions must differ from body extensions (packages and types may share them), consist of letters, digits or “_” and must not be sql, tst, pck, typ, rep, pdd, sqlnb or txt — until corrected, the defaults pks, pkb, tps and tpb are used."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterungen der Spezifikation müssen sich von denen des Bodys unterscheiden (Pakete und Typen dürfen sie teilen), aus Buchstaben, Ziffern oder „_“ bestehen und dürfen nicht sql, tst, pck, typ, rep, pdd, sqlnb oder txt sein — bis zur Korrektur gelten die Standardwerte pks, pkb, tps und tpb."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las extensiones de la especificación deben ser distintas de las del cuerpo (paquetes y tipos pueden compartirlas), de letras, cifras o «_», y distintas de sql, tst, pck, typ, rep, pdd, sqlnb y txt; hasta corregirlas se usan las predeterminadas pks, pkb, tps y tpb."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розширення специфікації мають відрізнятися від розширень тіла (пакет і тип можуть мати спільні), складатися з літер, цифр або «_» і не бути sql, tst, pck, typ, rep, pdd, sqlnb чи txt — до виправлення використовуються типові pks, pkb, tps і tpb."
+          }
+        }
+      }
+    },
+    "Rozszerzenie ciała pakietu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Package body extension"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterung für Paket-Body"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensión del cuerpo del paquete"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розширення тіла пакета"
+          }
+        }
+      }
+    },
+    "Rozszerzenie ciała typu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type body extension"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterung für Typ-Body"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensión del cuerpo del tipo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розширення тіла типу"
+          }
+        }
+      }
+    },
+    "Rozszerzenie specyfikacji pakietu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Package specification extension"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterung für Paketspezifikation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensión de la especificación del paquete"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розширення специфікації пакета"
+          }
+        }
+      }
+    },
+    "Rozszerzenie specyfikacji typu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type specification extension"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterung für Typspezifikation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensión de la especificación del tipo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розширення специфікації типу"
+          }
+        }
+      }
+    },
     "Rozwija wszystkie gałęzie drzewa planu w aktywnym oknie planu." : {
       "localizations" : {
         "en" : {
@@ -76353,6 +76913,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spezifikation und Body in einer Datei"
+          }
+        }
+      }
+    },
+    "Specyfikacja i ciało w osobnych plikach" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Specification and body in separate files"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spezifikation und Body in getrennten Dateien"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Especificación y cuerpo en archivos separados"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Специфікація й тіло в окремих файлах"
+          }
+        }
+      }
+    },
+    "Specyfikacja i ciało zostaną zapisane w plikach %@ i %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The specification and body will be saved to the files %@ and %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spezifikation und Body werden in den Dateien %@ und %@ gespeichert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La especificación y el cuerpo se guardarán en los archivos %@ y %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Специфікацію й тіло буде збережено у файлах %@ і %@."
           }
         }
       }
@@ -84953,6 +85569,34 @@
         }
       }
     },
+    "Uprawnienia w plikach na obiekt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privileges in files per object"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berechtigungen bei Datei pro Objekt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privilegios en archivos por objeto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привілеї у файлах на об'єкт"
+          }
+        }
+      }
+    },
     "Uprawnienie" : {
       "localizations" : {
         "en" : {
@@ -91365,6 +92009,34 @@
         }
       }
     },
+    "Wczytaj ponownie (utracisz zmiany)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload (discard changes)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu laden (Änderungen verwerfen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a cargar (perder los cambios)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажити знову (втратити зміни)"
+          }
+        }
+      }
+    },
     "Wczytaj ponownie z bazy" : {
       "localizations" : {
         "en" : {
@@ -91389,6 +92061,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Завантажити знову з бази даних"
+          }
+        }
+      }
+    },
+    "Wczytaj ponownie z dysku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload from disk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von der Festplatte neu laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a cargar desde el disco"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажити знову з диска"
           }
         }
       }
@@ -91561,6 +92261,34 @@
         }
       }
     },
+    "Wczytano ponownie %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reloaded %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ neu geladen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se ha vuelto a cargar %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знову завантажено %@"
+          }
+        }
+      }
+    },
     "Wczytano ponownie z bazy" : {
       "localizations" : {
         "en" : {
@@ -91725,6 +92453,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Завантажити знову з бази даних?"
+          }
+        }
+      }
+    },
+    "Wczytać „%@” ponownie z dysku?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload “%@” from disk?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ von der Festplatte neu laden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Volver a cargar «%@» desde el disco?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажити «%@» знову з диска?"
+          }
+        }
+      }
+    },
+    "Wczytuj bez pytania pliki zmienione na zewnątrz, gdy okno nie ma zmian" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload files changed outside without asking when the window has no changes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extern geänderte Dateien ohne Rückfrage neu laden, wenn das Fenster keine Änderungen hat"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a cargar sin preguntar los archivos modificados fuera cuando la ventana no tiene cambios"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажувати без запиту файли, змінені ззовні, коли вікно не має змін"
+          }
+        }
+      }
+    },
+    "Wczytuje plik aktywnego okna ponownie z dysku (okno pary specyfikacja/ciało — oba pliki). Niezapisane zmiany okna zostają zastąpione treścią pliku; tekst sprzed wczytania trafia do historii lokalnej. Okna z niezapisanymi zmianami agent nie wczytuje." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reloads the active window's file from disk (a specification/body pair window — both files). Unsaved changes in the window are replaced by the file content; the text before reloading goes to the local history. The agent does not reload windows with unsaved changes."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt die Datei des aktiven Fensters neu von der Festplatte (Fenster mit Spezifikation/Body-Paar — beide Dateien). Ungespeicherte Änderungen im Fenster werden durch den Dateiinhalt ersetzt; der Text vor dem Neuladen kommt in den lokalen Verlauf. Fenster mit ungespeicherten Änderungen lädt der Agent nicht neu."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve a cargar desde el disco el archivo de la ventana activa (ventana de par especificación/cuerpo: ambos archivos). Los cambios sin guardar de la ventana se reemplazan por el contenido del archivo; el texto anterior va al historial local. El agente no vuelve a cargar ventanas con cambios sin guardar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знову завантажує файл активного вікна з диска (вікно пари специфікація/тіло — обидва файли). Незбережені зміни вікна замінюються вмістом файлу; текст до завантаження потрапляє до локальної історії. Вікна з незбереженими змінами агент не завантажує."
           }
         }
       }
@@ -98589,6 +99401,34 @@
         }
       }
     },
+    "Wykrywaj zmiany plików na dysku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detect file changes on disk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen von Dateien auf der Festplatte erkennen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detectar cambios de archivos en el disco"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виявляти зміни файлів на диску"
+          }
+        }
+      }
+    },
     "Wykrywany automatycznie (Homebrew, /opt/oracle, Pobrane)" : {
       "localizations" : {
         "en" : {
@@ -102145,6 +102985,62 @@
         }
       }
     },
+    "Zachowaj moje zmiany" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep my changes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meine Änderungen behalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservar mis cambios"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти мої зміни"
+          }
+        }
+      }
+    },
+    "Zachowaj w oknie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep in window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Fenster behalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservar en la ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Залишити у вікні"
+          }
+        }
+      }
+    },
     "Zachowaj wielkość liter" : {
       "localizations" : {
         "en" : {
@@ -105393,6 +106289,34 @@
         }
       }
     },
+    "Zapis zastąpi zmiany wprowadzone poza tym oknem." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saving will replace the changes made outside this window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Speichern ersetzt Änderungen, die außerhalb dieses Fensters vorgenommen wurden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar reemplazará los cambios hechos fuera de esta ventana."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збереження замінить зміни, внесені поза цим вікном."
+          }
+        }
+      }
+    },
     "Zapisano" : {
       "localizations" : {
         "en" : {
@@ -106513,6 +107437,34 @@
         }
       }
     },
+    "Zapisuje okno programu ze specyfikacją i ciałem w jednym pliku (np. .pck) zamiast w parze plików specyfikacji i ciała." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saves a program window with a specification and body to a single file (e.g. .pck) instead of a pair of specification and body files."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichert ein Programmfenster mit Spezifikation und Body in einer einzigen Datei (z. B. .pck) statt in einem Paar aus Spezifikations- und Body-Datei."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda una ventana de programa con especificación y cuerpo en un solo archivo (p. ej. .pck) en lugar de un par de archivos de especificación y cuerpo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає вікно програми зі специфікацією й тілом в одному файлі (напр. .pck) замість пари файлів специфікації й тіла."
+          }
+        }
+      }
+    },
     "Zapisuje okno testu jako szablon testu standardowego; %%CALL%% w bloku oznacza miejsce wywołania programu." : {
       "localizations" : {
         "en" : {
@@ -107157,6 +108109,34 @@
         }
       }
     },
+    "Zapisz jako jeden plik…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save as single file…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als eine Datei speichern …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar como un solo archivo…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти як один файл…"
+          }
+        }
+      }
+    },
     "Zapisz jako standardowy" : {
       "localizations" : {
         "en" : {
@@ -107377,6 +108357,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Makro in Bibliothek speichern …"
+          }
+        }
+      }
+    },
+    "Zapisz mimo to" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save anyway"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trotzdem speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar de todos modos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усе одно зберегти"
           }
         }
       }
@@ -108497,6 +109505,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Im Raster anwenden"
+          }
+        }
+      }
+    },
+    "Zastąp" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reemplazar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінити"
           }
         }
       }
@@ -114157,6 +115193,34 @@
         }
       }
     },
+    "Zostaw" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dejar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Залишити"
+          }
+        }
+      }
+    },
     "Zwija blok, IF, LOOP albo CASE zaczynający się w linii kursora lub najbliższy obejmujący kursor." : {
       "localizations" : {
         "en" : {
@@ -119365,6 +120429,34 @@
         }
       }
     },
+    "przed: wczytanie z dysku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "before: reload from disk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vor: Neuladen von der Festplatte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "antes: carga desde el disco"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "перед: завантаження з диска"
+          }
+        }
+      }
+    },
     "przekroczono limit wywołań na minutę" : {
       "localizations" : {
         "en" : {
@@ -121605,6 +122697,34 @@
         }
       }
     },
+    "w osobnym pliku (nazwa.grants.sql)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "in a separate file (name.grants.sql)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "in einer eigenen Datei (name.grants.sql)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "en un archivo aparte (nombre.grants.sql)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "в окремому файлі (назва.grants.sql)"
+          }
+        }
+      }
+    },
     "w toku" : {
       "localizations" : {
         "en" : {
@@ -122049,6 +123169,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "deaktiviert"
+          }
+        }
+      }
+    },
+    "z „/” (polecenie za jednostką): %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "with “/” (statement after the unit): %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mit „/“ (Anweisung nach der Einheit): %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "con «/» (sentencia tras la unidad): %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "із «/» (команда після одиниці): %@"
           }
         }
       }

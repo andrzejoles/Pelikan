@@ -217,10 +217,28 @@ struct GeneralPane: View {
                 TextField(L10n.tr("Dodatkowe rozszerzenia testów"), text: Binding(get: { workspace.settings.testExtensions.joined(separator: ", ") },
                     set: { workspace.settings.testExtensions = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.filter { !$0.isEmpty } }))
             }
+            // D194: specyfikacja i ciało w osobnych plikach (zapis okna programu, otwieranie pary, eksport obiektów).
+            Section(L10n.tr("Specyfikacja i ciało w osobnych plikach")) {
+                Toggle(L10n.tr("Otwieraj parę specyfikacja/ciało w jednym oknie"), isOn: setting(workspace, \.openSpecBodyPair))
+                TextField(L10n.tr("Rozszerzenie specyfikacji pakietu"), text: setting(workspace, \.specBodyExtensions.packageSpec), prompt: Text("pks"))
+                TextField(L10n.tr("Rozszerzenie ciała pakietu"), text: setting(workspace, \.specBodyExtensions.packageBody), prompt: Text("pkb"))
+                TextField(L10n.tr("Rozszerzenie specyfikacji typu"), text: setting(workspace, \.specBodyExtensions.typeSpec), prompt: Text("tps"))
+                TextField(L10n.tr("Rozszerzenie ciała typu"), text: setting(workspace, \.specBodyExtensions.typeBody), prompt: Text("tpb"))
+                if workspace.settings.specBodyExtensions.isInvalid {
+                    Text(L10n.tr("Rozszerzenia specyfikacji muszą różnić się od rozszerzeń ciała (pakiet i typ mogą mieć wspólne), składać się z liter, cyfr albo „_” i być inne niż sql, tst, pck, typ, rep, pdd, sqlnb i txt — do czasu poprawki używane są domyślne pks, pkb, tps i tpb."))
+                        .font(.uiSecondary).foregroundStyle(.red)
+                }
+                Text(L10n.tr("Okno programu ze specyfikacją i ciałem zapisuje każdą jednostkę do jej pliku, bez „/”; Zapisz jako tworzy parę plików. Eksport obiektów (plik na obiekt) używa tych rozszerzeń."))
+                    .font(.uiSecondary).foregroundStyle(.secondary)
+            }
             Section(L10n.tr("Pliki")) {
                 Toggle(L10n.tr("Przywracaj okna po ponownym uruchomieniu (także niezapisane)"), isOn: setting(workspace, \.worksetAutosave))
                 Toggle(L10n.tr("Autozapis układu okna"), isOn: setting(workspace, \.autosaveLayout))
                 Toggle(L10n.tr("Pytaj o zapis zmian przy zamykaniu nowych okien"), isOn: setting(workspace, \.confirmSaveNewWindows))
+                // D197: pliki zmienione przez inny program (agent, git) — przy aktywacji okna, karty i aplikacji.
+                Toggle(L10n.tr("Wykrywaj zmiany plików na dysku"), isOn: setting(workspace, \.detectExternalFileChanges))
+                Toggle(L10n.tr("Wczytuj bez pytania pliki zmienione na zewnątrz, gdy okno nie ma zmian"), isOn: setting(workspace, \.reloadExternalChangesSilently))
+                    .disabled(!workspace.settings.detectExternalFileChanges)
             }
             Section(L10n.tr("Dziennik aplikacji")) {
                 Picker(L10n.tr("Zapisuj w dzienniku"), selection: setting(workspace, \.logLevel)) {

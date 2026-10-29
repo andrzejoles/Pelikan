@@ -293,8 +293,8 @@ public enum ProgramCompiler {
         guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (polecenia CREATE …)")) }
         guard let conn = ws.effectiveConnection(of: doc) else { throw CommandError.notConnected }
         // Plik tylko do odczytu (np. z systemu kontroli wersji) — kompilacja wyłączona preferencją (PD-PROG-017).
-        if let url = doc.fileURL, !ws.settings.compileReadOnlyFiles, FileManager.default.fileExists(atPath: url.path),
-           !FileManager.default.isWritableFile(atPath: url.path) {
+        // Okno pary (D194): którykolwiek z plików specyfikacji i ciała.
+        if !ws.settings.compileReadOnlyFiles, let url = doc.fileURLs.first(where: { FileManager.default.fileExists(atPath: $0.path) && !FileManager.default.isWritableFile(atPath: $0.path) }) {
             throw CommandError.notAvailable(L10n.tr("Plik „\(url.lastPathComponent)” jest tylko do odczytu — kompilacja wyłączona (Ustawienia › Oracle)"))
         }
         try await ws.guardModification(units.map(\.text), connectionID: conn)

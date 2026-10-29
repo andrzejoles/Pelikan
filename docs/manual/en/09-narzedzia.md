@@ -49,7 +49,7 @@ line, ignoring case, spacing and comments, swapping sides and **Reload**. Instea
 
 | Tool | What for |
 |---|---|
-| Tools › Export user objects… | DDL of the selected objects to one file or a file per object (specification with body or separately), with privileges and storage, in executable order |
+| Tools › Export user objects… | DDL of the selected objects to one file (a script with “/”) or a file per object — the specification and body of packages and types in separate `.pks`/`.pkb` and `.tps`/`.tpb` files (extensions from Preferences) without “/” unless you turn on **End units with /**; **Specification and body in one file** gives `.pck`/`.typ` with “/”; object files contain only CREATE — privileges go to a separate `name.grants.sql` file or are skipped (**Privileges in files per object**), a disabled trigger gets `DISABLE` in `CREATE TRIGGER`, a comment with the date only with **Header with the export date**; with storage, in executable order |
 | Tools › Export tables… | table data as an INSERT script (with DROP/CREATE, TRUNCATE/DELETE, disabling triggers and foreign keys, COMMIT every n, a WHERE condition), in Pelikan's own (compressed) format or through Data Pump |
 | Tools › Import tables… | import of an INSERT script or the own format with a choice of tables; Data Pump import with REMAP_SCHEMA |
 | Tools › Text Importer… | CSV and text files: detection of the separator, header and encoding, mapping fields to columns, transformation functions, a filter, handling of duplicates, CREATE TABLE from a file |
