@@ -60,7 +60,7 @@ Funktion nicht. KI-Agenten haben keinen Zugriff auf diese Werkzeuge. Die Bericht
 - **Filter** wählt die Abfrage der Liste (z. B. *Benutzersitzungen*); **Aktualisieren alle** n Sekunden schaltet die
   automatische Aktualisierung ein.
 - Detail-Tabs der ausgewählten Sitzung: **Aktuelles SQL**, **Offene Cursor**, **Sperren**, **Statistiken**, **Warten**.
-- **Beenden** und **Sofort beenden** beenden die Sitzung (`ALTER SYSTEM KILL SESSION`) nach Bestätigung.
+- **Sitzung beenden** und **Sofort beenden** beenden die Sitzung (`ALTER SYSTEM KILL SESSION`) nach Bestätigung.
 - **Aktionen** — u. a. das Aktivieren von SQL Trace für die Sitzung (DBMS_MONITOR).
 - **Abfragen …** ermöglicht eigene Filter (WHERE-Bedingung), Detail-Tabs (mit `:sid`, `:serial#`) und Aktionen.
 

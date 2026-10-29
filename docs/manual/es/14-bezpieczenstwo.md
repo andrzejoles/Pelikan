@@ -8,7 +8,7 @@ frente a errores y frente a los agentes de IA.
 - Las contraseñas de bases de datos, las contraseñas SSH (túneles y destinos Pro*C) y las frases de paso de claves SSH
   se guardan **únicamente en el Llavero de macOS**: en el llavero de inicio de sesión, sin sincronización con iCloud y
   solo disponibles con el Mac desbloqueado.
-- Las contraseñas **nunca** van a los archivos de Pelikan (definiciones de conexiones, preferencias, worksets),
+- Las contraseñas **nunca** van a los archivos de Pelikan (definiciones de conexiones, ajustes, worksets),
   a los registros, al historial de comandos, a los argumentos de procesos ni a las variables de entorno.
   Los comandos con contraseñas (`CONNECT`, `ALTER USER … IDENTIFIED BY`, `CREATE DATABASE LINK`) no se guardan en el
   historial de comandos.
@@ -16,14 +16,14 @@ frente a errores y frente a los agentes de IA.
   en un archivo (cifradas con una frase o en texto plano) tras confirmar con Touch ID o la contraseña del Mac; consulta
   **Conexiones**, «Exportar e importar definiciones». El agente de IA no tiene este comando.
 - Una contraseña que no se recuerda en el Llavero se mantiene solo en memoria hasta cerrar la aplicación.
-- La opción **Requerir Touch ID o la contraseña del Mac antes de usar una contraseña guardada** (**Preferencias › Oracle
+- La opción **Requerir Touch ID o la contraseña del Mac antes de usar una contraseña guardada** (**Ajustes › Oracle
   › Contraseñas de conexiones**) exige confirmación una vez por conexión mientras la aplicación está en marcha, también
   cuando usa la conexión un agente de IA.
 - La contraseña SSH llega al programa `ssh` a través de una canalización de un solo uso accesible solo para tu cuenta, y
   no mediante argumentos, el entorno o un archivo.
 - Las contraseñas de una cartera Oracle Wallet nunca llegan a Pelikan: del inicio de sesión se encarga el cliente de
   Oracle.
-- La exportación de definiciones de conexiones, la exportación de preferencias, las definiciones de trabajos, traslados
+- La exportación de definiciones de conexiones, la exportación de ajustes, las definiciones de trabajos, traslados
   y herramientas de usuario, los scripts utPLSQL para CI y los parámetros de inicio no contienen contraseñas.
 
 ## Protección de las bases de datos frente a errores
@@ -71,7 +71,7 @@ proveedores y se conectan a sus servidores: envían allí lo que el agente lee e
 ## Datos en el disco
 
 Los datos de Pelikan están en el directorio `~/Library/Application Support/Pelikan`: definiciones de conexiones (sin
-contraseñas), preferencias, historial de comandos, worksets e instantáneas para recuperar ventanas (pueden contener el
+contraseñas), ajustes, historial de comandos, worksets e instantáneas para recuperar ventanas (pueden contener el
 texto de ventanas sin guardar), historial local de archivos, informes, cestas y el registro de agentes. Los archivos con
 el contenido de las ventanas y del registro se guardan con permisos de acceso solo para tu cuenta. Si tu Mac es
 compartido, recuerda que una persona con acceso a tu cuenta de macOS también tiene acceso a estos datos: los protegen la

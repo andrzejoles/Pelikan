@@ -11,7 +11,7 @@ used ones. The connection's open windows are listed under it.
 - Double-clicking a connection connects it as the **main connection** (bold in the list). New windows open on the main
   connection.
 - The connection's context menu: **Connect as main**, **Connect** (without changing the main connection),
-  **Disconnect**, **New window** (SQL, program, test or command window on this connection), **Show Connection
+  **Disconnect**, **New window** (SQL, program or test window or SQL*Plus Console on this connection), **Show Connection
   Windows**, **Close Connection Windows**, **Reconnect Connection Windows**, **Set Current Schema…**, **Edit…**,
   **Copy Under Another Name…** (a copy in the same folder, with the saved passwords), **Move to Folder** and
   **Delete…**.

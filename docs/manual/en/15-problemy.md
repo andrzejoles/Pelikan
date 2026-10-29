@@ -145,5 +145,5 @@ system, drivers) to a text file. Review the file before sending it, especially i
 ## Glossary
 
 The Polish names of windows and terms in Pelikan and their PL/SQL Developer equivalents (e.g. *Okno SQL* — SQL Window,
-*Przeglądarka obiektów* — Object Browser, *Zatwierdź zmiany (Post)* — Post changes) are in the glossary:
+*Przeglądarka obiektów* — Object Browser, *Zapisz zmiany w bazie (Post)* — Post changes) are in the glossary:
 [docs/GLOSSARY.md](https://github.com/andrzejoles/Pelikan/blob/main/docs/GLOSSARY.md).

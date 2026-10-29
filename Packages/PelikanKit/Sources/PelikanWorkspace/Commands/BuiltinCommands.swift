@@ -20,7 +20,9 @@ public enum BuiltinCommands {
                                     agent: AgentAccess = .none, feature: String) -> Command {
         Command(CommandDescriptor(
             id: CommandID(rawValue: id), title: title, category: .file, submenu: L10n.tr("Nowy"), pd: pd, mac: mac,
-            agent: agent, effect: .uiState, summary: L10n.tr("Otwiera nowe puste okno: \(kind.displayName)."), feature: feature
+            agent: agent, effect: .uiState,
+            summary: kind == .command ? L10n.tr("Otwiera nową, pustą konsolę SQL*Plus.") : L10n.tr("Otwiera nowe puste okno: \(kind.displayName)."),
+            feature: feature
         )) { ctx in
             let doc = ctx.workspace.newDocument(kind)
             return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))

@@ -70,7 +70,13 @@ struct PreferencesStartupTests {
         try await other.invoke("prefs.import", CommandArguments(["file": .string(file.path)]))
         #expect(other.settings.tabSize == 5 && other.settings.autoCommitSQL == false)
         let all = try PreferenceSets.export(ws.settings, sections: nil)
-        #expect(try PreferenceSets.importValues(all, sections: [L10n.tr("SQL Window")])["autoCommitSQL"] == .bool(true))
+        #expect(try PreferenceSets.importValues(all, sections: [L10n.tr("Okno SQL")])["autoCommitSQL"] == .bool(true))
+        // Synonimy sekcji (D195): nazwa angielska, dawna i polska bez względu na język interfejsu i wielkość liter.
+        for name in ["SQL Window", "okno sql", "Okno SQL"] {
+            #expect(try PreferenceSets.importValues(all, sections: [name])["autoCommitSQL"] == .bool(true))
+        }
+        #expect(try PreferenceSets.importValues(all, sections: ["Object Browser"])["browserRecentLimit"] != nil)
+        #expect(try PreferenceSets.importValues(all, sections: ["Object Browser"])["autoCommitSQL"] == nil)
         #expect(throws: (any Error).self) { try PreferenceSets.importValues(Data(#"{"format":"x","version":1,"values":{}}"#.utf8), sections: nil) }
     }
 

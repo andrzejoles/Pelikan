@@ -159,5 +159,5 @@ besonders wenn Namen angezeigt wurden.
 ## Glossar
 
 Die polnischen Namen der Fenster und Begriffe in Pelikan und ihre Entsprechungen in PL/SQL Developer (z. B. *Okno SQL* —
-SQL Window, *Przeglądarka obiektów* — Object Browser, *Zatwierdź zmiany (Post)* — Post changes) enthält das Glossar:
+SQL Window, *Przeglądarka obiektów* — Object Browser, *Zapisz zmiany w bazie (Post)* — Post changes) enthält das Glossar:
 [docs/GLOSSARY.md](https://github.com/andrzejoles/Pelikan/blob/main/docs/GLOSSARY.md).

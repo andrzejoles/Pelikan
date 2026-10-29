@@ -13,7 +13,7 @@ parámetros y el resultado de la función. Abres una ventana vacía con **Archiv
 2. Pulsa F8 (⌘↩). Tras la ejecución, los valores de salida aparecen en la tabla, y los que han cambiado se resaltan en
    amarillo. La barra de estado muestra el tiempo de ejecución.
 3. Confirma o revierte los cambios: F10 / ⇧F10 (la opción **AutoCommit tras ejecutar la ventana de prueba** de
-   **Preferencias › SQL Window** confirma automáticamente).
+   **Ajustes › SQL Window** confirma automáticamente).
 
 Las demás pestañas:
 
@@ -45,14 +45,14 @@ El depurador usa el paquete de Oracle DBMS_DEBUG y funciona en bases de datos 19
   **Depuración › Privilegios del depurador…** abre una SQL Window con las sentencias GRANT listas para que las ejecute
   un administrador.
 - El código que quieres recorrer paso a paso debe estar compilado con información de depuración: **Herramientas › Objeto
-  › Añadir información de depuración** o automáticamente al compilar en la Program Window (**Preferencias › Oracle ›
+  › Añadir información de depuración** o automáticamente al compilar en la Program Window (**Ajustes › Oracle ›
   Depurador**; ahí también están las listas de objetos y conexiones para los que la información se añade siempre o
   nunca, p. ej., `*@prod*`).
 
 ### Ejecución paso a paso
 
 1. Establece puntos de interrupción: haz clic en el margen de números de línea de la ventana de programa o de prueba, o
-   pulsa ⌃B (**Depuración › Punto de interrupción**).
+   pulsa ⌃B (**Depuración › Alternar punto de interrupción**).
 2. En la Test Window, elige **Depuración › Iniciar depuración** (F9). Se abre la ventana **Depurador** con la pila de
    llamadas, las variables y las expresiones observadas, y el cursor se detiene en la primera línea.
 3. Avanza paso a paso:
@@ -82,7 +82,7 @@ El foco se queda en la ventana principal, así que puedes avanzar con atajos mie
 
 En los disparadores no están disponibles los valores `:new` y `:old` (limitación de DBMS_DEBUG): el depurador muestra
 entonces un aviso en lugar del valor. Por omisión, la ejecución paso a paso omite la inicialización de paquetes y los
-objetos de SYS (**Preferencias › Oracle › Depurador**).
+objetos de SYS (**Ajustes › Oracle › Depurador**).
 
 ### Puntos de interrupción, condiciones y puntos de registro
 
@@ -122,7 +122,7 @@ transacción de la ventana: confírmala si quieres conservarlos.
 ## Estadísticas, traza y SQL Trace
 
 - La pestaña **Estadísticas** muestra la variación de las estadísticas de la sesión (V$MYSTAT) de la última ejecución y
-  el total de la ventana, con filtro y exportación a CSV. La elección de estadísticas está en **Preferencias › SQL
+  el total de la ventana, con filtro y exportación a CSV. La elección de estadísticas está en **Ajustes › SQL
   Window**. Requiere acceso a V$MYSTAT.
 - **Depuración › DBMS_TRACE al ejecutar** registra la ejecución (llamadas, excepciones, SQL, líneas) en la pestaña
   **Traza**; el historial de ejecuciones está en **Historial de ejecuciones de DBMS_TRACE**. Requiere las tablas de

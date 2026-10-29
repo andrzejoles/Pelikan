@@ -2566,7 +2566,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Acción de las preferencias para un objeto soltado fuera del editor: Editar, Consultar datos, DDL, Describir o Propiedades."
+            "value" : "Acción de los ajustes para un objeto soltado fuera del editor: Editar, Consultar datos, DDL, Describir o Propiedades."
           }
         },
         "uk" : {
@@ -8362,13 +8362,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No hay búsquedas: añádelas en Preferencias › Herramientas"
+            "value" : "No hay búsquedas: añádelas en Ajustes › Herramientas"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Немає пошуків — додайте їх у Параметрах › Інструменти"
+            "value" : "Немає пошуків — додайте їх у Налаштуваннях › Інструменти"
           }
         }
       }
@@ -10182,7 +10182,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Qué insertar; vacío — según preferencias"
+            "value" : "Qué insertar; vacío — según ajustes"
           }
         },
         "uk" : {
@@ -19282,13 +19282,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exportar preferencias…"
+            "value" : "Exportar ajustes…"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Експортувати параметри…"
+            "value" : "Експортувати налаштування…"
           }
         }
       }
@@ -19562,13 +19562,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Etiquetas, listas, cinta, pestañas de ventanas, barra de estado, ventanas de herramientas y Preferencias. El texto secundario es 2 pt más pequeño; los menús y títulos de ventana los dibuja macOS."
+            "value" : "Etiquetas, listas, cinta, pestañas de ventanas, barra de estado, ventanas de herramientas y Ajustes. El texto secundario es 2 pt más pequeño; los menús y títulos de ventana los dibuja macOS."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Мітки, списки, стрічка, вкладки вікон, рядок стану, вікна інструментів і Параметри. Допоміжний текст на 2 pt менший; меню й заголовки вікон малює macOS."
+            "value" : "Мітки, списки, стрічка, вкладки вікон, рядок стану, вікна інструментів і Налаштування. Допоміжний текст на 2 pt менший; меню й заголовки вікон малює macOS."
           }
         }
       }
@@ -26030,13 +26030,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Importar preferencias…"
+            "value" : "Importar ajustes…"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Імпортувати параметри…"
+            "value" : "Імпортувати налаштування…"
           }
         }
       }
@@ -28466,13 +28466,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Directorios separados por ; (por defecto, ubicaciones del File Browser)"
+            "value" : "Directorios separados por ; (por defecto, ubicaciones del Explorador de archivos)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Каталоги, розділені ; (типово — розташування File Browser)"
+            "value" : "Каталоги, розділені ; (типово — розташування Переглядача файлів)"
           }
         }
       }
@@ -28494,13 +28494,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Directorios separados por ; (vacío: ubicaciones del File Browser)"
+            "value" : "Directorios separados por ; (vacío: ubicaciones del Explorador de archivos)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Каталоги, розділені ; (порожньо — розташування File Browser)"
+            "value" : "Каталоги, розділені ; (порожньо — розташування Переглядача файлів)"
           }
         }
       }
@@ -29222,13 +29222,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Código fuente del programa de ALL_SOURCE (paquete: especificación y cuerpo) como CREATE OR REPLACE, unidades sin «/» (preferencia de la ventana de programa); para ejecutarlo como script de SQL*Plus, termine cada unidad con «/» o compile las unidades por separado."
+            "value" : "Código fuente del programa de ALL_SOURCE (paquete: especificación y cuerpo) como CREATE OR REPLACE, unidades sin «/» (ajuste de la ventana de programa); para ejecutarlo como script de SQL*Plus, termine cada unidad con «/» o compile las unidades por separado."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вихідний код програми з ALL_SOURCE (пакет: специфікація й тіло) як CREATE OR REPLACE, одиниці без «/» (параметр вікна програми); щоб виконати як скрипт SQL*Plus, завершіть кожну одиницю «/» або компілюйте одиниці окремо."
+            "value" : "Вихідний код програми з ALL_SOURCE (пакет: специфікація й тіло) як CREATE OR REPLACE, одиниці без «/» (налаштування вікна програми); щоб виконати як скрипт SQL*Plus, завершіть кожну одиницю «/» або компілюйте одиниці окремо."
           }
         }
       }
@@ -31441,34 +31441,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alle kompilieren"
-          }
-        }
-      }
-    },
-    "Kompiluj wszystko" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Build"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Зібрати"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Compilar"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bauen"
           }
         }
       }
@@ -34278,7 +34250,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Step into"
+            "value" : "Step Into"
           }
         },
         "uk" : {
@@ -36692,13 +36664,13 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вхід /@база з обліковими даними з гаманця, указаного в Параметри › Oracle (Oracle Wallet). Поле «База» має точно збігатися з псевдонімом або рядком з'єднання, записаним у гаманці; псевдонім має бути в конфігурації Oracle Net з Параметрів."
+            "value" : "Вхід /@база з обліковими даними з гаманця, указаного в Налаштування › Oracle (Oracle Wallet). Поле «База» має точно збігатися з псевдонімом або рядком з'єднання, записаним у гаманці; псевдонім має бути в конфігурації Oracle Net з Налаштувань."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inicio de sesión /@base con la credencial de la cartera indicada en Preferencias › Oracle (Oracle Wallet). El campo «Base de datos» debe ser exactamente un alias o una cadena de conexión guardada en la cartera; el alias debe estar en la configuración de Oracle Net de las Preferencias."
+            "value" : "Inicio de sesión /@base con la credencial de la cartera indicada en Ajustes › Oracle (Oracle Wallet). El campo «Base de datos» debe ser exactamente un alias o una cadena de conexión guardada en la cartera; el alias debe estar en la configuración de Oracle Net de las Ajustes."
           }
         },
         "de" : {
@@ -39610,13 +39582,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nombre de la acción de Preferencias › Sesiones"
+            "value" : "Nombre de la acción de Ajustes › Sesiones"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Назва дії з Параметрів › Сесії"
+            "value" : "Назва дії з Налаштувань › Сесії"
           }
         }
       }
@@ -40674,13 +40646,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nombre de la búsqueda de Preferencias (por defecto, la primera)"
+            "value" : "Nombre de la búsqueda de Ajustes (por defecto, la primera)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Назва пошуку з Параметрів (типово — перший)"
+            "value" : "Назва пошуку з Налаштувань (типово — перший)"
           }
         }
       }
@@ -51986,13 +51958,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abre un documento de usuario de la lista de Preferencias (un archivo o una dirección http/https)."
+            "value" : "Abre un documento de usuario de la lista de Ajustes (un archivo o una dirección http/https)."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Відкриває документ користувача зі списку в Параметрах (файл або адресу http/https)."
+            "value" : "Відкриває документ користувача зі списку в Налаштуваннях (файл або адресу http/https)."
           }
         }
       }
@@ -52273,6 +52245,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffnet ein neues leeres Fenster: %@."
+          }
+        }
+      }
+    },
+    "Otwiera nową, pustą konsolę SQL*Plus." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a new, empty SQL*Plus Console."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet eine neue, leere SQL*Plus-Konsole."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre una consola SQL*Plus nueva y vacía."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває нову порожню консоль SQL*Plus."
           }
         }
       }
@@ -52938,13 +52938,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abre el texto de la ventana en la aplicación de Preferencias (p. ej., Visual Studio Code); al volver a Pelikan se cargan los cambios."
+            "value" : "Abre el texto de la ventana en la aplicación de Ajustes (p. ej., Visual Studio Code); al volver a Pelikan se cargan los cambios."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Відкриває текст вікна в програмі з Параметрів (напр. Visual Studio Code); після повернення до Pelikan зміни завантажуються."
+            "value" : "Відкриває текст вікна в програмі з Налаштувань (напр. Visual Studio Code); після повернення до Pelikan зміни завантажуються."
           }
         }
       }
@@ -52994,13 +52994,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abre en el navegador una búsqueda del texto seleccionado o de la palabra bajo el cursor (búsquedas con %%s en Preferencias)."
+            "value" : "Abre en el navegador una búsqueda del texto seleccionado o de la palabra bajo el cursor (búsquedas con %%s en Ajustes)."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Відкриває в браузері пошук виділеного тексту або слова під курсором (пошуки з %%s у Параметрах)."
+            "value" : "Відкриває в браузері пошук виділеного тексту або слова під курсором (пошуки з %%s у Налаштуваннях)."
           }
         }
       }
@@ -56634,13 +56634,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El archivo «%@» es de solo lectura: compilación desactivada (Preferencias › Oracle)"
+            "value" : "El archivo «%@» es de solo lectura: compilación desactivada (Ajustes › Oracle)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Файл «%@» доступний лише для читання — компіляцію вимкнено (Параметри › Oracle)"
+            "value" : "Файл «%@» доступний лише для читання — компіляцію вимкнено (Налаштування › Oracle)"
           }
         }
       }
@@ -57194,13 +57194,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recuperar más filas aumentará el uso de memoria (límite en Preferencias › SQL Window)."
+            "value" : "Recuperar más filas aumentará el uso de memoria (límite en Ajustes › SQL Window)."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отримання наступних рядків збільшить використання пам’яті (обмеження в Параметри › SQL Window)."
+            "value" : "Отримання наступних рядків збільшить використання пам’яті (обмеження в Налаштування › SQL Window)."
           }
         }
       }
@@ -57502,13 +57502,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Indica directorios o añade ubicaciones en el File Browser"
+            "value" : "Indica directorios o añade ubicaciones en el Explorador de archivos"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Укажіть каталоги або додайте розташування у File Browser"
+            "value" : "Укажіть каталоги або додайте розташування у Переглядачі файлів"
           }
         }
       }
@@ -66198,25 +66198,25 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Step Over"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Крок з обходом"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pasar por encima"
+            "value" : "Go To"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Überspringen"
+            "value" : "Gehe zu"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ir a"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейти"
           }
         }
       }
@@ -66938,13 +66938,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mueve el cursor al nombre de un elemento de la ruta de Code Hierarchy."
+            "value" : "Mueve el cursor al nombre de un elemento de la ruta de la jerarquía de código."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Переміщує курсор до назви елемента шляху Code Hierarchy."
+            "value" : "Переміщує курсор до назви елемента шляху ієрархії коду."
           }
         }
       }
@@ -67962,25 +67962,25 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Breakpoint"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Точка зупину"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Punto de interrupción"
+            "value" : "Toggle Breakpoint"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Haltepunkt"
+            "value" : "Haltepunkt umschalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternar punto de interrupción"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемкнути точку зупину"
           }
         }
       }
@@ -73581,34 +73581,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SQL Tuning Advisor"
-          }
-        }
-      }
-    },
-    "SQL Window" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SQL Window"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SQL Window"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SQL Window"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SQL Window"
           }
         }
       }
@@ -81974,13 +81946,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No es un archivo de preferencias de Pelikan"
+            "value" : "No es un archivo de ajustes de Pelikan"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Це не файл параметрів Pelikan"
+            "value" : "Це не файл налаштувань Pelikan"
           }
         }
       }
@@ -86224,19 +86196,19 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Legt die Reihenfolge der Elemente im Bereich Code Contents fest (in den Einstellungen gespeichert)."
+            "value" : "Legt die Reihenfolge der Elemente im Bereich Codeinhalt fest (in den Einstellungen gespeichert)."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Define el orden de los elementos del panel Code Contents (guardado en Preferencias)."
+            "value" : "Define el orden de los elementos del panel Contenido del código (guardado en Ajustes)."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Встановлює порядок елементів на панелі Code Contents (зберігається в Налаштуваннях)."
+            "value" : "Встановлює порядок елементів на панелі «Вміст коду» (зберігається в Налаштуваннях)."
           }
         }
       }
@@ -86398,13 +86370,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preferencias"
+            "value" : "Ajustes"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Параметри"
+            "value" : "Налаштування"
           }
         }
       }
@@ -86432,7 +86404,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Параметри NLS сеансу"
+            "value" : "Налаштування NLS сеансу"
           }
         }
       }
@@ -86454,13 +86426,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preferencias de Pelikan"
+            "value" : "Ajustes de Pelikan"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Параметри Pelikan"
+            "value" : "Налаштування Pelikan"
           }
         }
       }
@@ -91612,7 +91584,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Завантажено параметрів: %@"
+            "value" : "Завантажено налаштувань: %@"
           }
         }
       }
@@ -91774,13 +91746,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Carga preferencias desde un archivo (secciones seleccionadas) en el conjunto que se edita en Preferencias."
+            "value" : "Carga ajustes desde un archivo (secciones seleccionadas) en el conjunto que se edita en Ajustes."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Завантажує параметри з файлу (вибрані розділи) до набору, що редагується в Параметрах."
+            "value" : "Завантажує налаштування з файлу (вибрані розділи) до набору, що редагується в Налаштуваннях."
           }
         }
       }
@@ -96634,7 +96606,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Step out"
+            "value" : "Step Out"
           }
         },
         "uk" : {
@@ -97710,13 +97682,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ejecuta una acción del explorador de sesiones (comando de Preferencias) para la sesión seleccionada a través del guardián de cambios."
+            "value" : "Ejecuta una acción del explorador de sesiones (comando de Ajustes) para la sesión seleccionada a través del guardián de cambios."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Виконує дію браузера сесій (команду з Параметрів) для вибраної сесії через захист змін."
+            "value" : "Виконує дію браузера сесій (команду з Налаштувань) для вибраної сесії через захист змін."
           }
         }
       }
@@ -99866,13 +99838,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Busca en la documentación de Oracle de la versión elegida (Preferencias › Oracle)."
+            "value" : "Busca en la documentación de Oracle de la versión elegida (Ajustes › Oracle)."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Шукає в документації Oracle вибраної версії (Параметри › Oracle)."
+            "value" : "Шукає в документації Oracle вибраної версії (Налаштування › Oracle)."
           }
         }
       }
@@ -106418,13 +106390,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Guarda las preferencias vigentes (secciones seleccionadas) en un archivo; sin contraseñas ni historial de archivos."
+            "value" : "Guarda los ajustes vigentes (secciones seleccionadas) en un archivo; sin contraseñas ni historial de archivos."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Зберігає чинні параметри (вибрані розділи) у файл; без паролів та історії файлів."
+            "value" : "Зберігає чинні налаштування (вибрані розділи) у файл; без паролів та історії файлів."
           }
         }
       }
@@ -110198,13 +110170,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Selecciona el elemento de la ruta de Code Hierarchy (unidad, subprograma, bloque) que contiene el cursor."
+            "value" : "Selecciona el elemento de la ruta de la jerarquía de código (unidad, subprograma, bloque) que contiene el cursor."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Виділяє елемент шляху Code Hierarchy (одиницю, підпрограму, блок), що містить курсор."
+            "value" : "Виділяє елемент шляху ієрархії коду (одиницю, підпрограму, блок), що містить курсор."
           }
         }
       }
@@ -111306,7 +111278,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Settings sets"
+            "value" : "Settings presets"
           }
         },
         "de" : {
@@ -111318,13 +111290,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conjuntos de preferencias"
+            "value" : "Conjuntos de ajustes"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Набори параметрів"
+            "value" : "Набори налаштувань"
           }
         }
       }
@@ -111334,7 +111306,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Settings sets: personal, default and per connection; the source of each value and restoring the inherited one."
+            "value" : "Settings presets: personal, default and per connection; the source of each value and restoring the inherited one."
           }
         },
         "de" : {
@@ -111346,13 +111318,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conjuntos de preferencias: personal, predeterminado y por conexión; origen de cada valor y restauración del heredado."
+            "value" : "Conjuntos de ajustes: personal, predeterminado y por conexión; origen de cada valor y restauración del heredado."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Набори параметрів: особистий, типовий і для з'єднань; джерело кожного значення та відновлення успадкованого."
+            "value" : "Набори налаштувань: особистий, типовий і для з'єднань; джерело кожного значення та відновлення успадкованого."
           }
         }
       }
@@ -111362,7 +111334,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Settings Sets…"
+            "value" : "Settings Presets…"
           }
         },
         "de" : {
@@ -111374,13 +111346,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conjuntos de preferencias…"
+            "value" : "Conjuntos de ajustes…"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Набори параметрів…"
+            "value" : "Набори налаштувань…"
           }
         }
       }
@@ -112102,13 +112074,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Guardar los cambios de Preferencias en"
+            "value" : "Guardar los cambios de Ajustes en"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Зберігати зміни в Параметрах до"
+            "value" : "Зберігати зміни в Налаштуваннях до"
           }
         }
       }
@@ -120564,7 +120536,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "параметр сервера"
+            "value" : "налаштування сервера"
           }
         }
       }

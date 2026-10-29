@@ -3,7 +3,7 @@
 Konsola SQL*Plus działa jak SQL*Plus: wykonuje polecenia linia po linii i skrypty, a wyniki zapytań pokazuje jako tekst w
 kolumnach. Otworzysz ją przez **Plik › Nowy › Konsola SQL*Plus** albo z menu połączenia na liście połączeń.
 
-Okno ma dwie karty:
+Konsola ma dwie karty:
 
 - **Dialog** — wyjście i **linia poleceń** na dole. Wpisz polecenie SQL*Plus, SQL albo blok PL/SQL (blok kończy
   ukośnik `/` w osobnej linii) i naciśnij ↩. Strzałki przewijają historię wpisanych linii.

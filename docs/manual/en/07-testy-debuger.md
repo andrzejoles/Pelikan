@@ -49,7 +49,7 @@ The debugger uses the Oracle DBMS_DEBUG package and works on 19c–26ai database
 
 ### Stepping
 
-1. Set breakpoints: click the line number margin in a program or test window, or press ⌃B (**Debug › Breakpoint**).
+1. Set breakpoints: click the line number margin in a program or test window, or press ⌃B (**Debug › Toggle Breakpoint**).
 2. In the Test Window choose **Debug › Start debugging** (F9). The **Debugger** window opens with the call stack,
    variables and watches, and the cursor stops at the first line.
 3. Step:
@@ -57,9 +57,9 @@ The debugger uses the Oracle DBMS_DEBUG package and works on 19c–26ai database
 | Action | Shortcut |
 |---|---|
 | Continue (to the next breakpoint) | ⌃R |
-| Step into (a subprogram, also a trigger) | ⌃N |
+| Step Into (a subprogram, also a trigger) | ⌃N |
 | Step Over (next line) | ⌃O |
-| Step out (of a subprogram) | ⌃T |
+| Step Out (of a subprogram) | ⌃T |
 | Run to cursor / to exception | Debugging menu |
 | Stop debugging | ⇧F9 |
 

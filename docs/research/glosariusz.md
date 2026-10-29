@@ -33,7 +33,7 @@ i Eclipse (Babel); **Oracle** — polska terminologia baz danych i Oracle; **git
 
 | Pojęcie | W Pelikanie | Uzasadnienie / źródło |
 |---|---|---|
-| Settings… (⌘,) | **Ustawienia…**; okno **Ustawienia** (en *Settings* wszędzie, także w instrukcji en); Narzędzia › Ustawienia › Eksportuj/Importuj ustawienia…, Zestawy ustawień… | macOS 13+ (HIG: „Settings” zamiast „Preferences”); wcześniej okno nazywało się „Preferencje”, choć menu już „Ustawienia…” (D195) |
+| Settings… (⌘,) | **Ustawienia…**; okno **Ustawienia** (en *Settings*, zestawy — *Settings presets*; es *Ajustes*; uk *Налаштування* — jak w macOS; także w instrukcjach); Narzędzia › Ustawienia › Eksportuj/Importuj ustawienia…, Zestawy ustawień… | macOS 13+ (HIG: „Settings” zamiast „Preferences”); wcześniej okno nazywało się „Preferencje”, choć menu już „Ustawienia…” (D195) |
 | Undo / Redo | Cofnij / **Powtórz** | macOS (wcześniej „Ponów”, które w Pelikanie znaczy „Retry”) |
 | Cut / Copy / Paste / Select All | Wytnij / Kopiuj / Wklej / Zaznacz wszystko | macOS |
 | Minimize / Zoom | **Zminimalizuj** / Powiększ | macOS (wcześniej „Minimalizuj”) |
@@ -73,7 +73,7 @@ i Eclipse (Babel); **Oracle** — polska terminologia baz danych i Oracle; **git
 | Start / Stop debugging | Rozpocznij debugowanie / Zatrzymaj debugowanie | VS |
 | Step into / Step over / Step out | **Krok do** / **Krok przez** / **Wyjdź z podprogramu** | VS po polsku; wcześniej „Wejdź / Przejdź / Wyjdź” (dwuznaczne — „Wyjdź” to też zamknięcie, „Przejdź” — przejście do miejsca) |
 | Run to cursor / to exception | Wykonaj do kursora / Wykonaj do wyjątku | |
-| Toggle breakpoint | **Przełącz punkt przerwania**; Punkty przerwania… (lista) | VS; wcześniej rzeczownik „Punkt przerwania” |
+| Toggle breakpoint | **Przełącz punkt przerwania**; Punkty przerwania… (lista) | VS; wcześniej rzeczownik „Punkt przerwania”; en *Toggle Breakpoint*, en kroki *Step Into / Step Over / Step Out* (wielkie litery jak w macOS) |
 | Watch | Obserwuj wyrażenie / Usuń z obserwowanych; panel „Obserwowane” | VS (zmienne obserwowane) |
 | Call stack | Stos wywołań; Ramka stosu wywołań | VS |
 

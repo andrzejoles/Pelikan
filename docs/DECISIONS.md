@@ -2130,6 +2130,16 @@ użytkownik oczekuje innego słowa.
   diagramie → **punkt zgięcia**. Po angielsku *Preferences* → *Settings* wszędzie (okno, menu, opisy, „in Settings ›
   …”, instrukcja en; zestawy — *Settings sets*). Dawne nazwy są słowami kluczowymi wyszukiwania komend. Tytuł okna
   wyznacza nazwy plików zrzutów, więc zrzuty konsoli i ustawień dostaną nowe nazwy przy następnym przebiegu.
+- **Po przeglądzie gałęzi:** es *Ajustes* i uk *Налаштування* wszędzie (okno, podmenu, opisy, instrukcje — jak macOS),
+  en zestawy *Settings presets*, en *Toggle Breakpoint* i *Step Into / Step Over / Step Out*; klucz „Przejdź”
+  (Zawartość kodu, menu jednostek) ma tłumaczenia „przejdź do”, nie debugera; przyciski przeglądarki sesji
+  i pytanie o zakończenie używają tytułu komendy „Zakończ sesję (Kill)”. Nazwy sekcji w parametrze `sections`
+  komend `prefs.export` / `prefs.import` (makra, skrypty, agent) są przetłumaczone na język interfejsu —
+  `PreferenceSets.sectionNames` przyjmuje też nazwę polską, angielską i dawną (np. „SQL Window”, „Object Browser”),
+  bez względu na wielkość liter; sekcja okna SQL to teraz „Okno SQL” (była „SQL Window”).
+- **Do zrobienia po następnym przebiegu zrzutów** (po scaleniu zrzutów ukrytych): nowe nazwy plików od tytułów okien
+  (Konsola SQL*Plus, Ustawienia) — poprawić odnośniki w docs/FEATURES.md (wiersze ok. 218, 355, 400, 495), usunąć
+  stare pliki zrzutów i odświeżyć obrazki instrukcji.
 - **IDE:** Fragmenty kodu (snippety), Wyodrębnij (Wydziel), Przełącz komentarz linii, Zamień na wielkie/małe litery,
   Przejdź do pierwszego znaku linii, Pokaż podpowiedzi kodu, Kompiluj projekt / Kompiluj zmienione (Buduj / Make),
   Duplikuj połączenie…, Filtruj wyrażeniem… / Filtruj kolumny…; macOS: Powtórz (było „Ponów” — w angielskim

@@ -15,7 +15,7 @@ hace cambios en la base de datos con tu autorización.
 | Antigravity | `agy` | registro único del servidor «pelikan», solo con tu autorización |
 
 El programa del agente lo instalas tú y en él inicias sesión con tu cuenta del proveedor. Pelikan busca el comando en el
-`PATH` de tu shell de inicio de sesión. La lista de programas se cambia en **Preferencias › Agentes** (**Añadir CLI**,
+`PATH` de tu shell de inicio de sesión. La lista de programas se cambia en **Ajustes › Agentes** (**Añadir CLI**,
 **Restaurar valores predeterminados**).
 
 El servidor MCP de Pelikan solo está disponible para una sesión iniciada desde Pelikan: la comunicación va por un socket
@@ -93,7 +93,7 @@ La ventana está diseñada para que no se apruebe nada por accidente:
 - El agente tiene **sus propias sesiones de base de datos**: no ve tu transacción sin confirmar y no puede confirmarla.
   En V$SESSION sus sesiones tienen MODULE «Pelikan agent», y en ACTION, el nombre de la herramienta.
 - Las consultas del agente se ejecutan en una transacción de solo lectura, con límites de número de filas, tiempo y
-  tamaño del resultado (**Preferencias › Agentes › Consultas del agente**; por omisión, 500 filas, 30 s y 1 MB) y un
+  tamaño del resultado (**Ajustes › Agentes › Consultas del agente**; por omisión, 500 filas, 30 s y 1 MB) y un
   límite de llamadas por minuto. Una consulta debe ser una única sentencia SELECT/WITH, sin `FOR UPDATE` y sin funciones
   definidas en la cláusula WITH.
 - **El DML del agente queda sin confirmar** hasta que autorizas por separado un COMMIT. Cerrar la sesión del agente
@@ -132,7 +132,7 @@ autónomas): también frente a eso solo protegen los privilegios.
 
 ## Modo estricto
 
-**Preferencias › Agentes › Modo estricto** (activado por omisión) inicia el programa del agente sin su propio shell ni
+**Ajustes › Agentes › Modo estricto** (activado por omisión) inicia el programa del agente sin su propio shell ni
 edición de archivos, solo con las herramientas de Pelikan, si el programa lo permite. Si no lo permite, el panel del
 agente muestra una advertencia. Un programa de agente en modo completo funciona con los permisos de tu cuenta de macOS:
 Pelikan avisa, pero no lo limita.

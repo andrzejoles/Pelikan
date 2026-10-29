@@ -60,7 +60,7 @@ herramientas. Los informes se guardan como HTML.
   actualización automática.
 - Pestañas de detalle de la sesión seleccionada: **SQL actual**, **Cursores abiertos**, **Bloqueos**, **Estadísticas**,
   **Espera**.
-- **Finalizar** y **Finalizar inmediatamente** terminan la sesión (`ALTER SYSTEM KILL SESSION`) tras confirmación.
+- **Finalizar sesión** y **Finalizar inmediatamente** terminan la sesión (`ALTER SYSTEM KILL SESSION`) tras confirmación.
 - **Acciones**: entre otras, activar SQL Trace para la sesión (DBMS_MONITOR).
 - **Consultas…** permite definir filtros propios (condición WHERE), pestañas de detalle (con `:sid`, `:serial#`) y
   acciones.

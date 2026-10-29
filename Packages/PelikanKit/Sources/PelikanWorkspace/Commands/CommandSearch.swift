@@ -145,7 +145,7 @@ public enum CommandSearch {
         "ob.describe": "describe desc opis",
         "ob.recompile": "recompile compile kompiluj",
         "ob.recompileSelected": "compile invalid objects kompiluj niepoprawne nieprawidlowe",
-        "reports.invalidObjects": "invalid objects niepoprawne kompiluj",
+        "reports.invalidObjects": "invalid objects niepoprawne invalid kompiluj",
         "tools.compileInvalid": "compile invalid objects niepoprawne",
         "grid.export": "export results csv excel html xml json",
         "grid.copyToExcel": "copy to excel xlsx",

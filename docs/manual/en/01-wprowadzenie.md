@@ -103,7 +103,7 @@ The window title shows the main connection and the active workset, and the subti
 Below the toolbar is the **ribbon** — every action in one click, without searching menus or remembering shortcuts. The
 standard tabs are **Start** (new windows, files, execution, COMMIT and ROLLBACK, connection, search), **Edit**,
 **Objects**, **Debug and test**, **Tools**, **Reports** and **View**. With a program, query result, diagram, report,
-notebook, plan or command window a coloured **contextual tab** appears (e.g. **Program** with compilation, units,
+notebook or plan window or the SQL*Plus Console a coloured **contextual tab** appears (e.g. **Program** with compilation, units,
 comparison with the source in the database and tests). The ribbon remembers which tab you chose for each kind of window
 and returns to it when you switch windows.
 

@@ -1,6 +1,6 @@
-# Preferencias y atajos de teclado
+# Ajustes y atajos de teclado
 
-## Ventana Preferencias
+## Ventana Ajustes
 
 La abres con **Pelikan › Ajustes…** (⌘,). Los cambios se guardan al instante: no hay botón Aplicar. El campo **Buscar
 ajustes** de la parte superior encuentra un ajuste por su nombre (en el idioma de la interfaz) y lleva a la pestaña
@@ -17,7 +17,7 @@ correspondiente.
 | Object Browser | carpetas visibles y orden, confirmación de la recompilación, acciones al arrastrar, filtros con nombre, carpetas de usuario |
 | Herramientas | búsquedas en la web, editor externo, visor de diferencias externo, documentos, copias de seguridad y recuperación de ventanas, preguntas «No volver a preguntar» |
 | Agentes | programas de agentes, modo estricto, límites de llamadas y consultas del agente |
-| Conjuntos | conjuntos de preferencias, exportación e importación, barra de acceso rápido |
+| Conjuntos | conjuntos de ajustes, exportación e importación, barra de acceso rápido |
 
 Algunos ajustes solo surten efecto tras reiniciar Pelikan: el directorio de Instant Client, Oracle Net y Oracle Wallet,
 y el idioma de la interfaz.
@@ -36,7 +36,7 @@ Pelikan recuerda entonces tu respuesta. La lista de respuestas recordadas y el b
 pestaña **Herramientas**. Las confirmaciones de cambios en producción y las autorizaciones para los agentes de IA no se
 pueden desactivar de este modo.
 
-## Conjuntos de preferencias
+## Conjuntos de ajustes
 
 Los conjuntos permiten tener ajustes distintos para distintas conexiones, p. ej., otro formato de fecha para una base de
 datos o reglas más estrictas para producción. Pelikan aplica los conjuntos en este orden (del más importante):
@@ -44,18 +44,18 @@ datos o reglas más estrictas para producción. Pelikan aplica los conjuntos en 
 Los conjuntos de conexión tienen un patrón `usuario@base` o un nombre de conexión con `*` y `%` (p. ej., `app@prod*`) y
 se aplican cuando la conexión principal coincide con ellos.
 
-![Pestaña Conjuntos de Preferencias](../img/zestawy-preferencji.png)
+![Pestaña Conjuntos de ajustes](../img/zestawy-preferencji.png)
 
-En la pestaña **Conjuntos** (o con **Herramientas › Preferencias › Conjuntos de preferencias…**):
+En la pestaña **Conjuntos** (o con **Herramientas › Ajustes › Conjuntos de ajustes…**):
 
 1. Añade un conjunto: elige el tipo, escribe el nombre y el patrón de conexiones y haz clic en **Añadir**.
-2. En el campo **Guardar los cambios de Preferencias en**, elige el conjunto que quieres editar. A partir de ese
+2. En el campo **Guardar los cambios de Ajustes en**, elige el conjunto que quieres editar. A partir de ese
    momento, los cambios de las demás pestañas van a ese conjunto.
 3. Junto a cada ajuste se ve de qué conjunto procede el valor; **Heredar** quita el valor del conjunto que se edita.
 
-**Exportación e importación** guarda en un archivo JSON las secciones elegidas de las preferencias vigentes
-(**Herramientas › Preferencias › Exportar preferencias…**) y las carga en el conjunto que se edita (**Importar
-preferencias…**). La exportación no contiene contraseñas ni el historial de archivos.
+**Exportación e importación** guarda en un archivo JSON las secciones elegidas de los ajustes vigentes
+(**Herramientas › Ajustes › Exportar ajustes…**) y las carga en el conjunto que se edita (**Importar
+ajustes…**). La exportación no contiene contraseñas ni el historial de archivos.
 
 ## Barra de herramientas y acceso rápido
 

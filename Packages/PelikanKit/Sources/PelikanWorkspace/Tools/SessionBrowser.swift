@@ -163,7 +163,7 @@ public enum SessionCommands {
                 try await ctx.workspace.guardModification(["alter system kill session '\(sid),\(serial)'"], connectionID: conn)
                 if let ui = ctx.ui {
                     guard await ui.ask(L10n.tr("Zakończyć sesję \(sid),\(serial)?"), message: L10n.tr("Niezatwierdzona transakcja tej sesji zostanie wycofana."),
-                                       buttons: [L10n.tr("Zakończ sesję"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
+                                       buttons: [L10n.tr("Zakończ sesję (Kill)"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
                 }
                 try await SessionBrowser.kill(sid: Int(sid), serial: Int(serial), immediate: ctx.arguments.bool("immediate") ?? true,
                                          in: try await toolSession(ctx.workspace, connection: conn))

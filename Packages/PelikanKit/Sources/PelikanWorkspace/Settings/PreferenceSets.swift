@@ -121,7 +121,7 @@ public enum PreferenceSets {
         (L10n.tr("Ogólne"), ["sessionMode", "logoffWithOpenTransaction", "checkConnectionIntervalSeconds", "pinWindowConnectionsByDefault",
                              "appearance", "uiFontName", "uiFontSize", "uiFontWeight", "language", "confirmSaveNewWindows", "worksetAutosave", "autosaveLayout",
                              "quickAccessCommands", "showRibbon", "ribbonCollapsed", "toolDock", "logLevel", "logIncludeNames"]),
-        (L10n.tr("SQL Window"), ["autoCommitSQL", "autoCommitTestWindow", "autoSelectStatement", "recordsPerPage", "maximumResultSetMegabytes",
+        (L10n.tr("Okno SQL"), ["autoCommitSQL", "autoCommitTestWindow", "autoSelectStatement", "recordsPerPage", "maximumResultSetMegabytes",
                                  "fetchLOBsOnDemand", "dbmsOutputEnabled", "dbmsOutputClearBeforeExecute", "dbmsOutputBufferSize",
                                  "dateFormat", "timestampFormat", "standardQueries", "gridFontSize", "gridFontName", "gridFontWeight", "gridColors", "rowNumbersInCopyExport", "gridNumberLayout",
                                  "notifyLongQuerySeconds", "alignTemplates", "autoAlign", "qbeCaseInsensitive", "qbeAutoContains",
@@ -149,9 +149,31 @@ public enum PreferenceSets {
         sections.first { $0.keys.contains(key) }?.name ?? L10n.tr("Inne")
     }
 
+    /// Inne nazwy sekcji (w kolejności `sections`, potem „Inne”) przyjmowane w parametrze `sections` komend
+    /// `prefs.export` i `prefs.import`: nazwa polska, angielska i dawna sprzed D195. Nazwy w `sections` są
+    /// przetłumaczone na język interfejsu, więc makro albo skrypt zapisany w innym języku dalej trafia w sekcję.
+    static let sectionSynonyms: [[String]] = [
+        ["Ogólne", "General"], ["Okno SQL", "SQL Window"], ["Edytor", "Editor"], ["Formater", "Formatter"],
+        ["Klawiatura", "Keyboard"], ["Oracle"], ["Przeglądarka obiektów", "Object Browser"], ["Agenci", "Agents"],
+        ["Narzędzia", "Tools"], ["Inne", "Other"],
+    ]
+
+    /// Nazwy sekcji podane przez użytkownika, makro albo agenta — synonimy zamienione na nazwy z `sections`
+    /// (bez względu na wielkość liter); nieznane zostają bez zmian.
+    public static func sectionNames(_ names: Set<String>) -> Set<String> {
+        let all = sections.map(\.name) + [L10n.tr("Inne")]
+        return Set(names.map { n in
+            for (i, name) in all.enumerated() where ([name] + sectionSynonyms[i]).contains(where: { $0.caseInsensitiveCompare(n) == .orderedSame }) {
+                return name
+            }
+            return n
+        })
+    }
+
     /// Plik eksportu: wybrane sekcje (nil — wszystkie), bez pól prywatnych. Hasła nie są częścią preferencji —
     /// leżą w Pęku kluczy.
     public static func export(_ s: Settings, sections chosen: Set<String>?) throws -> Data {
+        let chosen = chosen.map(sectionNames)
         let all = values(of: s).filter { !privateKeys.contains($0.key) && (chosen?.contains(section(of: $0.key)) ?? true) }
         let file = ExportFile(format: ExportFile.formatName, version: 1, values: all)
         let enc = JSONEncoder()
@@ -164,6 +186,7 @@ public enum PreferenceSets {
         let file = try JSONDecoder().decode(ExportFile.self, from: data)
         guard file.format == ExportFile.formatName else { throw CommandError.notAvailable(L10n.tr("To nie jest plik ustawień Pelikana")) }
         let known = values(of: Settings())
+        let chosen = chosen.map(sectionNames)
         return file.values.filter { known[$0.key] != nil && !privateKeys.contains($0.key) && (chosen?.contains(section(of: $0.key)) ?? true) }
     }
 

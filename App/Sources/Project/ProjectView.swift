@@ -20,7 +20,7 @@ struct ProjectView: View {
                 Button(L10n.tr("Otwórz…")) { openProject() }
                 Button(L10n.tr("Zamknij")) { workspace.perform("project.close") }.disabled(workspace.project == nil)
                 Spacer()
-                Button(L10n.tr("Kompiluj wszystko")) { run("project.build") }.disabled(workspace.project == nil)
+                Button(L10n.tr("Kompiluj projekt")) { run("project.build") }.disabled(workspace.project == nil)
                 Button(L10n.tr("Kompiluj zmienione")) { run("project.make") }.disabled(workspace.project == nil)
             }
             if let p = workspace.project {

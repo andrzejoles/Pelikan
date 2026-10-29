@@ -58,7 +58,7 @@ line.
 
 ## Code editor
 
-The same editor works in SQL, program, test and command windows. It edits without delays even packages with tens of
+The same editor works in SQL, program and test windows and in the SQL*Plus Console. It edits without delays even packages with tens of
 thousands of lines.
 
 ### Completion and navigation
