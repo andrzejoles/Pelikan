@@ -18,6 +18,13 @@ verwendeten. Unter einer Verbindung sind ihre offenen Fenster zu sehen.
 - Ordner und Verbindungen sind alphabetisch sortiert. Eine Verbindung, die mit der Maus auf einen Ordner gezogen wird,
   landet darin, auf freiem Platz der Liste — auf der obersten Ebene.
 - Die Schaltflächen über der Liste legen eine neue Verbindung (**+**) und einen Ordner an und aktualisieren die Liste.
+- **Ordner entfernen** (Kontextmenü des Ordners, Entf-Taste auf dem ausgewählten Ordner oder **Start › Verbindungen ›
+  Ordner entfernen** mit Auswahl unter den leeren Ordnern) entfernt nur einen leeren Ordner — ohne Verbindungen und
+  Unterordner, daher ohne Rückfrage. Bei einem nicht leeren Ordner nennt eine Meldung (und der Tooltip des
+  Menüeintrags), wie viele Verbindungen und Unterordner zuerst zu verschieben oder zu löschen sind. Einen Ordner mit
+  Zuordnungsregel (aus einem Import) entfernen Sie nach einer Bestätigung — passende Verbindungen kehren auf die oberste
+  Ebene zurück. Der Ordner **Zuletzt** lässt sich nicht entfernen. Entf auf einer Verbindung ist **Löschen …** mit
+  Rückfrage. In Skripten wird ein Ordner per ID oder Pfad („Team / Archiv“) angegeben; ein eindeutiger Name genügt.
 
 Sie können auch das Anmeldefenster verwenden: **Sitzung › Anmelden …** (⇧⌘L). Es zeigt alle Definitionen mit einem
 Suchfeld und ermöglicht es, eine neue Verbindung anzulegen oder eine vorhandene zu bearbeiten. **Sitzung ›

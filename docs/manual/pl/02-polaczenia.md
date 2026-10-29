@@ -17,6 +17,13 @@ Pod połączeniem widać jego otwarte okna.
 - Foldery i połączenia są ułożone alfabetycznie. Połączenie przeciągnięte myszą na folder trafia do niego, a na wolne
   miejsce listy — na poziom główny.
 - Przyciski nad listą tworzą nowe połączenie (**+**) i folder oraz odświeżają listę.
+- **Usuń folder** (menu podręczne folderu, klawisz Delete na zaznaczonym folderze albo **Start › Połączenia › Usuń
+  folder** z wyborem spośród pustych folderów) usuwa tylko pusty folder — bez połączeń i podfolderów, więc bez pytania.
+  Przy niepustym folderze komunikat (i podpowiedź pozycji menu) podaje, ile połączeń i podfolderów trzeba najpierw
+  przenieść albo usunąć. Folder z regułą dopasowania (z importu definicji) usuniesz po potwierdzeniu — połączenia
+  pasujące do reguły wracają na poziom główny. Folderu **Ostatnie** nie da się usunąć. Delete na połączeniu to
+  **Usuń…** z pytaniem. W skryptach folder wskazuje identyfikator albo ścieżka („Zespół / Archiwum”); nazwa
+  wystarczy, gdy jest jednoznaczna.
 
 Możesz też użyć okna logowania: **Sesja › Zaloguj…** (⇧⌘L). Pokazuje ono wszystkie definicje z wyszukiwarką i pozwala
 utworzyć nowe połączenie albo edytować istniejące. **Sesja › Wyloguj połączenie główne** kończy sesje połączenia

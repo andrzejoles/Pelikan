@@ -799,6 +799,20 @@ public enum BuiltinCommands {
                 ctx.ui?.showCommandPalette()
                 return .ok
             },
+            // Lewa kolumna (D204): przycisk na pasku tytułu, menu Widok, wstążka, ⌃⌘S jak „Pokaż pasek boczny” w macOS.
+            Command(CommandDescriptor(id: "view.toggleSidebar", title: L10n.tr("Pokaż lub ukryj panel po lewej"), category: .view, mac: ["ctrl+cmd+s"],
+                                      parameters: [CommandParameter("visible", .boolean, L10n.tr("Pokaż (true) albo ukryj (false) panel; bez argumentu — przełącza"))],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Pokazuje albo chowa lewą kolumnę okna głównego (Połączenia, Obiekty, Okna, Szablony, Pliki); stan zostaje w układzie okna."),
+                                      feature: "PD-UI-001")) { ctx in
+                guard let ui = ctx.ui, let visible = ui.isSidebarVisible() else {
+                    throw CommandError.notAvailable(L10n.tr("Brak okna głównego"))
+                }
+                let show = ctx.arguments.bool("visible") ?? !visible
+                ui.setSidebar(visible: show)
+                // Makro odtwarza stan, a nie przełączenie (przycisk paska i skrót wywołują bez argumentu).
+                return CommandResult(value: .bool(show), resolvedArguments: CommandArguments(["visible": .bool(show)]))
+            },
             // Panel w aktywnym oknie (D199); ustawienie `showCodeContents` jest tylko domyślnym stanem okien.
             Command(CommandDescriptor(id: "view.codeContents", title: L10n.tr("Zawartość kodu"), category: .view,
                                       parameters: [CommandParameter("visible", .boolean, L10n.tr("Pokaż (true) albo ukryj (false) panel; bez argumentu — przełącza"))],

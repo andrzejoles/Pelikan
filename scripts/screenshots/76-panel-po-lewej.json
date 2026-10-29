@@ -1,0 +1,7 @@
+[
+  {"command": "connection.newFolder", "args": {"name": "Zespół"}, "delay": 1},
+  {"command": "connection.newFolder", "args": {"name": "Do usunięcia"}, "delay": 1},
+  {"command": "connection.moveToFolder", "args": {"connection": "dev_baza_druga", "folder": "Zespół"}, "delay": 1},
+  {"command": "connection.deleteFolder", "args": {"folder": "Do usunięcia"}, "delay": 1},
+  {"command": "file.new.sql", "delay": 2}
+]

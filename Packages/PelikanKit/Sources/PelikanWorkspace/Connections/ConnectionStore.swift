@@ -146,7 +146,13 @@ public final class ConnectionStore {
 
     // MARK: Foldery
 
+    /// Dodaje albo zmienia folder. Nowa nazwa nie może zawierać „/” (ukośnik oddziela foldery w ścieżce, D204); folder
+    /// z importu z „/” w nazwie można zmieniać bez zmiany nazwy.
     public func upsert(folder: ConnectionFolder) throws {
+        let old = folders.first { $0.id == folder.id }
+        if folder.name.contains("/"), old?.name != folder.name {
+            throw CommandError.invalidArgument("name", L10n.tr("nazwa folderu nie może zawierać „/” — ukośnik oddziela foldery w ścieżce („Zespół / Archiwum”)"))
+        }
         if let i = folders.firstIndex(where: { $0.id == folder.id }) { folders[i] = folder } else { folders.append(folder) }
         try save()
     }
@@ -158,6 +164,74 @@ public final class ConnectionStore {
         for i in folders.indices where folders[i].parentID == id { folders[i].parentID = f.parentID }
         folders.removeAll { $0.id == id }
         try save()
+    }
+
+    /// Ścieżka folderu („Zespół / Archiwum”) — listy wyboru i makra (przenośna między instalacjami, D204).
+    public func path(of id: UUID) -> String? {
+        guard let folder = folders.first(where: { $0.id == id }) else { return nil }
+        var names = [folder.name]
+        var parent = folder.parentID
+        var seen: Set<UUID> = [folder.id]
+        while let p = parent, seen.insert(p).inserted, let f = folders.first(where: { $0.id == p }) {
+            names.insert(f.name, at: 0)
+            parent = f.parentID
+        }
+        return names.joined(separator: " / ")
+    }
+
+    /// Folder z argumentu komendy (odstępy na brzegach pomijane), bez wielkości liter:
+    /// - identyfikator;
+    /// - nazwa bez „/” — folder o tej nazwie na dowolnym poziomie; kilka takich — błąd z prośbą o identyfikator albo ścieżkę;
+    /// - ścieżka („Zespół / Archiwum”): odstępy wokół „/” dowolne, puste człony pomijane („Zespół//Archiwum”,
+    ///   „/Zespół/Archiwum/” — to samo); kilka pasujących (folder z importu z „/” w nazwie) — błąd jak wyżej; żadna —
+    ///   jeszcze cały tekst jako nazwa (folder z „/” w nazwie).
+    public func resolveFolder(_ spec: String) throws -> UUID {
+        let trimmed = spec.trimmingCharacters(in: .whitespaces)
+        if let id = UUID(uuidString: trimmed), folders.contains(where: { $0.id == id }) { return id }
+        func ambiguous(_ found: [ConnectionFolder]) -> CommandError {
+            let examples = found.compactMap { path(of: $0.id) }.sorted().map { "„\($0)”" }.joined(separator: ", ")
+            return CommandError.invalidArgument("folder", L10n.tr("niejednoznaczna nazwa folderu „\(trimmed)” — podaj identyfikator albo ścieżkę (\(examples))"))
+        }
+        let byName = folders.filter { $0.name.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(trimmed) == .orderedSame }
+        if trimmed.contains("/") {
+            func parts(_ s: String) -> [String] { s.split(separator: "/").map { $0.trimmingCharacters(in: .whitespaces).lowercased() } }
+            let wanted = parts(trimmed)
+            let byPath = folders.filter { f in path(of: f.id).map(parts) == wanted }
+            if byPath.count == 1 { return byPath[0].id }
+            if byPath.count > 1 { throw ambiguous(byPath) }
+        }
+        if byName.count == 1 { return byName[0].id }
+        if byName.count > 1 { throw ambiguous(byName) }
+        throw CommandError.invalidArgument("folder", L10n.tr("nieznany folder"))
+    }
+
+    /// Argument wskazujący folder w wyniku komendy (makro, dziennik): ścieżka, gdy wskazuje jednoznacznie ten folder —
+    /// inaczej (folder z „/” w nazwie, powtórzona ścieżka) identyfikator.
+    public func argument(for id: UUID) -> String {
+        guard let p = path(of: id), (try? resolveFolder(p)) == id else { return id.uuidString }
+        return p
+    }
+
+    /// Dlaczego folderu nie można usunąć z listy (D204); nil — folder pusty, można usunąć. Usuwany jest tylko folder bez
+    /// połączeń przypisanych jawnie i bez podfolderów (nic nie znika razem z nim). Folder z regułą dopasowania (UG 19.2)
+    /// też — komenda pyta wtedy o potwierdzenie (połączenia dopasowane regułą wracają na poziom główny).
+    public func deletionBlocker(folder id: UUID) -> String? {
+        guard let f = folders.first(where: { $0.id == id }) else { return L10n.tr("nieznany folder") }
+        let conns = connections.filter { $0.folderID == id }.count
+        let subs = folders.filter { $0.parentID == id }.count
+        guard conns + subs > 0 else { return nil }
+        return L10n.tr("Folder „\(f.name)” nie jest pusty (połączenia: \(conns), podfoldery: \(subs)) — przenieś albo usuń najpierw jego połączenia i podfoldery.")
+    }
+
+    /// Usuwa pusty folder (D204); niepusty albo nieznany — błąd z powodem, lista bez zmian.
+    public func removeEmpty(folder id: UUID) throws {
+        if let reason = deletionBlocker(folder: id) {
+            guard folders.contains(where: { $0.id == id }) else { throw CommandError.invalidArgument("folder", reason) }
+            throw CommandError.notAvailable(reason)
+        }
+        let before = folders
+        folders.removeAll { $0.id == id }
+        do { try save() } catch { folders = before; throw error }
     }
 
     /// Połączenia widoczne w folderze: jawnie przypisane + pasujące do reguły (UG 19.2), alfabetycznie.

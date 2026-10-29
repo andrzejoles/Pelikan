@@ -100,7 +100,7 @@ von Zeilen ohne Verzögerung.
   Unterprogramm testen, alles auf-/zuklappen). Unter dem Editor zeigt die **Codehierarchie** den Pfad vom Cursor aus
   (Paket › Prozedur › Block); ein Klick auf eine Ebene wählt sie aus oder springt zu ihrem Namen.
   Den Bereich blenden Sie in jedem Fenster einzeln ein und aus — **Ansicht › Codeinhalt** oder die
-  Seitenleisten-Taste am linken Ende der Fensterleiste; die Auswahl bleibt im Fenster (auch im Workset).
+  Taste mit der eingerückten Liste am linken Ende der Fensterleiste; die Auswahl bleibt im Fenster (auch im Workset).
   **Einstellungen › Editor › Codeinhalt standardmäßig sichtbar** gilt für Fenster, in denen der Bereich nicht
   umgeschaltet wurde.
 - **Kontrollstrukturen** im Codeinhalt: `IF` mit den Zweigen `ELSIF` und `ELSE`, Schleifen `LOOP`, `FOR` (Zähl-

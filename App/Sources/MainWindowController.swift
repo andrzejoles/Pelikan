@@ -37,8 +37,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         // przez które tekst całego panelu był na monitorach bez Retina rysowany kanciasto w aktywnym oknie.
         let sidebar = NSSplitViewItem(viewController: sidebarController)
         sidebar.holdingPriority = .defaultLow + 10
+        // Szerokość panelu: najmniej tyle, ile potrzebuje przełącznik pięciu kart; bez górnej granicy — panel można
+        // poszerzyć, dopóki obszar okien ma swoje minimum (480 pt).
         sidebar.minimumThickness = 220
-        sidebar.maximumThickness = 420
+        sidebar.maximumThickness = NSSplitViewItem.unspecifiedDimension
         sidebar.canCollapse = true
         centerArea.splitView.isVertical = false
         let documents = NSSplitViewItem(viewController: documentArea)
@@ -55,15 +57,18 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         content.minimumThickness = 480
         split.addSplitViewItem(sidebar)
         split.addSplitViewItem(content)
-        split.splitView.autosaveName = "PelikanMainSplit"
+        // Przebieg zrzutów (D196, D204) nie zapisuje układu okna — klon ma osobną domenę ustawień, a to dodatkowa ochrona.
+        if AppDelegate.uiScriptURL == nil { split.splitView.autosaveName = Self.splitAutosaveName }
         window.contentViewController = split
         // contentViewController dopasowuje okno do minimalnego rozmiaru treści — rozmiar startowy ustawiamy po nim,
         // a zapamiętaną ramkę (autosave) przywracamy na końcu.
         window.contentMinSize = NSSize(width: 820, height: 520)
         window.setContentSize(NSSize(width: 1280, height: 820))
         window.center()
-        window.setFrameUsingName("PelikanMainWindow")
-        window.setFrameAutosaveName("PelikanMainWindow")
+        if AppDelegate.uiScriptURL == nil {
+            window.setFrameUsingName("PelikanMainWindow")
+            window.setFrameAutosaveName("PelikanMainWindow")
+        }
 
         let toolbar = NSToolbar(identifier: "PelikanMainToolbar")
         toolbar.displayMode = .iconOnly
@@ -81,6 +86,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         }
         updateGroupPill()
         window.addTitlebarAccessoryViewController(ribbon)
+        // Przycisk lewej kolumny tuż za przyciskami okna, przed tytułem (D204).
+        window.addTitlebarAccessoryViewController(sidebarToggle)
+        observeSidebar()
         window.onFirstResponderChange = { [weak self] in self?.autoHideDocks() }
         window.toolsWithoutFocus = { [weak self] in
             guard let self else { return [] }
@@ -147,9 +155,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     var layout: WindowLayout? {
         guard let w = window else { return nil }
-        let sidebar = split.splitViewItems.first
-        return WindowLayout(frame: NSStringFromRect(w.frame), sidebarWidth: Double(sidebar?.viewController.view.frame.width ?? 260),
-                            sidebarPane: sidebarController.selectedPane, agentPaneVisible: isAgentPaneVisible)
+        let width = isSidebarVisible ? sidebarItem?.viewController.view.frame.width ?? 260 : sidebarWidthBeforeCollapse
+        return WindowLayout(frame: NSStringFromRect(w.frame), sidebarWidth: Double(width), sidebarPane: sidebarController.selectedPane,
+                            agentPaneVisible: isAgentPaneVisible, sidebarCollapsed: !isSidebarVisible)
     }
 
     func apply(_ l: WindowLayout) {
@@ -158,11 +166,98 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         split.splitViewItems.first?.isCollapsed = false
         split.splitView.setPosition(CGFloat(l.sidebarWidth), ofDividerAt: 0)
         sidebarController.select(pane: l.sidebarPane)
+        if l.isSidebarCollapsed {
+            setSidebar(visible: false, animated: false)
+            // Schowana kolumna wraca do szerokości z układu (podział przy schowanej kolumnie jej nie zna).
+            sidebarWidthBeforeCollapse = max(CGFloat(l.sidebarWidth), sidebarItem?.minimumThickness ?? 220)
+        }
         if agentItem != nil { setAgentPane(visible: l.agentPaneVisible) }
     }
 
     func setAgentPane(visible: Bool) {
         agentItem?.animator().isCollapsed = !visible
+    }
+
+    // MARK: Lewa kolumna — pokaż/ukryj (D204)
+
+    private var sidebarItem: NSSplitViewItem? { split.splitViewItems.first }
+    private lazy var sidebarToggle = SidebarToggleAccessory(workspace: workspace) { [weak self] in self?.isSidebarVisible ?? true }
+    private var sidebarResizeObserver: (any NSObjectProtocol)?
+    private static let splitAutosaveName = "PelikanMainSplit"
+    /// Szerokość lewej kolumny sprzed schowania — układ okna zapamiętuje ją także przy schowanej kolumnie: przy chowaniu
+    /// komendą — szerokość z tej chwili, przy zwinięciu przeciągnięciem — ostatnia szerokość ≥ minimum przed zwinięciem;
+    /// na starcie z autozapisu podziału, gdy kolumna była schowana.
+    private var sidebarWidthBeforeCollapse: CGFloat = 260
+    /// Ostatnia szerokość widocznej kolumny (≥ minimum) z każdej zmiany podziału — także przy przeciąganiu podziału
+    /// i zmianie rozmiaru okna. Przy zwinięciu przeciągnięciem staje się szerokością sprzed schowania.
+    private var lastSidebarWidth: CGFloat = 260
+    private var sidebarWasCollapsed = false
+    /// Trwające animacje pokazania/schowania (szybkie przełączenia nakładają się) — pośrednie szerokości pomijane.
+    private var sidebarAnimations = 0
+
+    /// Śledzi szerokość i widoczność lewej kolumny (przycisk na pasku tytułu, VoiceOver).
+    private func observeSidebar() {
+        if let width = Self.autosavedSidebarWidth(), width >= (sidebarItem?.minimumThickness ?? 220) { sidebarWidthBeforeCollapse = width }
+        lastSidebarWidth = sidebarWidthBeforeCollapse
+        sidebarWasCollapsed = sidebarItem?.isCollapsed ?? false
+        sidebarResizeObserver = NotificationCenter.default.addObserver(forName: NSSplitView.didResizeSubviewsNotification,
+                                                                       object: split.splitView, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.sidebarDidResize() }
+        }
+    }
+
+    private func sidebarDidResize() {
+        if let item = sidebarItem {
+            if !item.isCollapsed, sidebarAnimations == 0 {
+                let width = item.viewController.view.frame.width
+                if width >= item.minimumThickness { lastSidebarWidth = width }
+            }
+            // Zwinięcie (przeciągnięciem; komenda zapisała już szerokość sama) — ostatnia szerokość przed zwinięciem.
+            if item.isCollapsed, !sidebarWasCollapsed, sidebarAnimations == 0 { sidebarWidthBeforeCollapse = lastSidebarWidth }
+            sidebarWasCollapsed = item.isCollapsed
+        }
+        sidebarToggle.refresh()
+    }
+
+    /// Szerokość pierwszego elementu z autozapisu podziału („NSSplitView Subview Frames PelikanMainSplit”: „x, y, w, h,
+    /// ukryty, …”) — zapisana także dla schowanej kolumny. Format klucza jest wewnętrzny dla AppKit (nieudokumentowany):
+    /// inny albo nieczytelny — nil i szerokość domyślna, nic więcej od niego nie zależy.
+    private static func autosavedSidebarWidth() -> CGFloat? {
+        guard AppDelegate.uiScriptURL == nil,
+              let frames = UserDefaults.standard.array(forKey: "NSSplitView Subview Frames " + splitAutosaveName) as? [String],
+              let first = frames.first else { return nil }
+        let parts = first.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        return parts.count > 2 ? Double(parts[2]).map { CGFloat($0) } : nil
+    }
+
+    var isSidebarVisible: Bool { !(sidebarItem?.isCollapsed ?? true) }
+
+    /// Pokazuje albo chowa lewą kolumnę; animacja zwijania jak pasek boczny macOS. Fokus z chowanej kolumny przechodzi
+    /// do edytora aktywnego okna.
+    func setSidebar(visible: Bool, animated: Bool = true) {
+        guard let item = sidebarItem, item.isCollapsed == visible else { return }
+        if !visible {
+            let width = item.viewController.view.frame.width
+            if width >= item.minimumThickness { sidebarWidthBeforeCollapse = width }
+            if let responder = window?.firstResponder as? NSView, responder.isDescendant(of: item.viewController.view) {
+                documentArea.focusActiveDocument()
+            }
+        }
+        guard animated else {
+            item.isCollapsed = !visible
+            sidebarToggle.refresh()
+            return
+        }
+        sidebarAnimations += 1
+        NSAnimationContext.runAnimationGroup({ _ in item.animator().isCollapsed = !visible }, completionHandler: { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.sidebarAnimations -= 1
+                self.sidebarWasCollapsed = self.sidebarItem?.isCollapsed ?? false
+                self.sidebarToggle.refresh()
+            }
+        })
+        sidebarToggle.refresh()
     }
 
     // MARK: Panele narzędzi (PD-UI-003)

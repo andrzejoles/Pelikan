@@ -104,6 +104,8 @@ public enum CommandSymbols {
         "report.print": "printer", "report.lock": "lock", "report.unlock": "lock.open", "report.addToMenu": "text.badge.plus",
         "notebook.runAll": "forward.fill", "notebook.runCell": "play.fill", "notebook.exportMarkdown": "arrow.down.doc",
         "notebook.addSQLCell": "plus.rectangle", "notebook.addMarkdownCell": "text.badge.plus",
+        // Lewa kolumna okna głównego (D204) — symbol paska bocznego jak w Finderze i Mailu.
+        "view.toggleSidebar": "sidebar.left", "connection.deleteFolder": "folder.badge.minus",
         // Agent AI (komendy aplikacji, AgentUICommands)
         "agent.togglePane": "sidebar.right", "agent.undoSession": "arrow.uturn.backward.circle", "agent.endSession": "stop.circle",
         "agent.showLog": "list.bullet.clipboard",

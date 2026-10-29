@@ -1,0 +1,5 @@
+[
+  {"command": "file.new.sql", "delay": 1},
+  {"command": "view.toggleSidebar", "args": {"visible": false}, "delay": 1},
+  {"command": "debug.hideToolbar", "delay": 2}
+]

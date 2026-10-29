@@ -95,7 +95,7 @@ thousands of lines.
   tracks the cursor and has sorting and a menu (select, copy, cut, test subprogram, expand/collapse all). Below the
   editor, the **code hierarchy** shows the path from the cursor (package › procedure › block); clicking a level
   selects it or moves to its name.
-  You show and hide the panel in each window separately — **View › Code Contents** or the sidebar button at
+  You show and hide the panel in each window separately — **View › Code Contents** or the indented-list button at
   the left end of the window bar; the choice stays with the window (also in the workset). **Settings › Editor ›
   Code Contents visible by default** decides for windows where the panel was not toggled.
 - **Control structures** in Code Contents: `IF` with `ELSIF` and `ELSE` branches, `LOOP`, `FOR` (numeric and

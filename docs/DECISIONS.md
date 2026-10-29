@@ -2315,7 +2315,11 @@ okna); każdy przebieg ma własny katalog `mktemp` (klon, dane — równoległe 
 sprzątany w `trap` razem z niewidocznymi instancjami (sesje w bazie testowej); katalogi przebiegów przerwanych bez
 sprzątania (właściciel z `owner.pid` już nie działa) są usuwane przy następnym starcie. Scenariusz bez żadnego zrzutu
 kończy skrypt błędem; okna modalne i arkusze w trybie skryptu trafiają do dziennika `.log`, a zrzut treści WKWebView ma
-limit 5 s. Klon jest bez rozszerzeń (`PlugIns`, Quick Look nie rejestruje się drugi raz).
+limit 5 s. Klon jest bez rozszerzeń (`PlugIns`, Quick Look nie rejestruje się drugi raz). **Zmiana D204:** klon ma
+osobny identyfikator `<id>.screenshots` (osobna domena UserDefaults i usługa pęku kluczy), ustawienia czyszczone przed
+każdym scenariuszem i w sprzątaniu (także „Saved Application State” i pamięć podręczna klonu); w trybie skryptu bez
+autozapisu ramki okna, układu paska i podziału. Język: wyczyszczona domena nie ma nadpisania języka aplikacji, więc
+klon dostaje `-AppleLanguages (pl)` w argumentach uruchomienia — zrzuty po polsku niezależnie od języka systemu.
 
 ### D197 · 2026-10-29 — Pliki zmienione przez inny program: wykrywanie przy aktywacji i wczytanie ponowne
 
@@ -2820,3 +2824,82 @@ Prośba właściciela: „W drzewku struktury kodu brakuje mi jeszcze wszystkich
   GOTO) nie jest pokazywana; struktury w kodzie Java/MLE — nie dotyczy. Kompilacja warunkowa z niezrównoważonymi
   strukturami w gałęziach (np. `$IF … $THEN IF a THEN $ELSE IF b THEN $END … END IF;`) daje mylące zagnieżdżenie — kod
   obu gałęzi jest czytany jak jeden.
+
+### D204 · 2026-10-29 — Pokaż/ukryj panel po lewej, usuwanie pustych folderów połączeń
+
+Prośby właściciela: „Panel z lewej strony Pelikana — opcja ukrywania/pokazywania (gdzieś na wierzchu)” oraz
+„W połączeniach nie ma usuwania folderu (najlepiej z zabezpieczeniem, że tylko pusty można usunąć)”.
+
+- **Komenda `view.toggleSidebar`** „Pokaż lub ukryj panel po lewej” (Widok; agent: brak dostępu, skutek: stan
+  interfejsu; opcjonalny argument `visible`, makro nagrywa stan — jak `view.codeContents`, D199). Skrót **⌃⌘S** w obu
+  profilach — jak „Pokaż pasek boczny” w macOS, wolny w rejestrze. Wstążka: Widok › Panele narzędzi „Panel po lewej”
+  (obok paneli po prawej i na dole). Lewa kolumna zwija się z animacją (`animator().isCollapsed`); fokus z chowanej
+  kolumny przechodzi do edytora aktywnego okna. Bez okna głównego — czytelny błąd.
+- **Przycisk na wierzchu:** dodatek paska tytułu `NSTitlebarAccessoryViewController` z `layoutAttribute = .leading`
+  (`SidebarToggleAccessory`) — symbol `sidebar.left` tuż za przyciskami okna, przed tytułem, jak w Mailu i Notatkach,
+  w tym samym miejscu także przy schowanej kolumnie. Sprawdzony najpierw element paska narzędzi z separatorem
+  śledzącym (`NSTrackingSeparatorToolbarItem`): tytuł okna zostawał na lewym końcu, przycisk stał przy prawej krawędzi
+  lewej kolumny, a po jej schowaniu przeskakiwał na prawą stronę paska — odrzucony (lewa kolumna nie jest paskiem
+  bocznym macOS, D180, więc tytuł nie przechodzi za separator). Domyślny układ paska narzędzi bez zmian (bez migracji
+  zapamiętanego układu); komenda jest w palecie Dostosuj pasek.
+  - Wygląd: sam symbol bez ramki (szklany przycisk dodatku nie rysuje się w zrzutach w tle, D196); wysokość dodatku
+    28 pt, przycisk 30×24 pt — nie wyższy niż pasek tytułu przy ukrytym pasku narzędzi (zrzut 77), więc go nie podnosi.
+  - Pełny ekran: dodatki paska tytułu są częścią paska, który macOS chowa w pełnym ekranie i pokazuje po najechaniu na
+    górną krawędź — przycisk jest wtedy razem z paskiem narzędzi; menu Widok i ⌃⌘S działają zawsze.
+  - Kliknięcie przełącza stan przycisku od razu, właściwy stan ustawia komenda (odświeżenie po zmianie podziału
+    i po animacji).
+  - VoiceOver: przełącznik (`pushOnPushOff`) „Panel po lewej” z wartością „widoczny”/„ukryty”, stan odświeżany po
+    każdej zmianie podziału (także zwinięciu przeciągnięciem); podpowiedź ze skrótem z bieżącej mapy klawiszy
+    (zmiana skrótu w Ustawieniach odświeża ją od razu).
+- **Przycisk Zawartości kodu** (D199) dostał symbol `list.bullet.indent` — `sidebar.left` przy dwóch różnych panelach
+  po lewej mylił.
+- **Układ okna:** `WindowLayout.sidebarCollapsed` (opcjonalne; brak w starszych układach — kolumna widoczna, widoczna
+  kolumna nie zapisuje pola); **Widok › Zapisz układ okna** i autozapis układu (opis komendy wymienia schowanie
+  kolumny). Worksety nie zapisują układu okna. Przy schowanej kolumnie `sidebarWidth` to szerokość sprzed schowania:
+  ostatnia szerokość widocznej kolumny (≥ minimum) jest zapamiętywana po każdej zmianie podziału — także przy
+  przeciąganiu podziału i zmianie rozmiaru okna — poza animacją pokazania/schowania (licznik trwających animacji,
+  zmniejszany w `completionHandler` z `NSAnimationContext.runAnimationGroup`; szybkie przełączenia się nakładają);
+  przy zwinięciu przeciągnięciem szerokością sprzed schowania staje się ta ostatnia szerokość ≥ minimum przed
+  zwinięciem; przy chowaniu komendą — szerokość z tej chwili; na starcie
+  z autozapisu podziału („NSSplitView Subview Frames PelikanMainSplit” — format wewnętrzny AppKit, nieudokumentowany:
+  nieczytelny daje szerokość domyślną 260 pt); po przywróceniu układu ze schowaną kolumną — szerokość z układu, nie
+  mniej niż minimum kolumny (220 pt).
+- **Zrzuty (zmiana D196):** przebieg zrzutów zmieniał UserDefaults aplikacji Debug właściciela (ten sam identyfikator
+  klonu: ramka okna, układ paska i podziału — stąd zrzuty w rozmiarze okna właściciela). Klon dostaje identyfikator
+  `<id>.screenshots` (PlistBuddy przed podpisem), jego domena jest czyszczona przed każdym scenariuszem i w sprzątaniu;
+  od identyfikatora zależą jeszcze usługi pęku kluczy (`<id>.screenshots.connection`/`.ssh` — przebieg łączy się
+  portfelem SEPS z katalogu `PELIKAN_DATA_DIR`, więc bez haseł) i podsystem dziennika; Sparkle w Debug wyłączony,
+  schemat URL — klon wyrejestrowywany po przebiegu. W trybie skryptu dodatkowo bez autozapisu ramki okna, układu paska
+  i podziału. Krok `debug.hideToolbar` chowa pasek narzędzi przez `toggleToolbarShown` (jak menu — hak widoczności
+  paska z grup kart). Okno zrzutów ma rozmiar domyślny 1280×820.
+- **Komenda `connection.deleteFolder`** „Usuń folder” (Sesja › Połączenia w palecie, `inMenu: false` jak „Nowy
+  folder…”; wstążka Start › Połączenia; agent: brak dostępu i skutek „ustawienia” — jak pozostałe komendy definicji
+  połączeń i folderów). Wywołania: menu podręczne folderu na liście połączeń, klawisz Delete (⌫/⌦) na zaznaczonym
+  folderze. Bez argumentu użytkownik wybiera z listy **tylko folderów, które da się usunąć** (ścieżki „Zespół /
+  Archiwum”); brak takich — komunikat. Skrypt i agent bez argumentu — błąd argumentu.
+- **Wskazanie folderu** (`ConnectionStore.resolveFolder`, także `connection.moveToFolder`), bez wielkości liter:
+  identyfikator; nazwa bez „/” — folder o tej nazwie na dowolnym poziomie (kilka — błąd argumentu „niejednoznaczna
+  nazwa folderu … — podaj identyfikator albo ścieżkę” z listą ścieżek); ścieżka („Zespół / Archiwum”) — odstępy wokół
+  „/” dowolne, puste człony pomijane („Zespół//Archiwum”, „/Zespół/Archiwum/” to ta sama ścieżka), kilka pasujących —
+  ten sam błąd, żadna — jeszcze cały tekst jako nazwa. **„/” w nazwie** nowego folderu (i przy zmianie nazwy przez
+  `upsert(folder:)`) jest odrzucany z komunikatem; folder z „/” z importu działa dalej (zmiany bez zmiany nazwy
+  dozwolone). Wynik (`resolvedArguments`, `ConnectionStore.argument(for:)`) podaje ścieżkę folderu — przenośną między
+  instalacjami — a identyfikator, gdy ścieżka nie wskazuje jednoznacznie tego folderu (folder z „/” w nazwie, powtórzona
+  ścieżka). Dziś makra nie nagrywają komend ze skutkiem „ustawienia”, więc dotyczy to dziennika i przyszłych makr.
+  Odstępy na brzegach argumentu są pomijane przed rozpoznaniem identyfikatora. **Znane ograniczenie:** folder z „/”
+  w nazwie (tylko z importu) nie da się wskazać ścieżką, gdy ta sama ścieżka pasuje do innego folderu (np. „Dev/Test”
+  i „Dev” › „Test”) — wtedy tylko identyfikatorem albo z listy wyboru; nazwy takiego folderu nie zmienia się
+  automatycznie.
+- **Zabezpieczenie:** `ConnectionStore.deletionBlocker` — usuwany jest tylko folder bez połączeń przypisanych jawnie
+  i bez podfolderów (nic nie znika razem z nim, więc **bez pytania potwierdzającego**). Niepusty: komunikat „Folder
+  „…” nie jest pusty (połączenia: N, podfoldery: M) — przenieś albo usuń najpierw jego połączenia i podfoldery.”.
+  W menu podręcznym pozycja zostaje **włączona** (dostępna dla VoiceOver i klawiatury), ten tekst jest w podpowiedzi,
+  a wybranie pokazuje komunikat. **Folder z regułą dopasowania** (UG 19.2; decyzja koordynatora): pusty użytkownik
+  usuwa po potwierdzeniu — reguły nie da się odtworzyć w Pelikanie (przychodzi z importu definicji); skrypt z argumentem
+  usuwa go bez pytania (agent nie ma dostępu do komendy). Połączenia pasujące do reguły wracają na poziom główny listy
+  albo do innego folderu z pasującą regułą. **Folder „Ostatnie”** jest tworzony automatycznie — nieusuwalny (argument
+  „Ostatnie”/„recent”, chyba że użytkownik ma folder o tej nazwie); Delete na jego wierszu i na wierszu okna — tylko
+  sygnał dźwiękowy. Foldery DBA i DBMS (D190) są gałęziami Przeglądarki obiektów, nie folderami połączeń. Zapis
+  `connections.json` od razu; błąd zapisu przywraca folder na liście. Dawne `ConnectionStore.remove(folder:)` (przenosi
+  zawartość do rodzica) zostaje dla importu i testów, interfejs go nie używa.
+- **Delete na połączeniu** — `connection.delete` z jego pytaniem (definicja i zapisane hasło).

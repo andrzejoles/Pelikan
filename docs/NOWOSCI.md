@@ -2,6 +2,21 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.10.0 — panel po lewej i foldery połączeń
+
+- **Panel po lewej** (Połączenia, Obiekty, Okna, Szablony, Pliki) można poszerzyć bez dawnego limitu 420 punktów — aż do
+  chwili, gdy obszarowi okien zostaje jego minimalna szerokość.
+- **Pokaż albo ukryj panel po lewej:** przycisk na lewym końcu paska tytułu (tuż za przyciskami okna, jak w Mailu),
+  **Widok › Pokaż lub ukryj panel po lewej**, skrót **⌃⌘S** (jak „Pokaż pasek boczny” w macOS) i przycisk na wstążce
+  (Widok › Panele narzędzi). Panel zwija się z animacją, a jego stan i szerokość zostają w układzie okna.
+- **Usuń folder połączeń:** menu podręczne folderu na liście połączeń, klawisz Delete na zaznaczonym folderze
+  i **Start › Połączenia › Usuń folder** (wybór spośród pustych folderów). Usunąć można tylko pusty folder — bez
+  połączeń i podfolderów; przy niepustym komunikat mówi, ile połączeń i podfolderów trzeba najpierw przenieść albo
+  usunąć. Folder z regułą dopasowania — po potwierdzeniu; folder „Ostatnie” zostaje. Delete na połączeniu usuwa je
+  (z pytaniem).
+- Przycisk **Zawartości kodu** na pasku okna ma teraz symbol listy z wcięciami (symbol paska bocznego należy do panelu
+  po lewej).
+
 ## 1.9.0 — struktury sterujące w Zawartości kodu
 
 - **Struktury sterujące w drzewie:** Zawartość kodu pokazuje teraz także `IF` z gałęziami `ELSIF` i `ELSE`, pętle

@@ -90,7 +90,7 @@ kilkadziesiąt tysięcy linii.
   (zaznacz, kopiuj, wytnij, testuj podprogram, rozwiń/zwiń wszystko). Pod edytorem **hierarchia kodu** pokazuje
   ścieżkę od kursora (pakiet › procedura › blok); kliknięcie poziomu zaznacza go albo przenosi do nazwy.
   Panel pokazujesz i ukrywasz w każdym oknie osobno — **Widok › Zawartość kodu** albo przycisk z symbolem
-  paska bocznego na lewym końcu paska okna; wybór zostaje w oknie (także w worksecie). **Ustawienia › Edytor ›
+  listy z wcięciami na lewym końcu paska okna; wybór zostaje w oknie (także w worksecie). **Ustawienia › Edytor ›
   Zawartość kodu domyślnie widoczna** decyduje o oknach, w których panelu nie przełączano.
 - **Struktury sterujące** w Zawartości kodu: `IF` z gałęziami `ELSIF` i `ELSE`, pętle `LOOP`, `FOR` (liczbowe
   i kursorowe, także `FOR r IN (SELECT …) LOOP`) i `WHILE`, `FORALL`, instrukcja `CASE` z gałęziami `WHEN`

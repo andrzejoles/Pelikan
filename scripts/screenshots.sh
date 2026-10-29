@@ -48,8 +48,15 @@ fi
 WORK=$(mktemp -d "$TMP/pelikan-shots.XXXXXX")
 echo $$ > "$WORK/owner.pid"
 RUN_APP="$WORK/Pelikan.app"
+# Osobny identyfikator klonu (D204): własna domena ustawień (UserDefaults) — przebieg nie zmienia ramki okna, układu
+# paska i podziału ani innych ustawień aplikacji Debug właściciela; pęk kluczy też pod osobną usługą (<id>.screenshots.…).
+SHOT_ID=""
 cleanup() {
     pkill -f "$RUN_APP/Contents/MacOS/Pelikan" 2>/dev/null || true
+    if [ -n "$SHOT_ID" ]; then
+        defaults delete "$SHOT_ID" >/dev/null 2>&1 || true
+        rm -rf "$HOME/Library/Saved Application State/$SHOT_ID.savedState" "$HOME/Library/Caches/$SHOT_ID"
+    fi
     "$LSREGISTER" -u "$RUN_APP" 2>/dev/null || true
     rm -rf "$WORK"
 }
@@ -65,6 +72,8 @@ trap 'exit 130' INT TERM
 cp -Rc "$APP" "$RUN_APP" 2>/dev/null || ditto "$APP" "$RUN_APP"
 rm -rf "$RUN_APP/Contents/PlugIns"
 /usr/libexec/PlistBuddy -c "Add :LSUIElement bool true" "$RUN_APP/Contents/Info.plist"
+SHOT_ID="$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$RUN_APP/Contents/Info.plist").screenshots"
+/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $SHOT_ID" "$RUN_APP/Contents/Info.plist"
 codesign --force --sign - --options runtime --preserve-metadata=entitlements "$RUN_APP" >/dev/null 2>&1 \
     || { echo "Nie udało się podpisać kopii aplikacji $RUN_APP" >&2; exit 1; }
 if [ "$SCREEN" = 0 ]; then
@@ -135,8 +144,12 @@ for name in "${scenarios[@]}"; do
     started=$(date +%s)
     # Klon należy tylko do tego przebiegu — instancja poprzedniego scenariusza nie może zostać.
     pkill -f "$RUN_APP/Contents/MacOS/Pelikan" 2>/dev/null || true
+    # Czyste ustawienia klonu dla każdego scenariusza (rozmiar okna domyślny, nie z poprzedniego scenariusza); język
+    # interfejsu polski z argumentów uruchomienia (`-AppleLanguages (pl)`), niezależnie od języka systemu.
+    defaults delete "$SHOT_ID" >/dev/null 2>&1 || true
     if [ "$SCREEN" = 0 ]; then
-        open -g -n --env PELIKAN_DATA_DIR="$DATA" --env PELIKAN_UI_SCRIPT="$run" --env PELIKAN_SNAPSHOT="$OUT/$name" "$RUN_APP"
+        open -g -n --env PELIKAN_DATA_DIR="$DATA" --env PELIKAN_UI_SCRIPT="$run" --env PELIKAN_SNAPSHOT="$OUT/$name" "$RUN_APP" \
+            --args -AppleLanguages '(pl)'
         for _ in $(seq 1 120); do [ -f "$run.done" ] && break; sleep 0.5; done
         [ -f "$run.done" ] || echo "$name: przebieg nie zakończył się w 60 s" >&2
         # Zrzuty zapisała aplikacja: „zrzut plik  tytuł  rozmiar” w dzienniku skryptu; pominięte okna dialogowe i okna
@@ -156,7 +169,8 @@ for name in "${scenarios[@]}"; do
         pkill -f "$RUN_APP/Contents/MacOS/Pelikan" 2>/dev/null || true
         continue
     fi
-    open -g -n --env PELIKAN_DATA_DIR="$DATA" --env PELIKAN_UI_SCRIPT="$run" --env PELIKAN_UI_SCRIPT_VISIBLE=1 "$RUN_APP"
+    open -g -n --env PELIKAN_DATA_DIR="$DATA" --env PELIKAN_UI_SCRIPT="$run" --env PELIKAN_UI_SCRIPT_VISIBLE=1 "$RUN_APP" \
+        --args -AppleLanguages '(pl)'
     for _ in $(seq 1 120); do [ -f "$run.done" ] && break; sleep 0.5; done
     sleep 1.5
     pid=$(pgrep -f "$RUN_APP/Contents/MacOS/Pelikan" | tail -1 || true)

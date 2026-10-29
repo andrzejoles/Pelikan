@@ -240,6 +240,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolDockManager.shared.toggle(placement)
     }
 
+    func isSidebarVisible() -> Bool? { mainWindow?.isSidebarVisible }
+
+    func setSidebar(visible: Bool) { mainWindow?.setSidebar(visible: visible) }
+
     func placeTool(_ key: String?, at placement: ToolPlacement) -> String? {
         ToolDockManager.shared.place(key, at: placement)
     }
@@ -1329,6 +1333,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 if s.command == "debug.openFile", case .string(let path)? = s.args?["path"] {
                     do { _ = try workspace.openFile(URL(fileURLWithPath: path)); log("ok debug.openFile") }
                     catch { log("debug.openFile: \(error.localizedDescription)") }
+                    try? await Task.sleep(for: .seconds(s.delay ?? 1))
+                    continue
+                }
+                // Pasek narzędzi ukryty (pasek tytułu bez paska narzędzi — przycisk lewej kolumny, D204).
+                if s.command == "debug.hideToolbar" {
+                    // Jak Widok › Ukryj pasek narzędzi — przez toggleToolbarShown (hak widoczności paska okna głównego).
+                    if mainWindow?.window?.toolbar?.isVisible == true { mainWindow?.window?.toggleToolbarShown(nil) }
+                    log("ok debug.hideToolbar")
                     try? await Task.sleep(for: .seconds(s.delay ?? 1))
                     continue
                 }

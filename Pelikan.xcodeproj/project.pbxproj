@@ -49,6 +49,7 @@
 		53A071441267FB1A65FE9E57 /* CodeTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C474097D823409ADBB63C09 /* CodeTextEditor.swift */; };
 		53BDE5324DF28EA6708C99AE /* MonitorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */; };
 		53C7CAA6E29623995902B17B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3429C3E6085A0A6E4E4B0843 /* main.swift */; };
+		57D4BA5F2CBEBEE3C8D7C19F /* SidebarToggleAccessory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1B24691B6354EFAAF3C9F2 /* SidebarToggleAccessory.swift */; };
 		5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */; };
 		5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */; };
 		5ECD40E66F671B53CBD29985 /* Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3554C8E9BEC253635C7FDF /* Accessibility.swift */; };
@@ -226,6 +227,7 @@
 		987FAF7ACFFCC021864BC626 /* UtplsqlResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtplsqlResultsView.swift; sourceTree = "<group>"; };
 		9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VariablesView.swift; sourceTree = "<group>"; };
 		9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBuilder.swift; sourceTree = "<group>"; };
+		9F1B24691B6354EFAAF3C9F2 /* SidebarToggleAccessory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarToggleAccessory.swift; sourceTree = "<group>"; };
 		A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectToolsViews.swift; sourceTree = "<group>"; };
 		A5038ED2FB68FC68A88C5209 /* Oracle23Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Oracle23Views.swift; sourceTree = "<group>"; };
 		A7048E3E041B381E86A22B88 /* CompletionPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionPopup.swift; sourceTree = "<group>"; };
@@ -494,6 +496,7 @@
 				26AA9CEDE79921F45A0500AB /* Observe.swift */,
 				8985D14B4D443131FC094B58 /* Ribbon.swift */,
 				285C7B10C63EF5F2F56D1679 /* ServicesProvider.swift */,
+				9F1B24691B6354EFAAF3C9F2 /* SidebarToggleAccessory.swift */,
 				F7E4D86502008EA02BAC9C4E /* TabGroupViews.swift */,
 				3F187215A572499B1DAD61B4 /* TabStrip.swift */,
 				031C04E8448920291721F4D5 /* UIScriptSnapshots.swift */,
@@ -907,6 +910,7 @@
 				ED1A5FBBBA6072361C0B0A94 /* SearchBarView.swift in Sources */,
 				D0E4E53E61B71D09B1D4C583 /* ServicesProvider.swift in Sources */,
 				D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */,
+				57D4BA5F2CBEBEE3C8D7C19F /* SidebarToggleAccessory.swift in Sources */,
 				E3A1E7C2AE6D2213F55A68EB /* SimpleObjectEditorView.swift in Sources */,
 				B1EE1F26840F3000682D5D93 /* Stage7ToolViews.swift in Sources */,
 				D23D6E5FE264EA699F32CE3A /* Stage7Views.swift in Sources */,

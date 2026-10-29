@@ -17,7 +17,8 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
         super.init()
         toolbar.delegate = self
         toolbar.allowsUserCustomization = true
-        toolbar.autosavesConfiguration = true
+        // Przebieg zrzutów (D196, D204) nie zapisuje układu paska.
+        toolbar.autosavesConfiguration = AppDelegate.uiScriptURL == nil
         token = trackChanges { [weak self] in
             guard let self else { return }
             _ = self.workspace.settings.quickAccessCommands

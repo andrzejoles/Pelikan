@@ -86,6 +86,10 @@ public protocol UIServices: AnyObject {
     func askSecret(_ title: String, message: String, confirm: Bool) async -> String?
     /// Panele narzędzi okna głównego (PD-UI-003): pokazanie albo ukrycie panelu.
     func toggleToolDock(_ placement: ToolPlacement)
+    /// Lewa kolumna okna głównego (panel po lewej, D204): widoczna? nil — brak okna głównego.
+    func isSidebarVisible() -> Bool?
+    /// Pokazuje albo chowa lewą kolumnę (z animacją zwijania).
+    func setSidebar(visible: Bool)
     /// Przeniesienie narzędzia (nil — bieżącego) do panelu albo osobnego okna; zwraca klucz narzędzia (nil — brak narzędzia).
     func placeTool(_ key: String?, at placement: ToolPlacement) -> String?
     /// Zamknięcie narzędzia (nil — bieżącego); zwraca klucz zamkniętego narzędzia.
@@ -228,6 +232,8 @@ extension UIServices {
     public func focusRibbonSearch() {}
     public func askSecret(_ title: String, message: String, confirm: Bool) async -> String? { nil }
     public func toggleToolDock(_ placement: ToolPlacement) {}
+    public func isSidebarVisible() -> Bool? { nil }
+    public func setSidebar(visible: Bool) {}
     public func placeTool(_ key: String?, at placement: ToolPlacement) -> String? { nil }
     public func closeTool(_ key: String?) -> String? { nil }
     public func showPreferenceSets() {}
