@@ -97,6 +97,55 @@ Pelikan ma jedno okno główne:
 
 Tytuł okna pokazuje połączenie główne i aktywny zestaw roboczy (workset), a podtytuł — bieżące okno.
 
+**Gałąź na pasku stanu:** kliknięcie gałęzi Git (prawy dolny róg) otwiera menu **Otwórz pozostałe pliki zmienione
+w gałęzi** (także **Narzędzia › Git** i wstążka **Narzędzia › Git**). Pelikan otwiera pliki kodu zmienione w gałęzi
+repozytorium pliku aktywnego okna: zatwierdzone od rozgałęzienia z gałęzią domyślną zdalnego repozytorium (`origin/HEAD`,
+bez niej `origin/main` albo `master`; bez zdalnego — od gałęzi śledzonej), niezatwierdzone i nieśledzone. Pomija pliki
+usunięte, binarne, ignorowane i już otwarte; para `.pks`/`.pkb` otwiera się jednym oknem. Przy ponad 30 plikach pyta
+o zgodę; bieżące okno zostaje aktywne.
+
+## Grupy kart
+
+Przy wielu otwartych oknach Pelikan dzieli karty na **grupy**, a pasek kart pokazuje tylko karty bieżącej grupy.
+Grupy widać jako **kapsułki** na pasku tytułu, między tytułem okna a przyciskami: w pierwszym wierszu nazwa grupy,
+w drugim szczegół i liczba okien (np. „main · 7”, „5 okien”). Kliknięcie kapsułki pokazuje karty grupy i aktywuje jej
+ostatnio używane okno; bieżąca grupa jest wyróżniona obwódką. Gdy kapsułki się nie mieszczą, ostatnia — **»** —
+rozwija listę wszystkich grup. Przy jednej grupie kapsułek nie ma. Gdy pasek narzędzi jest ukryty albo okno jest na
+pełnym ekranie, mała kapsułka bieżącej grupy jest na początku paska kart.
+
+Okno trafia do grupy według kolejnych reguł:
+
+1. **Grupa ręczna** — jeśli przeniosłeś do niej okno (ma pierwszeństwo przed pozostałymi regułami).
+2. **Projekt** — okno z plikiem otwartego projektu Pelikana.
+3. **Repozytorium · gałąź** — plik w repozytorium gita, które ma zdalne repozytorium; worktree z inną gałęzią to
+   osobna grupa, a po zmianie gałęzi (np. `git checkout`) okna przechodzą do grupy nowej gałęzi, gdy wrócisz do
+   Pelikana. Repozytoria bez zdalnego — dalej według połączenia.
+4. **Połączenie** okna; okna bez połączenia — grupa **Bez połączenia** na końcu.
+5. Gdy wszystkie pozostałe okna używają **jednej bazy**, zamiast grup połączeń są grupy według rodzaju okna: **Okna
+   SQL**, **Programy**, **Testy**, **Konsole SQL*Plus** i **Inne okna**. Na grupy połączeń Pelikan przechodzi dopiero,
+   gdy druga baza ma więcej niż jedno okno — jedno okno na innej bazie nie przestawia całego paska.
+
+Kolejność kapsułek jest stała: grupy ręczne (w kolejności utworzenia), projekt, repozytoria i połączenia alfabetycznie
+(albo rodzaje okien), „Bez połączenia” na końcu. Karty w grupie są w kolejności otwierania.
+
+Okno aktywowane skądkolwiek (Przeglądarka obiektów, lista błędów, Lista okien, debuger, otwarcie pliku, agent)
+przełącza grupę samo. **⌃Tab** i **⌃⇧Tab** (Następne / Poprzednie okno) przechodzą po oknach bieżącej grupy,
+**⌃⌘]** i **⌃⌘[** — **Następna grupa kart** / **Poprzednia grupa kart**, a **Okno › Pokaż grupę kart…** wybiera
+grupę z listy. **Okno › Karty wszystkich grup** (także w menu kapsułki i listy **»**) pokazuje na pasku karty
+wszystkich grup. Lista okien (karta **Okna** w lewej kolumnie, **Widok › Lista okien**) pokazuje okna w drzewie
+według grup; kliknięcie grupy ją pokazuje.
+
+**Grupy ręczne:** menu karty › **Przenieś do grupy › Nowa grupa…** albo istniejąca grupa; **Usuń z grupy ręcznej**
+zwraca okno do grup automatycznych. Menu kapsułki grupy ręcznej ma **Zmień nazwę…** i **Rozgrupuj**. Grupy ręczne
+i kolory połączeń zapisują się w worksecie. Karty nie przeciąga się na kapsułkę — służy do tego menu karty.
+
+**Karty** mają dwa wiersze: kropkę koloru środowiska, literę typu, tytuł i przycisk zamknięcia (kropka — niezapisane
+zmiany), a pod nimi zawsze połączenie okna (okno bez połączenia — szare „Brak połączenia”); pełna nazwa jest
+w podpowiedzi. Tło karty ma kolor połączenia z palety (zobacz *Połączenia › Środowiska i ochrona przed pomyłkami*):
+aktywna karta ma mocniejsze tło, grube podkreślenie w kolorze połączenia i pogrubiony tytuł. Gdy karty nie mieszczą
+się w jednym wierszu, po bokach paska pojawiają się przyciski **‹** i **›**; pasek przewijasz też kółkiem myszy albo
+gestem na gładziku, a aktywna karta jest zawsze widoczna.
+
 ## Wstążka i „Szukaj czynności”
 
 Pod paskiem narzędzi jest **wstążka** — każda czynność jednym kliknięciem, bez szukania w menu i bez pamiętania skrótów.

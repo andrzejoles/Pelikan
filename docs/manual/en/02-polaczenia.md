@@ -92,6 +92,11 @@ agents* chapter.
   The **Editor background in connection color** option (**Settings › General**) also tints the editor background. On
   the same tab you can add color rules by a `user@database` pattern (e.g. `sys@*`) — they take precedence over the
   environment color.
+- Besides the environment color, every connection with open windows gets a color from a **palette of 10 clearly
+  different hues**: it is the background of its windows' tabs, the capsule of the connection group, the mark in the
+  Window List and in the status bar (see *Introduction › Tab groups*). The color stays with the connection while it has
+  open windows and comes back when the workset is reopened; after the last window closes it returns to the pool. With
+  more than 10 connections at once the colors repeat.
 - On a **production** connection, statements that change data or objects (DML, DDL, PL/SQL blocks) require confirmation
   in the “Changes on production connection” window.
 - A **read-only** connection rejects everything except queries and session control before it is sent to the database —

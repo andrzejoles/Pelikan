@@ -98,6 +98,56 @@ Pelikan has one main window:
 
 The window title shows the main connection and the active workset, and the subtitle shows the current window.
 
+**Branch in the status bar:** clicking the Git branch (bottom right corner) opens a menu with **Open Other Files Changed
+in Branch** (also **Tools › Git** and the ribbon **Tools › Git**). Pelikan opens the code files changed in the branch of
+the active window's repository: committed since the fork point with the remote's default branch (`origin/HEAD`, without
+it `origin/main` or `master`; without a remote — since the upstream branch), uncommitted and untracked. It skips deleted,
+binary, ignored and already open files; a `.pks`/`.pkb` pair opens as one window. With more than 30 files it asks first;
+the current window stays active.
+
+## Tab groups
+
+With many windows open, Pelikan divides the tabs into **groups**, and the tab bar shows only the tabs of the current
+group. Groups appear as **capsules** in the title bar, between the window title and the buttons: the first line is the
+group name, the second a detail and the number of windows (e.g. “main · 7”, “5 windows”). Clicking a capsule shows the
+group's tabs and activates its most recently used window; the current group is outlined. When the capsules do not fit,
+the last one — **»** — opens a list of all groups. With a single group there are no capsules. When the toolbar is
+hidden or the window is in full screen, a small capsule of the current group sits at the start of the tab bar.
+
+A window joins a group by these rules, in order:
+
+1. **Manual group** — if you moved the window into one (it takes precedence over the other rules).
+2. **Project** — a window with a file of the open Pelikan project.
+3. **Repository · branch** — a file in a git repository that has a remote; a worktree with another branch is a separate
+   group, and after a branch change (e.g. `git checkout`) the windows move to the new branch's group when you return to
+   Pelikan. Repositories without a remote — by connection, as below.
+4. The window's **connection**; windows without a connection — the **No connection** group at the end.
+5. When all the remaining windows use **one database**, the connection groups are replaced by groups by window type:
+   **SQL Windows**, **Programs**, **Tests**, **SQL*Plus Consoles** and **Other windows**. Pelikan switches to connection
+   groups only when the second database has more than one window — a single window on another database does not
+   rearrange the whole bar.
+
+The order of the capsules is fixed: manual groups (in creation order), project, repositories and connections
+alphabetically (or window types), “No connection” at the end. Tabs within a group are in opening order.
+
+A window activated from anywhere (Object Browser, error list, Window List, debugger, opening a file, an agent) switches
+the group by itself. **⌃Tab** and **⌃⇧Tab** (Next / Previous Window) move through the windows of the current group,
+**⌃⌘]** and **⌃⌘[** — **Next Tab Group** / **Previous Tab Group**, and **Window › Show Tab Group…** picks a group from a
+list. **Window › Tabs of All Groups** (also in the capsule menu and the **»** list) shows the tabs of all groups in the
+bar. The Window List (the **Windows** tab of the left column, **View › Window List**) shows the windows in a tree by
+group; clicking a group shows it.
+
+**Manual groups:** tab menu › **Move to Group › New Group…** or an existing group; **Remove from Manual Group** returns
+the window to the automatic groups. The capsule menu of a manual group has **Rename…** and **Ungroup**. Manual groups
+and connection colors are saved in the workset. Tabs are not dragged onto capsules — use the tab menu.
+
+**Tabs** have two lines: the environment color dot, the type letter, the title and the close button (a dot — unsaved
+changes), and below them always the window's connection (a window without a connection — gray “No connection”); the full
+name is in the tooltip. The tab background has the connection's palette color (see *Connections › Environments and
+protection against mistakes*): the active tab has a stronger background, a thick underline in the connection color and a
+bold title. When the tabs do not fit in one row, **‹** and **›** buttons appear at the sides of the bar; you also scroll
+the bar with the mouse wheel or a trackpad gesture, and the active tab is always visible.
+
 ## Ribbon and “Search actions”
 
 Below the toolbar is the **ribbon** — every action in one click, without searching menus or remembering shortcuts. The
