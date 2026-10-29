@@ -27,11 +27,19 @@ for old in "$TMP"/pelikan-shots.*; do
     owner=$(cat "$old/owner.pid" 2>/dev/null || true)
     if [ -n "$owner" ] && kill -0 "$owner" 2>/dev/null; then continue; fi
     # Katalog świeżo założony przez inny przebieg, który nie zdążył jeszcze zapisać owner.pid.
-    if [ -z "$owner" ] && [ $(( $(date +%s) - $(stat -f %m "$old") )) -lt 60 ]; then continue; fi
+    m=$(stat -f %m "$old" 2>/dev/null) || continue
+    if [ -z "$owner" ] && [ $(( $(date +%s) - m )) -lt 60 ]; then continue; fi
     pkill -f "$old/Pelikan.app/Contents/MacOS/Pelikan" 2>/dev/null || true
     "$LSREGISTER" -u "$old/Pelikan.app" 2>/dev/null || true
     rm -rf "$old"
 done
+
+# Stały katalog wersji sprzed D196 (bez sufiksu) — jednorazowo: klon wyrejestrowany, katalog usunięty.
+if [ -d "$TMP/pelikan-shots" ]; then
+    pkill -f "$TMP/pelikan-shots/Pelikan.app/Contents/MacOS/Pelikan" 2>/dev/null || true
+    "$LSREGISTER" -u "$TMP/pelikan-shots/Pelikan.app" 2>/dev/null || true
+    rm -rf "$TMP/pelikan-shots"
+fi
 
 # Własny katalog przebiegu (równoległe przebiegi nie dzielą klonu aplikacji ani danych).
 WORK=$(mktemp -d "$TMP/pelikan-shots.XXXXXX")
@@ -110,9 +118,10 @@ for name in "${scenarios[@]}"; do
             failed=1
         else
             echo "$shots"
+            # Błędy zrzutu i zapisu: „nieudany: tytuł”, „nieudany zapis plik: błąd”.
             if grep -q '^nieudany' <<< "$shots"; then failed=1; fi
         fi
-        sed -n -E 's/^[^ ]* ((pominięto okno dialogowe|okno modalne).*)/\1/p' "$run.log" 2>/dev/null >&2 || true
+        sed -n -E 's/^[^ ]* ((pominięto okno dialogowe|okno modalne).*)/\1/p' "$run.log" >&2 2>/dev/null || true
         sleep 0.5
         pkill -f "$RUN_APP/Contents/MacOS/Pelikan" 2>/dev/null || true
         continue

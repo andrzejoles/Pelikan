@@ -28,11 +28,12 @@ enum UIScriptSnapshots {
         return s.isEmpty ? "okno" : s
     }
 
-    /// Zrzuty wszystkich okien do `<przedrostek>-<tytuł>.png`; zwraca linie „plik  tytuł  szer×wys” do dziennika skryptu.
+    /// Zrzuty wszystkich okien do `<przedrostek>-<tytuł>.png`; zwraca linie „plik  tytuł  szer×wys” (błąd: „nieudany…”)
+    /// do dziennika skryptu, gdzie dostają przedrostek „zrzut ”.
     static func snapshot(prefix: String, mainWindow: NSWindow?) async -> [String] {
         var lines: [String] = []
         for window in windows() {
-            guard let png = await render(window) else { lines.append("zrzut nieudany: \(window.title)"); continue }
+            guard let png = await render(window) else { lines.append("nieudany: \(window.title)"); continue }
             let base = prefix + "-" + slug(window.title, main: window === mainWindow)
             var path = base + ".png"
             var n = 2
@@ -42,7 +43,7 @@ enum UIScriptSnapshots {
                 try png.write(to: URL(fileURLWithPath: path))
                 lines.append("\((path as NSString).lastPathComponent)  \(window.title)  \(Int(window.frame.width))x\(Int(window.frame.height))")
             } catch {
-                lines.append("zrzut \(path): \(error.localizedDescription)")
+                lines.append("nieudany zapis \(path): \(error.localizedDescription)")
             }
         }
         return lines

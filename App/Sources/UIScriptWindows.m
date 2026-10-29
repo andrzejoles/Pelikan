@@ -132,6 +132,19 @@ static void PKSwap(Class cls, SEL original, SEL replacement) {
 - (void)pk_activate {
 }
 
+// Pętla modalna (np. NSAlert.runModal) w trybie skryptu czeka na kliknięcie, którego nie będzie — wpis w dzienniku.
+- (NSModalResponse)pk_runModalForWindow:(NSWindow *)window {
+    PKConceal(window);
+    PKLogModal(window, "runModalForWindow");
+    return [self pk_runModalForWindow:window];
+}
+
+- (NSModalSession)pk_beginModalSessionForWindow:(NSWindow *)window {
+    PKConceal(window);
+    PKLogModal(window, "beginModalSession");
+    return [self pk_beginModalSessionForWindow:window];
+}
+
 - (NSInteger)pk_requestUserAttention:(NSRequestUserAttentionType)type {
     (void)type;
     return 0;
@@ -162,6 +175,8 @@ static void PKSwap(Class cls, SEL original, SEL replacement) {
     PKSwap(a, @selector(activateIgnoringOtherApps:), @selector(pk_activateIgnoringOtherApps:));
     PKSwap(a, NSSelectorFromString(@"activate"), @selector(pk_activate));
     PKSwap(a, @selector(requestUserAttention:), @selector(pk_requestUserAttention:));
+    PKSwap(a, @selector(runModalForWindow:), @selector(pk_runModalForWindow:));
+    PKSwap(a, @selector(beginModalSessionForWindow:), @selector(pk_beginModalSessionForWindow:));
 }
 @end
 #endif
