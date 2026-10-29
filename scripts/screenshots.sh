@@ -34,8 +34,11 @@ for old in "$TMP"/pelikan-shots.*; do
     rm -rf "$old"
 done
 
-# Stały katalog wersji sprzed D196 (bez sufiksu) — jednorazowo: klon wyrejestrowany, katalog usunięty.
-if [ -d "$TMP/pelikan-shots" ]; then
+# Stały katalog wersji sprzed D196 (bez sufiksu) — jednorazowo: klon wyrejestrowany, katalog usunięty; tylko gdy nic
+# w nim nie zmieniło się od 10 minut (przebieg starszą wersją skryptu mógłby jeszcze trwać).
+recent=""
+[ -d "$TMP/pelikan-shots" ] && recent=$(/usr/bin/find "$TMP/pelikan-shots" -maxdepth 1 -mmin -10 2>/dev/null || true)
+if [ -d "$TMP/pelikan-shots" ] && [ -z "$recent" ]; then
     pkill -f "$TMP/pelikan-shots/Pelikan.app/Contents/MacOS/Pelikan" 2>/dev/null || true
     "$LSREGISTER" -u "$TMP/pelikan-shots/Pelikan.app" 2>/dev/null || true
     rm -rf "$TMP/pelikan-shots"

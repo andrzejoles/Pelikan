@@ -65,10 +65,7 @@ static void PKSwap(Class cls, SEL original, SEL replacement) {
 }
 
 - (void)pk_orderWindow:(NSWindowOrderingMode)place relativeTo:(NSInteger)other {
-    if (place != NSWindowOut) {
-        PKConceal(self);
-        if (!self.isVisible && (self.isModalPanel || NSApp.modalWindow == self)) PKLogModal(self, "modalne");
-    }
+    if (place != NSWindowOut) PKConceal(self);
     [self pk_orderWindow:place relativeTo:other];
 }
 
@@ -132,16 +129,11 @@ static void PKSwap(Class cls, SEL original, SEL replacement) {
 - (void)pk_activate {
 }
 
-// Pętla modalna (np. NSAlert.runModal) w trybie skryptu czeka na kliknięcie, którego nie będzie — wpis w dzienniku.
-- (NSModalResponse)pk_runModalForWindow:(NSWindow *)window {
-    PKConceal(window);
-    PKLogModal(window, "runModalForWindow");
-    return [self pk_runModalForWindow:window];
-}
-
+// Pętla modalna (np. NSAlert.runModal — runModalForWindow: zaczyna sesję modalną) w trybie skryptu czeka na kliknięcie,
+// którego nie będzie — jeden wpis w dzienniku na sesję (arkusze osobno w beginSheet).
 - (NSModalSession)pk_beginModalSessionForWindow:(NSWindow *)window {
     PKConceal(window);
-    PKLogModal(window, "beginModalSession");
+    PKLogModal(window, "sesja modalna");
     return [self pk_beginModalSessionForWindow:window];
 }
 
@@ -175,7 +167,6 @@ static void PKSwap(Class cls, SEL original, SEL replacement) {
     PKSwap(a, @selector(activateIgnoringOtherApps:), @selector(pk_activateIgnoringOtherApps:));
     PKSwap(a, NSSelectorFromString(@"activate"), @selector(pk_activate));
     PKSwap(a, @selector(requestUserAttention:), @selector(pk_requestUserAttention:));
-    PKSwap(a, @selector(runModalForWindow:), @selector(pk_runModalForWindow:));
     PKSwap(a, @selector(beginModalSessionForWindow:), @selector(pk_beginModalSessionForWindow:));
 }
 @end
