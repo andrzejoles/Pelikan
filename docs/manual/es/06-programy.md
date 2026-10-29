@@ -172,7 +172,9 @@ el «río» y la estructura de la instrucción — y sangra la línea nueva: baj
 un nivel más tras `BEGIN`, `THEN`, `LOOP`, el cuerpo de la subconsulta tras `(`. El texto nunca pasa de una línea a
 otra, la alineación escrita en las declaraciones se mantiene, y los comentarios, los literales de varias líneas, la
 compilación condicional `$IF … $END`, el código Java/JavaScript y los comandos SQL*Plus no cambian; una línea con un
-paréntesis sin cerrar solo recibe mayúsculas y minúsculas. El primer ⌘Z deshace solo el formato; el segundo, el Intro.
+paréntesis sin cerrar solo recibe mayúsculas y minúsculas. Solo se formatea una línea modificada desde que se abrió, guardó o recargó el archivo — una línea existente que no ha
+editado se queda igual (la línea nueva solo recibe la sangría); Intro al principio de una línea o en su sangría es un
+Intro normal, y ⌥↩ inserta una línea nueva sin sangría ni formato. El primer ⌘Z deshace solo el formato; el segundo, el Intro.
 Se activa y desactiva con el interruptor de la varita en la barra de herramientas (arriba a la derecha), en **Edición ›
 Formatear la línea al pulsar Intro**, en la cinta (pestaña **Edición**) o en **Ajustes › Formateador › Al escribir**;
 la consola SQL*Plus no formatea.

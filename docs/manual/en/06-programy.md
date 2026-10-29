@@ -162,7 +162,9 @@ around operators and commas, and a line starting with a clause word (`FROM`, `WH
 line: under the first list item after a comma, one level deeper after `BEGIN`, `THEN`, `LOOP`, the subquery body after
 `(`. Text never moves between lines, alignment typed in declarations stays, and comments, multi-line literals,
 conditional compilation `$IF … $END`, Java/JavaScript code and SQL*Plus commands are left unchanged; a line with an
-unclosed parenthesis only gets its letter case. The first ⌘Z undoes just the formatting, the second the Enter. Turn it
+unclosed parenthesis only gets its letter case. Only a line changed since the file was opened, saved or reloaded is formatted — an existing line you have not edited
+stays as it is (the new line only gets the indent); Enter at the start of a line or in its indentation is a plain Enter,
+and ⌥↩ inserts a new line without indent or formatting. The first ⌘Z undoes just the formatting, the second the Enter. Turn it
 on and off with the wand switch on the toolbar (top right), in **Edit › Format line on Enter**, on the ribbon (**Edit**
 tab) or in **Settings › Formatter › While typing**; the SQL*Plus console does not format.
 

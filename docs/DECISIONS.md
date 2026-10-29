@@ -2912,7 +2912,9 @@ stronie jakiś przełącznik do wyłączania/włączania formatera podczas pisan
 przeszkadzać).” (PD-BEAU-003)
 
 - **Zakres:** istniejący kod — bez zmian, formatowany tylko na żądanie (⇧⌘F, automatyczne formatowanie z D174). Enter
-  w oknie SQL, programu i testu: (a) **opuszczana linia** normalizowana w swoich granicach — wielkość liter słów
+  w oknie SQL, programu i testu: (a) **opuszczana linia — tylko gdy była zmieniona w tej sesji edycji** (po przeglądzie:
+  od otwarcia, zapisu albo wczytania, jak status linii — `EditedRanges`, zakresy zmian przesuwane przy edycji;
+  nietknięta istniejąca linia zostaje bez zmian, nowa linia dostaje tylko wcięcie formatera) — normalizowana w swoich granicach — wielkość liter słów
   kluczowych i identyfikatorów (reguły i pisownia specjalna formatera), odstępy wokół operatorów, przecinków i nawiasów,
   końcowe odstępy usunięte; linia zaczynająca się słowem klauzuli (`FROM`, `WHERE`, `ORDER BY`, `JOIN`, `SET`, `UNION`…),
   `AND`/`OR`, `ON`, przecinkiem albo `)` w toku instrukcji, a także `END`, `ELSE`, `ELSIF`, `EXCEPTION`, `BEGIN`, `WHEN`
@@ -2940,39 +2942,60 @@ przeszkadzać).” (PD-BEAU-003)
   tokenu: styl wcięć użytkownika zostaje dla kolejnych instrukcji, formater dodaje swoje kroki. Zwykła instrukcja (linia
   zaczynająca instrukcję) zachowuje wcięcie użytkownika. Test na korpusie formatera: Enter na końcu każdej linii kodu
   sformatowanego niczego nie zmienia.
-- **Wyjątki (zwykły Enter albo linia bez zmian):** linia zaczynająca się albo Enter wewnątrz komentarza blokowego,
-  literału (także wieloliniowego `q'[…]'`) i identyfikatora w cudzysłowie; kompilacja warunkowa `$IF … $END`, polecenia
-  SQL*Plus, kod Java/JavaScript (CREATE JAVA, MLE), regiony `-- NoFormat`/`@formatter:off` — wszystko, co formater
-  kopiuje bez zmian; komentarz `--` na końcu linii bez zmian (część przed nim — normalizowana), linia komentarza bez
-  zmian; linia z niedomkniętym nawiasem — tylko wielkość liter. Konsola SQL*Plus (także jej karta edytora) i okna bez
-  kodu — bez formatowania.
-- **Bezpieczeństwo:** zmieniona linia przechodzi `Beautifier.verify` — tokeny polecenia od jego początku do kursora
+- **Wyjątki (zwykły Enter albo linia bez zmian):** Enter na początku linii albo w jej wiodących odstępach (reszta linii
+  z dotychczasowym wcięciem; także pusta linia); ⌥↩ — nowa linia bez wcięcia i formatowania (`insertNewlineIgnoringFieldEditor`
+  omija Enter edytora); kompozycja znaków metody wprowadzania; linia zaczynająca się albo Enter wewnątrz komentarza
+  blokowego, literału (także wieloliniowego `q'[…]'`) i identyfikatora w cudzysłowie; kompilacja warunkowa
+  `$IF … $END`, polecenia SQL*Plus, kod Java/JavaScript (CREATE JAVA, MLE), regiony `-- NoFormat`/`@formatter:off` —
+  wszystko, co formater kopiuje bez zmian, także region otwarty przed poleceniem (NoFormat obejmujący kilka poleceń,
+  `$IF` obejmujący podprogram — stan regionów trzyma pamięć podziału przy początkach poleceń i punktach kontrolnych;
+  znacznik w literale się nie liczy); komentarz `--` na końcu linii bez zmian (część przed nim — normalizowana), linia
+  komentarza bez zmian; linia z niedomkniętym nawiasem — tylko wielkość liter. Konsola SQL*Plus (także jej karta
+  edytora) i okna bez kodu — bez formatowania.
+- **Słowo po kropce i ß (po przeglądzie, dotyczy też ⇧⌘F):** słowo po kropce to nazwa — reguła identyfikatora, nie typu
+  ani funkcji (`j.doc.date`, nie `DATE`), a formater zostawia je w pisowni źródła (pola JSON w notacji z kropką rozróżniają
+  wielkość liter); tak samo słowo, którego wielkie litery mają inną długość (`straße`). `verify` porównuje takie słowa
+  dokładnie.
+- **Bezpieczeństwo:** zmieniona linia przechodzi `Beautifier.verify` — tokeny polecenia od początku kontekstu do kursora
   przed zmianą i po niej (w kontekście, bo podział na polecenia zależy od tekstu przed linią: `set` w `UPDATE` nie jest
   poleceniem SQL*Plus); odrzucona — linia bez zmian (wcięcie nowej linii zostaje).
-- **Wydajność:** bez przechodzenia całego pliku przy każdym Enter: `StatementStartMemory` (pamięć podziału edytora)
-  trzyma początki poleceń z `ScriptSplitter` (tryb Command Window jak formater) — ważne, dopóki tekst przed nimi się nie
-  zmienia (edycja unieważnia początki od swojego miejsca), więc Enter dzieli tylko od ostatniego znanego początku; formater
-  przechodzi polecenie tylko do nowej linii (śledzenie zatrzymuje się po pierwszym tokenie nowej linii), z wyprzedzeniem
-  do 200 linii (szerokość rzeki, długość list i warunków). Polecenie dłuższe niż 2000 linii przed kursorem: w ciele
-  pakietu albo typu kontekst od początku bieżącego podprogramu najwyższego poziomu z nagłówkiem zastępczym (pakiet
-  2100 linii: ok. 30 ms w Debug), w innym — tylko wielkość liter i wcięcie automatyczne edytora.
-- **Cofanie:** dwie zmiany w dwóch grupach cofania — najpierw zwykły Enter z wcięciem automatycznym (pisanie, z
-  przerwaniem łączenia z wcześniejszym pisaniem), potem formatowanie (jedna zamiana: opuszczana linia i wcięcie nowej);
-  grupa zdarzenia zamknięta i otwarta nowa (`endUndoGrouping`/`beginUndoGrouping` przy `groupsByEvent`, zamyka ją menedżer
-  na końcu zdarzenia — sprawdzone na NSTextView poza ekranem). Pierwsze ⌘Z cofa samo formatowanie, drugie — Enter.
-  Formatowanie bez zmian — bez drugiej grupy. Wiele kursorów, zaznaczenie — zwykły Enter.
+- **Wydajność (po przeglądzie):** `StatementStartMemory` (pamięć podziału edytora) trzyma początki poleceń z
+  `ScriptSplitter` (tryb Command Window jak formater) ze stanem regionów i punkty kontrolne w blokach PL/SQL — początki
+  linii podprogramów najwyższego poziomu ciała (z jednostką CREATE … PACKAGE|TYPE BODY, w której leżą — także w oknie
+  pary specyfikacja + ciało bez `/`; słowa nagłówka czytane z pominięciem komentarzy) i co 200 linii. Wszystko ważne,
+  dopóki tekst przed nim się nie zmienia (edycja unieważnia od swojego miejsca). Enter leksuje tylko od ostatniego
+  ważnego punktu do linii kursora (blok kończy tylko `/` sam w linii — wtedy podział od nowa); formater przechodzi
+  kontekst tylko do nowej linii, z wyprzedzeniem do 200 linii. Polecenie dłuższe niż 2000 linii przed kursorem: w ciele
+  pakietu albo typu kontekst od początku bieżącego podprogramu z nagłówkiem zastępczym, w innym — tylko wielkość liter
+  (bez Java/MLE, linii z dyrektywą i regionów bez formatowania). Pomiar (pakiet 18 tys. linii, 500 tys. znaków, i para
+  z nim): pamięć liczona od zera (podział i punkty kontrolne całego pliku) — 0,3 s Debug / 33 ms Release; dlatego edytor liczy
+  ją w tle 0,3 s po otwarciu i po każdej zmianie w tekście dłuższym niż 20 tys. znaków (przyjmowana tylko dla
+  niezmienionego tekstu), a Enter korzysta z gotowej; kolejny Enter na końcu pakietu — 0,7 ms Debug / 0,2 ms Release,
+  Enter w środku pakietu po zmianie w podprogramie — 4,6 ms Debug / 0,55 ms Release (test `performance` w
+  BeautifierEnterTests sprawdza, że Enter leksuje tylko od punktu kontrolnego).
+- **Cofanie:** dwie grupy cofania. Grupa Entera: krok 0 — to, co zwykły Enter robi z tekstem przed kursorem (wielkość
+  liter słowa kluczowego z Ustawień › Edytor, AutoReplace — wykonane przed liczeniem planu, bo zamiana zmienia linię;
+  zamiana z miejscem kursora `|`, np. `dbo`, zużywa Enter — wtedy zwykły Enter bez formatowania), i krok 1 — znak nowej
+  linii z wcięciem automatycznym jednym wstawieniem tekstu. Grupa formatowania: jedna zamiana (opuszczana linia i
+  wcięcie nowej) — tylko gdy tekst w jej zakresie jest dokładnie taki, jak plan przewidział (inaczej pominięta). Grupa
+  zdarzenia zamknięta i otwarta nowa (`endUndoGrouping`/`beginUndoGrouping` przy `groupsByEvent`, zamyka ją menedżer
+  na końcu zdarzenia — sprawdzone na NSTextView poza ekranem). Dwie grupy wymagają dwóch zmian tekstu (dwóch
+  `textDidChange`) — jedna zmiana dałaby jedno cofnięcie. Pierwsze ⌘Z cofa samo formatowanie, drugie — Enter.
+  Formatowanie bez zmian — bez drugiej grupy. Wiele kursorów, zaznaczenie — zwykły Enter. Tryb wcięcia Smart: linia
+  z END/ELSE/ELSIF/EXCEPTION, której formater nie wyrównał (np. nieedytowana), dostaje wyrównanie Smart jak dotąd.
 - **Ustawienie i komenda:** `BeautifierOptions.formatOnEnter` (domyślnie włączone, zapisy bez klucza — włączone;
   **Przywróć domyślne** je zachowuje jak formatowanie automatyczne), **Ustawienia › Formater › Podczas pisania ›
-  Formatuj linię przy Enter**. Komenda `edit.formatOnEnter` (argument `enabled`, bez argumentu przełącza; makro zapisuje
-  stan; skutek `.settings`, agent — brak) w menu **Edycja** z zaznaczeniem stanu (`Workspace.toggleState`), w palecie,
-  na wstążce (karta Edycja › Formatowanie), skrót — bez domyślnego (do przypisania). **Przełącznik na pasku narzędzi**
-  u góry po prawej (przed logowaniem): różdżka `wand.and.stars`, włączony — wciśnięty, wyłączony — przekreślony;
-  podpowiedź ze stanem i skrótem, VoiceOver — wartość „włączone/wyłączone”; w menu przepełnienia — pozycja z
-  zaznaczeniem. Zapamiętany układ paska sprzed D205 dostaje przełącznik raz (`ensureFormatOnEnterItem`, jak grupy kart).
+  Formatuj linię przy Enter**. Komenda `edit.formatOnEnter` (argument `enabled`, bez argumentu przełącza; skutek
+  `.settings`, agent — brak; komenda ustawień nie jest nagrywana w makrach, a Enter odtworzony z makra wstawia tekst bez
+  formatowania) w menu **Edycja** z zaznaczeniem stanu (`Workspace.toggleState`), w palecie, na wstążce (karta Edycja ›
+  Formatowanie), skrót — bez domyślnego (do przypisania). **Przełącznik na pasku narzędzi** u góry po prawej (przed
+  logowaniem): różdżka `wand.and.stars`, włączony — wciśnięty, wyłączony — przekreślony; podpowiedź ze stanem i
+  skrótem, VoiceOver — wartość „włączone/wyłączone”; w menu przepełnienia — pozycja z zaznaczeniem. Zapamiętany układ
+  paska sprzed D205 dostaje przełącznik raz (`ensureFormatOnEnterItem`, jak grupy kart).
 - **Zrzut w tle:** `scripts/screenshots/78-formatowanie-enter.json`; krok `debug.showToolbar` pokazuje pasek narzędzi na
-  czas zrzutu bez zapisu (ustawienia paska są wspólne z aplikacją Debug właściciela — jego ukryty pasek zostaje ukryty).
+  czas zrzutu bez zapisu stanu (zrzut nie zależy od zapamiętanego stanu paska w domenie ustawień klonu).
 - **Pominięte:** wyrównanie do rzeki linii zaczynającej się słowem klauzuli przy CASE w jednej linii według formatera
   (krótki CASE — formater nie łamie, więc linia `ELSE` zostaje); po komentarzu `--` na końcu linii w SQL nowa linia
   dostaje kolumnę elementów (zaległe złamanie po komentarzu), nie kolumnę instrukcji; stanu przełącznika nie pokazują
-  wstążka i paleta (tylko menu i pasek narzędzi).
-
+  wstążka i paleta (tylko menu i pasek narzędzi); punkty kontrolne tylko w blokach PL/SQL (długie polecenie SQL
+  leksowane od początku przy każdym Enter).

@@ -156,7 +156,9 @@ identyfikatorów, odstępy wokół operatorów i przecinków, a linię zaczynaj�
 wcina nową linię: pod pierwszym elementem listy po przecinku, o poziom głębiej po `BEGIN`, `THEN`, `LOOP`, wcięcie treści
 podzapytania po `(`. Tekst nigdy nie przechodzi między liniami, wyrównanie wpisane w deklaracjach zostaje, a
 komentarze, literały wieloliniowe, kompilacja warunkowa `$IF … $END`, kod Java/JavaScript i polecenia SQL*Plus — bez
-zmian; linia z niedomkniętym nawiasem dostaje tylko wielkość liter. Pierwsze ⌘Z cofa samo formatowanie, drugie —
+zmian; linia z niedomkniętym nawiasem dostaje tylko wielkość liter. Formatowana jest tylko linia zmieniona od otwarcia, zapisu albo wczytania pliku — istniejąca, nieedytowana linia
+zostaje bez zmian (nowa linia dostaje tylko wcięcie); Enter na początku linii albo w jej wcięciu to zwykły Enter, a ⌥↩
+wstawia nową linię bez wcięcia i formatowania. Pierwsze ⌘Z cofa samo formatowanie, drugie —
 Enter. Włączasz i wyłączasz je przełącznikiem z różdżką na pasku narzędzi (u góry po prawej), w menu **Edycja ›
 Formatuj linię przy Enter**, na wstążce (karta **Edycja**) albo w **Ustawienia › Formater › Podczas pisania**;
 konsola SQL*Plus nie formatuje.

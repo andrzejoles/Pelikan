@@ -169,7 +169,10 @@ Struktur der Anweisung ausgerichtet — und rückt die neue Zeile ein: unter das
 eine Ebene tiefer nach `BEGIN`, `THEN`, `LOOP`, den Inhalt der Unterabfrage nach `(`. Text wandert nie zwischen Zeilen,
 in Deklarationen getippte Ausrichtung bleibt, und Kommentare, mehrzeilige Literale, bedingte Kompilierung
 `$IF … $END`, Java-/JavaScript-Code und SQL*Plus-Befehle bleiben unverändert; eine Zeile mit offener Klammer erhält nur
-die Groß-/Kleinschreibung. Das erste ⌘Z macht nur die Formatierung rückgängig, das zweite das Enter. Ein- und
+die Groß-/Kleinschreibung. Formatiert wird nur eine Zeile, die seit dem Öffnen, Speichern oder Neuladen der Datei geändert wurde — eine
+vorhandene, nicht bearbeitete Zeile bleibt unverändert (die neue Zeile erhält nur die Einrückung); Enter am
+Zeilenanfang oder in der Einrückung ist ein normales Enter, und ⌥↩ fügt eine neue Zeile ohne Einrückung und
+Formatierung ein. Das erste ⌘Z macht nur die Formatierung rückgängig, das zweite das Enter. Ein- und
 ausschalten mit dem Zauberstab-Schalter in der Symbolleiste (oben rechts), über **Bearbeiten › Zeile bei Enter
 formatieren**, im Menüband (Register **Bearbeiten**) oder unter **Einstellungen › Formatierer › Beim Tippen**; die
 SQL*Plus-Konsole formatiert nicht.
