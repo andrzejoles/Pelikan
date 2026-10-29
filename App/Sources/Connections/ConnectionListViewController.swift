@@ -9,7 +9,7 @@ import PelikanWorkspace
 final class ConnectionListViewController: NSViewController, NSOutlineViewDataSource, NSOutlineViewDelegate, NSMenuDelegate {
     static let connectionPasteboardType = NSPasteboard.PasteboardType("local.pelikan.connection")
     private let workspace: Workspace
-    private let outline = NSOutlineView()
+    private let outline = ConnectionOutlineView()
     private var roots: [Node] = []
     /// Korzenie już pokazane — nowe (np. pierwszy raz „Ostatnie”) są rozwijane, znane zachowują stan użytkownika.
     private var seenRoots = Set<String>()
@@ -57,6 +57,7 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
         outline.delegate = self
         outline.target = self
         outline.doubleAction = #selector(doubleClicked)
+        outline.onDelete = { [weak self] in self?.deleteSelectedFolder() }
         outline.setAccessibilityLabel(L10n.tr("Lista połączeń"))
         let menu = NSMenu()
         menu.delegate = self
@@ -286,13 +287,44 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
             menu.addItem(item(L10n.tr("Kopiuj pod inną nazwą…"), "connection.duplicate", arg))
             menu.addItem(moveMenu(c))
             menu.addItem(item(L10n.tr("Usuń…"), "connection.delete", arg))
-        case .folder, .recent:
+        case .folder(let f):
+            menu.addItem(item(L10n.tr("Nowe połączenie…"), "connection.new", nil))
+            menu.addItem(.separator())
+            menu.addItem(deleteFolderItem(f))
+        case .recent:
             menu.addItem(item(L10n.tr("Nowe połączenie…"), "connection.new", nil))
         case .window(let d):
             let activate = NSMenuItem(title: L10n.tr("Aktywuj"), action: #selector(activateWindow(_:)), keyEquivalent: "")
             activate.target = self
             activate.representedObject = d
             menu.addItem(activate)
+        }
+    }
+
+    /// „Usuń folder” (D204): tylko pusty folder — przy niepustym pozycja wyłączona, podpowiedź mówi dlaczego.
+    private func deleteFolderItem(_ f: ConnectionFolder) -> NSMenuItem {
+        let i = NSMenuItem(title: L10n.tr("Usuń folder"), action: #selector(deleteFolder(_:)), keyEquivalent: "")
+        i.target = self
+        i.representedObject = f.id.uuidString
+        if let reason = workspace.connections.deletionBlocker(folder: f.id) {
+            i.toolTip = reason
+            i.action = nil
+        }
+        return i
+    }
+
+    @objc private func deleteFolder(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        workspace.perform("connection.deleteFolder", CommandArguments(["folder": .string(id)]))
+    }
+
+    /// Delete na zaznaczonym folderze — ta sama komenda; niepusty folder zostaje z komunikatem o powodzie.
+    private func deleteSelectedFolder() {
+        guard outline.selectedRow >= 0, let node = outline.item(atRow: outline.selectedRow) as? Node else { return }
+        switch node.kind {
+        case .folder(let f): workspace.perform("connection.deleteFolder", CommandArguments(["folder": .string(f.id.uuidString)]))
+        case .recent: workspace.perform("connection.deleteFolder", CommandArguments(["folder": .string("recent")]))
+        default: NSSound.beep()
         }
     }
 
@@ -400,5 +432,19 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
 extension NSColor {
     convenience init(rgb: PelikanWorkspace.RGBColor) {
         self.init(srgbRed: rgb.red, green: rgb.green, blue: rgb.blue, alpha: 1)
+    }
+}
+
+/// Lista połączeń z klawiszem Delete (⌫ albo ⌦) dla zaznaczonego folderu (D204).
+private final class ConnectionOutlineView: NSOutlineView {
+    var onDelete: (() -> Void)?
+
+    override func keyDown(with event: NSEvent) {
+        let mods = event.modifierFlags.intersection([.command, .control, .option, .shift])
+        if mods.isEmpty, event.keyCode == 51 || event.keyCode == 117 {
+            onDelete?()
+        } else {
+            super.keyDown(with: event)
+        }
     }
 }

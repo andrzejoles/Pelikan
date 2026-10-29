@@ -18,6 +18,28 @@ public enum ConnectionCommands {
         return main
     }
 
+    /// Folder listy połączeń z argumentu: identyfikator albo nazwa (bez wielkości liter).
+    @MainActor
+    static func folderID(_ ctx: CommandContext, _ spec: String) throws -> UUID {
+        let folders = ctx.workspace.connections.folders
+        if let match = UUID(uuidString: spec).flatMap({ u in folders.first { $0.id == u } })
+            ?? folders.first(where: { $0.name.caseInsensitiveCompare(spec) == .orderedSame }) { return match.id }
+        throw CommandError.invalidArgument("folder", L10n.tr("nieznany folder"))
+    }
+
+    /// Ścieżka folderu w liście wyboru („Produkcja / Klienci”).
+    @MainActor
+    static func folderPath(_ store: ConnectionStore, _ folder: ConnectionFolder) -> String {
+        var names = [folder.name]
+        var parent = folder.parentID
+        var seen: Set<UUID> = [folder.id]
+        while let p = parent, seen.insert(p).inserted, let f = store.folders.first(where: { $0.id == p }) {
+            names.insert(f.name, at: 0)
+            parent = f.parentID
+        }
+        return names.joined(separator: " / ")
+    }
+
     @MainActor
     public static var all: [Command] {
         [
@@ -155,14 +177,7 @@ public enum ConnectionCommands {
                                       inMenu: false, feature: "PD-CONN-003")) { ctx in
                 let id = try connectionID(ctx)
                 var folder: UUID?
-                if let f = ctx.arguments.string("folder"), !f.isEmpty {
-                    let folders = ctx.workspace.connections.folders
-                    guard let match = UUID(uuidString: f).flatMap({ u in folders.first { $0.id == u } })
-                            ?? folders.first(where: { $0.name.caseInsensitiveCompare(f) == .orderedSame }) else {
-                        throw CommandError.invalidArgument("folder", L10n.tr("nieznany folder"))
-                    }
-                    folder = match.id
-                }
+                if let f = ctx.arguments.string("folder"), !f.isEmpty { folder = try folderID(ctx, f) }
                 try ctx.workspace.connections.move(id, to: folder)
                 return .ok
             },
@@ -331,6 +346,32 @@ public enum ConnectionCommands {
                 let parent = ctx.arguments.string("parent").flatMap(UUID.init(uuidString:))
                 try ctx.workspace.connections.upsert(folder: ConnectionFolder(name: name, parentID: parent))
                 return .ok
+            },
+            // Tylko pusty folder (D204): bez połączeń i podfolderów nic nie znika, więc bez pytania potwierdzającego.
+            Command(CommandDescriptor(id: "connection.deleteFolder", title: L10n.tr("Usuń folder"), category: .session, submenu: L10n.tr("Połączenia"),
+                                      parameters: [CommandParameter("folder", .string, L10n.tr("Identyfikator albo nazwa folderu (bez argumentu — wybór z listy folderów)"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Usuwa pusty folder z listy połączeń; folder z połączeniami albo podfolderami zostaje — najpierw je przenieś albo usuń."),
+                                      inMenu: false, feature: "PD-CONN-003")) { ctx in
+                let store = ctx.workspace.connections
+                var spec = ctx.arguments.string("folder")
+                if spec == nil, ctx.askingUI != nil {
+                    guard !store.folders.isEmpty else { throw CommandError.notAvailable(L10n.tr("Lista połączeń nie ma folderów")) }
+                    let options = store.folders.map { (label: folderPath(store, $0), value: $0.id.uuidString) }
+                        .sorted { $0.label.localizedStandardCompare($1.label) == .orderedAscending }
+                    spec = try await ctx.choose(L10n.tr("Usuń folder"), options)
+                }
+                guard let spec, !spec.isEmpty else { throw CommandError.missingArgument("folder") }
+                // „Ostatnie” to folder tworzony automatycznie, nie folder użytkownika (chyba że użytkownik ma folder o tej nazwie).
+                let isRecent = [L10n.tr("Ostatnie"), "recent"].contains { $0.caseInsensitiveCompare(spec) == .orderedSame }
+                if isRecent, !store.folders.contains(where: { $0.name.caseInsensitiveCompare(spec) == .orderedSame }) {
+                    throw CommandError.notAvailable(L10n.tr("Folder „Ostatnie” jest tworzony automatycznie z ostatnio używanych połączeń — nie można go usunąć."))
+                }
+                let id = try folderID(ctx, spec)
+                let name = store.folders.first { $0.id == id }?.name ?? spec
+                try store.removeEmpty(folder: id)
+                Log.connection.info("Usunięto pusty folder połączeń \(name, privacy: .hash)")
+                return CommandResult(message: L10n.tr("Usunięto folder „\(name)”"), resolvedArguments: CommandArguments(["folder": .string(id.uuidString)]))
             },
         ]
     }

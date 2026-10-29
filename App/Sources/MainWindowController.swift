@@ -72,6 +72,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         toolbarController = MainToolbarController(workspace: workspace, toolbar: toolbar)
         window.toolbar = toolbar
         window.addTitlebarAccessoryViewController(ribbon)
+        // Przycisk lewej kolumny tuż za przyciskami okna, przed tytułem (D204).
+        window.addTitlebarAccessoryViewController(SidebarToggleAccessory(workspace: workspace))
         window.onFirstResponderChange = { [weak self] in self?.autoHideDocks() }
         window.toolsWithoutFocus = { [weak self] in
             guard let self else { return [] }
@@ -122,9 +124,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     var layout: WindowLayout? {
         guard let w = window else { return nil }
-        let sidebar = split.splitViewItems.first
-        return WindowLayout(frame: NSStringFromRect(w.frame), sidebarWidth: Double(sidebar?.viewController.view.frame.width ?? 260),
-                            sidebarPane: sidebarController.selectedPane, agentPaneVisible: isAgentPaneVisible)
+        let width = isSidebarVisible ? sidebarItem?.viewController.view.frame.width ?? 260 : sidebarWidthBeforeCollapse
+        return WindowLayout(frame: NSStringFromRect(w.frame), sidebarWidth: Double(width), sidebarPane: sidebarController.selectedPane,
+                            agentPaneVisible: isAgentPaneVisible, sidebarCollapsed: !isSidebarVisible)
     }
 
     func apply(_ l: WindowLayout) {
@@ -133,11 +135,34 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         split.splitViewItems.first?.isCollapsed = false
         split.splitView.setPosition(CGFloat(l.sidebarWidth), ofDividerAt: 0)
         sidebarController.select(pane: l.sidebarPane)
+        if l.isSidebarCollapsed { setSidebar(visible: false, animated: false) }
         if agentItem != nil { setAgentPane(visible: l.agentPaneVisible) }
     }
 
     func setAgentPane(visible: Bool) {
         agentItem?.animator().isCollapsed = !visible
+    }
+
+    // MARK: Lewa kolumna — pokaż/ukryj (D204)
+
+    private var sidebarItem: NSSplitViewItem? { split.splitViewItems.first }
+    /// Szerokość lewej kolumny sprzed schowania — układ okna zapamiętuje ją także przy schowanej kolumnie.
+    private var sidebarWidthBeforeCollapse: CGFloat = 260
+
+    var isSidebarVisible: Bool { !(sidebarItem?.isCollapsed ?? true) }
+
+    /// Pokazuje albo chowa lewą kolumnę; animacja zwijania jak pasek boczny macOS. Fokus z chowanej kolumny przechodzi
+    /// do edytora aktywnego okna.
+    func setSidebar(visible: Bool, animated: Bool = true) {
+        guard let item = sidebarItem, item.isCollapsed == visible else { return }
+        if !visible {
+            let width = item.viewController.view.frame.width
+            if width >= item.minimumThickness { sidebarWidthBeforeCollapse = width }
+            if let responder = window?.firstResponder as? NSView, responder.isDescendant(of: item.viewController.view) {
+                documentArea.focusActiveDocument()
+            }
+        }
+        if animated { item.animator().isCollapsed = !visible } else { item.isCollapsed = !visible }
     }
 
     // MARK: Panele narzędzi (PD-UI-003)

@@ -20749,6 +20749,34 @@
         }
       }
     },
+    "Folder „%@” dobiera połączenia regułą (użytkownik, baza, rola) — takiego folderu nie można usunąć z listy." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder “%@” picks connections by a rule (user, database, role) — such a folder cannot be removed from the list."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Ordner „%@“ wählt Verbindungen per Regel aus (Benutzer, Datenbank, Rolle) — ein solcher Ordner kann nicht aus der Liste entfernt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La carpeta «%@» elige conexiones mediante una regla (usuario, base de datos, rol): una carpeta así no se puede eliminar de la lista."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тека «%@» добирає з'єднання за правилом (користувач, база, роль) — таку теку не можна вилучити зі списку."
+          }
+        }
+      }
+    },
     "Folder „%@” już istnieje" : {
       "localizations" : {
         "en" : {
@@ -20777,6 +20805,34 @@
         }
       }
     },
+    "Folder „%@” nie jest pusty (połączenia: %@, podfoldery: %@) — przenieś albo usuń najpierw jego połączenia i podfoldery." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder “%@” is not empty (connections: %@, subfolders: %@) — first move or delete its connections and subfolders."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Ordner „%@“ ist nicht leer (Verbindungen: %@, Unterordner: %@) — verschieben oder löschen Sie zuerst seine Verbindungen und Unterordner."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La carpeta «%@» no está vacía (conexiones: %@, subcarpetas: %@): primero mueve o elimina sus conexiones y subcarpetas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тека «%@» не порожня (з'єднання: %@, підтеки: %@) — спочатку перемістіть або видаліть її з'єднання та підтеки."
+          }
+        }
+      }
+    },
     "Folder „%@” nie ma szablonów użytkownika" : {
       "localizations" : {
         "en" : {
@@ -20801,6 +20857,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Тека «%@» не має шаблонів користувача"
+          }
+        }
+      }
+    },
+    "Folder „Ostatnie” jest tworzony automatycznie z ostatnio używanych połączeń — nie można go usunąć." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The “Recent” folder is created automatically from recently used connections — it cannot be removed."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Ordner „Zuletzt“ wird automatisch aus zuletzt verwendeten Verbindungen erstellt — er kann nicht entfernt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La carpeta «Recientes» se crea automáticamente con las conexiones usadas recientemente: no se puede eliminar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Теку «Останні» створено автоматично з нещодавно використаних з'єднань — її не можна вилучити."
           }
         }
       }
@@ -24637,6 +24721,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ідентифікатор або назва папки (без аргументу — верхній рівень списку)"
+          }
+        }
+      }
+    },
+    "Identyfikator albo nazwa folderu (bez argumentu — wybór z listy folderów)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder ID or name (without an argument — choose from the list of folders)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID oder Name des Ordners (ohne Argument — Auswahl aus der Ordnerliste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID o nombre de la carpeta (sin argumento: elegir de la lista de carpetas)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор або назва теки (без аргументу — вибір зі списку тек)"
           }
         }
       }
@@ -36145,6 +36257,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindungsliste"
+          }
+        }
+      }
+    },
+    "Lista połączeń nie ma folderów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The connection list has no folders"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Verbindungsliste hat keine Ordner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La lista de conexiones no tiene carpetas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Список з'єднань не має тек"
           }
         }
       }
@@ -54909,6 +55049,34 @@
         }
       }
     },
+    "Panel po lewej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left panel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linker Bereich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel izquierdo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ліва панель"
+          }
+        }
+      }
+    },
     "Panel po prawej" : {
       "localizations" : {
         "en" : {
@@ -59221,6 +59389,34 @@
         }
       }
     },
+    "Pokazuje albo chowa lewą kolumnę okna głównego (Połączenia, Obiekty, Okna, Szablony, Pliki); stan zostaje w układzie okna." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows or hides the left column of the main window (Connections, Objects, Windows, Templates, Files); the state is kept in the window layout."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blendet die linke Spalte des Hauptfensters ein oder aus (Verbindungen, Objekte, Fenster, Templates, Dateien); der Zustand bleibt im Fensterlayout."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra u oculta la columna izquierda de la ventana principal (Conexiones, Objetos, Ventanas, Templates, Archivos); el estado se guarda en la disposición de la ventana."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує або приховує ліву колонку головного вікна (З'єднання, Об'єкти, Вікна, Templates, Файли); стан зберігається в макеті вікна."
+          }
+        }
+      }
+    },
     "Pokazuje albo chowa prawy panel narzędzi okna głównego." : {
       "localizations" : {
         "en" : {
@@ -59973,6 +60169,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показати або приховати нижню панель"
+          }
+        }
+      }
+    },
+    "Pokaż lub ukryj panel po lewej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show or Hide Left Panel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linken Bereich ein-/ausblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar u ocultar el panel izquierdo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати або приховати ліву панель"
           }
         }
       }
@@ -87389,6 +87613,34 @@
         }
       }
     },
+    "Usunięto folder „%@”" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder “%@” removed"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner „%@“ entfernt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carpeta «%@» eliminada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Теку «%@» вилучено"
+          }
+        }
+      }
+    },
     "Usunięto jednostkę %@" : {
       "localizations" : {
         "en" : {
@@ -88169,6 +88421,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Видаляє точку зламу лінії зв'язку."
+          }
+        }
+      }
+    },
+    "Usuwa pusty folder z listy połączeń; folder z połączeniami albo podfolderami zostaje — najpierw je przenieś albo usuń." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removes an empty folder from the connection list; a folder with connections or subfolders stays — move or delete them first."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernt einen leeren Ordner aus der Verbindungsliste; ein Ordner mit Verbindungen oder Unterordnern bleibt — verschieben oder löschen Sie diese zuerst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina una carpeta vacía de la lista de conexiones; una carpeta con conexiones o subcarpetas se mantiene: muévelas o elimínalas primero."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучає порожню теку зі списку з'єднань; тека зі з'єднаннями або підтеками залишається — спочатку перемістіть або видаліть їх."
           }
         }
       }

@@ -137,17 +137,24 @@ extension Workset {
 }
 
 /// Układ okna głównego (UG 23.10 „Autosave desktop/layout”, PD-WSET-002): ramka, szerokość lewej kolumny, karta
-/// lewej kolumny, panel agenta.
+/// lewej kolumny, lewa kolumna schowana (D204), panel agenta.
 public struct WindowLayout: Sendable, Codable, Hashable {
     /// Ramka okna w formacie `NSStringFromRect` („{{x, y}, {w, h}}”).
     public var frame: String
+    /// Szerokość lewej kolumny — przy schowanej kolumnie szerokość sprzed schowania (wraca po pokazaniu).
     public var sidebarWidth: Double
     public var sidebarPane: Int
     public var agentPaneVisible: Bool
+    /// Lewa kolumna schowana (D204); brak w starszych układach — widoczna.
+    public var sidebarCollapsed: Bool?
 
-    public init(frame: String, sidebarWidth: Double, sidebarPane: Int, agentPaneVisible: Bool) {
+    public init(frame: String, sidebarWidth: Double, sidebarPane: Int, agentPaneVisible: Bool, sidebarCollapsed: Bool = false) {
         self.frame = frame; self.sidebarWidth = sidebarWidth; self.sidebarPane = sidebarPane; self.agentPaneVisible = agentPaneVisible
+        self.sidebarCollapsed = sidebarCollapsed ? true : nil
     }
+
+    /// Lewa kolumna schowana.
+    public var isSidebarCollapsed: Bool { sidebarCollapsed ?? false }
 }
 
 /// Worksety i układ w katalogu danych (`Worksets/<nazwa>.json`, `Worksets/state.json`, `layout.json`); pliki 0600 —

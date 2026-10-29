@@ -160,6 +160,31 @@ public final class ConnectionStore {
         try save()
     }
 
+    /// Dlaczego folderu nie można usunąć z listy (D204); nil — folder pusty, można usunąć. Usuwany jest tylko folder bez
+    /// połączeń i bez podfolderów (nic nie znika razem z nim). Folder z regułą dopasowania (UG 19.2) zostaje zawsze —
+    /// reguły nie da się odtworzyć w Pelikanie (przychodzi z importu definicji).
+    public func deletionBlocker(folder id: UUID) -> String? {
+        guard let f = folders.first(where: { $0.id == id }) else { return L10n.tr("nieznany folder") }
+        if f.hasRule {
+            return L10n.tr("Folder „\(f.name)” dobiera połączenia regułą (użytkownik, baza, rola) — takiego folderu nie można usunąć z listy.")
+        }
+        let conns = connections.filter { $0.folderID == id }.count
+        let subs = folders.filter { $0.parentID == id }.count
+        guard conns + subs > 0 else { return nil }
+        return L10n.tr("Folder „\(f.name)” nie jest pusty (połączenia: \(conns), podfoldery: \(subs)) — przenieś albo usuń najpierw jego połączenia i podfoldery.")
+    }
+
+    /// Usuwa pusty folder (D204); niepusty, z regułą albo nieznany — błąd z powodem, lista bez zmian.
+    public func removeEmpty(folder id: UUID) throws {
+        if let reason = deletionBlocker(folder: id) {
+            guard folders.contains(where: { $0.id == id }) else { throw CommandError.invalidArgument("folder", reason) }
+            throw CommandError.notAvailable(reason)
+        }
+        let before = folders
+        folders.removeAll { $0.id == id }
+        do { try save() } catch { folders = before; throw error }
+    }
+
     /// Połączenia widoczne w folderze: jawnie przypisane + pasujące do reguły (UG 19.2), alfabetycznie.
     public func connections(in folderID: UUID?) -> [ConnectionDefinition] {
         let explicit = connections.filter { $0.folderID == folderID }

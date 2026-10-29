@@ -155,6 +155,8 @@ public enum CommandSearch {
         "grid.post": "post zapisz zmiany zatwierdz",
         "grid.lastPage": "fetch all pobierz wszystko",
         "view.objectBrowser": "object browser drzewo obiektow",
+        "view.toggleSidebar": "sidebar pasek boczny lewa kolumna left panel schowaj pokaz",
+        "connection.deleteFolder": "delete folder usun folder polaczen remove",
         "ob.refresh": "object browser odswiez refresh",
         "ob.applyFilter": "object browser filter filtr",
         "view.fileBrowser": "file browser",

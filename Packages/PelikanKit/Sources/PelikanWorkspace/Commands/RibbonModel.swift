@@ -139,7 +139,7 @@ public enum RibbonModel {
                 .small("session.windowConnection", label: L10n.tr("Połączenie okna")),
                 .small("window.reconnect"), .small("session.logoff", label: L10n.tr("Wyloguj")),
                 .menu(L10n.tr("Połączenia"), symbol: "cylinder.split.1x2", commands: [
-                    "connection.new", "connection.edit", "connection.duplicate", "connection.delete", "connection.newFolder", separator,
+                    "connection.new", "connection.edit", "connection.duplicate", "connection.delete", "connection.newFolder", "connection.deleteFolder", separator,
                     "connection.connect", "connection.connectAsMain", "connection.disconnect", "connection.setCurrentSchema", separator,
                     "connection.openWindow", "connection.showWindows", "connection.closeWindows", "connection.reconnectWindows", separator,
                     "connection.import", "connection.export", "connection.exportWithPasswords", separator, "session.console",
@@ -417,6 +417,7 @@ public enum RibbonModel {
                 .small("view.ribbon"), .small("view.ribbonCollapse"), .small("view.customizeToolbar", label: L10n.tr("Dostosuj pasek")),
             ]),
             RibbonGroup(L10n.tr("Panele narzędzi"), [
+                .small("view.toggleSidebar", label: L10n.tr("Panel po lewej")),
                 .small("view.toolDockRight", label: L10n.tr("Panel po prawej")), .small("view.toolDockBottom", label: L10n.tr("Panel na dole")),
                 .small("view.toolDockAutoHide", label: L10n.tr("Autoukrywanie")),
                 .menu(L10n.tr("Narzędzie"), symbol: "rectangle.portrait.on.rectangle.portrait", commands: [

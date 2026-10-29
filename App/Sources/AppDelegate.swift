@@ -240,6 +240,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolDockManager.shared.toggle(placement)
     }
 
+    func isSidebarVisible() -> Bool? { mainWindow?.isSidebarVisible }
+
+    func setSidebar(visible: Bool) { mainWindow?.setSidebar(visible: visible) }
+
     func placeTool(_ key: String?, at placement: ToolPlacement) -> String? {
         ToolDockManager.shared.place(key, at: placement)
     }
