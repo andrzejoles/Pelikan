@@ -100,7 +100,7 @@ de varias decenas de miles de líneas.
   probar subprograma, expandir/contraer todo). Bajo el editor, la **jerarquía de código** muestra la ruta
   desde el cursor (paquete › procedimiento › bloque); un clic en un nivel lo selecciona o lleva a su nombre.
   El panel se muestra y oculta en cada ventana por separado — **Vista › Contenido del código** o el botón de
-  barra lateral en el extremo izquierdo de la barra de la ventana; la elección se mantiene en la ventana (también
+  lista con sangría en el extremo izquierdo de la barra de la ventana; la elección se mantiene en la ventana (también
   en el workset). **Ajustes › Editor › Contenido del código visible por defecto** decide para las ventanas en las
   que no se ha alternado el panel.
 - El menú contextual sobre el nombre de un objeto de la base de datos en el editor ofrece las mismas acciones que el

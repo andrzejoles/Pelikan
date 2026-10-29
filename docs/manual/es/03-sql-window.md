@@ -40,7 +40,7 @@ primera palabra y el comienzo de la sentencia, hasta unos 1000 caracteres con sa
 paquetes y disparadores de `CREATE`, y bloques anónimos con sus declaraciones. Un clic o Intro lleva el cursor a la
 sentencia, el árbol sigue el cursor y el campo sobre el árbol filtra también por el texto de la sentencia (p. ej.
 el nombre de una tabla). El panel se muestra u oculta en esta ventana con **Vista › Contenido del código** o con el
-botón de barra lateral en el extremo izquierdo de la barra de la ventana; la elección se mantiene en la ventana, y
+botón de lista con sangría en el extremo izquierdo de la barra de la ventana; la elección se mantiene en la ventana, y
 el valor por defecto de las ventanas nuevas está en **Ajustes › Editor › Contenido del código visible por defecto**.
 La consola SQL*Plus no tiene este panel. En un script con más de 5000 sentencias SQL, el panel muestra solo las
 unidades y bloques PL/SQL (con una nota con el número de sentencias).

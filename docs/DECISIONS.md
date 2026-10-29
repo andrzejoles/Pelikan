@@ -2473,23 +2473,42 @@ Prośby właściciela: „Panel z lewej strony Pelikana — opcja ukrywania/poka
   w tym samym miejscu także przy schowanej kolumnie. Sprawdzony najpierw element paska narzędzi z separatorem
   śledzącym (`NSTrackingSeparatorToolbarItem`): tytuł okna zostawał na lewym końcu, przycisk stał przy prawej krawędzi
   lewej kolumny, a po jej schowaniu przeskakiwał na prawą stronę paska — odrzucony (lewa kolumna nie jest paskiem
-  bocznym macOS, D180, więc tytuł nie przechodzi za separator). Przycisk bez ramki (szklany przycisk dodatku nie
-  rysuje się w zrzutach w tle, D196); komenda jest też w palecie dostosowania paska narzędzi. Domyślny układ paska bez
-  zmian — bez migracji zapamiętanego układu.
-- **Układ okna i workset:** `WindowLayout.sidebarCollapsed` (opcjonalne; brak w starszych układach — kolumna
-  widoczna, widoczna kolumna nie zapisuje pola). Przy schowanej kolumnie `sidebarWidth` to szerokość sprzed schowania,
-  więc pokazanie po przywróceniu układu wraca do niej. Między uruchomieniami stan trzyma też autozapis podziału okna.
+  bocznym macOS, D180, więc tytuł nie przechodzi za separator). Domyślny układ paska narzędzi bez zmian (bez migracji
+  zapamiętanego układu); komenda jest w palecie Dostosuj pasek.
+  - Wygląd: sam symbol bez ramki (szklany przycisk dodatku nie rysuje się w zrzutach w tle, D196); wysokość dodatku
+    28 pt, przycisk 30×24 pt — nie wyższy niż pasek tytułu przy ukrytym pasku narzędzi (zrzut 77), więc go nie podnosi.
+  - Pełny ekran: dodatki paska tytułu są częścią paska, który macOS chowa w pełnym ekranie i pokazuje po najechaniu na
+    górną krawędź — przycisk jest wtedy razem z paskiem narzędzi; menu Widok i ⌃⌘S działają zawsze.
+  - VoiceOver: przełącznik (`pushOnPushOff`) „Panel po lewej” z wartością „widoczny”/„ukryty”, stan odświeżany po
+    każdej zmianie podziału (także zwinięciu przeciągnięciem); podpowiedź ze skrótem z bieżącej mapy klawiszy
+    (zmiana skrótu w Ustawieniach odświeża ją od razu).
+- **Przycisk Zawartości kodu** (D199) dostał symbol `list.bullet.indent` — `sidebar.left` przy dwóch różnych panelach
+  po lewej mylił.
+- **Układ okna:** `WindowLayout.sidebarCollapsed` (opcjonalne; brak w starszych układach — kolumna widoczna, widoczna
+  kolumna nie zapisuje pola); **Widok › Zapisz układ okna** i autozapis układu (opis komendy wymienia schowanie
+  kolumny). Worksety nie zapisują układu okna. Przy schowanej kolumnie `sidebarWidth` to szerokość sprzed schowania:
+  aktualizowana po każdej zmianie podziału przy widocznej kolumnie (także tuż przed zwinięciem przeciągnięciem),
+  na starcie z autozapisu podziału („NSSplitView Subview Frames PelikanMainSplit”), a po przywróceniu układu ze
+  schowaną kolumną — szerokość z układu, nie mniej niż minimum kolumny (220 pt).
 - **Komenda `connection.deleteFolder`** „Usuń folder” (Sesja › Połączenia w palecie, `inMenu: false` jak „Nowy
   folder…”; wstążka Start › Połączenia; agent: brak dostępu i skutek „ustawienia” — jak pozostałe komendy definicji
-  połączeń i folderów). Argument `folder` — id albo nazwa (bez wielkości liter); bez argumentu użytkownik wybiera
-  z listy folderów ze ścieżkami („Zespół / Archiwum”), makro nagrywa id; skrypt i agent bez argumentu — błąd argumentu.
-  Wywołania: menu podręczne folderu na liście połączeń, klawisz Delete (⌫/⌦) na zaznaczonym folderze.
+  połączeń i folderów). Wywołania: menu podręczne folderu na liście połączeń, klawisz Delete (⌫/⌦) na zaznaczonym
+  folderze. Bez argumentu użytkownik wybiera z listy **tylko folderów, które da się usunąć** (ścieżki „Zespół /
+  Archiwum”); brak takich — komunikat. Skrypt i agent bez argumentu — błąd argumentu.
+- **Wskazanie folderu** (`ConnectionStore.resolveFolder`, także `connection.moveToFolder`): identyfikator, ścieżka
+  („Zespół / Archiwum”, odstępy wokół „/” dowolne) albo nazwa — bez wielkości liter. Nazwa albo ścieżka kilku folderów
+  — błąd argumentu „niejednoznaczna nazwa folderu … — podaj identyfikator albo ścieżkę” z listą ścieżek. Wynik
+  (`resolvedArguments`) podaje ścieżkę folderu, nie identyfikator — przenośną między instalacjami (dziś makra nie
+  nagrywają komend ze skutkiem „ustawienia”, więc dotyczy to dziennika i przyszłych makr).
 - **Zabezpieczenie:** `ConnectionStore.deletionBlocker` — usuwany jest tylko folder bez połączeń przypisanych jawnie
   i bez podfolderów (nic nie znika razem z nim, więc **bez pytania potwierdzającego**). Niepusty: komunikat „Folder
-  „…” nie jest pusty (połączenia: N, podfoldery: M) — przenieś albo usuń najpierw jego połączenia i podfoldery.”;
-  w menu podręcznym pozycja wyłączona z tym tekstem w podpowiedzi. **Nieusuwalne:** folder z regułą dopasowania
-  (UG 19.2 — reguły nie da się odtworzyć w Pelikanie, przychodzi z importu definicji), folder „Ostatnie” (tworzony
-  automatycznie; argument „Ostatnie”/„recent”, chyba że użytkownik ma folder o tej nazwie). Foldery DBA i DBMS (D190)
-  są gałęziami Przeglądarki obiektów, nie folderami połączeń — komenda ich nie dotyczy. Zapis `connections.json`
-  od razu; błąd zapisu przywraca folder na liście. Dawne `ConnectionStore.remove(folder:)` (przenosi zawartość do
-  rodzica) zostaje dla importu i testów, interfejs go nie używa.
+  „…” nie jest pusty (połączenia: N, podfoldery: M) — przenieś albo usuń najpierw jego połączenia i podfoldery.”.
+  W menu podręcznym pozycja zostaje **włączona** (dostępna dla VoiceOver i klawiatury), ten tekst jest w podpowiedzi,
+  a wybranie pokazuje komunikat. **Folder z regułą dopasowania** (UG 19.2; decyzja koordynatora): pusty usuwa się po
+  potwierdzeniu — reguły nie da się odtworzyć w Pelikanie (przychodzi z importu definicji), a połączenia pasujące do
+  reguły wracają na poziom główny listy. **Folder „Ostatnie”** jest tworzony automatycznie — nieusuwalny (argument
+  „Ostatnie”/„recent”, chyba że użytkownik ma folder o tej nazwie); Delete na jego wierszu i na wierszu okna — tylko
+  sygnał dźwiękowy. Foldery DBA i DBMS (D190) są gałęziami Przeglądarki obiektów, nie folderami połączeń. Zapis
+  `connections.json` od razu; błąd zapisu przywraca folder na liście. Dawne `ConnectionStore.remove(folder:)` (przenosi
+  zawartość do rodzica) zostaje dla importu i testów, interfejs go nie używa.
+- **Delete na połączeniu** — `connection.delete` z jego pytaniem (definicja i zapisane hasło).

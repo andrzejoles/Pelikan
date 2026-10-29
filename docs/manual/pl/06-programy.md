@@ -90,7 +90,7 @@ kilkadziesiąt tysięcy linii.
   (zaznacz, kopiuj, wytnij, testuj podprogram, rozwiń/zwiń wszystko). Pod edytorem **hierarchia kodu** pokazuje
   ścieżkę od kursora (pakiet › procedura › blok); kliknięcie poziomu zaznacza go albo przenosi do nazwy.
   Panel pokazujesz i ukrywasz w każdym oknie osobno — **Widok › Zawartość kodu** albo przycisk z symbolem
-  paska bocznego na lewym końcu paska okna; wybór zostaje w oknie (także w worksecie). **Ustawienia › Edytor ›
+  listy z wcięciami na lewym końcu paska okna; wybór zostaje w oknie (także w worksecie). **Ustawienia › Edytor ›
   Zawartość kodu domyślnie widoczna** decyduje o oknach, w których panelu nie przełączano.
 - Menu kontekstowe na nazwie obiektu bazy w edytorze oferuje te same czynności co Przeglądarka obiektów.
 - **F1** otwiera dokumentację Oracle dla słowa pod kursorem.

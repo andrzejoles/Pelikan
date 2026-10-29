@@ -81,7 +81,7 @@ Pelikan tiene una única ventana principal:
   archivos). Arrastra su borde para ensanchar la columna (el panel izquierdo); ocúltala y muéstrala con el botón de
   barra lateral del extremo izquierdo de la barra de título (justo después de los botones de la ventana), con
   **Vista › Mostrar u ocultar el panel izquierdo** o con **⌃⌘S**. Su estado y anchura se guardan en la
-  disposición de la ventana y en el workset.
+  disposición de la ventana (guardar la disposición, guardado automático de la disposición).
 - **Pestañas de documentos** en el centro: cada ventana SQL, de programa, de prueba o de plan tiene su propia pestaña
   con una letra de tipo en color: S — SQL Window, P — Program Window, T — Test Window, C — consola SQL*Plus, E — Explain
   Plan Window, R — Report Window, D — ventana de diagrama, N — cuaderno SQL. Un clic central en una pestaña cierra la

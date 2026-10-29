@@ -19,9 +19,12 @@ used ones. The connection's open windows are listed under it.
   space in the list to move it to the top level.
 - The buttons above the list create a new connection (**+**) and a folder, and refresh the list.
 - **Remove folder** (the folder's context menu, the Delete key on a selected folder, or **Start › Connections ›
-  Remove folder** with a choice from a list) removes only an empty folder — no connections and no subfolders, so it
-  does not ask. For a non-empty folder the item is disabled and its tooltip says how many connections and subfolders
-  to move or delete first. The **Recent** folder and folders with a matching rule (from an import) cannot be removed.
+  Remove folder** with a choice among the empty folders) removes only an empty folder — no connections and no
+  subfolders, so it does not ask. For a non-empty folder a message (and the menu item's tooltip) says how many
+  connections and subfolders to move or delete first. A folder with a matching rule (from an import) is removed after
+  a confirmation — connections matching the rule go back to the top level. The **Recent** folder cannot be removed.
+  Delete on a connection is **Delete…** with its question. In scripts a folder is given by its ID or path
+  (“Team / Archive”); a name is enough when it is unambiguous.
 
 You can also use the logon window: **Session › Log on…** (⇧⌘L). It shows all definitions with a search field and lets
 you create a new connection or edit an existing one. **Session › Log off main connection** ends the sessions of the main
