@@ -57457,34 +57457,6 @@
         }
       }
     },
-    "Po zmianie tej opcji" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "After changing this option"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nach Änderung dieser Option"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tras cambiar esta opción"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Після зміни цієї опції"
-          }
-        }
-      }
-    },
     "Pobiera kolejną stronę wierszy wyniku." : {
       "localizations" : {
         "en" : {
@@ -58325,34 +58297,7 @@
         }
       }
     },
-    "Podgląd — linie zmienione ostatnią zmianą są podświetlone" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preview — lines changed by the last change are highlighted"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vorschau — durch die letzte Änderung geänderte Zeilen sind hervorgehoben"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vista previa: las líneas modificadas por el último cambio están resaltadas"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Попередній перегляд — рядки, змінені останньою зміною, підсвічено"
-          }
-        }
-      }
-    },
+    "Podgląd — linie zmienione ostatnią zmianą są podświetlone przez 5 s, czerwona kreska oznacza usunięte linie, pionowa linia — prawy margines" : {},
     "Podgląd: %@ rekordów" : {
       "localizations" : {
         "en" : {
@@ -68769,34 +68714,7 @@
         }
       }
     },
-    "Przykład opcji — wskaż albo zmień opcję po lewej" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Option example — point at or change an option on the left"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beispiel der Option — zeigen Sie links auf eine Option oder ändern Sie sie"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ejemplo de la opción: señale o cambie una opción a la izquierda"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Приклад опції — наведіть на опцію ліворуч або змініть її"
-          }
-        }
-      }
-    },
+    "Przykład podglądu" : {},
     "Przykład: Okno SQL — SELECT * FROM emp; Połączono z dev_baza_testowa" : {
       "localizations" : {
         "en" : {
@@ -81785,34 +81703,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieses Objekt ist keine PL/SQL-Einheit"
-          }
-        }
-      }
-    },
-    "Teraz" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Now"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jetzt"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ahora"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Зараз"
           }
         }
       }
@@ -109117,6 +109007,7 @@
         }
       }
     },
+    "Zapytania" : {},
     "Zapytania agenta (run_query)" : {
       "localizations" : {
         "en" : {

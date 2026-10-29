@@ -2,16 +2,21 @@ import PelikanSQL
 import PelikanWorkspace
 import SwiftUI
 
-/// Reguły formatera PL/SQL (UG 29.1–29.2, D174) z podglądem na żywo: kod podglądu pokazuje każdą opcję, linie
-/// zmienione ostatnią zmianą ustawienia są podświetlone, a opcja pod kursorem (albo ostatnio zmieniona) ma przykład
-/// „teraz” i „po zmianie”. Formatowanie automatyczne (UG 29.4).
+/// Reguły formatera PL/SQL (UG 29.1–29.2, D174, D202) z podglądem na żywo: cztery przełączane przykłady (PL/SQL,
+/// zapytania, DML, DDL) z kolorowaniem składni, numerami linii i linią prawego marginesu; linie zmienione ostatnią zmianą
+/// ustawienia są podświetlone, miejsce usuniętych — czerwoną kreską; zmiana przełącza na przykład, w którym ją widać, i
+/// przewija do niej; podświetlenie gaśnie po 5 s albo przy następnej zmianie (D202). Formatowanie automatyczne (UG 29.4).
 struct BeautifierPane: View {
     let workspace: Workspace
     @State private var specialCase = ""
-    /// Opcja, której przykład jest pokazany (nazwa właściwości `BeautifierOptions`).
-    @State private var focused = "keywordCase"
-    @State private var preview = ""
-    @State private var changed: Set<Int> = []
+    /// Przykład podglądu (`BeautifierExamples.previews`), sformatowane przykłady i znaczniki ostatniej zmiany.
+    @State private var sampleID = "plsql"
+    @State private var formatted: [String: String] = [:]
+    @State private var marks: [String: BeautifierExamples.Marks] = [:]
+    /// Linia, do której podgląd przewija po zmianie (z licznikiem — ta sama linia po kolejnej zmianie też przewija).
+    @State private var scrollTarget: (line: Int, serial: Int)?
+    /// Numer ostatniej zmiany ustawień — podświetlenie zmian gaśnie po 5 s (zadanie anulowane przy następnej zmianie).
+    @State private var changeSerial = 0
 
     private var options: BeautifierOptions { workspace.settings.beautifier }
 
@@ -33,23 +38,27 @@ struct BeautifierPane: View {
             .formStyle(.grouped)
             .frame(width: 390)
             VStack(alignment: .leading, spacing: 8) {
-                example
-                Text(L10n.tr("Podgląd — linie zmienione ostatnią zmianą są podświetlone")).font(.uiSecondary).foregroundStyle(.secondary)
-                ScrollView([.vertical, .horizontal]) {
-                    Text(highlighted)
-                        .font(.code)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .topLeading)
-                        .padding(8)
+                HStack {
+                    Picker(L10n.tr("Przykład podglądu"), selection: $sampleID) {
+                        Text(verbatim: "PL/SQL").tag("plsql")
+                        Text(L10n.tr("Zapytania")).tag("queries")
+                        Text(verbatim: "DML").tag("dml")
+                        Text(verbatim: "DDL").tag("ddl")
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .fixedSize()
+                    Spacer()
                 }
-                .background(Color(nsColor: .textBackgroundColor))
-                .accessibilityLabel(L10n.tr("Podgląd formatowania"))
+                Text(L10n.tr("Podgląd — linie zmienione ostatnią zmianą są podświetlone przez 5 s, czerwona kreska oznacza usunięte linie, pionowa linia — prawy margines"))
+                    .font(.uiSecondary).foregroundStyle(.secondary)
+                previewView
             }
             .padding(10)
         }
         .onAppear {
             specialCase = options.specialCase.joined(separator: ", ")
-            preview = format(BeautifierExamples.preview, options)
+            formatted = formatAll(options)
         }
         // Pole zapisywane przy każdej zmianie (jak reszta Preferencji), a zmiana z zestawu lub importu odświeża pole.
         .onChange(of: specialCase) { saveSpecialCase() }
@@ -57,11 +66,118 @@ struct BeautifierPane: View {
             if Self.parseSpecialCase(specialCase) != new { specialCase = new.joined(separator: ", ") }
         }
         .onChange(of: options) { old, new in
-            if let id = Self.changedOption(old, new) { focused = id }
-            let next = format(BeautifierExamples.preview, new)
-            changed = Set(TextDiff.lineStatus(baseline: preview, current: next).keys)
-            preview = next
+            let id = Self.changedOption(old, new)
+            let before = formatted.isEmpty ? formatAll(old) : formatted
+            let after = formatAll(new)
+            var m: [String: BeautifierExamples.Marks] = [:]
+            for s in BeautifierExamples.previews {
+                m[s.id] = BeautifierExamples.marks(baseline: before[s.id] ?? "", current: after[s.id] ?? "")
+            }
+            formatted = after
+            marks = m
+            // Zmiana niewidoczna w bieżącym przykładzie — przykład tej opcji albo pierwszy, w którym coś się zmieniło.
+            if m[sampleID]?.isEmpty ?? true {
+                let preferred = id.flatMap { BeautifierExamples.previewOf[$0] }
+                if let p = preferred, m[p]?.isEmpty == false {
+                    sampleID = p
+                } else if let other = BeautifierExamples.previews.first(where: { m[$0.id]?.isEmpty == false }) {
+                    sampleID = other.id
+                }
+            }
+            if let first = m[sampleID]?.first { scrollTarget = (first, (scrollTarget?.serial ?? 0) + 1) }
+            changeSerial += 1
         }
+        .task(id: changeSerial) {
+            guard changeSerial > 0 else { return }
+            try? await Task.sleep(for: .seconds(5))
+            if !Task.isCancelled { withAnimation { marks = [:] } }
+        }
+    }
+
+    // MARK: Podgląd
+
+    private var previewLines: [String] { (formatted[sampleID] ?? "").components(separatedBy: "\n") }
+
+    /// Szerokość znaku czcionki kodu (linia marginesu i szerokość wierszy).
+    private var charWidth: CGFloat {
+        ("M" as NSString).size(withAttributes: [.font: InterfaceFonts.shared.code]).width
+    }
+
+    private var currentMarks: BeautifierExamples.Marks { marks[sampleID] ?? BeautifierExamples.Marks() }
+
+    private var gutterWidth: CGFloat { CGFloat(String(previewLines.count).count + 1) * charWidth }
+
+    private var rowWidth: CGFloat {
+        let longest = previewLines.map(\.count).max() ?? 0
+        return gutterWidth + 12 + CGFloat(max(options.rightMargin + 4, longest)) * charWidth
+    }
+
+    private var marginOffset: CGFloat { gutterWidth + 12 + CGFloat(options.rightMargin) * charWidth }
+
+    private func previewRow(_ k: Int, _ line: String) -> some View {
+        let m = currentMarks
+        return HStack(spacing: 0) {
+            Text(verbatim: "\(k + 1)")
+                .foregroundStyle(.tertiary)
+                .frame(width: gutterWidth, alignment: .trailing)
+                .padding(.trailing, 12)
+            Text(colored(line))
+                .fixedSize()
+        }
+        .font(.code)
+        .frame(width: rowWidth, alignment: .leading)
+        .background(m.changed.contains(k) ? Color.yellow.opacity(0.35) : Color.clear)
+        .overlay(alignment: .top) {
+            if m.removedBefore.contains(k) { removedMark }
+        }
+    }
+
+    private var removedMark: some View { Rectangle().fill(Color.red.opacity(0.8)).frame(height: 2) }
+
+    private var previewLinesView: some View {
+        let lines = previewLines
+        return VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(lines.enumerated()), id: \.offset) { k, line in
+                previewRow(k, line).id(k)
+            }
+            if currentMarks.removedBefore.contains(lines.count) { removedMark.frame(width: rowWidth) }
+        }
+        .overlay(alignment: .topLeading) {
+            Rectangle().fill(Color.secondary.opacity(0.35)).frame(width: 1).offset(x: marginOffset)
+        }
+    }
+
+    private var previewView: some View {
+        ScrollViewReader { proxy in
+            ScrollView([.vertical, .horizontal]) {
+                previewLinesView
+                    .padding(8)
+                    .textSelection(.enabled)
+            }
+            .background(Color(nsColor: .textBackgroundColor))
+            .accessibilityLabel(L10n.tr("Podgląd formatowania"))
+            .onChange(of: scrollTarget?.serial) {
+                guard let line = scrollTarget?.line else { return }
+                withAnimation { proxy.scrollTo(line, anchor: .center) }
+            }
+        }
+    }
+
+    /// Linia podglądu z kolorami składni jak w edytorze (bez stanu między liniami — przykłady nie mają wieloliniowych
+    /// literałów ani komentarzy).
+    private func colored(_ line: String) -> AttributedString {
+        var out = AttributedString()
+        let lexer = Lexer(line)
+        for t in lexer.tokenize() {
+            var part = AttributedString(lexer.string(t))
+            if let c = SyntaxTheme.color(for: t.kind) { part.foregroundColor = Color(nsColor: c) }
+            out += part
+        }
+        return out
+    }
+
+    private func formatAll(_ o: BeautifierOptions) -> [String: String] {
+        Dictionary(uniqueKeysWithValues: BeautifierExamples.previews.map { ($0.id, format($0.code, o)) })
     }
 
     // MARK: Sekcje
@@ -200,40 +316,12 @@ struct BeautifierPane: View {
         }
     }
 
-    // MARK: Przykład opcji
-
-    @ViewBuilder private var example: some View {
-        if let e = BeautifierExamples.example(focused) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(L10n.tr("Przykład opcji — wskaż albo zmień opcję po lewej")).font(.uiSecondary).foregroundStyle(.secondary)
-                HStack(alignment: .top, spacing: 8) {
-                    exampleColumn(L10n.tr("Teraz"), format(e.snippet, options))
-                    exampleColumn(L10n.tr("Po zmianie tej opcji"), format(e.snippet, e.variant(options)))
-                }
-            }
-            .frame(height: 190)
-        }
-    }
-
-    private func exampleColumn(_ title: String, _ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.uiSecondary.bold())
-            ScrollView([.vertical, .horizontal]) {
-                Text(text)
-                    .font(.code)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-                    .padding(6)
-            }
-            .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 4))
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    /// Wiersz opcji: wskazanie kursorem albo zmiana wartości pokazuje jej przykład.
+    /// Wiersz opcji: kliknięcie przełącza podgląd na przykład, w którym widać opcję.
     private func row<Content: View>(_ id: String, @ViewBuilder _ content: () -> Content) -> some View {
         content()
-            .onHover { if $0 { focused = id } }
-            .simultaneousGesture(TapGesture().onEnded { focused = id })
+            .simultaneousGesture(TapGesture().onEnded {
+                if let p = BeautifierExamples.previewOf[id] { sampleID = p }
+            })
     }
 
     // MARK: Pomocnicze
@@ -245,16 +333,6 @@ struct BeautifierPane: View {
             guard let l = c.label else { return false }
             return old[l] != "\(c.value)" && BeautifierExamples.example(l) != nil
         }?.label
-    }
-
-    private var highlighted: AttributedString {
-        var out = AttributedString()
-        for (k, line) in preview.components(separatedBy: "\n").enumerated() {
-            var a = AttributedString(line + "\n")
-            if changed.contains(k) { a.backgroundColor = Color.yellow.opacity(0.35) }
-            out += a
-        }
-        return out
     }
 
     private func format(_ text: String, _ o: BeautifierOptions) -> String {

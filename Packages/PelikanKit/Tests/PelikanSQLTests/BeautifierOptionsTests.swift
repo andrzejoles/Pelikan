@@ -23,28 +23,46 @@ struct BeautifierOptionsTests {
     }
 
     static var corpus: [String] {
-        [BeautifierExamples.preview, BeautifierTests.query, BeautifierTests.body, BeautifierTests.misc] + BeautifierExamples.all.map(\.snippet)
+        [BeautifierTests.query, BeautifierTests.body, BeautifierTests.misc] + BeautifierExamples.previews.map(\.code)
+            + BeautifierExamples.all.map(\.snippet)
     }
 
-    @Test("każda opcja zmienia swój przykład i kod podglądu w Preferencjach")
+    @Test("każda opcja zmienia swój przykład; każda wartość każdej opcji zmienia przypisany przykład podglądu i zmiana jest zaznaczona")
     func everyOptionVisible() throws {
         for base in [BeautifierOptions(), Self.heavy] {
             for e in BeautifierExamples.all {
                 let now = try Beautifier.format(e.snippet, options: base)
                 let other = try Beautifier.format(e.snippet, options: e.variant(base))
                 #expect(now != other, "przykład \(e.id) bez zmiany")
+                // Podgląd: przypisany przykład (PL/SQL, Zapytania, DML, DDL) przy każdej innej wartości opcji.
+                let sample = try #require(BeautifierExamples.previewOf[e.id].flatMap(BeautifierExamples.previewSample), "\(e.id) bez przykładu podglądu")
+                let prepared = BeautifierExamples.prepared(e.id, base)
+                let shown = try Beautifier.format(sample.code, options: prepared)
+                let values = BeautifierExamples.alternatives(e.id, base)
+                #expect(!values.isEmpty, "\(e.id) bez wartości")
+                for v in values {
+                    let changed = try Beautifier.format(sample.code, options: v)
+                    #expect(changed != shown, "podgląd \(sample.id) nie pokazuje opcji \(e.id) = \(v)")
+                    #expect(!BeautifierExamples.marks(baseline: shown, current: changed).isEmpty, "\(e.id): zmiana bez zaznaczenia")
+                }
             }
         }
-        let o = BeautifierOptions()
-        let preview = try Beautifier.format(BeautifierExamples.preview, options: o)
-        for e in BeautifierExamples.all {
-            #expect(try Beautifier.format(BeautifierExamples.preview, options: e.variant(o)) != preview, "podgląd nie pokazuje opcji \(e.id)")
-        }
-        // Każda opcja wpływająca na wynik ma przykład.
+        // Każda opcja wpływająca na wynik ma przykład i przykład podglądu.
         let documented = Set(BeautifierExamples.all.map(\.id))
         let mirror = Mirror(reflecting: BeautifierOptions()).children.compactMap(\.label)
         let automatic: Set<String> = ["afterLoad", "beforeCompile", "beforeSave"]
         #expect(Set(mirror).subtracting(automatic) == documented)
+        #expect(Set(BeautifierExamples.previewOf.keys) == documented)
+    }
+
+    @Test("znaczniki podglądu: zmienione, dodane i miejsce usuniętych linii")
+    func previewMarks() {
+        let m = BeautifierExamples.marks(baseline: "a\nb\n\nc\nd", current: "a\nB\nc\nd\ne")
+        #expect(m.changed == [1, 4])
+        #expect(m.removedBefore == [2])
+        #expect(m.first == 1)
+        #expect(BeautifierExamples.marks(baseline: "a\n\n\nb", current: "a\n\nb").removedBefore == [2])
+        #expect(BeautifierExamples.marks(baseline: "x", current: "x").isEmpty)
     }
 
     @Test("bezpieczeństwo i idempotencja przy każdej opcji osobno i wszystkich naraz")

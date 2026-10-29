@@ -9,38 +9,189 @@ public enum BeautifierExamples {
         public let variant: @Sendable (BeautifierOptions) -> BeautifierOptions
     }
 
-    public static let preview = """
-        create or replace package body kadry_api as
-        c_limit constant number := 1000; -- próg podwyżki
-        g_licznik pls_integer := 0; -- liczba zmian w sesji
+    /// Przykład podglądu (przełączany w Preferencjach): identyfikator i kod.
+    public struct PreviewSample: Sendable, Identifiable {
+        /// `plsql`, `queries`, `dml`, `ddl` (tytuł w interfejsie nadaje warstwa aplikacji).
+        public let id: String
+        public let code: String
+    }
+
+    /// Cztery przykłady podglądu (docs/research/formater.md, rozdz. 6.3): każda opcja zmienia coś widocznego w swoim
+    /// przykładzie (`previewOf`) przy każdej wartości (`alternatives`) — pilnuje tego test. Słowa o mieszanej wielkości
+    /// liter (`Exception_init`, `g_Licznik`, `Pls_integer`, `Dbms_output`, `To_char`) rozróżniają reguły wielkości liter.
+    public static let previews: [PreviewSample] = [
+        PreviewSample(id: "plsql", code: """
+            create or replace package body kadry_api as
+            c_limit constant number(12,2) := 1000; -- próg podwyżki
+            g_Licznik Pls_integer := 0; -- zmiany w sesji
+            e_brak exception;
+            pragma Exception_init(e_brak, -20001);
+            cursor c_dzial(p_dzial number) is select empno, ename, sal from emp where deptno = p_dzial;
 
 
-        procedure podwyzka(p_dzial in number, p_procent in out nocopy number, p_data_od date default sysdate, p_tryb varchar2 := 'N') is
-        v_suma number(12,2);
-        v_opis_zmiany varchar2(200) := 'brak';
-        begin
-        select d.dname nazwa, count(*) liczba, sum(nvl(e.sal,0)) suma, case when sum(e.sal)>c_limit then 'wysoka' else 'niska' end poziom
-        into v_opis_zmiany, g_licznik, v_suma, v_opis_zmiany
-        from emp e join dept d on d.deptno=e.deptno
-        where e.deptno=p_dzial and e.hiredate<p_data_od or e.job in ('CLERK','ANALYST')
-        group by d.dname;
-        if v_suma>c_limit then
-        update emp set sal=sal*(1+p_procent/100), comm=nvl(comm,0)+10, data_zmiany=sysdate where deptno=p_dzial;
-        insert into log_zmian (dzial, procent, kiedy) values (p_dzial, p_procent, sysdate);
-        end if;
-        g_licznik := g_licznik+1;
-        v_opis_zmiany := to_char(v_suma)||' zł';
-        v_suma := round(v_suma, 2);
-        dbms_output.put_line(v_opis_zmiany);
-        zapisz_log(p_dzial => p_dzial, p_opis => v_opis_zmiany, p_kiedy => systimestamp, p_uzytkownik => user);
-        end podwyzka;
-        function suma_dzialu(p_dzial number, p_rok number) return number is
-        begin
-        return 0;
-        end suma_dzialu;
-        end kadry_api;
-        /
-        """
+            procedure podwyzka(p_dzial in number, p_procent in out nocopy number, p_data_od date default sysdate, p_tryb varchar2 := 'N') is
+            v_suma number(12,2);
+            v_opis varchar2(200) := 'brak';
+            begin
+            if v_suma > c_limit and p_tryb = 'N' and p_data_od < sysdate or p_procent is null and g_Licznik < 10 then
+            v_opis := 'Dział ' || to_char(p_dzial) || ': suma ' || to_char(v_suma, 'FM999G990D00') || ' przekracza limit ' || c_limit;
+            elsif v_suma between 1 and c_limit then
+            v_opis := case when v_suma > 500 then 'średnia' else 'niska' end;
+            end if;
+            g_Licznik := g_Licznik+1;
+            v_opis := v_opis || '!';
+            v_suma := round(v_suma, 2);
+            Dbms_output.put_line(v_opis);
+            zapisz_log(p_dzial => p_dzial, p_opis => v_opis, p_kiedy => systimestamp);
+            exception
+            when no_data_found then
+            v_opis := null;
+            raise e_brak;
+            end podwyzka;
+            function suma_dzialu(p_dzial number, p_rok number) return number is
+            begin
+            return 0;
+            end suma_dzialu;
+            end kadry_api;
+            /
+            """),
+        PreviewSample(id: "queries", code: """
+            with dzialy as (select deptno, sum(sal) suma from emp group by deptno), duze as (select deptno from dzialy where suma > 9000)
+            select e.ename imie, d.dname dzial, nvl(e.comm,0) prowizja, -- bez NULL
+            To_char(e.hiredate,'YYYY') rok,
+            case when e.sal > 3000 then 'wysoka' when e.sal > 1500 then 'średnia' else 'niska' end poziom,
+            rank() over (partition by e.deptno order by e.sal desc) ranking
+            from emp e join dept d on d.deptno = e.deptno and d.loc is not null
+            where (e.job = 'CLERK' or e.job = 'ANALYST') and e.deptno in (select deptno from duze)
+            and e.ename not in ('SMITH', 'ALLEN', 'WARD', 'JONES', 'MARTIN', 'BLAKE', 'CLARK', 'SCOTT', 'KING', 'TURNER', 'ADAMS')
+            union all
+            select ename, null, 0, null, null, null from emp_hist where sal > 0
+            order by 1, 2 desc;
+            """),
+        PreviewSample(id: "dml", code: """
+            update emp set sal = sal * (1 + p_procent / 100), comm = nvl(comm, 0) + 10, data_zmiany = sysdate where deptno = p_dzial and job <> 'PRESIDENT';
+            insert into log_zmian (dzial, procent, kiedy, kto) values (p_dzial, p_procent, sysdate, user);
+            insert into emp_hist (empno, ename, sal) select empno, ename, sal from emp where deptno = p_dzial;
+            merge into emp t using (select empno, sal from emp_stage) s on (t.empno = s.empno) when matched then update set t.sal = s.sal, t.data_zmiany = sysdate when not matched then insert (empno, sal) values (s.empno, s.sal);
+            delete from emp where deptno = p_dzial and sal is null;
+            """),
+        PreviewSample(id: "ddl", code: """
+            create table log_zmian (id number generated always as identity, dzial number(2) not null, procent number(5,2) default 0 not null, kiedy date default sysdate, kto varchar2(128 char), constraint log_zmian_pk primary key (id), constraint log_zmian_dzial_fk foreign key (dzial) references dept (deptno) on delete cascade, constraint log_zmian_proc_ck check (procent between -100 and 100)) tablespace users;
+            comment on table log_zmian is 'Historia podwyżek';
+            create index log_zmian_ix on log_zmian (dzial, kiedy) compress 1;
+            alter table log_zmian add (uwagi varchar2(4000), zrodlo varchar2(30) default 'APP');
+            create or replace view v_log (dzial, procent, kiedy) as select dzial, procent, kiedy from log_zmian where procent <> 0 with read only;
+            create or replace trigger log_zmian_bi before insert or update of procent on log_zmian for each row when (new.procent > 50) begin :new.kto := user; end;
+            /
+            create or replace type t_zmiana as object (dzial number(2), procent number(5,2), kiedy date, member function opis return varchar2);
+            /
+            grant select, insert on log_zmian to kadry_role, raport_user;
+            """),
+    ]
+
+    /// Kod podglądu PL/SQL (pierwszy przykład).
+    public static var preview: String { previews[0].code }
+
+    public static func previewSample(_ id: String) -> PreviewSample? { previews.first { $0.id == id } }
+
+    /// Przykład podglądu, w którym widać opcję (docs/research/formater.md, tabela 6.3).
+    public static let previewOf: [String: String] = [
+        "indent": "plsql", "useTabs": "plsql", "rightMargin": "plsql", "keepBlankLines": "plsql", "maxBlankLines": "plsql",
+        "blankLineBetweenSubprograms": "plsql", "listLayout": "queries", "parameterDeclarations": "plsql", "callParameters": "plsql",
+        "insertLists": "dml", "commaBefore": "queries", "clauseLayout": "queries", "andOrPosition": "queries",
+        "joinConditionOnNewLine": "queries", "thenOnNewLine": "plsql", "caseLayout": "queries", "spaceAroundOperators": "plsql",
+        "spaceAfterComma": "queries", "spaceInsideParentheses": "queries", "alignDeclarations": "plsql", "alignParameters": "plsql",
+        "alignNamedArguments": "plsql", "alignAssignments": "plsql", "alignAliases": "queries", "alignSetValues": "dml",
+        "alignTrailingComments": "plsql", "keywordCase": "plsql", "identifierCase": "plsql", "dataTypeCase": "plsql",
+        "functionCase": "queries", "packageCase": "plsql", "specialCase": "plsql",
+    ]
+
+    /// Ustawienia, przy których opcja ma widoczny skutek (np. wyrównanie parametrów wymaga parametrów w osobnych liniach).
+    public static func prepared(_ id: String, _ o: BeautifierOptions) -> BeautifierOptions {
+        var o = o
+        switch id {
+        case "alignParameters": o.parameterDeclarations = .onePerLine
+        case "alignNamedArguments": o.callParameters = .onePerLine
+        case "alignAliases", "alignSetValues", "commaBefore": o.listLayout = .onePerLine
+        case "maxBlankLines": o.keepBlankLines = true
+        default: break
+        }
+        return o
+    }
+
+    /// Wszystkie inne wartości opcji (z `prepared`), które zmieniają wynik — liczby: wartości reprezentatywne; reguły
+    /// wielkości liter grup słów bez wartości równej dziedziczonej.
+    public static func alternatives(_ id: String, _ base: BeautifierOptions) -> [BeautifierOptions] {
+        let o = prepared(id, base)
+        func alt<T: Equatable>(_ kp: WritableKeyPath<BeautifierOptions, T>, _ values: [T]) -> [BeautifierOptions] {
+            values.filter { $0 != o[keyPath: kp] }.map { var x = o; x[keyPath: kp] = $0; return x }
+        }
+        func altCase(_ kp: WritableKeyPath<BeautifierOptions, BeautifierOptions.WordCase?>, inherited: BeautifierOptions.WordCase) -> [BeautifierOptions] {
+            let effective = o[keyPath: kp] ?? inherited
+            return ([nil] + BeautifierOptions.WordCase.allCases.map(Optional.some)).filter { ($0 ?? inherited) != effective }
+                .map { var x = o; x[keyPath: kp] = $0; return x }
+        }
+        switch id {
+        case "indent": return alt(\.indent, [2, 3, 4])
+        case "useTabs": return alt(\.useTabs, [false, true])
+        case "rightMargin": return alt(\.rightMargin, [60, 100, 140])
+        case "keepBlankLines": return alt(\.keepBlankLines, [false, true])
+        case "maxBlankLines": return alt(\.maxBlankLines, [1, 2])
+        case "blankLineBetweenSubprograms": return alt(\.blankLineBetweenSubprograms, [false, true])
+        case "listLayout": return alt(\.listLayout, BeautifierOptions.ListLayout.allCases)
+        case "parameterDeclarations": return alt(\.parameterDeclarations, BeautifierOptions.ListLayout.allCases)
+        case "callParameters": return alt(\.callParameters, BeautifierOptions.ListLayout.allCases)
+        case "insertLists": return alt(\.insertLists, BeautifierOptions.ListLayout.allCases)
+        case "commaBefore": return alt(\.commaBefore, [false, true])
+        case "clauseLayout": return alt(\.clauseLayout, BeautifierOptions.ClauseLayout.allCases)
+        case "andOrPosition": return alt(\.andOrPosition, BeautifierOptions.OperatorPosition.allCases)
+        case "joinConditionOnNewLine": return alt(\.joinConditionOnNewLine, [false, true])
+        case "thenOnNewLine": return alt(\.thenOnNewLine, [false, true])
+        case "caseLayout": return alt(\.caseLayout, BeautifierOptions.CaseLayout.allCases)
+        case "spaceAroundOperators": return alt(\.spaceAroundOperators, [false, true])
+        case "spaceAfterComma": return alt(\.spaceAfterComma, [false, true])
+        case "spaceInsideParentheses": return alt(\.spaceInsideParentheses, [false, true])
+        case "alignDeclarations": return alt(\.alignDeclarations, [false, true])
+        case "alignParameters": return alt(\.alignParameters, [false, true])
+        case "alignNamedArguments": return alt(\.alignNamedArguments, [false, true])
+        case "alignAssignments": return alt(\.alignAssignments, [false, true])
+        case "alignAliases": return alt(\.alignAliases, [false, true])
+        case "alignSetValues": return alt(\.alignSetValues, [false, true])
+        case "alignTrailingComments": return alt(\.alignTrailingComments, [false, true])
+        case "keywordCase": return alt(\.keywordCase, BeautifierOptions.WordCase.allCases)
+        case "identifierCase": return alt(\.identifierCase, BeautifierOptions.WordCase.allCases)
+        case "dataTypeCase": return altCase(\.dataTypeCase, inherited: o.keywordCase)
+        case "functionCase": return altCase(\.functionCase, inherited: o.identifierCase)
+        case "packageCase": return altCase(\.packageCase, inherited: o.identifierCase)
+        case "specialCase": return alt(\.specialCase, [[], ["DBMS_Output"], ["dbms_%"]])
+        default: return []
+        }
+    }
+
+    /// Znaczniki zmian w podglądzie: linie wyniku (od 0) zmienione albo dodane i miejsca usuniętych linii (indeks linii
+    /// wyniku, przed którą je usunięto; liczba linii — na końcu).
+    public struct Marks: Sendable, Equatable {
+        public var changed: Set<Int> = []
+        public var removedBefore: Set<Int> = []
+        public init() {}
+        public var isEmpty: Bool { changed.isEmpty && removedBefore.isEmpty }
+        /// Pierwsza zaznaczona linia (do przewinięcia).
+        public var first: Int? { (changed.union(removedBefore)).min() }
+    }
+
+    public static func marks(baseline: String, current: String) -> Marks {
+        var m = Marks()
+        guard baseline != current else { return m }
+        var next = 0
+        for r in TextDiff.rows(baseline, current) {
+            switch r.kind {
+            case .same: next = r.right ?? next
+            case .changed, .added: if let line = r.right { m.changed.insert(line - 1); next = line }
+            case .removed: m.removedBefore.insert(next)
+            }
+        }
+        return m
+    }
 
     static func nextCase(_ c: BeautifierOptions.WordCase) -> BeautifierOptions.WordCase {
         let all = BeautifierOptions.WordCase.allCases

@@ -547,6 +547,8 @@ struct Formatter {
         guard let p = prev else { return false }
         // Sklejone w źródle i nierozdzielne (`$$x`, `1M`, `&x.y`, `a.b`…) — bez spacji (pilnuje tego też `verify`).
         if p.end == t.start, !Beautifier.separable(p.kind, p.text, t.kind, t.text) { return false }
+        // Przecinek na początku linii przeniesiony przed komentarz poprzedniego elementu: odstęp jak po przecinku.
+        if p.kind == .lineComment, cur == "," { return options.spaceAfterComma }
         if t.kind == .rightParen { return options.spaceInsideParentheses && p.kind != .leftParen }
         if [.comma, .semicolon, .dot].contains(t.kind) { return false }
         if p.kind == .leftParen { return options.spaceInsideParentheses }
