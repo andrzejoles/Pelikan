@@ -85,5 +85,31 @@ struct BranchChangesTests {
         #expect(ws.documents.contains { $0.unitFiles.count == 2 })
         let again = try await ws.invoke("vcs.openBranchChanges")
         #expect(again.value == .int(0) && ws.documents.count == 3)
+        // Zwykłe pliki tekstowe nie są otwierane.
+        try t.file("kadry/notatki.txt", "notatki\n")
+        #expect(try await ws.invoke("vcs.openBranchChanges").value == .int(0))
+    }
+
+    @MainActor
+    @Test("Powyżej 30 plików bez okna pytań (agent, skrypt) — odmowa z podpowiedzią confirm=true; z confirm — otwiera")
+    func manyFiles() async throws {
+        let t = try TempDirectory()
+        let dir = try repo(t)
+        try t.file("kadry/a.sql", "-- a\n")
+        try git(["add", "."], dir)
+        try git(["commit", "-q", "-m", "start"], dir)
+        for i in 1...31 { try t.file("kadry/s\(i).sql", "-- \(i)\n") }
+        let ws = Workspace()
+        ws.tabRepositoryProbe = nil
+        _ = try ws.openFile(dir.appendingPathComponent("a.sql"))
+        do {
+            _ = try await ws.invoke("vcs.openBranchChanges")
+            Issue.record("bez odmowy")
+        } catch CommandError.notAvailable(let m) {
+            #expect(m.contains("confirm=true") && m.contains("31"))
+        }
+        #expect(ws.documents.count == 1)
+        let r = try await ws.invoke("vcs.openBranchChanges", CommandArguments(["confirm": .bool(true)]))
+        #expect(r.value == .int(31) && ws.documents.count == 32)
     }
 }

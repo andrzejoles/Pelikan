@@ -285,11 +285,13 @@ enum FileCommands {
 
     /// Więcej plików zmienionych w gałęzi niż tyle — pytanie przed otwarciem (D201).
     static let branchChangesAskLimit = 30
+    /// Twardy limit — więcej plików naraz nie otwieramy (okna, pamięć, czas).
+    static let branchChangesHardLimit = 200
 
     /// Rozszerzenia plików kodu otwieranych z gałęzi: skrypty i programy (`FileOpening`), pliki okien Pelikana
-    /// i rozszerzenia z Ustawień (programy, testy, specyfikacja i ciało).
+    /// i rozszerzenia z Ustawień (programy, testy, specyfikacja i ciało); bez zwykłych plików tekstowych.
     static func branchOpenableExtensions(_ s: Settings) -> Set<String> {
-        FileOpening.extensions.union(["pls", "plb", "jav", "rep", "pdd", "sqlnb", "txt", "pc", "ctl"])
+        FileOpening.extensions.union(["pls", "plb", "jav", "rep", "pdd", "sqlnb", "pc", "ctl"])
             .union(s.programExtensions.map { $0.lowercased() }).union(s.testExtensions.map { $0.lowercased() })
             .union(s.specBodyExtensions.all.map { $0.lowercased() })
     }
@@ -354,33 +356,43 @@ enum FileCommands {
                 let u = try fileOrActive(ctx)
                 let repo = try await repository(for: u)
                 let ws = ctx.workspace
-                let changed = try await Task.detached { try repo.branchChangedFiles() }.value
                 let openable = branchOpenableExtensions(ws.settings)
-                let candidates = changed.filter { openable.contains($0.pathExtension.lowercased()) }
-                // Porównanie po rozwiązaniu dowiązań (np. /var → /private/var z katalogu repozytorium).
-                let isOpen = { (f: URL) in
-                    let r = f.resolvingSymlinksInPath().path
-                    return ws.documents.contains { $0.fileURLs.contains { $0.resolvingSymlinksInPath().path == r } }
-                }
-                let pending = candidates.filter { !isOpen($0) }
+                let openPaths = ws.documents.flatMap(\.fileURLs)
+                // Zmienione pliki i porównanie z otwartymi po rozwiązaniu dowiązań (np. /var → /private/var) — poza wątkiem
+                // głównym, każda ścieżka rozwiązywana raz.
+                let (candidates, resolved, open) = try await Task.detached { () -> ([URL], [String: String], Set<String>) in
+                    let changed = try repo.branchChangedFiles(extensions: openable)
+                    var map: [String: String] = [:]
+                    for f in changed { map[f.standardizedFileURL.path] = f.resolvingSymlinksInPath().path }
+                    return (changed, map, Set(openPaths.map { $0.resolvingSymlinksInPath().path }))
+                }.value
+                var openSet = open
+                let pending = candidates.filter { !openSet.contains(resolved[$0.standardizedFileURL.path] ?? $0.path) }
                 guard !pending.isEmpty else {
                     return CommandResult(message: L10n.tr("Wszystkie pliki zmienione w gałęzi są już otwarte"), value: .int(0))
                 }
+                Log.files.info("Pliki zmienione w gałęzi do otwarcia: \(pending.count, privacy: .public)")
+                guard pending.count <= branchChangesHardLimit else {
+                    throw CommandError.notAvailable(L10n.tr("Plików zmienionych w gałęzi jest za dużo, by otworzyć je naraz: \(pending.count) (najwyżej \(branchChangesHardLimit))."))
+                }
                 if pending.count > branchChangesAskLimit, ctx.arguments.bool("confirm") != true {
-                    Log.files.info("Pliki zmienione w gałęzi do otwarcia: \(pending.count, privacy: .public)")
-                    guard let ui = ctx.askingUI,
-                          await ui.ask(L10n.tr("Otworzyć pliki zmienione w gałęzi?"),
+                    // Bez okna pytań (agent, skrypt, makro) — odmowa z podpowiedzią zamiast cichego anulowania.
+                    guard let ui = ctx.askingUI else {
+                        throw CommandError.notAvailable(L10n.tr("Pliki zmienione w gałęzi do otwarcia: \(pending.count) — potwierdź argumentem confirm=true."))
+                    }
+                    guard await ui.ask(L10n.tr("Otworzyć pliki zmienione w gałęzi?"),
                                        message: L10n.tr("Pliki zmienione w gałęzi, które nie są otwarte: \(pending.count)."),
                                        buttons: [L10n.tr("Otwórz"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
                 }
                 let previous = ws.activeDocumentID
                 var opened = 0
                 var failed: [String] = []
-                for f in pending where !isOpen(f) {
-                    // Para .pks/.pkb otwiera się jednym oknem (D194) — drugi plik pary jest już wtedy otwarty.
+                for f in pending where !openSet.contains(resolved[f.standardizedFileURL.path] ?? f.path) {
+                    // Para .pks/.pkb otwiera się jednym oknem (D194) — drugi plik pary trafia do zbioru otwartych.
                     do {
-                        _ = try ws.openFile(f)
+                        let doc = try ws.openFile(f)
                         opened += 1
+                        for x in doc.fileURLs { openSet.insert(resolved[x.standardizedFileURL.path] ?? x.path) }
                     } catch {
                         failed.append(f.lastPathComponent)
                     }
