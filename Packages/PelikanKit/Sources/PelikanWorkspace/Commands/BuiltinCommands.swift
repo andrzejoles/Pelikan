@@ -157,10 +157,12 @@ public enum BuiltinCommands {
         // (najwyżej minutę), zamiast przerywać się po cichu.
         if doc.isSaving {
             // Komunikat w pasku stanu okna na czas czekania (zamknięcie, wyjście, zmiana workseta).
+            // Przywrócenie także po anulowaniu zadania, ale nie nad komunikatem ustawionym w trakcie czekania.
             let status = doc.statusText
-            doc.statusText = L10n.tr("Czekam na zakończenie zapisu…")
+            let waiting = L10n.tr("Czekam na zakończenie zapisu…")
+            doc.statusText = waiting
+            defer { if doc.statusText == waiting { doc.statusText = status } }
             for _ in 0..<1200 where doc.isSaving { try await Task.sleep(nanoseconds: 50_000_000) }
-            doc.statusText = status
         }
         if doc.isSaving { throw CommandError.notAvailable(L10n.tr("Okno „\(doc.title)” jest właśnie zapisywane")) }
         // Wykonanie w toku: debugowanie jest przerywane (inaczej sesja zostaje z DEBUG_ON i wstrzymanym programem),
