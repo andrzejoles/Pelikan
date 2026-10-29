@@ -2216,8 +2216,10 @@ edytor), Pelikan to wykrywa i pyta.
   `.pks` i `.pkb` osobno) datę modyfikacji, rozmiar i skrót bajtów (`Document.diskStamps`, `FileStamp`). Sprawdzenie
   czyta plik tylko, gdy zmieniła się data albo rozmiar; ten sam skrót (np. `touch`, `git checkout` bez zmiany treści)
   uaktualnia stan bez pytania. Dowiązanie — stan pliku docelowego; wiszące dowiązanie (cel usunięty) to plik usunięty.
-  Na woluminie nielokalnym (SMB, NFS — `volumeIsLocalKey`) treść jest porównywana zawsze, bo daty bywają zaokrąglane
-  albo z innego zegara.
+  Poza datą i rozmiarem porównywane są ctime i identyfikator pliku (`attributeModificationDateKey`,
+  `fileResourceIdentifierKey`) — podmiana pliku z tą samą datą i rozmiarem też jest wykrywana. Na woluminie nielokalnym
+  (SMB, NFS — `volumeIsLocalKey`) treść jest porównywana także bez zmiany metadanych (daty bywają zaokrąglane albo
+  z innego zegara), ale nie częściej niż co 5 s na plik. Odczyt i skrót zawsze poza wątkiem głównym.
 - **Kiedy:** przy aktywacji okna z plikiem, karty pliku w oknie pary i aplikacji (okno na wierzchu). Jedno sprawdzenie
   naraz i jedno pytanie naraz (zmiany kilku plików okna po kolei), pytania tylko dla aktywowanego okna — inne okna
   zapytają, gdy się je aktywuje. Nie w trakcie zapisu okna (także okna wyboru nazwy), nie w trybie skryptu
@@ -2233,11 +2235,16 @@ edytor), Pelikan to wykrywa i pyta.
   przy różnicy, odczyt i skrót poza wątkiem głównym. Z wyłączoną preferencją **Wykrywaj zmiany plików na dysku** — bez
   ostrzeżenia; w trybie skryptu i bez interfejsu zapis odbywa się (bez cichego anulowania), a nadpisanie zmiany z dysku
   trafia do dziennika. Tekst sprzed wczytania ponownego zawsze trafia do historii lokalnej (także okno bez zmian
-  i wczytanie bez pytania). Pytania nie mają dodatkowego przycisku „Anuluj”: Esc wybiera bezpieczną odpowiedź
-  (**Zostaw**, **Zachowaj moje zmiany**; przy pliku usuniętym domyślny jest **Zachowaj w oknie**) —
-  `UIServices.ask(_:message:buttons:escapeButton:)`. Nieudane wczytanie (np. plik nie do odczytu, para o innym
-  podziale) — także w trybie bez pytania — zapamiętuje stan dysku jako znany (bez pytania przy każdej aktywacji),
-  a błąd pokazuje użytkownikowi i zapisuje w dzienniku.
+  i wczytanie bez pytania). Pytania nie mają dodatkowego przycisku „Anuluj”; Esc wybiera bezpieczną odpowiedź
+  (**Zostaw**, **Zachowaj moje zmiany**, **Zachowaj w oknie**), a w oknie ze zmianami **Zachowaj moje zmiany** jest
+  też przyciskiem domyślnym (Enter), a **Wczytaj ponownie (utracisz zmiany)** — oznaczony jako niszczący, bez Enter
+  (`UIServices.ask(_:message:buttons:escapeButton:defaultButton:destructiveButton:)`). Nieudane wczytanie (np. plik nie
+  do odczytu, para o innym podziale) — także w trybie bez pytania — zapamiętuje stan dysku jako znany (plik nie do
+  odczytu: data i rozmiar z atrybutów, skrót dotychczasowy), więc nie pyta przy każdej aktywacji, a błąd pokazuje
+  użytkownikowi i zapisuje w dzienniku. Zapis okna jest chroniony przed ponownym wejściem (drugi ⌘S w trakcie pytania
+  albo sprawdzania — pomijany), a sprawdzenie zmian na dysku przed zapisem powtarza się, gdy tekst albo pliki okna
+  zmieniły się w trakcie (najwyżej trzy razy); zapis idzie do bieżącego pliku okna. Wiszące dowiązanie zachowane
+  w oknie („Zachowaj w oknie”): zapis tworzy plik docelowy z `destinationOfSymbolicLink`, dowiązanie zostaje.
 - **Plik usunięty albo przeniesiony:** „Plik „…” nie istnieje na dysku” — **Zachowaj w oknie** (okno oznaczone jako
   zmienione, zapis utworzy plik ponownie; bez ponownego pytania) albo **Zamknij okno** (okno ze zmianami — zwykłe
   pytanie o zapis).

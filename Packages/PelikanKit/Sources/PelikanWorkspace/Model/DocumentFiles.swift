@@ -307,7 +307,12 @@ extension Workspace {
     /// Zapis atomowy, który nie zmienia rodzaju pliku: przez dowiązanie symboliczne zapisuje plik docelowy (dowiązanie
     /// zostaje) i przywraca uprawnienia istniejącego pliku (0600, bit wykonywania) — zapis `.atomic` podmienia plik nowym.
     nonisolated static func writeKeepingFile(_ data: Data, to url: URL) throws {
-        let target = url.resolvingSymlinksInPath()
+        var target = url.resolvingSymlinksInPath()
+        // Wiszące dowiązanie (cel usunięty, „Zachowaj w oknie” — D197): zapis tworzy plik docelowy, dowiązanie zostaje.
+        if (try? FileManager.default.attributesOfItem(atPath: target.path))?[.type] as? FileAttributeType == .typeSymbolicLink,
+           let dest = try? FileManager.default.destinationOfSymbolicLink(atPath: target.path) {
+            target = dest.hasPrefix("/") ? URL(fileURLWithPath: dest) : target.deletingLastPathComponent().appendingPathComponent(dest)
+        }
         let permissions = (try? FileManager.default.attributesOfItem(atPath: target.path))?[.posixPermissions] as? NSNumber
         try data.write(to: target, options: .atomic)
         if let permissions { try? FileManager.default.setAttributes([.posixPermissions: permissions], ofItemAtPath: target.path) }

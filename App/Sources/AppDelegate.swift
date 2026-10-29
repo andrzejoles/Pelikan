@@ -1501,16 +1501,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         return index < buttons.count ? index : nil
     }
 
-    /// Pytanie bez dodatkowego „Anuluj” (D197): Esc wybiera bezpieczny przycisk `escapeButton`.
-    func ask(_ title: String, message: String, buttons: [String], escapeButton: Int) async -> Int? {
+    /// Pytanie bez dodatkowego „Anuluj” (D197): Enter — `defaultButton`, Esc — bezpieczny `escapeButton` (może to być
+    /// ten sam przycisk), `destructiveButton` oznaczony jako niszczący i bez Enter.
+    func ask(_ title: String, message: String, buttons: [String], escapeButton: Int, defaultButton: Int, destructiveButton: Int?) async -> Int? {
         if Self.scriptSkipsDialog(title) { return escapeButton }
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = message
         for b in buttons { alert.addButton(withTitle: b) }
-        if alert.buttons.indices.contains(escapeButton), escapeButton > 0 { alert.buttons[escapeButton].keyEquivalent = "\u{1b}" }
+        for (i, b) in alert.buttons.enumerated() { b.keyEquivalent = i == defaultButton ? "\r" : "" }
+        if let d = destructiveButton, alert.buttons.indices.contains(d) { alert.buttons[d].hasDestructiveAction = true }
+        // Esc kończy pytanie bezpieczną odpowiedzią — także gdy to przycisk z Enter (jeden przycisk ma jeden klawisz).
+        let first = NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
+        let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            guard event.keyCode == 53, NSApp.modalWindow === alert.window else { return event }
+            NSApp.stopModal(withCode: NSApplication.ModalResponse(rawValue: first + escapeButton))
+            return nil
+        }
+        defer { if let monitor { NSEvent.removeMonitor(monitor) } }
         let response = alert.runModal()
-        let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
+        let index = response.rawValue - first
         return buttons.indices.contains(index) ? index : escapeButton
     }
 }

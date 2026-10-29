@@ -72,6 +72,10 @@ public final class Document: Identifiable {
     @ObservationIgnored public var diskStamps: [URL: FileStamp] = [:]
     /// Skrót bajtów pliku okna (bez pary) z otwarcia albo zapisu — zapis ostrzega, gdy plik zmienił się na dysku.
     @ObservationIgnored public var savedFileHash: UInt64?
+    /// Ostatnie porównanie treści pliku na woluminie nielokalnym (co najwyżej co 5 s na plik, D197).
+    @ObservationIgnored public var contentChecks: [URL: Date] = [:]
+    /// Zapis okna w toku (pytania, okno wyboru nazwy) — drugi zapis w tym czasie jest pomijany.
+    @ObservationIgnored public var isSaving = false
     public var text: String {
         didSet {
             if text != oldValue {

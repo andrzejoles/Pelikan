@@ -55,13 +55,28 @@ public enum BuiltinCommands {
     @MainActor
     static func saveDocument(_ doc: Document, in ws: Workspace, askForName: Bool, singleFile: Bool = false) async throws -> Bool {
         // W trakcie zapisu (także pytań i okna wyboru nazwy) bez pytań o zmiany plików na dysku (D197).
+        // Drugi zapis tego okna w trakcie pierwszego (pytanie, okno wyboru nazwy) — pomijany.
+        guard !doc.isSaving else { return false }
+        doc.isSaving = true
         ws.savingDocuments += 1
-        defer { ws.savingDocuments -= 1 }
+        defer {
+            ws.savingDocuments -= 1
+            doc.isSaving = false
+        }
         // Zapis do pliku okna (para — każda jednostka do swojego pliku, D194): plik zmieniony na dysku od otwarcia albo
         // zapisu (inny program, git checkout, „Zostaw” przy pytaniu, D197) — bez cichego nadpisania.
         if !askForName, !singleFile, let url = doc.fileURL {
             // Preferencja „Wykrywaj zmiany plików na dysku” wyłączona — bez sprawdzania (D197).
-            let changed = ws.settings.detectExternalFileChanges ? await ws.externallyChangedUnitFiles(doc) : []
+            // Sprawdzenie dotyczy stanu okna po await: tekst albo pliki zmienione w trakcie sprawdzania (pisanie, agent) —
+            // sprawdzenie jeszcze raz dla nowego stanu (najwyżej trzy razy).
+            var changed: [URL] = []
+            if ws.settings.detectExternalFileChanges {
+                for _ in 0..<3 {
+                    let revision = doc.textRevision, files = doc.unitFiles, file = doc.fileURL
+                    changed = await ws.externallyChangedUnitFiles(doc)
+                    if doc.textRevision == revision, doc.unitFiles == files, doc.fileURL == file { break }
+                }
+            }
             if !changed.isEmpty {
                 let names = changed.map(\.lastPathComponent).joined(separator: ", ")
                 if let ui = ws.ui, ws.externalChangePromptsEnabled {
@@ -75,7 +90,8 @@ public enum BuiltinCommands {
                     Log.files.notice("Zapis nadpisuje plik zmieniony na dysku przez inny program: \(names, privacy: .hash)")
                 }
             }
-            try ws.save(doc, to: url)
+            // Plik okna po await (zmiana nazwy w Przeglądarce plików w trakcie pytania).
+            try ws.save(doc, to: doc.fileURL ?? url)
             return true
         }
         // Okno ze specyfikacją i ciałem pakietu albo typu — nowe okno albo Zapisz jako: para plików `nazwa.pks` +
