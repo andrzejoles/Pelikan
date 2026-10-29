@@ -2,6 +2,11 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.6.1 — szerszy panel po lewej
+
+- **Panel po lewej** (Połączenia, Obiekty, Okna, Szablony, Pliki) można poszerzyć bez dawnego limitu 420 punktów — aż do
+  chwili, gdy obszarowi okien zostaje jego minimalna szerokość.
+
 ## 1.6.0 — Zawartość kodu w oknie SQL i oknie testu
 
 - **Zawartość kodu w każdym oknie z kodem:** panel struktury kodu jest teraz także w oknie SQL i oknie testu, nie tylko

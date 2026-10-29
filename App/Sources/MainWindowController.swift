@@ -37,8 +37,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         // przez które tekst całego panelu był na monitorach bez Retina rysowany kanciasto w aktywnym oknie.
         let sidebar = NSSplitViewItem(viewController: sidebarController)
         sidebar.holdingPriority = .defaultLow + 10
+        // Szerokość panelu: najmniej tyle, ile potrzebuje przełącznik pięciu kart; bez górnej granicy — panel można
+        // poszerzyć, dopóki obszar okien ma swoje minimum (480 pt).
         sidebar.minimumThickness = 220
-        sidebar.maximumThickness = 420
+        sidebar.maximumThickness = NSSplitViewItem.unspecifiedDimension
         sidebar.canCollapse = true
         centerArea.splitView.isVertical = false
         let documents = NSSplitViewItem(viewController: documentArea)
