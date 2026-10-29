@@ -38,6 +38,38 @@ struct ExplainPlanOfflineTests {
         #expect(lines.sorted { $0.executionOrder < $1.executionOrder }.map(\.id) == [2, 3, 1, 0])
         #expect(ExplainPlan.tree(lines).first?.children?.first?.children?.map(\.id) == [2, 3])
     }
+
+    @Test("Rozwiń/Zwiń wszystko: gałęzie aktywnego okna planu; po zwinięciu zostaje korzeń, ponowny plan nie zmienia rozwinięcia")
+    @MainActor func expandCollapse() async throws {
+        func line(_ id: Int, _ parent: Int?) -> PlanLine {
+            PlanLine(id: id, parentID: parent, depth: 0, position: id, operation: "OP\(id)", options: "", objectOwner: "", objectName: "", optimizer: "",
+                     accessPredicates: "", filterPredicates: "")
+        }
+        func plan(_ id: String, _ lines: [PlanLine]) -> ExplainPlanResult {
+            let l = ExplainPlan.numberExecution(lines)
+            return ExplainPlanResult(statementID: id, roots: ExplainPlan.tree(l), lines: l, text: "", html: "", xml: "")
+        }
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let doc = ws.newDocument(.explainPlan, text: "select * from dual")
+        ws.activate(doc.id)
+        // Bez planu komendy niedostępne; w oknie SQL też.
+        #expect(!ws.isEnabled("plan.expandAll") && !ws.isEnabled("plan.collapseAll"))
+        // 0 ← 1 ← (2 ← 4, 3)
+        doc.plan = plan("a", [line(0, nil), line(1, 0), line(2, 1), line(3, 1), line(4, 2)])
+        #expect(ws.isEnabled("plan.expandAll"))
+        _ = try await ws.invoke("plan.expandAll")
+        #expect(doc.planExpanded == [0, 1, 2])
+        _ = try await ws.invoke("plan.collapseAll")
+        #expect(doc.planExpanded.isEmpty && doc.plan?.roots.map(\.id) == [0])
+        // Ponowne wyznaczenie planu zachowuje rozwinięte gałęzie (jak dotąd w drzewie), nowe gałęzie zwinięte.
+        doc.planExpanded = [0]
+        doc.plan = plan("b", [line(0, nil), line(1, 0), line(2, 1)])
+        #expect(doc.planExpanded == [0])
+        // Inne okno aktywne — komendy nie działają na oknie planu w tle.
+        let sql = ws.newDocument(.sql, text: "select 1 from dual")
+        ws.activate(sql.id)
+        #expect(!ws.isEnabled("plan.expandAll"))
+    }
 }
 
 @Suite("Narzędzia siatki bez bazy")

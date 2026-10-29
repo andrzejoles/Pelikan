@@ -81,6 +81,12 @@ struct PlanPanel: View {
                     Text(L10n.tr("Tekst")).tag(3)
                 }
                 .pickerStyle(.segmented).fixedSize()
+                Button { workspace.perform("plan.expandAll") } label: { Image(systemName: "chevron.down.2") }
+                    .iconLabel(L10n.tr("Rozwiń wszystko"))
+                    .disabled(document.plan == nil || mode != 0)
+                Button { workspace.perform("plan.collapseAll") } label: { Image(systemName: "chevron.up.2") }
+                    .iconLabel(L10n.tr("Zwiń wszystko"))
+                    .disabled(document.plan == nil || mode != 0)
                 Spacer()
                 Button(L10n.tr("Porównaj")) { workspace.perform("plan.compare") }.disabled(document.previousPlan == nil)
                     .help(L10n.tr("Porównaj z poprzednim planem okna"))
@@ -103,7 +109,8 @@ struct PlanPanel: View {
                     Text(plan.text).font(.code).textSelection(.enabled).padding(4)
                 }
             } else {
-                Table(document.plan?.roots ?? [], children: \.children, selection: $selection) {
+                // Rozwinięcie gałęzi w modelu okna (`planExpanded`) — komendy Rozwiń/Zwiń wszystko (PD-OPT-001).
+                Table(of: PlanLine.self, selection: $selection) {
                     TableColumn(L10n.tr("Opis")) { l in
                         Text(l.title).fontWeight(l.id == selection ? .semibold : .regular)
                     }
@@ -114,6 +121,8 @@ struct PlanPanel: View {
                     TableColumn(L10n.tr("Bajty")) { l in Text(l.bytes.map(String.init) ?? "").monospacedDigit() }.width(70)
                     TableColumn(L10n.tr("Czas")) { l in Text(l.time.map(String.init) ?? "").monospacedDigit() }.width(50)
                     TableColumn(L10n.tr("Kolejność")) { l in Text("\(l.executionOrder)").monospacedDigit() }.width(60)
+                } rows: {
+                    ForEach(document.plan?.roots ?? []) { PlanTreeRows(line: $0, expanded: $document.planExpanded) }
                 }
                 if let line = document.plan?.lines.first(where: { $0.id == selection }), !(line.accessPredicates.isEmpty && line.filterPredicates.isEmpty) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -133,5 +142,23 @@ struct PlanPanel: View {
         guard !ordered.isEmpty else { return }
         let i = ordered.firstIndex { $0.id == selection } ?? (delta > 0 ? -1 : ordered.count)
         selection = ordered[max(0, min(ordered.count - 1, i + delta))].id
+    }
+}
+
+/// Wiersze drzewa planu: gałąź jako wiersz z rozwijaniem sterowanym zbiorem rozwiniętych kroków okna.
+struct PlanTreeRows: TableRowContent {
+    let line: PlanLine
+    @Binding var expanded: Set<Int>
+
+    @TableRowBuilder<PlanLine> var tableRowBody: some TableRowContent<PlanLine> {
+        if let children = line.children {
+            DisclosureTableRow(line, isExpanded: Binding(get: { expanded.contains(line.id) }, set: { open in
+                if open { expanded.insert(line.id) } else { expanded.remove(line.id) }
+            })) {
+                ForEach(children) { PlanTreeRows(line: $0, expanded: $expanded) }
+            }
+        } else {
+            TableRow(line)
+        }
     }
 }

@@ -548,6 +548,9 @@ public enum RibbonModel {
                 .large("sql.execute", label: L10n.tr("Wyznacz plan")), .small("plan.compare", label: L10n.tr("Porównaj z poprzednim")),
                 .small("plan.export", label: L10n.tr("Zapisz plan")), .small("tools.autotrace"),
             ]),
+            RibbonGroup(L10n.tr("Drzewo"), [
+                .small("plan.expandAll", label: L10n.tr("Rozwiń wszystko")), .small("plan.collapseAll", label: L10n.tr("Zwiń wszystko")),
+            ]),
         ])
     }
 

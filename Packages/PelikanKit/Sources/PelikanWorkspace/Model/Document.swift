@@ -220,6 +220,8 @@ public final class Document: Identifiable {
     /// Poprzedni plan okna (porównanie planów, SD-PLAN-003).
     public var previousPlan: ExplainPlanResult?
     public var planGoal: OptimizerGoal = .session
+    /// Rozwinięte gałęzie drzewa planu (PLAN_TABLE.ID): bez zmian po ponownym wyznaczeniu planu, nowe gałęzie zwinięte.
+    public var planExpanded: Set<Int> = []
     public var planError: String?
     /// Zmienne okna testowego (UG 5.1) i stos ostatniego błędu wykonania (UG 5.5).
     public var testVariables: [TestVariable] = []
