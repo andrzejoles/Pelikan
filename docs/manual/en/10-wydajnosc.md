@@ -9,7 +9,7 @@ Plan Window**; Pelikan can create a missing PLAN_TABLE.
 
 ![Explain Plan Window — Diagram view](../img/plan-diagram.png)
 
-- **Explain** refreshes the plan for the text in the Explain Plan Window's editor, and **Optimizer goal** (*Same as session*,
+- **Refresh Plan** recalculates the plan for the text in the Explain Plan Window's editor, and **Optimizer goal** (*Same as session*,
   ALL_ROWS or FIRST_ROWS_n) adds a hint.
 - Views: **Tree** (operations with cost, number of rows, bytes, time, execution order, and access and filter
   predicates), **Diagram** (a node per operation with cost, cardinality and step number), **Flame graph** (the cost of

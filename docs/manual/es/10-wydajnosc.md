@@ -9,7 +9,7 @@ vacía con **Archivo › Nuevo › Explain Plan Window**; Pelikan puede crear la
 
 ![Ventana de plan: vista Diagrama](../img/plan-diagram.png)
 
-- **Explicar** actualiza el plan del texto del editor de la ventana de plan, y **Objetivo del optimizador** (*Como en la
+- **Actualizar plan** recalcula el plan del texto del editor de la ventana de plan, y **Objetivo del optimizador** (*Como en la
   sesión*, ALL_ROWS o FIRST_ROWS_n) añade una sugerencia (hint).
 - Vistas: **Árbol** (operaciones con coste, número de filas, bytes, tiempo, orden de ejecución y predicados de acceso y
   de filtro), **Diagrama** (un nodo por operación con coste, cardinalidad y número de paso), **Flame graph** (el coste

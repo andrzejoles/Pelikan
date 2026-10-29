@@ -20,7 +20,14 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
 - **Pliki bez „/”:** okno programu rozpoznaje specyfikację, ciało i inne jednostki po nagłówkach `CREATE …`, także
   gdy jednostki nie kończą się znakiem „/” — karty, kompilacja F8 każdej jednostki osobno i numeracja linii działają
   tak samo. Pelikan nie dopisuje już „/” przy zapisie, a kod otwarty z bazy i nowe jednostki z szablonów są bez „/”
-  (preferencja **Kończ jednostki okna programu znakiem „/”** w Preferencje › Oracle przywraca dawny układ).
+  (ustawienie **Kończ jednostki okna programu znakiem „/”** w Ustawienia › Oracle przywraca dawny układ).
+- **Polskie nazwy bliższe macOS i IDE:** okno planu ma przycisk **Odśwież plan** (zamiast „Wyjaśnij”), okno
+  **Preferencje** nazywa się **Ustawienia** (jak pozycja ⌘, w menu Pelikan), debuger — **Krok do**, **Krok przez**,
+  **Wyjdź z podprogramu** i **Przełącz punkt przerwania**, w siatce **Zapisz zmiany w bazie (Post)** (zatwierdza się
+  tylko COMMIT), **Fragmenty kodu** zamiast snippetów, **Wyodrębnij** w refaktoryzacji, **Zakończ sesję (Kill)**,
+  **Kompiluj projekt** / **Kompiluj zmienione**, **Powtórz** (⇧⌘Z), **Zminimalizuj**; opisy mówią o Przeglądarce
+  obiektów, Zawartości kodu i oknie SQL, a nie o ich angielskich nazwach. Szukaj czynności i paleta komend znajdują
+  komendy także po dawnych nazwach.
 
 ## 1.3.1 — poprawki zgłoszeń
 

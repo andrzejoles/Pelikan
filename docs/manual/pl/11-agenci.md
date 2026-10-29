@@ -14,7 +14,7 @@ analizować plany, pisać i formatować kod w oknach, a zmiany w bazie wykonuje 
 | Antigravity | `agy` | jednorazowa rejestracja serwera „pelikan” — tylko po Twojej zgodzie |
 
 Program agenta instalujesz sam i logujesz się w nim na swoje konto dostawcy. Pelikan szuka polecenia w ścieżce `PATH`
-Twojej powłoki logowania. Listę programów zmienisz w **Preferencje › Agenci** (**Dodaj CLI**, **Przywróć domyślne**).
+Twojej powłoki logowania. Listę programów zmienisz w **Ustawienia › Agenci** (**Dodaj CLI**, **Przywróć domyślne**).
 
 Serwer MCP Pelikana jest dostępny tylko dla sesji uruchomionej z Pelikana: komunikacja idzie przez gniazdo Unix
 dostępne wyłącznie dla Twojego konta (bez portów sieciowych), a każda sesja ma własny, jednorazowy token przekazywany
@@ -64,7 +64,7 @@ Narzędzia agenta w skrócie:
   testowego, uruchomienie testów utPLSQL, instalacja utPLSQL.
 
 Agent **nie ma** dostępu do okna poleceń i polecenia HOST, powłoki systemu przez Pelikana, debugera, okna Sesje (poza
-odczytem listy sesji) i zabijania sesji, SQL Trace, raportów AWR/ASH/ADDM, SQL Monitor i SQL Tuning Advisor, zdalnego
+odczytem listy sesji) i kończenia sesji, SQL Trace, raportów AWR/ASH/ADDM, SQL Monitor i SQL Tuning Advisor, zdalnego
 buildu Pro*C, narzędzi użytkownika ani do haseł, hostów, portów i nazw użytkowników połączeń.
 
 ## Okno zgody
@@ -87,7 +87,7 @@ Okno jest zaprojektowane tak, żeby nie zatwierdzić niczego przypadkiem:
 - Agent ma **własne sesje bazy** — nie widzi Twojej niezatwierdzonej transakcji i nie może jej zatwierdzić. W
   V$SESSION jego sesje mają MODULE „Pelikan agent”, a ACTION — nazwę narzędzia.
 - Zapytania agenta wykonują się w transakcji tylko do odczytu, z limitami liczby wierszy, czasu i rozmiaru wyniku
-  (**Preferencje › Agenci › Zapytania agenta**; domyślnie 500 wierszy, 30 s i 1 MB) oraz limitem wywołań na minutę.
+  (**Ustawienia › Agenci › Zapytania agenta**; domyślnie 500 wierszy, 30 s i 1 MB) oraz limitem wywołań na minutę.
   Zapytanie musi być jednym poleceniem SELECT/WITH, bez `FOR UPDATE` i bez funkcji zdefiniowanych w klauzuli WITH.
 - **DML agenta zostaje niezatwierdzone**, dopóki nie zgodzisz się osobno na COMMIT. Zamknięcie sesji agenta wycofuje
   niezatwierdzone zmiany (ROLLBACK). DDL agenta jest odrzucane, gdy agent ma niezatwierdzone DML (DDL zatwierdziłoby
@@ -122,7 +122,7 @@ mieć skutki uboczne (np. transakcje autonomiczne) — także przed tym chronią
 
 ## Tryb ścisły
 
-**Preferencje › Agenci › Tryb ścisły** (domyślnie włączony) uruchamia program agenta bez jego własnej powłoki i edycji
+**Ustawienia › Agenci › Tryb ścisły** (domyślnie włączony) uruchamia program agenta bez jego własnej powłoki i edycji
 plików — tylko z narzędziami Pelikana, o ile dany program na to pozwala. Gdy nie pozwala, panel agenta pokazuje
 ostrzeżenie. Program agenta w trybie pełnym działa z uprawnieniami Twojego konta macOS — Pelikan ostrzega, ale go nie
 ogranicza.

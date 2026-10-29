@@ -2097,3 +2097,39 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   w literale szablonowym JavaScript albo bloku tekstowym Javy) jest traktowana jako nagłówek następnej jednostki —
   takie jednostki kończ „/”.
 
+
+### D195 · 2026-10-29 — Polskie nazewnictwo interfejsu: macOS, IDE i Oracle (glosariusz)
+
+Prośba właściciela: „Co w explain plan oznacza «Wyjaśnij»? Nie ma to być «Odśwież»?” oraz przegląd polskich nazw
+pod kątem nomenklatury aplikacji macOS i narzędzi programistycznych — zmiany umiarkowane, tylko tam, gdzie polski
+użytkownik oczekuje innego słowa.
+
+- **Zasady** (szczegóły, źródła i tabela terminów: [`docs/research/glosariusz.md`](research/glosariusz.md)): czynności
+  w trybie rozkazującym (rzeczownik tylko przy przełącznikach i nazwach narzędzi), wielokropek tylko przed oknem
+  z pytaniem, ta sama czynność tą samą nazwą w menu, na wstążce, w palecie, na przyciskach i w instrukcji; panele
+  Pelikana po polsku jak w menu Widok (Przeglądarka obiektów, Przeglądarka plików, Zawartość kodu, okno SQL, okno
+  poleceń); nazwy własne narzędzi wzorca (Explain Plan, Code Assistant, Query Builder, Query By Example, Large Data
+  Editor, SQL Monitor…) bez tłumaczenia; słowa SQL w nawiasie przy polskiej czynności.
+- **Okno planu:** przycisk „Wyjaśnij” (kalka „Explain”) i etykieta wstążki „Wyznacz plan” → **Odśwież plan** — liczy
+  plan ponownie dla tekstu okna (pierwszy plan liczy otwarcie okna z okna SQL).
+- **Ustawienia zamiast Preferencji:** od macOS 13 menu aplikacji ma „Ustawienia…” (⌘,) — Pelikan już tak je nazywał,
+  ale okno, podmenu Narzędzia, zestawy, eksport/import i opisy mówiły „Preferencje”. Teraz wszędzie **Ustawienia**
+  (Zestawy ustawień, Eksportuj ustawienia…, „w Ustawieniach › Oracle”), także w instrukcji pl; nazwa pliku
+  `13-preferencje.md` i identyfikatory w kodzie bez zmian.
+- **Debuger:** Krok do / Krok przez / Wyjdź z podprogramu (było Wejdź / Przejdź / Wyjdź — „Wyjdź” myli się
+  z zamknięciem, „Przejdź” z przejściem do miejsca), Przełącz punkt przerwania.
+- **Spójność terminów Oracle:** Post w siatce → **Zapisz zmiany w bazie (Post)** („Zatwierdź” zarezerwowane dla
+  COMMIT); na wstążce Zatwierdź / Wycofaj zamiast samych COMMIT / ROLLBACK; „Zabij sesję” → **Zakończ sesję (Kill)**
+  jak „Zakończ sesję okna (Kill)”; INVALID — zawsze **nieprawidłowe** (było też „niepoprawne”); raport „Ograniczenia”
+  → **Więzy**.
+- **IDE:** Fragmenty kodu (snippety), Wyodrębnij (Wydziel), Przełącz komentarz linii, Zamień na wielkie/małe litery,
+  Przejdź do pierwszego znaku linii, Pokaż podpowiedzi kodu, Kompiluj projekt / Kompiluj zmienione (Buduj / Make),
+  Duplikuj połączenie…, Filtruj wyrażeniem… / Filtruj kolumny…; macOS: Powtórz (było „Ponów” — w angielskim
+  interfejsie pokazywało „Retry” przy ⇧⌘Z), Zminimalizuj, dwukrotne kliknięcie; Pro*C: kopia robocza, kopia
+  zapasowa; diagram: punkt załamania.
+- **Technicznie:** klucz = polskie zdanie, więc tłumaczenia en/de/es/uk przeniesiono na nowe klucze bez zmian;
+  poprawiono tylko te, którym zmienił się sens (Odśwież plan, Powtórz, Ustawienia). Dawne polskie tytuły komend są
+  słowami kluczowymi wyszukiwania czynności (`CommandSearch.keywords`), więc „wyjaśnij”, „zabij”, „snippet”, „buduj”
+  czy „preferencje” dalej znajdują komendę. Teksty dziennika i komunikaty SP2-/ORA- bez zmian.
+- **Pozostawione** (z powodem w glosariuszu): Workset, żargon zdalnego buildu Pro*C (build, binarka, remote, commit),
+  Zadokuj, Autoukrywanie, Rekompiluj, To-Do, Znaki specjalne, Status linii, nazwy narzędzi wzorca.

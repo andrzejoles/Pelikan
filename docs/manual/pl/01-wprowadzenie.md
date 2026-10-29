@@ -46,7 +46,7 @@ Pobierz „Instant Client for macOS (ARM64)”, pakiet **Basic** albo **Basic Li
 [oracle.com](https://www.oracle.com/database/technologies/instant-client/macos-arm64-downloads.html) i zainstaluj go
 według instrukcji Oracle. Pelikan szuka biblioteki `libclntsh.dylib` w tej kolejności:
 
-1. katalog wskazany w **Preferencje › Oracle › Oracle Instant Client**;
+1. katalog wskazany w **Ustawienia › Oracle › Oracle Instant Client**;
 2. `/opt/homebrew/lib`, `/usr/local/lib`, `/usr/local/oracle/instantclient` i katalogi `/opt/oracle/instantclient*`;
 3. katalogi `instantclient_*` w Twoich folderach **Pobrane** i **Aplikacje** (najnowsza wersja pierwsza).
 
@@ -89,7 +89,7 @@ Pelikan ma jedno okno główne:
   własnej karcie. Kartę przeciągasz do drugiego panelu albo poza panele — wtedy narzędzie dostaje osobne okno
   w miejscu upuszczenia; to samo robi menu karty i przyciski w nagłówku panelu. Okno narzędzia wraca do panelu
   przyciskiem na pasku tytułu. Pelikan zapamiętuje miejsce każdego rodzaju narzędzia. Zwinięty panel z narzędziami
-  pokazuje na pasku stanu przycisk z ich liczbą. Polecenia są w **Widok › Panele narzędzi**, a w **Preferencje ›
+  pokazuje na pasku stanu przycisk z ich liczbą. Polecenia są w **Widok › Panele narzędzi**, a w **Ustawienia ›
   Ogólne › Panele narzędzi** wybierasz miejsce nowych narzędzi (także osobne okna) i autoukrywanie paneli.
   Skróty narzędzia w panelu (Enter, Esc) działają tylko wtedy, gdy kursor jest w tym narzędziu.
 - **Panel agenta** po prawej (domyślnie zwinięty) — terminal agenta AI z listą jego działań. Pokazuje go **Widok ›
@@ -108,8 +108,8 @@ danego rodzaju — po przełączeniu okna wraca do niej sama.
 
 Częste czynności mają duże przyciski, pozostałe — małe; rzadsze są w listach rozwijanych grup (oznaczonych ▾). Podpowiedź
 przycisku pokazuje opis i skrót, więc skrótów uczysz się przy okazji. Prawy klik na przycisku dodaje komendę do paska
-szybkiego dostępu. Dwuklik karty albo strzałka po prawej zwija wstążkę do samych kart; **Widok › Wstążka** ją ukrywa
-(także w **Preferencje › Ogólne › Wstążka**).
+szybkiego dostępu. Dwukrotne kliknięcie karty albo strzałka po prawej zwija wstążkę do samych kart; **Widok › Wstążka** ją ukrywa
+(także w **Ustawienia › Ogólne › Wstążka**).
 
 Pole **Szukaj czynności…** po prawej stronie kart znajduje każdą komendę — wpisz kilka liter: „plan”, „eksport tabel”,
 „zrodlo” (bez polskich znaków) albo angielską nazwę znaną z PL/SQL Developera, np. „beautifier”, „compile invalid”.
@@ -125,7 +125,7 @@ sposób, żeby znaleźć funkcję, której położenia w menu nie pamiętasz.
 
 Pelikan ma dwa profile skrótów: **PL/SQL Developer** (klawisze F, Ctrl — np. F8 wykonuje, F9 rozpoczyna debugowanie) i
 **macOS** (skróty z ⌘). W obu profilach działają odpowiedniki z ⌘, np. ⌘↩ wykonuje polecenie. Profil wybierasz w
-**Preferencje › Klawiatura**. Jeśli klawisze F1–F12 sterują jasnością czy głośnością, włącz w Ustawieniach systemowych
+**Ustawienia › Klawiatura**. Jeśli klawisze F1–F12 sterują jasnością czy głośnością, włącz w Ustawieniach systemowych
 opcję używania ich jako standardowych klawiszy funkcyjnych albo naciskaj je z klawiszem fn.
 
 ## Aktualizacje
@@ -136,13 +136,13 @@ innego źródła. Ustawienia, połączenia i hasła zostają bez zmian.
 
 ## Języki
 
-Interfejs jest dostępny po polsku, angielsku, niemiecku, hiszpańsku i ukraińsku. Język wybierasz w **Preferencje ›
+Interfejs jest dostępny po polsku, angielsku, niemiecku, hiszpańsku i ukraińsku. Język wybierasz w **Ustawienia ›
 Ogólne › Język interfejsu**; zmiana działa po ponownym uruchomieniu. Nazwy niektórych okien i narzędzi (np. Explain
 Plan, Large Data Editor, Query Builder) pozostają w oryginalnym brzmieniu.
 
 ## Gdzie Pelikan trzyma dane
 
-Definicje połączeń (bez haseł), preferencje, historia, worksety, historia lokalna plików, dziennik agentów i inne dane
+Definicje połączeń (bez haseł), ustawienia, historia, worksety, historia lokalna plików, dziennik agentów i inne dane
 aplikacji są w katalogu `~/Library/Application Support/Pelikan`. Hasła są wyłącznie w Pęku kluczy macOS — zobacz
 rozdział *Bezpieczeństwo i prywatność*.
 

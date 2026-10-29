@@ -11,7 +11,7 @@ Okno ma dwie karty:
   karcie Dialog. **Sesja › Przerwij** (⌘.) zatrzymuje skrypt.
 
 Pasek stanu pokazuje bieżące ustawienia `ECHO`, `TERMOUT`, `FEEDBACK`, `VERIFY`, `AUTOPRINT`, `HEADING` i `TIMING`;
-dwuklik na wskaźniku przełącza ustawienie.
+dwukrotne kliknięcie wskaźnika przełącza ustawienie.
 
 ## Obsługiwane polecenia SQL*Plus
 

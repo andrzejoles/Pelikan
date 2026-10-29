@@ -8,7 +8,7 @@ bez haseł — hasła trafiają wyłącznie do Pęku kluczy macOS.
 Karta **Połączenia** w lewej kolumnie pokazuje definicje w folderach, a w folderze **Ostatnie** — ostatnio używane.
 Pod połączeniem widać jego otwarte okna.
 
-- Dwuklik na połączeniu łączy je jako **połączenie główne** (pogrubione na liście). Nowe okna otwierają się na
+- Dwukrotne kliknięcie połączenia łączy je jako **połączenie główne** (pogrubione na liście). Nowe okna otwierają się na
   połączeniu głównym.
 - Menu kontekstowe połączenia: **Połącz jako główne**, **Połącz** (bez zmiany głównego), **Rozłącz**, **Nowe okno**
   (okno SQL, programu, testu albo poleceń na tym połączeniu), **Pokaż okna połączenia**, **Zamknij okna połączenia**,
@@ -86,14 +86,14 @@ zgodą), osobny użytkownik bazy dla agenta i kolumny maskowane. Opisuje je rozd
 ## Środowiska i ochrona przed pomyłkami
 
 - Kolor połączenia widać na liście połączeń, na karcie okna, na liście okien i na pasku stanu. Opcja **Tło edytora w
-  kolorze połączenia** (**Preferencje › Ogólne**) barwi też tło edytora. W tej samej karcie możesz dodać reguły
+  kolorze połączenia** (**Ustawienia › Ogólne**) barwi też tło edytora. W tej samej karcie możesz dodać reguły
   kolorów według wzorca `użytkownik@baza` (np. `sys@*`) — mają pierwszeństwo przed kolorem środowiska.
 - Na połączeniu **produkcyjnym** polecenia zmieniające dane lub obiekty (DML, DDL, bloki PL/SQL) wymagają
   potwierdzenia w oknie „Zmiany na połączeniu produkcyjnym”.
 - Połączenie **tylko do odczytu** odrzuca przed wysłaniem do bazy wszystko poza zapytaniami i sterowaniem sesją —
   także `SELECT … FOR UPDATE` i bloki PL/SQL. Na pasku stanu okna widać wtedy „tylko odczyt”.
 - Pelikan nigdy sam nie zatwierdza transakcji. Przy zamykaniu okna albo aplikacji z otwartą transakcją pyta, czy
-  zatwierdzić (COMMIT) czy wycofać (ROLLBACK); zachowanie przy wylogowaniu zmienisz w **Preferencje › Ogólne ›
+  zatwierdzić (COMMIT) czy wycofać (ROLLBACK); zachowanie przy wylogowaniu zmienisz w **Ustawienia › Ogólne ›
   Wylogowanie z otwartą transakcją**.
 
 ## Hasła i Touch ID
@@ -101,7 +101,7 @@ zgodą), osobny użytkownik bazy dla agenta i kolumny maskowane. Opisuje je rozd
 Hasła baz i hasła SSH są przechowywane wyłącznie w Pęku kluczy logowania macOS (bez synchronizacji z iCloud). Nie
 trafiają do plików, dzienników, historii poleceń ani argumentów procesów.
 
-W **Preferencje › Oracle › Hasła połączeń** możesz włączyć **Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego
+W **Ustawienia › Oracle › Hasła połączeń** możesz włączyć **Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego
 hasła**. Pelikan zapyta wtedy o potwierdzenie raz na połączenie w czasie działania aplikacji — także wtedy, gdy
 połączenia użyje agent AI.
 
@@ -117,10 +117,10 @@ połączenie zapamiętuje hasło.
 Pelikan obsługuje dwa rodzaje portfela:
 
 - **Magazyn haseł** (Secure External Password Store) — logowanie bez hasła w Pelikanie (`/@alias`). Katalog portfela i
-  katalog konfiguracji Oracle Net wskazujesz w **Preferencje › Oracle › Oracle Net i Oracle Wallet**; Pelikan pokazuje
+  katalog konfiguracji Oracle Net wskazujesz w **Ustawienia › Oracle › Oracle Net i Oracle Wallet**; Pelikan pokazuje
   tam stan portfela (portfel z automatycznym logowaniem `cwallet.sso` jest wymagany). W definicji połączenia wybierz
   uwierzytelnianie *Oracle Wallet (magazyn haseł)*. Pole **Baza** musi być dokładnie aliasem albo connect stringiem
-  zapisanym w portfelu. Zmiany w tej sekcji Preferencji działają po ponownym uruchomieniu Pelikana.
+  zapisanym w portfelu. Zmiany w tej sekcji Ustawień działają po ponownym uruchomieniu Pelikana.
 - **Portfel TLS** (mTLS, np. Autonomous Database) — ustawiany w karcie **Zaawansowane** definicji połączenia.
 
 Hasła z portfela nigdy nie trafiają do Pelikana.
@@ -138,17 +138,17 @@ Hasła z portfela nigdy nie trafiają do Pelikana.
 
 Każde okno ma swoje połączenie, widoczne na pasku stanu. Kliknij je, żeby przełączyć okno na inne połączenie; gdy okno
 ma otwartą transakcję, Pelikan najpierw zapyta o COMMIT albo ROLLBACK. Okno z **przypiętym** połączeniem (📌) nie
-zmienia go, gdy zmienisz połączenie główne; domyślne przypinanie nowych okien włączysz w **Preferencje › Ogólne**.
+zmienia go, gdy zmienisz połączenie główne; domyślne przypinanie nowych okien włączysz w **Ustawienia › Ogólne**.
 
-Tryb sesji (**Preferencje › Ogólne › Tryb sesji**):
+Tryb sesji (**Ustawienia › Ogólne › Tryb sesji**):
 
 - **Multi** (domyślny) — każde okno ma własną sesję bazy, więc długie zapytanie w jednym oknie nie blokuje innych, a
   transakcje okien są niezależne;
 - **Dual** — okna dzielą jedną sesję, a kompilacja ma osobną;
 - **Single** — wszystko w jednej sesji.
 
-Pelikan co 60 sekund sprawdza, czy połączenie żyje (interwał zmienisz w Preferencjach), i reaguje na jego utratę.
-Opcjonalnie zamyka sesje okien bezczynnych dłużej niż zadany czas, jeśli nie mają otwartej transakcji (**Preferencje ›
+Pelikan co 60 sekund sprawdza, czy połączenie żyje (interwał zmienisz w Ustawieniach), i reaguje na jego utratę.
+Opcjonalnie zamyka sesje okien bezczynnych dłużej niż zadany czas, jeśli nie mają otwartej transakcji (**Ustawienia ›
 Oracle**).
 
 Gdy zapytania nie da się przerwać (**Przerwij**, ⌘.), użyj **Sesja › Zakończ sesję okna (Kill)** — Pelikan zakończy

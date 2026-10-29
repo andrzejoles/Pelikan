@@ -9,7 +9,7 @@ Planfenster öffnen Sie über **Datei › Neu › Explain Plan Window**; eine fe
 
 ![Planfenster — Ansicht „Diagramm“](../img/plan-diagram.png)
 
-- **Erklären** aktualisiert den Plan für den Text im Editor des Planfensters, **Optimizer-Ziel** (*Wie in der Sitzung*,
+- **Plan aktualisieren** berechnet den Plan für den Text im Editor des Planfensters neu, **Optimizer-Ziel** (*Wie in der Sitzung*,
   ALL_ROWS oder FIRST_ROWS_n) fügt einen Hint hinzu.
 - Ansichten: **Baum** (Operationen mit Kosten, Zeilenzahl, Bytes, Zeit, Ausführungsreihenfolge sowie Zugriffs- und
   Filterprädikaten), **Diagramm** (ein Knoten je Operation mit Kosten, Kardinalität und Schrittnummer), **Flame Graph**

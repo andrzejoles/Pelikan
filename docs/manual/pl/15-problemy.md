@@ -11,7 +11,7 @@ ochrona** i kliknij **Otwórz mimo to** (zobacz rozdział *Wprowadzenie*).
 
 - Pobierz Instant Client dla macOS w wersji **ARM64** (Basic albo Basic Light) i rozpakuj go albo zainstaluj według
   instrukcji Oracle.
-- Wskaż katalog z plikiem `libclntsh.dylib` w **Preferencje › Oracle › Oracle Instant Client** i uruchom Pelikana
+- Wskaż katalog z plikiem `libclntsh.dylib` w **Ustawienia › Oracle › Oracle Instant Client** i uruchom Pelikana
   ponownie.
 - Jeśli klient jest w folderze Pobrane, a macOS zapytał o dostęp Pelikana do tego folderu i odmówiłeś, zmień to w
   **Ustawienia systemowe › Prywatność i ochrona › Pliki i foldery** albo przenieś klienta w inne miejsce.
@@ -21,12 +21,12 @@ ochrona** i kliknij **Otwórz mimo to** (zobacz rozdział *Wprowadzenie*).
 
 - Kliknij **Testuj** w definicji połączenia — komunikat bazy albo klienta Oracle wskaże przyczynę.
 - **ORA-12154 / TNS:** alias nie został znaleziony — sprawdź katalog konfiguracji (karta **Zaawansowane** albo
-  **Preferencje › Oracle › Oracle Net i Oracle Wallet**) albo użyj adresu `host:port/usługa`.
+  **Ustawienia › Oracle › Oracle Net i Oracle Wallet**) albo użyj adresu `host:port/usługa`.
 - **ORA-01017:** błędne hasło — Pelikan zapyta o nie ponownie; zaznacz zapamiętanie, żeby zastąpić hasło w Pęku
   kluczy.
 - **ORA-28001:** hasło wygasło — Pelikan pokaże okno zmiany hasła.
 - **Oracle Wallet:** pole **Baza** musi być dokładnie aliasem zapisanym w portfelu, a portfel musi mieć plik
-  `cwallet.sso` (automatyczne logowanie). Stan portfela widać w **Preferencje › Oracle**. Zmiany w tej sekcji działają
+  `cwallet.sso` (automatyczne logowanie). Stan portfela widać w **Ustawienia › Oracle**. Zmiany w tej sekcji działają
   po ponownym uruchomieniu.
 - **Tunel SSH:** Pelikan używa systemowego `ssh` — sprawdź w Terminalu, czy `ssh użytkownik@bastion.example.com`
   działa (klucz w agencie SSH, znany host). Adres bazy podaj tak, jak widzi go serwer SSH.
@@ -40,7 +40,7 @@ ochrona** i kliknij **Otwórz mimo to** (zobacz rozdział *Wprowadzenie*).
 - ⌃F8, ⌃F2, ⌃F3 i inne skróty z ⌃ mogą być zajęte przez macOS (**Ustawienia systemowe › Klawiatura › Skróty
   klawiszowe**). Użyj odpowiednika z ⌘ (np. ⇧⌘↩ zamiast ⌃F8) albo wyłącz skrót systemowy.
 - ⌃Spacja domyślnie przełącza źródło wprowadzania w macOS — podpowiedź kodu wywołasz przez ⌥⎋.
-- Sprawdź skrót komendy w palecie komend (⇧⌘P) albo w **Preferencje › Klawiatura**.
+- Sprawdź skrót komendy w palecie komend (⇧⌘P) albo w **Ustawienia › Klawiatura**.
 
 ### Zapytanie trwa zbyt długo
 
@@ -82,7 +82,7 @@ bazy, np. `GRANT EXECUTE ON SYS.DBMS_WORKLOAD_REPOSITORY TO SCOTT;`.
 ### Pelikan zamknął się nieoczekiwanie
 
 Przy następnym uruchomieniu Pelikan zaproponuje odzyskanie niezapisanych okien (także później: **Plik › Odzyskaj
-okna…**), jeśli w **Preferencje › Narzędzia** jest włączone zachowywanie niezapisanych okien. Zmiany plików znajdziesz
+okna…**), jeśli w **Ustawienia › Narzędzia** jest włączone zachowywanie niezapisanych okien. Zmiany plików znajdziesz
 też w historii lokalnej (**Plik › Historia lokalna**).
 
 ### Dziennik aplikacji
@@ -93,7 +93,7 @@ otwiera go w Konsoli macOS; plik leży w `~/Library/Logs/Pelikan`, a te same wpi
 (podsystem Pelikana w Konsoli). Pliki mają najwyżej 2 MB, Pelikan trzyma pięć ostatnich.
 
 Dziennik nigdy nie zawiera haseł, treści poleceń SQL ani danych z bazy. Nazwy połączeń, serwerów, obiektów i ścieżki
-plików są domyślnie ukryte albo zastąpione skrótem (te same nazwy mają ten sam skrót). W **Preferencje › Ogólne ›
+plików są domyślnie ukryte albo zastąpione skrótem (te same nazwy mają ten sam skrót). W **Ustawienia › Ogólne ›
 Dziennik aplikacji** wybierzesz zakres wpisów (*Ostrzeżenia i błędy*, *Zdarzenia*, *Szczegóły — diagnostyka*) i
 możesz włączyć jawne nazwy — przydaje się, gdy szukasz przyczyny problemu na własnym komputerze.
 
@@ -145,5 +145,5 @@ sterowniki) do pliku tekstowego. Przed wysłaniem przejrzyj plik, zwłaszcza gdy
 ## Słownik
 
 Polskie nazwy okien i pojęć w Pelikanie oraz ich odpowiedniki w PL/SQL Developer (np. *Okno SQL* — SQL Window,
-*Przeglądarka obiektów* — Object Browser, *Zatwierdź zmiany (Post)* — Post changes) zawiera słownik terminów:
+*Przeglądarka obiektów* — Object Browser, *Zapisz zmiany w bazie (Post)* — Post changes) zawiera słownik terminów:
 [docs/GLOSSARY.md](https://github.com/andrzejoles/Pelikan/blob/main/docs/GLOSSARY.md).

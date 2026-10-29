@@ -38,15 +38,15 @@ w całej bazie.
   - konkretny schemat.
   Folder **Katalogi** (katalogi Oracle nie mają właściciela schematu) pokazuje przy dostępie do widoków DBA wszystkie
   katalogi w każdym trybie, a bez niego — te z nadanym uprawnieniem.
-  Zakres po połączeniu ustawisz w **Preferencje › Object Browser › Po połączeniu pokazuj**.
+  Zakres po połączeniu ustawisz w **Ustawienia › Przeglądarka obiektów › Po połączeniu pokazuj**.
 - **Filtr** pod wyborem użytkownika: część nazwy (szukana w dowolnym miejscu nazwy — `emp` znajdzie `EMP` i `T_EMP_HIST`),
-  wzorzec z `%` (np. `EMP%` — tylko początek nazwy; zachowanie bez `%` zmienisz w **Preferencje › Object Browser**), kilka wzorców po przecinku, `status=invalid` (tylko
-  niepoprawne obiekty) albo `source=tekst` (obiekty, których źródło zawiera tekst).
+  wzorzec z `%` (np. `EMP%` — tylko początek nazwy; zachowanie bez `%` zmienisz w **Ustawienia › Przeglądarka obiektów**), kilka wzorców po przecinku, `status=invalid` (tylko
+  nieprawidłowe obiekty) albo `source=tekst` (obiekty, których źródło zawiera tekst).
 - Rozwinięcie obiektu pokazuje jego elementy: kolumny z typami, więzy, indeksy, wyzwalacze, partycje, podprogramy,
   atrybuty, a także zależności (**Zależy od**, **Używany przez**).
 - Folder **Ostatnie** zawiera ostatnio otwierane obiekty.
-- Obiekty niepoprawne mają czerwony znacznik.
-- **Odśwież** w menu (albo **Narzędzia › Obiekt › Odśwież Object Browser**) czyści pamięć podręczną słownika i
+- Obiekty nieprawidłowe mają czerwony znacznik.
+- **Odśwież** w menu (albo **Narzędzia › Obiekt › Odśwież Przeglądarkę obiektów**) czyści pamięć podręczną słownika i
   przeładowuje drzewo.
 
 Drzewo działa płynnie także w schematach z dziesiątkami tysięcy obiektów — słownik jest czytany w tle.
@@ -81,19 +81,19 @@ kolejkę**, **Dodaj do folderu…** i **Uruchom testy utPLSQL**.
 
 ### Przeciąganie
 
-Przeciągnij obiekt do edytora, żeby wstawić jego nazwę. Z klawiszem ⌃ (albo gdy w Preferencjach wybrano „Pytaj”) po
+Przeciągnij obiekt do edytora, żeby wstawić jego nazwę. Z klawiszem ⌃ (albo gdy w Ustawieniach wybrano „Pytaj”) po
 upuszczeniu pojawi się menu: nazwa, nazwa z właścicielem, lista kolumn, SELECT, INSERT, UPDATE, DELETE, wywołanie albo
-DDL. Upuszczenie obiektu na pusty obszar okien wykonuje akcję z **Preferencje › Object Browser** (np. Edytuj albo
+DDL. Upuszczenie obiektu na pusty obszar okien wykonuje akcję z **Ustawienia › Przeglądarka obiektów** (np. Edytuj albo
 Pokaż dane). Przeciągnięcie folderu wstawia nazwy jego obiektów po przecinku.
 
 ### Filtry i foldery własne
 
-W **Preferencje › Object Browser** ustawisz:
+W **Ustawienia › Przeglądarka obiektów** ustawisz:
 
-- widoczne foldery i ich kolejność oraz akcję dwukliku dla każdego typu;
+- widoczne foldery i ich kolejność oraz akcję dwukrotnego kliknięcia dla każdego typu;
 - **Filtry nazwane** — warunek `WHERE` i `ORDER BY` na widoku obiektów (alias `o`, zmienne `:browser_user` i
   `&browser_filter`), opcjonalnie dla wybranego użytkownika i jako filtr domyślny. Filtr zastosujesz przez **Narzędzia
-  › Object Browser › Filtr nazwany…**;
+  › Przeglądarka obiektów › Filtr nazwany…**;
 - **Foldery użytkownika** — własne grupy obiektów z listy albo z zapytania (kolumny `OWNER`, `OBJECT_NAME`,
   `OBJECT_TYPE`), z kolorem, folderem nadrzędnym i wzorcem połączeń, na których mają być widoczne.
 
@@ -101,9 +101,9 @@ W **Preferencje › Object Browser** ustawisz:
 
 - **Narzędzia › Znajdź obiekty bazy…** (⇧⌘O) przeszukuje źródła PL/SQL (także moduły MLE), zapytania widoków,
   definicje tabel i nazwy obiektów. Obsługuje wyrażenia regularne, całe słowa i wielkość liter, działa w tle i można
-  je przerwać. Dwuklik na wyniku otwiera obiekt w linii z trafieniem. Kryteria możesz zapisać, a wynik wyeksportować
+  je przerwać. Dwukrotne kliknięcie wyniku otwiera obiekt w linii z trafieniem. Kryteria możesz zapisać, a wynik wyeksportować
   do CSV.
-- **Narzędzia › Kompiluj niepoprawne obiekty…** pokazuje niepoprawne obiekty schematu i kompiluje je w kolejności
+- **Narzędzia › Kompiluj nieprawidłowe obiekty…** pokazuje nieprawidłowe obiekty schematu i kompiluje je w kolejności
   zależności, aż przestanie to cokolwiek zmieniać; błędy kompilacji są na liście.
 
 ## Edytor tabeli
@@ -165,7 +165,7 @@ starą albo nową nazwą, a **Kosz › Opróżnij kosz…** usuwa obiekty trwale
 
 W oknie diagramu: **Powiązane** dodaje tabele połączone kluczami obcymi, **Zależności** — linie zależności,
 **Notatka** i **Grupa** porządkują rysunek, **Kolumny** pokazuje lub ukrywa kolumny, **Siatka** włącza przyciąganie do
-siatki 8 px, a powiększenie zmienisz od 10 do 200%. Dwuklik na linii dodaje punkt załamania, ⌥+klik go usuwa. Diagram
+siatki 8 px, a powiększenie zmienisz od 10 do 200%. Dwukrotne kliknięcie linii dodaje punkt załamania, ⌥+klik go usuwa. Diagram
 zapiszesz jako plik `.pdd`, zaktualizujesz z bazy (**Aktualizuj z bazy**), wydrukujesz albo wyeksportujesz do PNG lub
 PDF.
 

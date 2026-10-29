@@ -7,20 +7,20 @@ AI.
 
 - Hasła baz danych, hasła SSH (tunele i cele Pro*C) i hasła kluczy SSH są przechowywane **wyłącznie w Pęku kluczy
   macOS** — w pęku logowania, bez synchronizacji z iCloud, dostępne tylko przy odblokowanym Macu.
-- Hasła **nigdy** nie trafiają do plików Pelikana (definicji połączeń, preferencji, worksetów), dzienników,
+- Hasła **nigdy** nie trafiają do plików Pelikana (definicji połączeń, ustawień, worksetów), dzienników,
   historii poleceń, argumentów procesów ani zmiennych środowiska. Polecenia z hasłami (`CONNECT`, `ALTER USER …
   IDENTIFIED BY`, `CREATE DATABASE LINK`) nie są zapisywane w historii poleceń.
 - Wyjątek, tylko na Twoje wyraźne polecenie: **Eksportuj połączenia z hasłami…** zapisuje hasła do pliku (zaszyfrowane
   frazą albo jawnym tekstem) po potwierdzeniu Touch ID albo hasłem Maca — zobacz rozdział **Połączenia**, „Eksport
   i import definicji”. Agent AI nie ma tej komendy.
 - Hasło niezapamiętane w Pęku kluczy jest trzymane tylko w pamięci do zamknięcia aplikacji.
-- Opcja **Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego hasła** (**Preferencje › Oracle › Hasła
+- Opcja **Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego hasła** (**Ustawienia › Oracle › Hasła
   połączeń**) wymaga potwierdzenia raz na połączenie w czasie działania aplikacji — także gdy połączenia używa agent
   AI.
 - Hasło SSH trafia do programu `ssh` przez jednorazową kolejkę dostępną tylko dla Twojego konta, a nie przez
   argumenty, środowisko czy plik.
 - Hasła z portfela Oracle Wallet nigdy nie trafiają do Pelikana — logowaniem zajmuje się klient Oracle.
-- Eksport definicji połączeń, eksport preferencji, definicje zadań, przenoszeń i narzędzi użytkownika, skrypty utPLSQL
+- Eksport definicji połączeń, eksport ustawień, definicje zadań, przenoszeń i narzędzi użytkownika, skrypty utPLSQL
   dla CI i parametry startowe nie zawierają haseł.
 
 ## Ochrona baz przed pomyłkami
@@ -64,7 +64,7 @@ serwerami — wysyłają tam to, co agent przeczyta w Pelikanie.
 
 ## Dane na dysku
 
-Dane Pelikana są w katalogu `~/Library/Application Support/Pelikan`: definicje połączeń (bez haseł), preferencje,
+Dane Pelikana są w katalogu `~/Library/Application Support/Pelikan`: definicje połączeń (bez haseł), ustawienia,
 historia poleceń, worksety i migawki do odzyskania okien (mogą zawierać tekst niezapisanych okien), historia lokalna
 plików, raporty, koszyki, dziennik agentów. Pliki z treścią okien i dziennika są zapisywane z prawami dostępu tylko
 dla Twojego konta. Jeśli Twój Mac jest współdzielony, pamiętaj, że osoba z dostępem do Twojego konta macOS ma dostęp

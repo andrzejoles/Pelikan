@@ -44,7 +44,7 @@ zaznaczonego pakietu, procedury albo użytkownika uruchomisz też przez **Narzę
 ## Eksplorator testów
 
 **Widok › Eksplorator testów utPLSQL** pokazuje drzewo suit, kontekstów i testów bieżącego użytkownika z wynikiem
-ostatniego przebiegu. Drzewo odświeża się po kompilacji; dwuklik na teście otwiera jego adnotację w specyfikacji.
+ostatniego przebiegu. Drzewo odświeża się po kompilacji; dwukrotne kliknięcie testu otwiera jego adnotację w specyfikacji.
 Zaznaczone testy uruchomisz przyciskiem **Uruchom** albo **Uruchom z pokryciem**.
 
 ## Okno wyników
