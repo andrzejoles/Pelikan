@@ -1627,7 +1627,9 @@ final class CodeTextView: NSTextView {
         insertText(plan.enter.text, replacementRange: selectedRange())
         // Krok 2 tylko na oczekiwanym tekście (inaczej coś zmieniło go po drodze — formatowanie pominięte).
         guard let format = plan.format, plan.expectedRange.upperBound <= textLength,
-              (string as NSString).substring(with: NSRange(location: plan.expectedRange.lowerBound, length: plan.expectedRange.count)) == plan.expected
+              // Jednostki UTF-16 (`==` na String uznaje „é” i „e\u{301}” za równe — zakres kroku 2 byłby przesunięty).
+              (string as NSString).substring(with: NSRange(location: plan.expectedRange.lowerBound, length: plan.expectedRange.count))
+                .utf16.elementsEqual(plan.expected.utf16)
         else { return true }
         breakUndoCoalescing()
         // Grupa cofania zdarzenia (Enter) zamknięta, formatowanie w nowej — zamyka ją menedżer cofania na końcu zdarzenia.

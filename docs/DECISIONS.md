@@ -3095,6 +3095,11 @@ wydanie). Poprawione:
   kontekst spadał do samej wielkości liter); linia rozwinięta skrótem AutoReplace przy Enterze formatowana jak edytowana;
   krok 0 porównywany w jednostkach UTF-16; wcięcie Smart zachowuje tabulatory wcięcia formatera; jedna funkcja kolumn
   (`Beautifier.columns`) i jedno API AutoReplace (`apply` → `Match` z `setsCursor`).
+- **Czwarte przejście:** punkty z jednego przejścia sortowane przed scaleniem (ORDER/MAP dopisany dopiero przy MEMBER);
+  przesunięcie Smart liczone w kolumnach formatera; wielkość liter słowa przy Enter tylko w linii edytowanej; kontrola
+  kroku 2 w jednostkach UTF-16 (`expectedStart` zamiast zapamiętanego zakresu); stan przełączników także w menu „»”
+  i listach wstążki; tło włączonego przełącznika po zmianie wyglądu i koloru akcentu; panel wartości włączony tylko przy
+  siatce; formaty kopiowania i eksportu z jednej listy także w menu kontekstowym siatki i narzędziu eksportu.
 - **Stan przełączników z trzech źródeł (rozstrzygnięte):** `Command.state` opisuje stan komendy dla aktywnego kontekstu
   (menu, wstążka, pasek narzędzi); pasek wyniku należy do konkretnej siatki, więc stan edycji czyta z jej modelu
   (`localState`), a widok rekordu jest stanem samego widoku (`setState`). Przekazywanie siatki do `Command.state`

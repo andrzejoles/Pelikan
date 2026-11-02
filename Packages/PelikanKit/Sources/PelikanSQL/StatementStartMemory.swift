@@ -139,8 +139,11 @@ public struct StatementStartMemory: Sendable, Equatable {
     /// pamięć ma już punkty późniejszej); punkt w znanym już miejscu zostaje bez zmian.
     /// W jednym miejscu punkt podprogramu ma pierwszeństwo przed punktem co 200 linii (ten sam stan, ale tylko on
     /// wyznacza kontekst od podprogramu).
-    mutating func merge(_ new: [Checkpoint]) {
-        guard !new.isEmpty else { return }
+    mutating func merge(_ unsorted: [Checkpoint]) {
+        guard !unsorted.isEmpty else { return }
+        // Przejście dopisuje punkt ORDER/MAP dopiero przy słowie MEMBER — może trafić za późniejszy punkt co 200 linii;
+        // kolejność położeń (w jednym miejscu punkt podprogramu po zwykłym, żeby go zastąpił).
+        let new = unsorted.sorted { $0.position < $1.position || $0.position == $1.position && !$0.subprogram && $1.subprogram }
         // Zwykle: nowe punkty za wszystkimi znanymi (także przy pustej pamięci) — dopisanie z łączeniem tego samego miejsca.
         if checkpoints.last.map({ l in new.allSatisfy { $0.position > l.position } }) ?? true {
             for c in new { appendOrMerge(c) }

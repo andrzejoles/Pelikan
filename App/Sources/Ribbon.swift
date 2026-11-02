@@ -320,6 +320,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             item.representedObject = raw
             item.toolTip = d.summary
             item.isEnabled = workspace.isEnabled(d.id)
+            if let on = workspace.toggleState(d.id) { item.state = on ? .on : .off }
             if let symbol = CommandSymbols.symbol(for: raw) {
                 item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
             }
@@ -538,6 +539,9 @@ final class RibbonButton: NSControl {
         super.init(frame: .zero)
         wantsLayer = true
         layer?.cornerRadius = 5
+        // Zmiana koloru akcentu w Ustawieniach systemowych — tło włączonego przełącznika w nowym kolorze.
+        NotificationCenter.default.addObserver(self, selector: #selector(systemColorsChanged),
+                                               name: NSColor.systemColorsDidChangeNotification, object: nil)
         let config = NSImage.SymbolConfiguration(pointSize: style == .large ? 22 : 13, weight: .regular)
         imageView.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.withSymbolConfiguration(config)
         imageView.contentTintColor = .labelColor
@@ -592,14 +596,25 @@ final class RibbonButton: NSControl {
         }
     }
 
+    /// Kolory dynamiczne (akcent, etykieta) zamieniane na `cgColor` w bieżącym wyglądzie — po zmianie trybu jasny/ciemny
+    /// albo koloru akcentu przeliczane od nowa (`viewDidChangeEffectiveAppearance`).
     private func updateBackground() {
         let alpha: CGFloat = pressed ? 0.22 : hovering ? 0.12 : 0
-        if alpha == 0, toggleState == true {
-            layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.2).cgColor
-            return
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            if alpha == 0, toggleState == true {
+                layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.2).cgColor
+            } else {
+                layer?.backgroundColor = alpha == 0 ? nil : NSColor.labelColor.withAlphaComponent(alpha).cgColor
+            }
         }
-        layer?.backgroundColor = alpha == 0 ? nil : NSColor.labelColor.withAlphaComponent(alpha).cgColor
     }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateBackground()
+    }
+
+    @objc private func systemColorsChanged() { updateBackground() }
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()

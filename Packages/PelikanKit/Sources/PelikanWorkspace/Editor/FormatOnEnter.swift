@@ -41,10 +41,12 @@ public enum FormatOnEnter {
         public var enter: Edit
         /// Krok 2 — formatowanie (zakres w tekście po kroku 1); nil — formatowanie niczego nie zmienia.
         public var format: Edit?
-        /// Tekst w zakresie `expectedRange` oczekiwany po kroku 1 (opuszczana linia, nowa linia i jej wcięcie) — inny
-        /// (coś zmieniło tekst po drodze) — krok 2 pominięty.
+        /// Tekst oczekiwany po kroku 1 od `expectedStart` (opuszczana linia, nowa linia i jej wcięcie) — inny (coś
+        /// zmieniło tekst po drodze) — krok 2 pominięty.
         public var expected: String
-        public var expectedRange: Range<Int>
+        public var expectedStart: Int
+        /// Zakres `expected` w tekście po kroku 1 (UTF-16).
+        public var expectedRange: Range<Int> { expectedStart..<(expectedStart + expected.utf16.count) }
         /// Kursor po wszystkich krokach: początek nowej linii za wcięciem.
         public var caret: Int
     }
@@ -68,7 +70,9 @@ public enum FormatOnEnter {
         let original = ns.substring(with: NSRange(location: lineStart, length: caret - lineStart))
         // Krok 0: wielkość liter słowa kluczowego przed kursorem i AutoReplace (jak w zwykłym Enterze).
         var left = original
-        if let cased = keywordCaseLine(left, keywordCase) { left = cased }
+        // Wielkość liter słowa przed kursorem tylko w linii edytowanej (słowo właśnie wpisane) — nieedytowany kod
+        // zostaje bez zmian i nie trafia do zmienionych zakresów (D205).
+        if lineEdited, let cased = keywordCaseLine(left, keywordCase) { left = cased }
         var replacedByAutoReplace = false
         if let r = autoReplaceLine(left, rules: autoReplace, text: ns, lineStart: lineStart, caret: caret) {
             guard let replaced = r else { return nil }   // zamiana z miejscem kursora zużywa Enter
@@ -89,7 +93,7 @@ public enum FormatOnEnter {
         if left.contains(where: \.isNewline) {
             let last = String(left.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).last ?? "")
             let enter = Edit(range: at..<at, text: "\n" + SmartIndent.newlineIndent(lineBeforeCaret: last, mode: indentMode, unit: unit))
-            return Plan(prepare: prepare, enter: enter, format: nil, expected: "", expectedRange: at..<at,
+            return Plan(prepare: prepare, enter: enter, format: nil, expected: "", expectedStart: at,
                         caret: at + (enter.text as NSString).length)
         }
         let context = memory.context(forLineAt: lineStart, in: ns)
@@ -105,14 +109,12 @@ public enum FormatOnEnter {
         // (wcięcie nowej linii od formatera przesunięte o tyle samo).
         if indentMode == .smart, SmartIndent.leading(line) == SmartIndent.leading(left),
            let fixed = SmartIndent.reindentClosingLine(line, previous: previousLine(ns, before: lineStart), unit: unit) {
-            // Przesunięcie w kolumnach (tabulator do następnej wielokrotności `tabWidth`), nie w znakach.
-            let shift = columns(SmartIndent.leading(fixed), tabWidth: tabWidth) - columns(SmartIndent.leading(line), tabWidth: tabWidth)
+            // Przesunięcie i wcięcie w kolumnach formatera: tabulator ma tyle kolumn co w formaterze (jednostka wcięcia przy
+            // `useTabs`, inaczej `tabWidth` — jak kolumny dokumentu w `Beautifier.formatOnEnter`), spacja — jedną.
+            let width = options.useTabs ? max(1, options.indent) : max(1, tabWidth)
+            let shift = Beautifier.columns(SmartIndent.leading(fixed), tabWidth: width) - Beautifier.columns(SmartIndent.leading(line), tabWidth: width)
             if let i = formatterIndent {
-                // Wcięcie formatera w jego kolumnach (tabulator = jednostka wcięcia przy `useTabs`, jak w formaterze),
-                // przesunięcie — w kolumnach dokumentu.
-                let width = options.useTabs ? max(1, options.indent) : max(1, tabWidth)
-                let docWidth = max(1, tabWidth)
-                let target = max(0, columns(i, tabWidth: width) + shift * width / docWidth)
+                let target = max(0, Beautifier.columns(i, tabWidth: width) + shift)
                 // Tabulatory: z ustawienia formatera (`useTabs`), inaczej tyle, ile było ich we wcięciu formatera (np. z
                 // linii polecenia wciętej tabulatorem) — bez mieszania stylu; reszta spacjami.
                 let tabs = options.useTabs && options.indent > 0 ? target / width : min(i.filter { $0 == "\t" }.count, target / width)
@@ -128,11 +130,10 @@ public enum FormatOnEnter {
         let expected = left + "\n" + auto + restIndent
         let indent = formatterIndent ?? SmartIndent.newlineIndent(lineBeforeCaret: line, mode: indentMode, unit: unit)
         let replacement = line + "\n" + indent
-        let range = lineStart..<(lineStart + (expected as NSString).length)
         // Tylko różniący się fragment: nieedytowana linia z innym wcięciem nowej linii nie jest oznaczana jako zmieniona.
         let format = Edit.minimal(at: lineStart, old: expected, new: replacement)
         let caretAfter = lineStart + ((format == nil ? left + "\n" + auto : replacement) as NSString).length
-        return Plan(prepare: prepare, enter: enter, format: format, expected: expected, expectedRange: range, caret: caretAfter)
+        return Plan(prepare: prepare, enter: enter, format: format, expected: expected, expectedStart: lineStart, caret: caretAfter)
     }
 
     /// Wielkość liter słowa kluczowego kończącego tekst linii przed kursorem (Ustawienia › Edytor › Wielkość liter słów
@@ -168,7 +169,6 @@ public enum FormatOnEnter {
     }
 
     /// Szerokość odstępów w kolumnach.
-    static func columns(_ s: String, tabWidth: Int) -> Int { Beautifier.columns(s, tabWidth: tabWidth) }
 
     /// Poprzednia niepusta linia przed `lineStart` (wcięcie Smart).
     static func previousLine(_ ns: NSString, before lineStart: Int) -> String? {

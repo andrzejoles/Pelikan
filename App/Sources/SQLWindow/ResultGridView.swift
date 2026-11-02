@@ -559,7 +559,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             item.representedObject = id
         }
         let copyAs = NSMenu()
-        for f in [ExportFormat.csv, .html, .xml, .sql] {
+        for f in GridCommands.copyAsFormats {
             let item = copyAs.addItem(withTitle: f.displayName, action: #selector(copyAsFormat(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = f.rawValue

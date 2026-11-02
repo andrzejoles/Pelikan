@@ -314,6 +314,17 @@ struct BeautifierEnterTests {
         #expect(memory.checkpoints.filter { $0.position == q }.count == 1 && memory.checkpoints.first { $0.position == q }?.subprogram == true)
     }
 
+    @Test("pamięć: punkty z przejścia nie po kolei (ORDER/MAP dopisany przy MEMBER) — scalane rosnąco")
+    func mergeUnsorted() {
+        typealias C = StatementStartMemory.Checkpoint
+        let r = StatementStartMemory.Region()
+        var m = StatementStartMemory()
+        m.merge([C(position: 10, statement: 0, region: r, unit: nil, subprogram: false)])
+        m.merge([C(position: 400, statement: 0, region: r, unit: nil, subprogram: false),
+                 C(position: 300, statement: 0, region: r, unit: nil, subprogram: true)])
+        #expect(m.checkpoints.map(\.position) == [10, 300, 400])
+    }
+
     @Test("pamięć: linia za „/” bloku z punktami kontrolnymi — koniec bloku zapamiętany, bez ponownego leksowania bloku")
     func lineAfterBlockEnd() {
         var s = "create or replace package body a is\n"

@@ -113,7 +113,6 @@ extension Beautifier {
         let placed = tr.placed
 
         /// Kolumna w znakach (jak kolumny formatera — `Character`, nie jednostki UTF-16: emoji, znaki złożone).
-        /// Kolumna w znakach (jak kolumny formatera — `Character`, nie jednostki UTF-16: emoji, znaki złożone).
         /// Szybko jednostka po jednostce, dopóki znak jest na pewno samodzielny (ASCII i Latin poniżej U+0300, litery
         /// greckie i cyrylicy); dalej — znaki od poprzedniej jednostki (mogła się łączyć z następną). Wyniki zapamiętane.
         var columnCache: [Int: Int] = [:]

@@ -129,6 +129,8 @@ struct FormatOnEnterTests {
         let (t2, p2) = plan("select a from t where|", keywordCase: .upper)
         let k = try #require(p2)
         #expect(k.prepare == FormatOnEnter.Edit(range: 16..<21, text: "WHERE"))
+        // Linia nieedytowana — słowo kluczowe bez zmiany wielkości liter (nie trafia do zmienionych zakresów).
+        #expect(try #require(plan("select a from t where|", keywordCase: .upper, edited: false).plan).prepare == nil)
         #expect(run(t2, k).final == "SELECT a FROM t WHERE\n       ")
     }
 
@@ -213,7 +215,7 @@ struct FormatOnEnterTests {
         let (t2, p2) = plan("begin\n\tif a then\n\t\tx := 1;\n\t\tend if;|", mode: .smart, edited: false, unit: "\t")
         let final = run(t2, try #require(p2)).final
         #expect(final.hasPrefix("begin\n\tif a then\n\t\tx := 1;\n\tend if;\n"))
-        #expect(FormatOnEnter.columns(String(final.split(separator: "\n", omittingEmptySubsequences: false).last!), tabWidth: 2) == 2)
+        #expect(Beautifier.columns(String(final.split(separator: "\n", omittingEmptySubsequences: false).last!), tabWidth: 2) == 2)
         // Formater z tabulatorami (`useTabs`, wcięcie 4) przy tabulatorze edytora 2: nowa linia po END IF — jeden tabulator.
         var o = BeautifierOptions()
         o.useTabs = true

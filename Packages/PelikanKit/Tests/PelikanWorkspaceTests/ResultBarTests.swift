@@ -34,9 +34,9 @@ struct ResultBarTests {
     @Test("stan przełączników z rejestru komend: edycja danych, panel wartości, formatowanie przy Enter")
     func toggleStates() {
         #expect(ws.toggleState("grid.edit") == false)
-        #expect(ws.toggleState("grid.valuePanel") == ws.valuePanelVisible)
-        ws.valuePanelVisible.toggle()
-        #expect(ws.toggleState("grid.valuePanel") == ws.valuePanelVisible)
+        // Panel wartości włączony tylko przy siatce wyniku — bez wyniku wyłączony niezależnie od ustawienia widoczności.
+        ws.valuePanelVisible = true
+        #expect(ws.toggleState("grid.valuePanel") == false)
         #expect(ws.toggleState("edit.formatOnEnter") == ws.settings.beautifier.formatOnEnter)
         #expect(ws.toggleState("grid.export") == nil)
     }

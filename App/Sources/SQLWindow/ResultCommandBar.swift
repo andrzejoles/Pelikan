@@ -284,6 +284,8 @@ final class ResultCommandBar: NSView {
         item.representedObject = raw
         item.toolTip = d.summary
         item.isEnabled = workspace.isEnabled(d.id)
+        // Stan przełącznika także w menu „»” i listach (jak na przycisku).
+        if let on = localState[raw]?() ?? workspace.toggleState(d.id) { item.state = on ? .on : .off }
         if let symbol = CommandSymbols.symbol(for: raw) { item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil) }
         if let chord = workspace.keymap.chords(for: d.id).first(where: { MenuBuilder.keyEquivalent(for: $0) != nil }),
            let (key, mask) = MenuBuilder.keyEquivalent(for: chord) {
