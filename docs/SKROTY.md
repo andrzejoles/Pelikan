@@ -131,6 +131,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zamień wszystko | `edit.replaceAll` |  |  | Brak | PD-EDIT-008 |
 | Przejdź do linii… | `edit.gotoLine` | ⌃G, ⌘L | ⌘L | Za zgodą | PD-EDIT-010 |
 | Formatuj kod PL/SQL | `edit.beautify` | ⇧⌘F | ⇧⌘F | Za zgodą | PD-BEAU-002 |
+| Formatuj linię przy Enter | `edit.formatOnEnter` |  |  | Brak | PD-BEAU-003 |
 | Pokaż podpowiedzi kodu | `edit.codeAssistant` | ⌃Spacja † | ⌥⎋, ⌃Spacja | Brak | PD-CA-001 |
 | Odśwież podpowiedzi kodu | `edit.refreshCodeAssistant` |  |  | Brak | PD-CA-009 |
 | Zwiń blok | `edit.fold` | ⌥⌘← | ⌥⌘← | Brak | PD-EDIT-013 |

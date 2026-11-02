@@ -121,6 +121,7 @@ thousands of lines.
 | Uppercase / lowercase | ⌥⌘U / ⌥⇧⌘U | Edit › Selection |
 | Increase / decrease indent | ⌘] / ⌘[ | Edit › Selection |
 | Format PL/SQL code | ⇧⌘F | Edit |
+| Format line on Enter (on / off) | — (assignable) | Edit, toolbar |
 | Find and replace | ⌘F | Edit |
 | Find next / previous | ⌘G / ⇧⌘G | Edit |
 | Go to line | ⌘L | Edit |
@@ -154,6 +155,19 @@ can run automatically after opening a source from the database, before compilati
 the `-- NoFormat Start` and `-- NoFormat End` comments stays unchanged. Formatting never changes the meaning of the
 code.
 
+**Formatting while typing.** The formatter changes existing code only on request, but lays out new code as you type:
+in SQL, program and test windows Enter formats the line you leave — letter case of keywords and identifiers, spacing
+around operators and commas, and a line starting with a clause word (`FROM`, `WHERE`, `ORDER BY`, `JOIN`…), `AND`/`OR`,
+`END`, `ELSE`, `EXCEPTION` or `)` is aligned to the “river” and the structure of the statement — and indents the new
+line: under the first list item after a comma, one level deeper after `BEGIN`, `THEN`, `LOOP`, the subquery body after
+`(`. Text never moves between lines, alignment typed in declarations stays, and comments, multi-line literals,
+conditional compilation `$IF … $END`, Java/JavaScript code and SQL*Plus commands are left unchanged; a line with an
+unclosed parenthesis only gets its letter case. Only a line changed since the file was opened, saved or reloaded is formatted — an existing line you have not edited
+stays as it is (the new line only gets the indent); Enter at the start of a line or in its indentation is a plain Enter,
+and ⌥↩ inserts a new line without indent or formatting. The first ⌘Z undoes just the formatting, the second the Enter. Turn it
+on and off with the wand switch on the toolbar (top right), in **Edit › Format line on Enter**, on the ribbon (**Edit**
+tab) or in **Settings › Formatter › While typing**; the SQL*Plus console does not format.
+
 The **Settings › Formatter** tab has the groups **Layout**, **Lists and commas** (separately SELECT/INTO/FROM lists,
 UPDATE … SET, GROUP BY and ORDER BY, parameter declarations, call parameters, INSERT lists, lists in parentheses — IN,
 function arguments — and table columns, record and type fields: one item per line, on one line if it fits, or fit to
@@ -172,7 +186,7 @@ syntax colours, line numbers and a vertical right-margin line; the switch above 
 **Queries**, **DML** or **DDL**. Lines changed by the last change are highlighted for 5 s (or until the next change), a
 red bar marks where lines were removed; changing an option switches to the example that shows it and scrolls to the
 change, and clicking an option shows its example. A region without formatting can also be marked with the
-`-- @formatter:off` and `-- @formatter:on` comments; the formatter leaves `$IF … $END` conditional compilation unchanged.
+`-- @formatter:off` and `-- @formatter:on` comments; the formatter leaves `$IF … $END` conditional compilation unchanged. The formatter treats a word after a dot as an identifier (`E.ENAME` with upper-case identifiers); JSON keys in dot notation are case-sensitive, so format such code with identifiers “unchanged” or in a NoFormat region.
 
 ### Templates, snippets and macros
 

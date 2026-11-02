@@ -2,6 +2,32 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.11.0 — formatowanie podczas pisania
+
+- **Formater na bieżąco:** Enter w oknie SQL, programu i testu formatuje opuszczaną linię (zmienioną od otwarcia albo
+  zapisu; istniejący, nieedytowany kod zostaje bez zmian) — wielkość liter słów
+  kluczowych i identyfikatorów, odstępy wokół operatorów i przecinków, a linię zaczynającą się słowem klauzuli
+  (`FROM`, `WHERE`, `ORDER BY`, `JOIN`…), `AND`/`OR`, `END`, `ELSE`, `EXCEPTION` albo `)` wyrównuje do „rzeki”
+  i struktury polecenia. Tekst nie przechodzi między liniami — nic nie skacze pod kursorem.
+- **Wcięcie nowej linii według reguł formatera:** pod pierwszym elementem listy SELECT/SET po przecinku, o poziom głębiej
+  po `BEGIN`, `THEN`, `LOOP`, treść podzapytania po `(`, gałęzie CASE; własny styl wcięć (np. 4 spacje) zostaje dla
+  kolejnych instrukcji.
+- **Bezpiecznie:** komentarze, literały wieloliniowe, kompilacja warunkowa `$IF … $END`, kod Java/JavaScript, polecenia
+  SQL*Plus i regiony bez formatowania zostają bez zmian, linia z niedomkniętym nawiasem dostaje tylko wielkość liter,
+  a każda zmieniona linia przechodzi kontrolę tokenów. Istniejący kod formatuje się nadal tylko na żądanie
+  (**Formatuj kod**, ⇧⌘F).
+- **Cofanie:** pierwsze ⌘Z cofa samo formatowanie, drugie — Enter. Enter na początku linii albo w jej wcięciu to
+  zwykły Enter, ⌥↩ — nowa linia bez wcięcia i formatowania.
+- **Formater:** słowo po kropce dostaje regułę identyfikatora — `j.doc.date` nie jest już traktowane jak typ `DATE`.
+  Klucze JSON w notacji z kropką rozróżniają wielkość liter: przy wielkich literach identyfikatorów zostaną podniesione,
+  więc taki kod formatuj z identyfikatorami „bez zmian” albo w regionie NoFormat.
+- **Przełącznik u góry po prawej:** różdżka na pasku narzędzi (wyłączona — przekreślona) włącza i wyłącza formatowanie
+  przy Enter; także **Edycja › Formatuj linię przy Enter** (z zaznaczeniem stanu), wstążka (karta Edycja), paleta komend,
+  skrót do przypisania i **Ustawienia › Formater › Podczas pisania**. Domyślnie włączone.
+- **Wstążka w wąskim oknie:** gdy karta wstążki się nie mieści, po bokach pojawiają się przyciski **‹ ›** — przewijają
+  do granicy kolejnej grupy (kółko myszy i gładzik przewijają jak dotąd). Tak samo przewija się pasek kart wstążki,
+  gdy nie mieści się obok pola „Szukaj czynności”.
+
 ## 1.10.0 — panel po lewej i foldery połączeń
 
 - **Panel po lewej** (Połączenia, Obiekty, Okna, Szablony, Pliki) można poszerzyć bez dawnego limitu 420 punktów — aż do

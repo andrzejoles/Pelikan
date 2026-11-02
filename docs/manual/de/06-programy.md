@@ -128,6 +128,7 @@ von Zeilen ohne Verzögerung.
 | Groß- / Kleinbuchstaben | ⌥⌘U / ⌥⇧⌘U | Bearbeiten › Auswahl |
 | Einrückung erhöhen / verringern | ⌘] / ⌘[ | Bearbeiten › Auswahl |
 | PL/SQL-Code formatieren | ⇧⌘F | Bearbeiten |
+| Zeile bei Enter formatieren (ein / aus) | — (zuweisbar) | Bearbeiten, Symbolleiste |
 | Suchen und Ersetzen | ⌘F | Bearbeiten |
 | Weitersuchen / Rückwärts suchen | ⌘G / ⇧⌘G | Bearbeiten |
 | Gehe zu Zeile | ⌘L | Bearbeiten |
@@ -160,6 +161,22 @@ Bezeichnern, Sonderschreibweisen). Der Formatierer kann automatisch nach dem Öf
 dem Kompilieren und vor dem Speichern laufen. Ein Abschnitt zwischen den Kommentaren `-- NoFormat Start` und `--
 NoFormat End` bleibt unverändert. Das Formatieren ändert nie die Bedeutung des Codes.
 
+**Formatieren beim Tippen.** Vorhandenen Code ändert der Formatierer nur auf Anforderung, neuen Code ordnet er beim
+Tippen: In SQL-, Programm- und Testfenstern formatiert Enter die Zeile, die Sie verlassen — Groß-/Kleinschreibung von
+Schlüsselwörtern und Bezeichnern, Abstände um Operatoren und Kommas; eine Zeile, die mit einem Klauselwort (`FROM`,
+`WHERE`, `ORDER BY`, `JOIN`…), `AND`/`OR`, `END`, `ELSE`, `EXCEPTION` oder `)` beginnt, wird am „Fluss“ und an der
+Struktur der Anweisung ausgerichtet — und rückt die neue Zeile ein: unter das erste Listenelement nach einem Komma,
+eine Ebene tiefer nach `BEGIN`, `THEN`, `LOOP`, den Inhalt der Unterabfrage nach `(`. Text wandert nie zwischen Zeilen,
+in Deklarationen getippte Ausrichtung bleibt, und Kommentare, mehrzeilige Literale, bedingte Kompilierung
+`$IF … $END`, Java-/JavaScript-Code und SQL*Plus-Befehle bleiben unverändert; eine Zeile mit offener Klammer erhält nur
+die Groß-/Kleinschreibung. Formatiert wird nur eine Zeile, die seit dem Öffnen, Speichern oder Neuladen der Datei geändert wurde — eine
+vorhandene, nicht bearbeitete Zeile bleibt unverändert (die neue Zeile erhält nur die Einrückung); Enter am
+Zeilenanfang oder in der Einrückung ist ein normales Enter, und ⌥↩ fügt eine neue Zeile ohne Einrückung und
+Formatierung ein. Das erste ⌘Z macht nur die Formatierung rückgängig, das zweite das Enter. Ein- und
+ausschalten mit dem Zauberstab-Schalter in der Symbolleiste (oben rechts), über **Bearbeiten › Zeile bei Enter
+formatieren**, im Menüband (Register **Bearbeiten**) oder unter **Einstellungen › Formatierer › Beim Tippen**; die
+SQL*Plus-Konsole formatiert nicht.
+
 Die Registerkarte **Einstellungen › Formatierer** hat die Gruppen **Layout**, **Listen und Kommas** (getrennt
 SELECT-/INTO-/FROM-Listen, UPDATE … SET, GROUP BY und ORDER BY, Parameterdeklarationen, Aufrufparameter, INSERT-Listen,
 Listen in Klammern — IN, Funktionsargumente — sowie Tabellenspalten, Record- und Typfelder: ein Element pro Zeile, in
@@ -180,7 +197,7 @@ mit Syntaxfarben, Zeilennummern und einer senkrechten Linie am rechten Rand; der
 nächsten Änderung) hervorgehoben, ein roter Strich markiert entfernte Zeilen; eine Optionsänderung wechselt zum
 Beispiel, in dem sie sichtbar ist, und scrollt dorthin, ein Klick auf eine Option zeigt ihr Beispiel. Ein Bereich ohne
 Formatierung lässt sich auch mit den Kommentaren `-- @formatter:off` und `-- @formatter:on` markieren; bedingte
-Kompilierung `$IF … $END` lässt der Formatierer unverändert.
+Kompilierung `$IF … $END` lässt der Formatierer unverändert. Ein Wort nach einem Punkt behandelt der Formatierer als Bezeichner (`E.ENAME` bei Bezeichnern in Großbuchstaben); JSON-Schlüssel in Punktnotation unterscheiden Groß-/Kleinschreibung, daher solchen Code mit Bezeichnern „unverändert“ oder in einem NoFormat-Bereich formatieren.
 
 ### Vorlagen, Snippets und Makros
 

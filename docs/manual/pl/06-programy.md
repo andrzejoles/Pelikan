@@ -116,6 +116,7 @@ kilkadziesiąt tysięcy linii.
 | Wielkie / małe litery | ⌥⌘U / ⌥⇧⌘U | Edycja › Zaznaczenie |
 | Zwiększ / zmniejsz wcięcie | ⌘] / ⌘[ | Edycja › Zaznaczenie |
 | Formatuj kod PL/SQL | ⇧⌘F | Edycja |
+| Formatuj linię przy Enter (włącz / wyłącz) | — (do przypisania) | Edycja, pasek narzędzi |
 | Znajdź i zamień | ⌘F | Edycja |
 | Znajdź następne / poprzednie | ⌘G / ⇧⌘G | Edycja |
 | Przejdź do linii | ⌘L | Edycja |
@@ -148,6 +149,20 @@ specjalna). Formater może działać automatycznie po otwarciu źródła z bazy,
 między komentarzami `-- NoFormat Start` i `-- NoFormat End` zostaje bez zmian. Formatowanie nigdy nie zmienia
 znaczenia kodu.
 
+**Formatowanie podczas pisania.** Istniejący kod formater zmienia tylko na żądanie, ale nowy kod układa na bieżąco:
+Enter w oknie SQL, programu i testu formatuje linię, którą opuszczasz — wielkość liter słów kluczowych i
+identyfikatorów, odstępy wokół operatorów i przecinków, a linię zaczynającą się słowem klauzuli (`FROM`, `WHERE`,
+`ORDER BY`, `JOIN`…), `AND`/`OR`, `END`, `ELSE`, `EXCEPTION` albo `)` wyrównuje do „rzeki” i struktury polecenia — i
+wcina nową linię: pod pierwszym elementem listy po przecinku, o poziom głębiej po `BEGIN`, `THEN`, `LOOP`, wcięcie treści
+podzapytania po `(`. Tekst nigdy nie przechodzi między liniami, wyrównanie wpisane w deklaracjach zostaje, a
+komentarze, literały wieloliniowe, kompilacja warunkowa `$IF … $END`, kod Java/JavaScript i polecenia SQL*Plus — bez
+zmian; linia z niedomkniętym nawiasem dostaje tylko wielkość liter. Formatowana jest tylko linia zmieniona od otwarcia, zapisu albo wczytania pliku — istniejąca, nieedytowana linia
+zostaje bez zmian (nowa linia dostaje tylko wcięcie); Enter na początku linii albo w jej wcięciu to zwykły Enter, a ⌥↩
+wstawia nową linię bez wcięcia i formatowania. Pierwsze ⌘Z cofa samo formatowanie, drugie —
+Enter. Włączasz i wyłączasz je przełącznikiem z różdżką na pasku narzędzi (u góry po prawej), w menu **Edycja ›
+Formatuj linię przy Enter**, na wstążce (karta **Edycja**) albo w **Ustawienia › Formater › Podczas pisania**;
+konsola SQL*Plus nie formatuje.
+
 Karta **Ustawienia › Formater** ma grupy **Układ**, **Listy i przecinki** (osobno listy SELECT/INTO/FROM, UPDATE …
 SET, GROUP BY i ORDER BY, deklaracje parametrów, parametry wywołań, listy INSERT, listy w nawiasach — IN, argumenty
 funkcji — oraz kolumny tabel, pola rekordów i typów: element w linii, w jednej linii, jeśli się mieści, albo do
@@ -166,7 +181,7 @@ kolorami składni, numerami linii i pionową linią prawego marginesu; przełąc
 **Zapytania**, **DML** albo **DDL**. Linie zmienione ostatnią zmianą są podświetlone przez 5 s (albo do następnej
 zmiany), miejsce usuniętych linii oznacza czerwona kreska; zmiana opcji przełącza na przykład, w którym ją widać, i
 przewija do niej, a kliknięcie opcji pokazuje jej przykład. Region bez formatowania można też oznaczyć komentarzami
-`-- @formatter:off` i `-- @formatter:on`; fragmenty kompilacji warunkowej `$IF … $END` formater zostawia bez zmian.
+`-- @formatter:off` i `-- @formatter:on`; fragmenty kompilacji warunkowej `$IF … $END` formater zostawia bez zmian. Słowo po kropce formater traktuje jak identyfikator (`E.ENAME` przy wielkich literach identyfikatorów); klucze JSON w notacji z kropką rozróżniają wielkość liter, więc kod z nimi formatuj z identyfikatorami „bez zmian” albo w regionie NoFormat.
 
 ### Szablony, fragmenty kodu i makra
 
