@@ -24,7 +24,9 @@ final class ResultCommandBar: NSView {
     private let trailing: NSView
     private var elements: [Element] = []
     private let overflowButton = NSButton(title: "", target: nil, action: nil)
-    private var tokens: [ObservationToken] = []
+    /// Śledzenie dostępności komend — tylko gdy pasek jest w oknie (siatki kart wyników w pamięci podręcznej okna
+    /// SQL poza oknem nie przeliczają komend przy każdej zmianie).
+    private var tracking: ObservationToken?
     private var visibleCount = 0
     /// Przyciski-przełączniki (stan z modelu siatki).
     private var toggles: Set<String> = []
@@ -48,7 +50,16 @@ final class ResultCommandBar: NSView {
         setAccessibilityRole(.toolbar)
         setAccessibilityLabel(L10n.tr("Czynności wyniku"))
         build()
-        tokens.append(trackChanges { [weak self] in self?.refreshEnabled() })
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil {
+            tracking?.cancel()
+            tracking = nil
+        } else if tracking == nil {
+            tracking = trackChanges { [weak self] in self?.refreshEnabled() }
+        }
     }
 
     @available(*, unavailable)
@@ -131,13 +142,16 @@ final class ResultCommandBar: NSView {
         for case .command(let id, let b) in elements {
             let on = workspace.isEnabled(CommandID(rawValue: id))
             if b.isEnabled != on { b.isEnabled = on }
+            // Stan komendy-przełącznika z rejestru (edycja danych, panel wartości).
+            if let state = workspace.toggleState(CommandID(rawValue: id)) { setState(id, on: state) }
         }
     }
 
-    /// Przełącznik włączony albo wyłączony (stan z modelu siatki — przycisk wyróżniony, symbol stanu włączonego).
+    /// Przełącznik włączony albo wyłączony (przycisk wyróżniony, symbol stanu włączonego): ze stanu komendy
+    /// (`toggleState`) albo — stan samego widoku siatki (widok rekordu) — od widoku.
     func setState(_ id: String, on: Bool) {
         for case .command(id, let b) in elements {
-            if toggles.insert(id).inserted { b.setButtonType(.pushOnPushOff) }
+            if toggles.insert(id).inserted { b.setButtonType(.pushOnPushOff) } else if (b.state == .on) == on { continue }
             b.state = on ? .on : .off
             guard let d = workspace.registry.command(CommandID(rawValue: id))?.descriptor else { continue }
             let symbol = on ? onSymbols[id] ?? CommandSymbols.symbol(for: id) : CommandSymbols.symbol(for: id)
@@ -226,17 +240,15 @@ final class ResultCommandBar: NSView {
     private func menu(for id: String) -> NSMenu? {
         if let make = menus[id] { return make() }
         let format: (ExportFormat) -> String
-        let formats: [ExportFormat]
         switch id {
-        case "grid.export":
-            formats = ExportFormat.allCases.filter { $0 != .expressionList }
-            format = { L10n.tr("Eksportuj jako \($0.displayName)…") }
-        case "grid.copyAs":
-            formats = [.csv, .html, .xml, .sql]
-            format = { $0.displayName }
-        default:
-            return nil
+        case "grid.export": format = { L10n.tr("Eksportuj jako \($0.displayName)…") }
+        case "grid.copyAs": format = { $0.displayName }
+        default: return nil
         }
+        // Formaty z parametru komendy — te same co w wyborze ze wstążki i dla agenta.
+        let formats = workspace.registry.command(CommandID(rawValue: id))?.descriptor.parameters
+            .first { $0.name == "format" }?.allowedValues?.compactMap(ExportFormat.init(rawValue:)) ?? []
+        guard !formats.isEmpty else { return nil }
         let menu = NSMenu()
         for f in formats {
             let item = menu.addItem(withTitle: format(f), action: #selector(formatChosen(_:)), keyEquivalent: "")

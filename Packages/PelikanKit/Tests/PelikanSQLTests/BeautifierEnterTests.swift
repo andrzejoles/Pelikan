@@ -264,6 +264,39 @@ struct BeautifierEnterTests {
         #expect(enter(text, lineLimit: 10) == EnterFormatting(line: "    IF a > 0 THEN", indent: "      "))
     }
 
+    @Test("kolumny w znakach: emoji i znak złożony przed słowem otwierającym nie przesuwają wyrównania")
+    func columnsInCharacters() {
+        let plain = enter("select 'x' a, (select b\nfrom t|")
+        #expect(plain == EnterFormatting(line: "                 FROM t", indent: "               "))
+        for lit in ["😀", "e\u{301}"] {
+            #expect(enter("select '\(lit)' a, (select b\nfrom t|") == plain, "\(lit)")
+        }
+    }
+
+    @Test("pamięć: punkty kontrolne wcześniejszego ciała dołączane po punktach późniejszego (dwa ciała rozdzielone „/”)")
+    func checkpointsOfEarlierUnit() {
+        func unit(_ name: String) -> String {
+            var s = "create or replace package body \(name) is\n"
+            for n in 0..<6 { s += "  procedure \(name)\(n) is\n  begin\n    null;\n  end;\n" }
+            return s + "end;\n/\n"
+        }
+        let text = (unit("a") + unit("b")) as NSString
+        var memory = StatementStartMemory()
+        let b4 = text.range(of: "procedure b4").location
+        let inB = text.range(of: "    null;", options: [], range: NSRange(location: b4, length: text.length - b4)).location
+        let cb = memory.context(forLineAt: inB, in: text, lineLimit: 10)
+        #expect(cb.mode == .format && cb.start == b4 - 2)
+        // Enter w ciele A po zapamiętaniu punktów B: kontekst od podprogramu A, nie tylko wielkość liter.
+        let a4 = text.range(of: "procedure a4").location
+        let inA = text.range(of: "    null;", options: [], range: NSRange(location: a4, length: text.length - a4)).location
+        let ca = memory.context(forLineAt: inA, in: text, lineLimit: 10)
+        #expect(ca.mode == .format && ca.start == a4 - 2)
+        // Kolejność położeń zachowana, punkty B zostają.
+        let positions = memory.checkpoints.map(\.position)
+        #expect(positions == positions.sorted() && Set(positions).count == positions.count)
+        #expect(memory.checkpoints.contains { $0.position == b4 - 2 })
+    }
+
     @Test("wydajność: pakiet ~20 tys. linii i para — Enter bez leksowania całego pliku")
     func performance() {
         func body(_ n: Int) -> String {

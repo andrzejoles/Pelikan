@@ -105,11 +105,12 @@ extension Beautifier {
         if tr.raw.contains(where: { $0.lowerBound < max(restTo, leftTo + 1) && $0.upperBound > leftFrom }) { return nil }
         let placed = tr.placed
 
+        /// Kolumna w znakach (jak kolumny formatera — `Character`, nie jednostki UTF-16: emoji, znaki złożone).
         func column(_ pos: Int) -> Int {
             var p = pos
             while p > 0, ctx.character(at: p - 1) != 0x0A { p -= 1 }
             var c = 0
-            for q in p..<pos { c = ctx.character(at: q) == 0x09 ? (c / width + 1) * width : c + 1 }
+            for ch in ctx.substring(with: NSRange(location: p, length: pos - p)) { c = ch == "\t" ? (c / width + 1) * width : c + 1 }
             return c
         }
         func firstOnLine(_ k: Int) -> Bool {

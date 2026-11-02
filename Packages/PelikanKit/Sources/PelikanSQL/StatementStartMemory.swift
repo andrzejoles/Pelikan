@@ -106,7 +106,9 @@ public struct StatementStartMemory: Sendable, Equatable {
                 merge(scan.checkpoints)
                 return (cp.statement, scan.region, scan.normal)
             }
-            checkpoints.removeSubrange(k...)
+            // Nieaktualny jest tylko ten punkt (linia nie zaczyna już podprogramu). `/` po drodze — linia leży za
+            // blokiem punktu: punkty (także późniejszych jednostek) zostają, polecenie wyznacza podział.
+            if scan.stale { checkpoints.remove(at: k) }
         }
         let base = starts.last { $0 <= lineStart } ?? 0
         guard base < lineStart else { return (base, regions[base] ?? Region(), true) }
@@ -126,8 +128,17 @@ public struct StatementStartMemory: Sendable, Equatable {
         return (statement, scan.region, scan.normal)
     }
 
+    /// Dołącza punkty kontrolne w kolejności położeń (także wcześniejsze niż znane — np. wcześniejszej jednostki, gdy
+    /// pamięć ma już punkty późniejszej); punkt w znanym już miejscu zostaje bez zmian.
     mutating func merge(_ new: [Checkpoint]) {
-        for c in new where c.position > (checkpoints.last?.position ?? -1) { checkpoints.append(c) }
+        guard !new.isEmpty else { return }
+        if let last = checkpoints.last, new.allSatisfy({ $0.position > last.position }) {
+            checkpoints += new
+            return
+        }
+        var known = Set(checkpoints.map(\.position))
+        for c in new where known.insert(c.position).inserted { checkpoints.append(c) }
+        checkpoints.sort { $0.position < $1.position }
     }
 
     /// Liczba linii między pozycjami (najwyżej `limit + 1` — liczenie od końca).

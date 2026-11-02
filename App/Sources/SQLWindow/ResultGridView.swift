@@ -118,9 +118,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         bar.actions = ["grid.insertRecord": { [weak self] in self?.insertRecord() },
                        "grid.toggleRecordView": { [weak self] in self?.toggleRecord() }]
         bar.onSymbols = ["grid.edit": "lock.open"]
-        bar.setState("grid.edit", on: false)
         bar.setState("grid.toggleRecordView", on: false)
-        bar.setState("grid.valuePanel", on: false)
         record.isHidden = true
         record.onMove = { [weak self] delta in self?.moveRecord(delta) }
         for v in [bar, scroll, record] as [NSView] {
@@ -248,7 +246,6 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         if valuePanel?.isHidden == showPanel {
             valuePanel?.isHidden = !showPanel
             panelWidth?.constant = showPanel ? 300 : 0
-            bar.setState("grid.valuePanel", on: showPanel)
         }
         let filterText = grid.filter?.text
         if filterText != lastFilter {
@@ -270,7 +267,6 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         bar.needsLayout = true
         if edit.isEditing != lastEditing {
             lastEditing = edit.isEditing
-            bar.setState("grid.edit", on: edit.isEditing)
             table.reloadData()
         } else if edit.isEditing {
             // Stan komórek (zmienione, wstawione, usunięte) — przerysowanie widocznych wierszy.

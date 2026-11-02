@@ -1405,11 +1405,14 @@ final class CodeTextView: NSTextView {
         let lineStart = ns.lineRange(for: NSRange(location: caret, length: 0)).location
         let line = ns.substring(with: NSRange(location: lineStart, length: caret - lineStart))
         // Ta sama reguła co w kroku 0 Entera z formatowaniem (D205).
-        guard let cased = FormatOnEnter.keywordCaseLine(line, keywordCase) else { return }
-        let r = NSRange(location: lineStart, length: caret - lineStart)
-        if shouldChangeText(in: r, replacementString: cased) {
-            replaceCharacters(in: r, with: cased)
+        guard let cased = FormatOnEnter.keywordCaseLine(line, keywordCase),
+              let edit = FormatOnEnter.Edit.minimal(at: lineStart, old: line, new: cased) else { return }
+        // Tylko samo słowo — nie cały początek linii (cofanie, kolorowanie i znaczniki od słowa).
+        let r = NSRange(location: edit.range.lowerBound, length: edit.range.count)
+        if shouldChangeText(in: r, replacementString: edit.text) {
+            replaceCharacters(in: r, with: edit.text)
             didChangeText()
+            setSelectedRange(NSRange(location: caret, length: 0))
         }
     }
 
@@ -1623,8 +1626,9 @@ final class CodeTextView: NSTextView {
         guard selectedRange() == NSRange(location: plan.enter.range.lowerBound, length: 0) else { return false }
         insertText(plan.enter.text, replacementRange: selectedRange())
         // Krok 2 tylko na oczekiwanym tekście (inaczej coś zmieniło go po drodze — formatowanie pominięte).
-        guard let format = plan.format, format.range.upperBound <= textLength,
-              (string as NSString).substring(with: NSRange(location: format.range.lowerBound, length: format.range.count)) == plan.expected else { return true }
+        guard let format = plan.format, plan.expectedRange.upperBound <= textLength,
+              (string as NSString).substring(with: NSRange(location: plan.expectedRange.lowerBound, length: plan.expectedRange.count)) == plan.expected
+        else { return true }
         breakUndoCoalescing()
         // Grupa cofania zdarzenia (Enter) zamknięta, formatowanie w nowej — zamyka ją menedżer cofania na końcu zdarzenia.
         if let undo = undoManager, undo.groupsByEvent, undo.groupingLevel == 1 {

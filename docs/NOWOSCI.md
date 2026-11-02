@@ -2,6 +2,20 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.13.2 — poprawki z przeglądu kodu
+
+- **AutoReplace przy Enter:** zamiana z kursorem na końcu (np. `nvl(|`) przy włączonym formatowaniu przy Enter nie gubi
+  już ostatniego znaku i nie dodaje nowej linii.
+- **Istniejący kod zostaje bez zmian:** Enter na końcu nieedytowanej linii nie oznacza jej jako zmienionej (następny
+  Enter w niej nie formatuje jej), a zmiana wielkości liter ostatniego słowa nie formatuje całej linii.
+- **Wyrównanie:** wcięcie tabulatorami w trybie Smart i emoji albo znaki złożone przed podzapytaniem nie przesuwają
+  wcięcia nowej linii.
+- **Długie skrypty z kilkoma pakietami:** Enter we wcześniejszym ciele pakietu formatuje linię także po pracy
+  w późniejszym (wcześniej tylko wielkość liter).
+- **Pasek wyniku:** „Kopiuj jako” ma także TSV i listę wyrażeń (IN); ukryte karty wyników nie spowalniają pracy.
+- **Stan przełączników na wstążce:** włączone „Formatuj przy Enter”, „Edytuj dane” i „Panel wartości” mają wyróżnione
+  tło (także w menu i na pasku wyniku).
+
 ## 1.13.0 — formatowanie podczas pisania, pasek czynności nad wynikiem
 
 Zmiany z wersji 1.11.0–1.13.0 (bez osobnych wydań), wydane razem.

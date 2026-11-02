@@ -117,7 +117,7 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
     }
 
     private func refreshFormatButtons() {
-        let on = workspace.settings.beautifier.formatOnEnter
+        let on = workspace.toggleState(CommandID(rawValue: ToolbarModel.formatOnEnterItem)) ?? false
         let state = on ? L10n.tr("włączone") : L10n.tr("wyłączone")
         var tip = L10n.tr("Formatowanie przy Enter: \(state)") + "\n"
             + L10n.tr("Enter formatuje opuszczaną linię i wcina nową według reguł formatera; istniejący kod — tylko na żądanie (Formatuj kod).")

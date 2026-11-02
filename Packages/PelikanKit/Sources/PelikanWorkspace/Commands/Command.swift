@@ -290,13 +290,17 @@ public struct Command: Sendable {
     let preview: PreviewHandler?
     /// Czy komenda jest teraz dostępna (stan menu); nil = zawsze.
     let validate: ValidationHandler?
+    /// Stan komendy-przełącznika (zaznaczenie w menu, wyróżnienie na wstążce, pasku wyniku i pasku narzędzi); nil —
+    /// komenda bez stanu.
+    let state: ValidationHandler?
 
-    public init(_ descriptor: CommandDescriptor, validate: ValidationHandler? = nil, preview: PreviewHandler? = nil,
-                run: @escaping CommandHandler) {
+    public init(_ descriptor: CommandDescriptor, validate: ValidationHandler? = nil, state: ValidationHandler? = nil,
+                preview: PreviewHandler? = nil, run: @escaping CommandHandler) {
         self.descriptor = descriptor
         self.run = run
         self.preview = preview
         self.validate = validate
+        self.state = state
     }
 
     public var id: CommandID { descriptor.id }

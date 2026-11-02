@@ -13,11 +13,11 @@ import AppKit
 struct FormatOnEnterTests {
     func plan(_ s: String, kind: DocumentKind = .sql, options: BeautifierOptions = BeautifierOptions(),
               mode: IndentMode = .automatic, keywordCase: KeywordCase = .unchanged, autoReplace: [AutoReplaceRule] = [],
-              edited: Bool = true) -> (text: String, plan: FormatOnEnter.Plan?) {
+              edited: Bool = true, unit: String = "  ") -> (text: String, plan: FormatOnEnter.Plan?) {
         let caret = (s as NSString).range(of: "|").location
         let text = (s as NSString).replacingCharacters(in: NSRange(location: caret, length: 1), with: "")
         var memory = StatementStartMemory()
-        return (text, FormatOnEnter.plan(text: text, caret: caret, kind: kind, options: options, indentMode: mode, unit: "  ",
+        return (text, FormatOnEnter.plan(text: text, caret: caret, kind: kind, options: options, indentMode: mode, unit: unit,
                                          tabWidth: 2, keywordCase: keywordCase, autoReplace: autoReplace, lineEdited: edited,
                                          memory: &memory))
     }
@@ -27,7 +27,7 @@ struct FormatOnEnterTests {
         var t = p.prepare.map { $0.applied(to: text) } ?? text
         t = p.enter.applied(to: t)
         guard let f = p.format else { return (t, t) }
-        #expect((t as NSString).substring(with: NSRange(location: f.range.lowerBound, length: f.range.count)) == p.expected)
+        #expect((t as NSString).substring(with: NSRange(location: p.expectedRange.lowerBound, length: p.expectedRange.count)) == p.expected)
         return (t, f.applied(to: t))
     }
 
@@ -110,23 +110,25 @@ struct FormatOnEnterTests {
         let rules = AutoReplaceRule.defaults
         let (text, p) = plan("begin\n  for r in (sf|", autoReplace: rules)
         let steps = try #require(p)
-        #expect(steps.prepare == FormatOnEnter.Edit(range: 6..<20, text: "  for r in (SELECT * FROM "))
+        #expect(steps.prepare == FormatOnEnter.Edit(range: 18..<20, text: "SELECT * FROM "))
         #expect(run(text, steps).final.hasPrefix("begin\n  FOR r IN (SELECT * FROM\n"))
         #expect(plan("begin\n  dbo|", autoReplace: rules).plan == nil)
+        // Znacznik kursora na końcu zamiany (`nvl(|`) też zużywa Enter — bez utraty znaku i bez nowej linii.
+        #expect(plan("begin\n  x := nv|", autoReplace: [AutoReplaceRule(abbreviation: "nv", replacement: "nvl(|")]).plan == nil)
         // Krok 1 zaczyna się tam, gdzie kończy się krok 0 (edytor sprawdza zaznaczenie przed Enterem).
         #expect(steps.enter.range.lowerBound == steps.prepare!.range.lowerBound + (steps.prepare!.text as NSString).length)
         // Zamiana wieloliniowa — krok 0 i Enter, bez formatowania.
         let multi = [AutoReplaceRule(abbreviation: "hdr", replacement: "-- autor\n-- data ")]
         let (t3, p3) = plan("begin\n  hdr|", autoReplace: multi)
         let m = try #require(p3)
-        #expect(m.prepare?.text == "  -- autor\n-- data " && m.format == nil)
+        #expect(m.prepare?.text == "-- autor\n-- data " && m.format == nil)
         #expect(run(t3, m).final == "begin\n  -- autor\n-- data \n")
         // Skrót w komentarzu — bez zamiany.
         #expect(try #require(plan("begin\n  x := 1; -- sf|", autoReplace: rules).plan).prepare == nil)
         // Wielkość liter słowa kluczowego przed kursorem (Ustawienia › Edytor) — w kroku 0, nie po drodze.
         let (t2, p2) = plan("select a from t where|", keywordCase: .upper)
         let k = try #require(p2)
-        #expect(k.prepare?.text == "select a from t WHERE")
+        #expect(k.prepare == FormatOnEnter.Edit(range: 16..<21, text: "WHERE"))
         #expect(run(t2, k).final == "SELECT a FROM t WHERE\n       ")
     }
 
@@ -190,11 +192,27 @@ struct FormatOnEnterTests {
         #expect(SmartIndent.followsNewline("ab\n" as NSString, caret: 3) && !SmartIndent.followsNewline("put_line()" as NSString, caret: 9))
     }
 
+    @Test("najmniejsza zmiana: nieedytowana linia nie trafia do zakresu kroku 2; para zastępcza nie jest dzielona")
+    func minimalEdits() throws {
+        let (text, p) = plan("select a,\n       b\n  from t\n where x = 1|", edited: false)
+        let steps = try #require(p)
+        let lineEnd = (text as NSString).length
+        if let f = steps.format { #expect(f.range.lowerBound > lineEnd) }
+        #expect(FormatOnEnter.Edit.minimal(at: 10, old: "ab", new: "ab") == nil)
+        #expect(FormatOnEnter.Edit.minimal(at: 10, old: "x then", new: "x THEN") == FormatOnEnter.Edit(range: 12..<16, text: "THEN"))
+        #expect(FormatOnEnter.Edit.minimal(at: 0, old: "😀a", new: "😁a") == FormatOnEnter.Edit(range: 0..<2, text: "😁"))
+    }
+
     @Test("tryb Smart: END nieedytowanej linii wyrównany do struktury także z formatowaniem")
     func smartIndent() throws {
         let (text, p) = plan("begin\n  if a then\n    x := 1;\n    end if;|", mode: .smart, edited: false)
         let steps = try #require(p)
         #expect(run(text, steps).final == "begin\n  if a then\n    x := 1;\n  end if;\n  ")
+        // Wcięcie tabulatorami: przesunięcie liczone w kolumnach (tabulator = 2 kolumny), nie w znakach.
+        let (t2, p2) = plan("begin\n\tif a then\n\t\tx := 1;\n\t\tend if;|", mode: .smart, edited: false, unit: "\t")
+        let final = run(t2, try #require(p2)).final
+        #expect(final.hasPrefix("begin\n\tif a then\n\t\tx := 1;\n\tend if;\n"))
+        #expect(FormatOnEnter.columns(String(final.split(separator: "\n", omittingEmptySubsequences: false).last!), tabWidth: 2) == 2)
     }
 
     @Test("makro: komenda ustawień nie jest nagrywana")
@@ -229,7 +247,8 @@ struct FormatOnEnterTests {
         }
         let end = (view.string as NSString).range(of: "then").upperBound
         // Linia bez zmian (tylko wcięcie nowej linii według formatera).
-        #expect(try #require(plan(at: end)).format?.text == "  if a>0 then\n    ")
+        // Krok 2 zaczyna się za znakiem nowej linii — opuszczana linia nie trafia do zmienionych zakresów.
+        #expect(try #require(plan(at: end)).format == FormatOnEnter.Edit(range: (end + 3)..<(end + 3), text: "  "))
         // Enter na końcu linii (zwykły) nie oznacza jej; wpisany znak — tak.
         view.setSelectedRange(NSRange(location: end, length: 0))
         view.insertText("\n", replacementRange: view.selectedRange())
@@ -237,7 +256,9 @@ struct FormatOnEnterTests {
         view.setSelectedRange(NSRange(location: end, length: 0))
         view.insertText(" ", replacementRange: view.selectedRange())
         #expect(tracker.ranges.touches(line: 6..<(end + 1)))
-        #expect(try #require(plan(at: end + 1)).format?.text.hasPrefix("  IF a > 0 THEN\n") == true)
+        let typedPlan = try #require(plan(at: end + 1))
+        let typed = try #require(typedPlan.format)
+        #expect(typed.range.lowerBound == 8 && typed.text.hasPrefix("IF a > 0 THEN\n"))
     }
     #endif
 }

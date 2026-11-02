@@ -3064,3 +3064,36 @@ wynikami”.
   wierszy po prawej, najwyżej trzecia część szerokości (skracany).
 - Dawny pasek siatki (strony, rekord, eksport, Excel, kłódka i przyciski edycji widoczne tylko w trybie edycji) zastąpiony;
   przyciski edycji są teraz zawsze widoczne, wyłączone poza trybem edycji.
+
+### D208 · 2026-11-03 — Przegląd kodu po wydaniu 1.13.0
+
+Przegląd zmian 1.10.0 → 1.13.0 (na polecenie właściciela: przegląd, poprawki, ponowny przegląd aż bez uwag, potem
+wydanie). Poprawione:
+- **AutoReplace przy Enter:** reguła ze znacznikiem kursora `|` na końcu zamiany (`nvl(|`) zużywa Enter jak w zwykłym
+  Enterze — wcześniej traciła ostatni znak i dodawała nową linię (`AutoReplace.match` zwraca, czy reguła ustawia kursor).
+- **Najmniejsze zmiany tekstu:** krok 0 (wielkość liter słowa, skrót) i krok 2 Entera oraz wielkość liter po wpisaniu
+  znaku zastępują tylko różniący się fragment (`FormatOnEnter.Edit.minimal`), nie całą linię — nieedytowana linia
+  z innym wcięciem nowej linii nie trafia do zmienionych zakresów (D205: istniejący kod tylko na żądanie), a cofanie
+  i kolorowanie obejmują samo słowo. Krok 2 sprawdza dalej cały oczekiwany tekst (`expectedRange`).
+- **Linia nieedytowana:** sama zmiana wielkości liter ostatniego słowa przy Enter nie formatuje już całej linii.
+- **Wcięcie Smart z tabulatorami:** przesunięcie linii END/ELSE liczone w kolumnach, nie w znakach.
+- **Kolumny w znakach:** kolumny dokumentu przy wyrównaniu liczone w znakach (jak w formaterze), nie w jednostkach
+  UTF-16 — emoji i znaki złożone przed słowem otwierającym nie przesuwają wyrównania.
+- **Pamięć podziału:** punkty kontrolne scalane w kolejności położeń (także wcześniejszej jednostki, gdy znane są punkty
+  późniejszej); `/` po drodze nie usuwa punktów, nieaktualny jest tylko punkt, od którego liczono.
+- **Pasek wyniku:** formaty „Kopiuj jako” i „Eksportuj” z parametru komendy (doszły TSV i lista IN); dostępność komend
+  śledzona tylko, gdy pasek jest w oknie (siatki kart wyników w pamięci okna nie przeliczają komend).
+- **Stan przełączników:** `Command(state:)` w rejestrze — menu (zaznaczenie), wstążka (wyróżnione tło, wartość dla
+  VoiceOver), pasek wyniku i przełącznik na pasku narzędzi czytają `Workspace.toggleState`; stan mają formatowanie
+  przy Enter, edycja danych i panel wartości. Widok rekordu to stan widoku siatki — ustawia go widok.
+
+Uwagi rozstrzygnięte bez zmiany kodu:
+- **„Linia edytowana” z diffu z tekstem bazowym zamiast `EditedRanges`:** zostaje `EditedRanges`. Diff wymaga
+  porównania całego dokumentu (numery linii przesuwają się przy wstawieniach wyżej) przy każdym Enterze; zakresy
+  zmienione w sesji kosztują O(liczba zakresów) i są przesuwane razem z tekstem. Słowo „bez zmian od otwarcia albo
+  zapisu” w D205 to sesja edycji, nie treść — linia zmieniona i przywrócona ręcznie liczy się jako edytowana.
+- **Formater od początku polecenia przy każdym Enterze:** zostaje. Pomiar (Release, M-series): blok 1900 linii — 27 ms
+  na Enter, w tym 10 ms kontroli tokenów; dłuższe polecenia już dziś przechodzą na samą wielkość liter (`enterLineLimit`),
+  a ciało pakietu liczy od podprogramu (punkty kontrolne).
+- **Słowo po kropce:** reguła identyfikatora obejmowała słowa kluczowe po kropce już przed 1.11.0 (`keywordAsIdentifier`);
+  zmiana dotyczy tylko typów danych (`j.doc.date`) — bez regresji `s.NEXTVAL` czy `v.COUNT`.

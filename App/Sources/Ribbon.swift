@@ -302,6 +302,8 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             guard let id = b.commandID else { continue }
             let on = workspace.isEnabled(id)
             if b.isEnabled != on { b.isEnabled = on }
+            let state = workspace.toggleState(id)
+            if b.toggleState != state { b.toggleState = state }
         }
     }
 
@@ -521,6 +523,13 @@ final class RibbonButton: NSControl {
     private let label: NSTextField
     private var hovering = false { didSet { updateBackground() } }
     private var pressed = false { didSet { updateBackground() } }
+    /// Stan komendy-przełącznika (włączona — wyróżnione tło); nil — komenda bez stanu.
+    var toggleState: Bool? {
+        didSet {
+            updateBackground()
+            setAccessibilityValue(toggleState.map { $0 ? L10n.tr("włączone") : L10n.tr("wyłączone") })
+        }
+    }
 
     init(style: Style, title: String, symbol: String, dropdown: Bool) {
         self.style = style
@@ -585,6 +594,10 @@ final class RibbonButton: NSControl {
 
     private func updateBackground() {
         let alpha: CGFloat = pressed ? 0.22 : hovering ? 0.12 : 0
+        if alpha == 0, toggleState == true {
+            layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.2).cgColor
+            return
+        }
         layer?.backgroundColor = alpha == 0 ? nil : NSColor.labelColor.withAlphaComponent(alpha).cgColor
     }
 
