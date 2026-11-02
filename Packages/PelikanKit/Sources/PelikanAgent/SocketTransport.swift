@@ -108,21 +108,12 @@ public actor SocketTransport: Transport {
 
     /// Wiadomość do śladu z hasłami zamaskowanymi w rozkodowanych napisach JSON (skrypt `connect u/hasło` po
     /// rozkodowaniu ma znaki nowej linii, a `^` wzorca trafia na początek linii — w surowej ramce nie).
+    /// Maskowanie wspólne z panelem aktywności i dziennikiem (`AgentController.redacted`).
     static func masked(_ data: Data) -> String {
-        guard let object = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) else {
+        guard let value = try? JSONDecoder().decode(JSONValue.self, from: data) else {
             return SQLPlusEngine.maskPassword(String(decoding: data, as: UTF8.self))
         }
-        func mask(_ v: Any) -> Any {
-            switch v {
-            case let s as String: SQLPlusEngine.maskPassword(s)
-            case let a as [Any]: a.map(mask)
-            case let o as [String: Any]: o.mapValues(mask)
-            default: v
-            }
-        }
-        guard let out = try? JSONSerialization.data(withJSONObject: mask(object), options: [.fragmentsAllowed, .sortedKeys, .withoutEscapingSlashes])
-        else { return "<niezapisane>" }
-        return String(decoding: out, as: UTF8.self)
+        return AgentController.redacted(value).description
     }
 
     /// Dopisuje do pliku śladu tylko, gdy to zwykły plik właściciela bez dostępu dla innych (ślad zawiera wyniki

@@ -183,6 +183,10 @@ public final class AgentController: AgentInvocationGate {
                 Task { @MainActor in self?.serverClosed(server, session: sessionID) }
             })
             try? await server.start(transport: transport)
+            // Sesja zamknięta w trakcie startu (`closeSession` zatrzymał serwer, zanim wystartował) — zatrzymanie teraz,
+            // żeby nie obsługiwał zamkniętej sesji do rozłączenia mostu.
+            let stillOpen = await MainActor.run { [weak self] in self?.mcpServers[sessionID]?.contains { $0 === server } ?? false }
+            if !stillOpen { await server.stop() }
         }
     }
 
@@ -278,7 +282,10 @@ public final class AgentController: AgentInvocationGate {
     static func limitedContent(_ text: String, untrusted: Bool, limit: Int = maxResultBytes) -> [Tool.Content] {
         let total = text.utf8.count
         // Długość po kodowaniu JSON: znaki sterujące jako `\uXXXX` (6 bajtów), więc sam limit bajtów nie wystarcza.
-        guard total > limit || jsonEncodedLength(text.unicodeScalars) > 2 * limit else { return [.text(text: text, annotations: nil, _meta: nil)] }
+        // Pełne liczenie tylko, gdy w najgorszym razie (6 bajtów na bajt) tekst mógłby przekroczyć limit po kodowaniu.
+        guard total > limit || 3 * total > limit && jsonEncodedLength(text.unicodeScalars) > 2 * limit else {
+            return [.text(text: text, annotations: nil, _meta: nil)]
+        }
         var head = String.UnicodeScalarView()
         var raw = 0, encoded = 0
         for s in text.unicodeScalars {
@@ -300,8 +307,6 @@ public final class AgentController: AgentInvocationGate {
         }
     }
 
-
-
     static func jsonEncodedLength(_ scalars: String.UnicodeScalarView) -> Int { scalars.reduce(0) { $0 + jsonCost($1) } }
 
     private static func truncated(_ head: String, total: Int, untrusted: Bool) -> [Tool.Content] {
@@ -321,7 +326,7 @@ public final class AgentController: AgentInvocationGate {
         return String(JSONValue.object(visible).description.prefix(500))
     }
 
-    static func redacted(_ value: JSONValue) -> JSONValue {
+    nonisolated static func redacted(_ value: JSONValue) -> JSONValue {
         switch value {
         case .string(let s): .string(SQLPlusEngine.maskPassword(s))
         case .array(let a): .array(a.map(redacted))

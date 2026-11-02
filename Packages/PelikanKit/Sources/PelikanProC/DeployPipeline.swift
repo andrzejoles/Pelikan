@@ -216,7 +216,7 @@ public final class DeployPipeline: Identifiable {
 
     /// Ręczne zdjęcie cudzej/przeterminowanej blokady (wywołujący pyta o potwierdzenie; PROD — nazwa celu).
     public nonisolated static func forceReleaseLock(_ t: PelikanSSHTarget, session: SSHSession) async throws {
-        let r: Spawn.Result = try await Task.detached { try session.run(DeployScripts.forceReleaseLockCommand(t), timeout: 30, idempotent: true) }.value
+        let r: Spawn.Result = try await Task.detached { try session.run(DeployScripts.forceReleaseLockCommand(t), timeout: 30) }.value
         guard r.status == 0 else { throw SSHError.io(code: r.status, detail: r.errorText) }
     }
 

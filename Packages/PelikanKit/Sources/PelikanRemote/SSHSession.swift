@@ -58,9 +58,10 @@ public final class SSHSession: Sendable {
         self.config = config
         self.runDirectory = runDirectory
         self.secret = secret
-        // Proces w kluczu: wspólny katalog gniazd w /tmp (kilka instancji Pelikana, np. Debug i Release) — każda ma własne
-        // połączenie główne i nie usuwa cudzego gniazda przy starcie (`startMaster`).
-        let key = "\(config.user)@\(config.host):\(config.port ?? 22)#\(getpid())"
+        // Własne gniazdo każdej sesji: `disconnect` jednej (np. test celu z tymczasową sesją) i `startMaster` (usuwa
+        // gniazdo) nie zrywają połączenia głównego innej sesji tego samego serwera — w tej samej aplikacji ani w innej
+        // instancji Pelikana we wspólnym katalogu w /tmp.
+        let key = "\(config.user)@\(config.host):\(config.port ?? 22)#\(UUID().uuidString)"
         let hash = SHA256.hash(data: Data(key.utf8)).prefix(5).map { String(format: "%02x", $0) }.joined()
         controlPath = runDirectory.appendingPathComponent("ssh-\(hash)").path
     }
@@ -372,7 +373,8 @@ public final class SSHSession: Sendable {
         let args = try commandArguments(command, tty: false)
         let r = try Spawn.run(Self.ssh, args, environment: environment, stdin: stdin, timeout: timeout)
         if r.status == 255 { startLock.withLock { $0 = nil } }
-        if r.status == 255, idempotent, !isConnected {
+        if r.status == 255, idempotent {
+            // Potwierdzenie zapomniane — `connect` sprawdza połączenie raz i w razie potrzeby nawiązuje je od nowa.
             try connect()
             return try Spawn.run(Self.ssh, args, environment: environment, stdin: stdin, timeout: timeout)
         }

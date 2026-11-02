@@ -2,6 +2,7 @@ import AppKit
 import PelikanAgent
 import PelikanBridgeKit
 import PelikanLog
+import PelikanRemote
 import PelikanWorkspace
 import SwiftTerm
 import SwiftUI
@@ -132,9 +133,10 @@ final class AgentUIController: ApprovalPresenter {
             try? FileManager.default.removeItem(at: sessionDir)
         }
         showPane()
-        // forkpty+execve bez zamykania deskryptorów — pod `DescriptorLock`, żeby nie odziedziczyć deskryptora utworzonego
-        // właśnie bez FD_CLOEXEC (potoki `ssh`, gniazdo agentów).
+        // forkpty+execve bez zamykania deskryptorów: wszystkie deskryptory aplikacji z FD_CLOEXEC i start pod
+        // `DescriptorLock` (bez okna z miejscami tworzącymi deskryptory) — CLI agenta nie dziedziczy żadnego.
         DescriptorLock.withLock {
+            DescriptorLock.markAllCloseOnExec()
             terminal.startProcess(executable: spec.shell, args: spec.shellArguments, environment: env.map { "\($0.key)=\($0.value)" },
                                   execName: nil, currentDirectory: directory)
         }

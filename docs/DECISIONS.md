@@ -3101,6 +3101,18 @@ ponawiane po zerwaniu; potwierdzenie połączenia zapominane po nieudanym `scp` 
 odczytu” jako jawny wybór w macierzy (`readOnlySession`), nie wniosek z poziomów wierszy; opis wersji thin jednym
 zapytaniem według wersji serwera.
 
+Trzecie przejście: `DescriptorLock` w PelikanRemote (nie w dzienniku); przed startem terminala agenta wszystkie
+deskryptory aplikacji dostają FD_CLOEXEC (`markAllCloseOnExec` — także tworzone przez Foundation, OCI, pliki), więc
+CLI agenta nie dziedziczy żadnego; każda sesja SSH ma własne gniazdo połączenia głównego (`disconnect` tymczasowej
+sesji testu celu nie zrywa wdrożenia); wymuszone zwolnienie blokady wdrożenia nie jest ponawiane (mogłoby usunąć
+blokadę innego wdrożenia); ponowienie polecenia idempotentnego — jedno sprawdzenie połączenia; opis wersji thin
+osobnym zapytaniem z pominięciem błędu (brak uprawnień do V$VERSION); kursory REF CURSOR, `CURSOR(…)` i wyniki
+niejawne dziedziczą limit czasu wywołania; wyniki zarejestrowane przed błędem tego samego wykonania są zamykane;
+serwer MCP zatrzymywany, gdy sesję zamknięto w trakcie jego startu; pętla `accept` bez budzenia co sekundę (potok
+budzenia przy `stop`), `errno` odczytywany pod blokadą, brak deskryptorów (EMFILE) — przerwa zamiast końca serwera;
+ślad MCP maskowany tą samą funkcją co panel aktywności. Zwolnienie własnej blokady wdrożenia zostaje ponawiane
+(idempotentne); po ponowieniu komunikat „Zdjęto blokadę” może się nie pokazać — blokady i tak już nie ma.
+
 Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
 testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
 `RETURNING … BULK COLLECT INTO` w bloku PL/SQL.

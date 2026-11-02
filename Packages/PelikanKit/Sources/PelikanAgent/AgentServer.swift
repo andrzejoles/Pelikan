@@ -3,6 +3,7 @@ import PelikanBridgeKit
 import Darwin
 import Foundation
 import PelikanLog
+import PelikanRemote
 import Synchronization
 
 /// Wynik próby połączenia (do dziennika i testów).
@@ -20,6 +21,8 @@ public final class AgentServer: @unchecked Sendable {
     let onAccept: @Sendable (Int32, AgentSession) -> Void
     let onEvent: @Sendable (ConnectionEvent) -> Void
     private let state = Mutex<(fd: Int32, running: Bool)>((-1, false))
+    /// Potok budzenia pętli `accept` przy `stop` (czekanie bez limitu czasu, bez budzenia co sekundę).
+    private let wake = Mutex<(read: Int32, write: Int32)>((-1, -1))
     /// Limit czasu na ramkę hello (s).
     static let helloTimeout: Double = 5
 
@@ -83,8 +86,14 @@ public final class AgentServer: @unchecked Sendable {
             close(fd)
             throw StartError.socket(e)
         }
+        var pipeFDs: [Int32] = [-1, -1]
+        DescriptorLock.withLock {
+            if pipe(&pipeFDs) == 0 { for p in pipeFDs { _ = fcntl(p, F_SETFD, FD_CLOEXEC) } }
+        }
+        wake.withLock { $0 = (pipeFDs[0], pipeFDs[1]) }
         state.withLock { $0 = (fd, true) }
-        let thread = Thread { [self] in acceptLoop(fd) }
+        let wakeRead = pipeFDs[0]
+        let thread = Thread { [self] in acceptLoop(fd, wake: wakeRead) }
         thread.name = "pelikan.agent.accept"
         thread.start()
     }
@@ -94,6 +103,17 @@ public final class AgentServer: @unchecked Sendable {
             let fd = s.fd
             s = (-1, false)
             return fd
+        }
+        // Najpierw obudzenie pętli (kończy się i zamyka potok), potem zamknięcie gniazda.
+        let w = wake.withLock { w -> Int32 in
+            let fd = w.write
+            w = (-1, -1)
+            return fd
+        }
+        if w >= 0 {
+            var b: UInt8 = 1
+            _ = Darwin.write(w, &b, 1)
+            close(w)
         }
         if fd >= 0 {
             shutdown(fd, SHUT_RDWR)
@@ -113,28 +133,37 @@ public final class AgentServer: @unchecked Sendable {
         if st.st_mode & 0o777 != 0o700 { chmod(dir, 0o700) }
     }
 
-    private func acceptLoop(_ listenFD: Int32) {
+    private func acceptLoop(_ listenFD: Int32, wake wakeRead: Int32) {
+        defer { if wakeRead >= 0 { close(wakeRead) } }
         while state.withLock({ $0.running }) {
-            // Czekanie bez blokady; samo `accept` (gniazdo gotowe — nie blokuje) i FD_CLOEXEC pod `DescriptorLock`.
-            var p = pollfd(fd: listenFD, events: Int16(POLLIN), revents: 0)
-            let ready = poll(&p, 1, 1000)
+            // Czekanie bez blokady i bez limitu czasu (budzi `stop` przez potok); samo `accept` (gniazdo gotowe,
+            // nieblokujące) i FD_CLOEXEC pod `DescriptorLock`.
+            var fds = [pollfd(fd: listenFD, events: Int16(POLLIN), revents: 0), pollfd(fd: wakeRead, events: Int16(POLLIN), revents: 0)]
+            let ready = poll(&fds, wakeRead >= 0 ? 2 : 1, wakeRead >= 0 ? -1 : 1000)
             if ready < 0 {
                 if errno == EINTR { continue }
                 break
             }
             if ready == 0 { continue }
-            if p.revents & Int16(POLLNVAL | POLLHUP | POLLERR) != 0 { break }
-            let client = DescriptorLock.withLock {
+            if wakeRead >= 0, fds[1].revents != 0 { break }
+            if fds[0].revents & Int16(POLLNVAL | POLLHUP | POLLERR) != 0 { break }
+            let (client, error) = DescriptorLock.withLock { () -> (Int32, Int32) in
                 let c = accept(listenFD, nil, nil)
+                let e = errno   // przed zwolnieniem blokady
                 if c >= 0 {
                     _ = fcntl(c, F_SETFD, FD_CLOEXEC)
                     // Połączenie dziedziczy O_NONBLOCK gniazda nasłuchu — uzgadnianie czyta z limitem czasu, blokująco.
                     _ = fcntl(c, F_SETFL, fcntl(c, F_GETFL) & ~O_NONBLOCK)
                 }
-                return c
+                return (c, e)
             }
             if client < 0 {
-                if errno == EINTR || errno == EAGAIN || errno == ECONNABORTED { continue }
+                if error == EINTR || error == EAGAIN || error == ECONNABORTED { continue }
+                // Brak deskryptorów (EMFILE/ENFILE) — przejściowe: chwila przerwy zamiast trwałego końca serwera.
+                if error == EMFILE || error == ENFILE {
+                    usleep(200_000)
+                    continue
+                }
                 break
             }
             var on: Int32 = 1

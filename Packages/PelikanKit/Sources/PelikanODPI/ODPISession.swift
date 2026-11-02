@@ -19,6 +19,9 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     private var resultSets: [UInt64: OpenResultSet] = [:]
     /// Rozmiar pobierania bieżącego polecenia (ExecuteOptions albo opcje połączenia) — także dla kursorów potomnych.
     private var currentFetchArraySize: UInt32 = 500
+    /// Limit czasu wywołania w toku (wykonanie albo pobieranie) — dziedziczą go kursory otwarte w jego trakcie
+    /// (REF CURSOR w zmiennej OUT, `CURSOR(…)` w wierszu, wyniki niejawne).
+    private var activeCallTimeoutMs: UInt32 = 0
     private var nextResultSetID: UInt64 = 1
     /// Zamknięte (true) — chronione blokadą, bo `breakExecution` działa poza kolejką i nie może trafić w zwolniony
     /// uchwyt połączenia w trakcie `close()`.
@@ -303,10 +306,23 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         try check(dpiStmt_getInfo(stmt, &stmtInfo))
         let kind = Self.kind(stmtInfo)
 
-        try check(dpiConn_setCallTimeout(conn, options.callTimeoutMs))
         // Limit dotyczy tego wykonania i pobierania jego wyników (zapamiętany przy wyniku, ustawiany na czas `fetchSync`);
         // COMMIT, ROLLBACK, ping i inne polecenia — bez niego.
-        defer { if options.callTimeoutMs != 0 { dpiConn_setCallTimeout(conn, 0) } }
+        if options.callTimeoutMs != 0 { try check(dpiConn_setCallTimeout(conn, options.callTimeoutMs)) }
+        activeCallTimeoutMs = options.callTimeoutMs
+        defer {
+            if options.callTimeoutMs != 0 { dpiConn_setCallTimeout(conn, 0) }
+            activeCallTimeoutMs = 0
+        }
+        // Błąd po zarejestrowaniu wyników (np. drugi wynik niejawny bez opisu) — wywołujący nie dostanie ich
+        // identyfikatorów: zamknięte, zamiast zostać otwarte na serwerze do końca sesji.
+        let firstResultSet = nextResultSetID
+        var completed = false
+        defer {
+            if !completed {
+                for id in firstResultSet..<nextResultSetID where resultSets[id] != nil { closeSync(ResultSetID(id)) }
+            }
+        }
         let vars = try bindVariables(binds, to: stmt)
         defer { for v in vars { dpiVar_release(v.handle) } }
 
@@ -362,6 +378,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                                                          callTimeoutMs: options.callTimeoutMs)
         }
         result.elapsed = ContinuousClock.now - start
+        completed = true
         return result
     }
 
@@ -378,7 +395,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     }
 
     private func register(stmt: OpaquePointer, columns: [ColumnInfo], lobLimit: Int, parent: UInt64? = nil,
-                          callTimeoutMs: UInt32 = 0) -> ResultSetDescriptor {
+                          callTimeoutMs: UInt32? = nil) -> ResultSetDescriptor {
+        let callTimeoutMs = callTimeoutMs ?? activeCallTimeoutMs
         let id = nextResultSetID
         nextResultSetID += 1
         resultSets[id] = OpenResultSet(stmt: stmt, columns: columns, lobLimit: lobLimit, callTimeoutMs: callTimeoutMs, parent: parent)
@@ -505,7 +523,11 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         if rs.callTimeoutMs != 0 {
             try check(dpiConn_setCallTimeout(conn, rs.callTimeoutMs))
         }
-        defer { if rs.callTimeoutMs != 0 { dpiConn_setCallTimeout(conn, 0) } }
+        activeCallTimeoutMs = rs.callTimeoutMs
+        defer {
+            if rs.callTimeoutMs != 0 { dpiConn_setCallTimeout(conn, 0) }
+            activeCallTimeoutMs = 0
+        }
         if rs.parent != nil {
             // Otwarty przez użytkownika — już nie podlega zamykaniu najstarszych.
             resultSets[id.raw]?.parent = nil
