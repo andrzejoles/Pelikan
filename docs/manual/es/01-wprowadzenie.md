@@ -177,7 +177,9 @@ Las acciones frecuentes tienen botones grandes y las demás pequeños; las menos
 de los grupos (marcadas con ▾). La descripción emergente de un botón muestra su descripción y atajo, así aprende los
 atajos sobre la marcha. Clic derecho en un botón añade el comando al acceso rápido. Doble clic en una pestaña o la
 flecha de la derecha contrae la cinta a sus pestañas; **Vista › Cinta** la oculta (también en **Ajustes › General ›
-Cinta**).
+Cinta**). Si la ventana es estrecha y una pestaña de la cinta no cabe, aparecen a los lados los botones **‹ ›**, que
+la desplazan hasta el borde del grupo siguiente; también la desplazan la rueda del ratón y el trackpad. La fila de
+pestañas de la cinta se desplaza igual cuando no cabe junto al campo de búsqueda.
 
 El campo **Buscar acciones…** a la derecha de las pestañas encuentra cualquier comando: escriba unas letras, «plan»,
 «eksport tabel», una palabra sin diacríticos polacos o un nombre en inglés conocido de PL/SQL Developer, p. ej.

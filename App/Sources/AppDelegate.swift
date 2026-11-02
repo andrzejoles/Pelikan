@@ -1344,6 +1344,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                     try? await Task.sleep(for: .seconds(s.delay ?? 1))
                     continue
                 }
+                // Rozmiar okna głównego (np. wąskie okno — przewijanie wstążki, D206): "args": {"width": 900, "height": 700}.
+                if s.command == "debug.windowSize", let window = mainWindow?.window {
+                    func number(_ key: String) -> CGFloat? {
+                        switch s.args?[key] { case .int(let v)?: CGFloat(v); case .double(let v)?: CGFloat(v); default: nil }
+                    }
+                    var frame = window.frame
+                    let top = frame.maxY
+                    frame.size.width = number("width") ?? frame.width
+                    frame.size.height = number("height") ?? frame.height
+                    frame.origin.y = top - frame.height
+                    window.setFrame(frame, display: true)
+                    log("ok debug.windowSize \(Int(frame.width))×\(Int(frame.height))")
+                    try? await Task.sleep(for: .seconds(s.delay ?? 1))
+                    continue
+                }
                 // Zmiana opcji formatera na inną wartość (przykład z BeautifierExamples) — podgląd zmian w Preferencjach.
                 if s.command == "debug.beautifierVariant", case .string(let id)? = s.args?["option"], let e = BeautifierExamples.example(id) {
                     workspace.settings.beautifier = e.variant(workspace.settings.beautifier)

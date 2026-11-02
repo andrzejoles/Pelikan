@@ -71009,6 +71009,118 @@
         }
       }
     },
+    "Przewiń karty wstążki w lewo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll ribbon tabs left"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menüband-Registerkarten nach links blättern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplazar las pestañas de la cinta a la izquierda"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прокрутити вкладки стрічки ліворуч"
+          }
+        }
+      }
+    },
+    "Przewiń karty wstążki w prawo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll ribbon tabs right"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menüband-Registerkarten nach rechts blättern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplazar las pestañas de la cinta a la derecha"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прокрутити вкладки стрічки праворуч"
+          }
+        }
+      }
+    },
+    "Przewiń wstążkę w lewo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll ribbon left"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menüband nach links blättern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplazar la cinta a la izquierda"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прокрутити стрічку ліворуч"
+          }
+        }
+      }
+    },
+    "Przewiń wstążkę w prawo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll ribbon right"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menüband nach rechts blättern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplazar la cinta a la derecha"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прокрутити стрічку праворуч"
+          }
+        }
+      }
+    },
     "Przełącz komentarz linii" : {
       "localizations" : {
         "en" : {

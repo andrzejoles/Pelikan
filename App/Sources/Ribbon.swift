@@ -12,7 +12,12 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
     private let workspace: Workspace
     private let tabStack = NSStackView()
     private let groupStack = NSStackView()
-    private let scroll = NSScrollView()
+    private let document = FlippedView()
+    /// Pasek kart wstążki i zawartość bieżącej karty — przewijane przy przepełnieniu przyciskami ‹ › (D206).
+    private lazy var tabStrip = OverflowScrollStrip(document: tabStack, leftLabel: L10n.tr("Przewiń karty wstążki w lewo"),
+                                                    rightLabel: L10n.tr("Przewiń karty wstążki w prawo"))
+    private lazy var contentStrip = OverflowScrollStrip(document: document, leftLabel: L10n.tr("Przewiń wstążkę w lewo"),
+                                                        rightLabel: L10n.tr("Przewiń wstążkę w prawo"), mapsPreciseVertical: false)
     private let search = NSSearchField()
     private let collapseButton = NSButton()
     private lazy var results = RibbonSearchResults(workspace: workspace) { [weak self] id in self?.run(id) }
@@ -66,45 +71,43 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         groupStack.spacing = 0
         groupStack.edgeInsets = NSEdgeInsets(top: 4, left: 8, bottom: 0, right: 8)
         groupStack.translatesAutoresizingMaskIntoConstraints = false
-        let document = FlippedView()
-        document.translatesAutoresizingMaskIntoConstraints = false
         document.addSubview(groupStack)
-        scroll.documentView = document
-        scroll.drawsBackground = false
-        // Bez paska przewijania: przy pokazywanych paskach (Ustawienia systemowe) zasłaniałby podpisy grup; szeroką
-        // kartę przewija gest albo kółko z Shift.
-        scroll.hasHorizontalScroller = false
-        scroll.hasVerticalScroller = false
-        scroll.verticalScrollElasticity = .none
-        scroll.translatesAutoresizingMaskIntoConstraints = false
+        // Bez paska przewijania: przy pokazywanych paskach (Ustawienia systemowe) zasłaniałby podpisy grup. Szeroką
+        // kartę przewijają przyciski ‹ › po bokach (tylko przy przepełnieniu, D206), gest gładzika, kółko myszy
+        // (także z Shift); przycisk przewija do granicy grupy.
+        contentStrip.translatesAutoresizingMaskIntoConstraints = false
+        contentStrip.pageItems = { [weak self] in self?.groupRanges() ?? [] }
+        // Pasek kart wstążki (Start … Widok i karty kontekstowe) też może się nie mieścić obok „Szukaj czynności”.
+        tabStrip.translatesAutoresizingMaskIntoConstraints = false
 
         let line = NSBox()
         line.boxType = .separator
         line.translatesAutoresizingMaskIntoConstraints = false
 
-        for v in [tabStack, search, collapseButton, line, scroll] as [NSView] { root.addSubview(v) }
+        for v in [tabStrip, search, collapseButton, line, contentStrip] as [NSView] { root.addSubview(v) }
         heightConstraints = [
-            (tabStack.heightAnchor.constraint(equalToConstant: 0), { Self.stripHeight - 6 }),
+            (tabStrip.heightAnchor.constraint(equalToConstant: 0), { Self.stripHeight - 6 }),
             (line.topAnchor.constraint(equalTo: root.topAnchor), { Self.stripHeight }),
-            (scroll.heightAnchor.constraint(equalToConstant: 0), { Self.contentHeight - 1 }),
+            (contentStrip.heightAnchor.constraint(equalToConstant: 0), { Self.contentHeight - 1 }),
             (document.heightAnchor.constraint(equalToConstant: 0), { Self.contentHeight - 1 }),
         ]
         for (c, value) in heightConstraints { c.constant = value() }
         NSLayoutConstraint.activate(heightConstraints.map(\.0))
         NSLayoutConstraint.activate([
-            tabStack.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 10),
-            tabStack.topAnchor.constraint(equalTo: root.topAnchor, constant: 3),
-            tabStack.trailingAnchor.constraint(lessThanOrEqualTo: search.leadingAnchor, constant: -12),
+            tabStrip.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 10),
+            tabStrip.topAnchor.constraint(equalTo: root.topAnchor, constant: 3),
+            tabStrip.trailingAnchor.constraint(equalTo: search.leadingAnchor, constant: -12),
+            tabStack.heightAnchor.constraint(equalTo: tabStrip.scroll.contentView.heightAnchor),
             collapseButton.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -10),
-            collapseButton.centerYAnchor.constraint(equalTo: tabStack.centerYAnchor),
+            collapseButton.centerYAnchor.constraint(equalTo: tabStrip.centerYAnchor),
             search.trailingAnchor.constraint(equalTo: collapseButton.leadingAnchor, constant: -6),
-            search.centerYAnchor.constraint(equalTo: tabStack.centerYAnchor),
+            search.centerYAnchor.constraint(equalTo: tabStrip.centerYAnchor),
             search.widthAnchor.constraint(equalToConstant: 230),
             line.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             line.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            scroll.topAnchor.constraint(equalTo: line.bottomAnchor),
-            scroll.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            scroll.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+            contentStrip.topAnchor.constraint(equalTo: line.bottomAnchor),
+            contentStrip.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            contentStrip.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             groupStack.leadingAnchor.constraint(equalTo: document.leadingAnchor),
             groupStack.topAnchor.constraint(equalTo: document.topAnchor),
             groupStack.bottomAnchor.constraint(equalTo: document.bottomAnchor),
@@ -166,6 +169,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
 
     private func rebuildTabs() {
         tabStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        var selectedButton: NSView?
         for tab in visibleTabs {
             let color = tab.context.first.map(DocumentTabButton.color(for:))
             let b = RibbonTabButton(title: tab.title, selected: tab.id == selectedTab, color: color)
@@ -178,7 +182,10 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
                 b.toolTip = L10n.tr("Karta kontekstowa: \(activeKind?.displayName ?? tab.title)")
             }
             tabStack.addArrangedSubview(b)
+            if tab.id == selectedTab { selectedButton = b }
         }
+        // Wybrana karta (także kontekstowa na końcu paska) w widoku przy przepełnieniu paska kart wstążki (D206).
+        if let selectedButton { tabStrip.reveal(selectedButton) }
     }
 
     private func select(tab id: String) {
@@ -206,7 +213,16 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             groupStack.addArrangedSubview(groupView(group))
         }
         refreshEnabled()
-        scroll.contentView.scroll(to: .zero)
+        // Nowa karta — od początku (D206).
+        contentStrip.scrollToStart()
+    }
+
+    /// Zakresy grup bieżącej karty w treści wstążki — krok przycisków ‹ › do granicy grupy (D206).
+    private func groupRanges() -> [ClosedRange<Double>] {
+        groupStack.arrangedSubviews.filter { !($0 is NSBox) }.map { v in
+            let f = v.convert(v.bounds, to: document)
+            return Double(f.minX)...Double(max(f.minX, f.maxX))
+        }
     }
 
     private func groupView(_ group: RibbonGroup) -> NSView {
@@ -351,7 +367,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
 
     private func applyVisibility(shown: Bool, collapsed: Bool) {
         isHidden = !shown
-        scroll.isHidden = collapsed
+        contentStrip.isHidden = collapsed
         let symbol = collapsed ? "chevron.down" : "chevron.up"
         collapseButton.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         collapseButton.toolTip = collapsed ? L10n.tr("Rozwiń wstążkę") : L10n.tr("Zwiń wstążkę do kart")
@@ -360,7 +376,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
     }
 
     private func updateFrameHeight() {
-        let height = Self.stripHeight + (scroll.isHidden ? 0 : Self.contentHeight)
+        let height = Self.stripHeight + (contentStrip.isHidden ? 0 : Self.contentHeight)
         if view.frame.height != height { view.setFrameSize(NSSize(width: view.frame.width, height: height)) }
     }
 

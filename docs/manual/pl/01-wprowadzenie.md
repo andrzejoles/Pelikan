@@ -162,7 +162,9 @@ danego rodzaju — po przełączeniu okna wraca do niej sama.
 Częste czynności mają duże przyciski, pozostałe — małe; rzadsze są w listach rozwijanych grup (oznaczonych ▾). Podpowiedź
 przycisku pokazuje opis i skrót, więc skrótów uczysz się przy okazji. Prawy klik na przycisku dodaje komendę do paska
 szybkiego dostępu. Dwukrotne kliknięcie karty albo strzałka po prawej zwija wstążkę do samych kart; **Widok › Wstążka** ją ukrywa
-(także w **Ustawienia › Ogólne › Wstążka**).
+(także w **Ustawienia › Ogólne › Wstążka**). Gdy okno jest wąskie, a karta wstążki się nie mieści, po bokach pojawiają
+się przyciski **‹ ›** — przewijają ją do granicy kolejnej grupy; przewija też kółko myszy i gest gładzika. Tak samo
+przewija się pasek kart wstążki, gdy nie mieści się obok pola wyszukiwania.
 
 Pole **Szukaj czynności…** po prawej stronie kart znajduje każdą komendę — wpisz kilka liter: „plan”, „eksport tabel”,
 „zrodlo” (bez polskich znaków) albo angielską nazwę znaną z PL/SQL Developera, np. „beautifier”, „compile invalid”.
