@@ -219,6 +219,11 @@ extension Workspace {
             doc.selectedRange = o..<o
         }
         doc.isModified = wasModified
+        // Okno z niezapisaną drugą kartą zostaje zmienione — nowa sesja edycji tylko w zakresie wczytanego pliku.
+        if wasModified {
+            let own = newTabs.filter { ($0.key.hasSuffix(" body") ? UnitFile.Part.body : .spec) == doc.unitFiles[k].part }.map(\.segment)
+            if let lo = own.map(\.lowerBound).min(), let hi = own.map(\.upperBound).max() { doc.markEditSession(lo..<hi) }
+        }
         doc.diskStamps[url] = FileStamp.of(url, data: data)
     }
 
