@@ -11257,6 +11257,34 @@
         }
       }
     },
+    "Czynności wyniku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Result actions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergebnisaktionen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acciones del resultado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дії з результатом"
+          }
+        }
+      }
+    },
     "Czynność" : {
       "localizations" : {
         "en" : {
@@ -18313,34 +18341,6 @@
         }
       }
     },
-    "Edytuj dane (wymaga ROWID w zapytaniu)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit data (requires ROWID in the query)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Редагувати дані (потребує ROWID у запиті)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Editar datos (requiere ROWID en la consulta)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Daten bearbeiten (erfordert ROWID in der Abfrage)"
-          }
-        }
-      }
-    },
     "Edytuj definicję tabeli" : {
       "localizations" : {
         "en" : {
@@ -19569,34 +19569,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Експортувати запит у файл…"
-          }
-        }
-      }
-    },
-    "Eksportuj zaznaczenie albo cały pobrany wynik" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export the selection or the entire fetched result"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Експортувати виділення або весь отриманий результат"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exportar la selección o todo el resultado obtenido"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Auswahl oder gesamtes abgerufenes Ergebnis exportieren"
           }
         }
       }
@@ -66753,6 +66725,34 @@
         }
       }
     },
+    "Pozostałe czynności wyniku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More result actions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitere Ergebnisaktionen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más acciones del resultado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інші дії з результатом"
+          }
+        }
+      }
+    },
     "Pozycja elementu w tekście — element w tym miejscu, także struktura sterująca; bez argumentu — podprogram, deklaracja, blok albo jednostka pod kursorem" : {
       "localizations" : {
         "en" : {
@@ -112589,34 +112589,6 @@
         }
       }
     },
-    "Zapisz zmiany w bazie (bez COMMIT)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apply changes to the database (without COMMIT)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Записати зміни в базу (без COMMIT)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aplicar cambios en la base de datos (sin COMMIT)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Änderungen in die Datenbank schreiben (ohne COMMIT)"
-          }
-        }
-      }
-    },
     "Zapisz…" : {
       "localizations" : {
         "en" : {
@@ -114209,34 +114181,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Commit (git commit) …"
-          }
-        }
-      }
-    },
-    "Zatwierdź zmiany" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apply changes"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Зафіксувати зміни"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirmar cambios"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Änderungen festschreiben"
           }
         }
       }

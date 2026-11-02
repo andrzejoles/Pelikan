@@ -79,6 +79,11 @@ the directory of the window's file.
 
 ![Editing a result: a new row and the pending changes counter](../img/siatka-edycja.png)
 
+Directly above the result is the **result action bar** — icons for every action on the result, grouped as on the
+**Result** ribbon tab: fetching, data editing, filter and QBE, copy and export, analysis (graph, totals, record, value
+panel) and result tabs; drop-down lists have a ▾ arrow. An icon's tooltip shows its name, description and shortcut.
+When the bar does not fit, the remaining actions are in the **»** menu; the row count is on the right.
+
 The grid fetches rows in batches (you set the number in **Settings › SQL Window › Rows per page**) and fetches more
 while you scroll. The “(more…)” label next to the row count means that the result is not complete. **Next page** (⌘⇟)
 and **Last page (fetch all)** (⇧⌘⇟) are in the **Session › Result** menu and on the bar above the grid. For very large

@@ -86,6 +86,12 @@ cuenta desde el directorio del archivo de la ventana.
 
 ![Edición de un resultado: fila nueva y contador de cambios pendientes](../img/siatka-edycja.png)
 
+Justo encima del resultado está la **barra de acciones del resultado**: iconos de todas las acciones sobre el
+resultado, agrupados como en la pestaña **Resultado** de la cinta: obtención, edición de datos, filtro y QBE, copia y
+exportación, análisis (gráfico, totales, registro, panel de valor) y pestañas de resultados; las listas desplegables
+llevan una flecha ▾. La descripción emergente de un icono muestra nombre, descripción y atajo. Si la barra no cabe, las
+demás acciones están en el menú **»**; a la derecha se ve el número de filas.
+
 La cuadrícula obtiene las filas por lotes (el número se ajusta en **Ajustes › SQL Window › Filas por página**) y
 carga más al desplazarte. La indicación «(más…)» junto al número de filas significa que el resultado no está completo.
 **Página siguiente** (⌘⇟) y **Última página (obtener todo)** (⇧⌘⇟) están en el menú **Sesión › Resultado** y en la barra

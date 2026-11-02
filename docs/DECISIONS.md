@@ -3028,3 +3028,21 @@ przeszkadzać).” (PD-BEAU-003)
   dostaje kolumnę elementów (zaległe złamanie po komentarzu), nie kolumnę instrukcji; stanu przełącznika nie pokazują
   wstążka i paleta (tylko menu i pasek narzędzi); punkty kontrolne tylko w blokach PL/SQL (długie polecenie SQL
   leksowane od początku przy każdym Enter).
+
+### D207 · 2026-11-02 — Pasek czynności wyniku nad siatką
+
+**Prośba właściciela:** „wszystkie funkcje dotyczące wyników zapytania SQL powinny mieć ikonki bezpośrednio nad
+wynikami”.
+
+- **Zawartość z rejestru:** `ResultBarModel` bierze grupy karty kontekstowej „Wynik” wstążki (ta sama kolejność i te same
+  listy rozwijane — pasek nie rozjeżdża się ze wstążką) bez czynności okna i sesji (`sql.execute`, `sql.break`,
+  `sql.toggleEditor`, COMMIT, ROLLBACK — są na pasku narzędzi) i z panelem wartości obok widoku rekordu (karta Widok).
+  Test pilnuje, że każda komenda `grid.*` z menu jest na pasku i każdy przycisk ma ikonę.
+- **Same ikony** (podpowiedź: tytuł, opis, skrót); listy rozwijane — symbol ze strzałką ▾; grupy rozdzielone kreską;
+  dostępność jak w menu (`Workspace.isEnabled`); przełączniki (edycja — kłódka otwarta, rekord, panel wartości)
+  wyróżnione według stanu siatki. Eksport i „Kopiuj jako” — menu formatów (jak dawny przycisk eksportu); wstawienie
+  rekordu — jak dotąd z edycją pierwszej komórki.
+- **Przepełnienie:** elementy, które się nie mieszczą, w menu „»” (grupy rozdzielone, listy jako podmenu); licznik
+  wierszy po prawej, najwyżej trzecia część szerokości (skracany).
+- Dawny pasek siatki (strony, rekord, eksport, Excel, kłódka i przyciski edycji widoczne tylko w trybie edycji) zastąpiony;
+  przyciski edycji są teraz zawsze widoczne, wyłączone poza trybem edycji.

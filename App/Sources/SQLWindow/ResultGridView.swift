@@ -13,10 +13,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     private let table = GridTableView()
     private let scroll = NSScrollView()
     private let record = SingleRecordView()
-    private let bar = NSStackView()
-    private let recordButton = NSButton()
-    private let editButton = NSButton()
-    private var editControls: [NSView] = []
+    private lazy var bar = ResultCommandBar(workspace: workspace, trailing: countLabel)
     private var lastEditing = false
     private var lastFocus: Int?
     private let countLabel = NSTextField(labelWithString: "")
@@ -114,67 +111,16 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         scroll.contentView.postsBoundsChangedNotifications = true
         NotificationCenter.default.addObserver(self, selector: #selector(columnsMoved), name: NSTableView.columnDidMoveNotification, object: table)
 
-        // Pasek siatki (UG 7.1: Next Page, Last Page; UG 7.2: Single Record View, Export, Copy to Excel).
-        func button(_ symbol: String, _ tip: String, _ action: Selector) -> NSButton {
-            let b = NSButton(image: NSImage(systemSymbolName: symbol, accessibilityDescription: tip)!, target: self, action: action)
-            b.bezelStyle = .accessoryBarAction
-            b.isBordered = false
-            b.toolTip = tip
-            return b
-        }
-        recordButton.image = NSImage(systemSymbolName: "rectangle.split.1x2", accessibilityDescription: L10n.tr("Widok pojedynczego rekordu"))
-        recordButton.bezelStyle = .accessoryBarAction
-        recordButton.setButtonType(.pushOnPushOff)
-        recordButton.isBordered = false
-        recordButton.toolTip = L10n.tr("Widok pojedynczego rekordu")
-        recordButton.target = self
-        recordButton.action = #selector(toggleRecord)
-        let export = NSPopUpButton(frame: .zero, pullsDown: true)
-        export.isBordered = false
-        export.addItem(withTitle: "")
-        export.item(at: 0)?.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: L10n.tr("Eksport"))
-        for f in ExportFormat.allCases where f != .expressionList {
-            let item = export.menu!.addItem(withTitle: L10n.tr("Eksportuj jako \(f.displayName)…"), action: #selector(exportAs(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = f.rawValue
-        }
-        export.toolTip = L10n.tr("Eksportuj zaznaczenie albo cały pobrany wynik")
+        // Pasek czynności wyniku nad siatką (D207; UG 7.1 Next/Last Page, UG 7.2 Single Record View, Export, Copy to
+        // Excel, UG 7.6 edycja): komendy z rejestru w grupach karty „Wynik” wstążki, przepełnienie w menu „»”.
         countLabel.textColor = .secondaryLabelColor
-        // Edycja (UG 7.6): kłódka Edit data, Wstaw, Usuń, Zatwierdź zmiany (z menu: kopiuj SQL zmian, anuluj).
-        editButton.image = NSImage(systemSymbolName: "lock", accessibilityDescription: L10n.tr("Edytuj dane"))
-        editButton.bezelStyle = .accessoryBarAction
-        editButton.setButtonType(.pushOnPushOff)
-        editButton.isBordered = false
-        editButton.toolTip = L10n.tr("Edytuj dane (wymaga ROWID w zapytaniu)")
-        editButton.target = self
-        editButton.action = #selector(toggleEdit)
-        editButton.isEnabled = grid.rowidColumn != nil
-        let post = NSPopUpButton(frame: .zero, pullsDown: true)
-        post.isBordered = false
-        post.addItem(withTitle: "")
-        post.item(at: 0)?.image = NSImage(systemSymbolName: "checkmark.circle", accessibilityDescription: L10n.tr("Zatwierdź zmiany"))
-        for (title, id) in [(L10n.tr("Zapisz zmiany w bazie (Post)"), "grid.post"), (L10n.tr("Kopiuj SQL zmian"), "grid.copyChangesSQL"),
-                            (L10n.tr("Anuluj zmiany"), "grid.cancelChanges")] {
-            let item = post.menu!.addItem(withTitle: title, action: #selector(contextCommand(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = id
-        }
-        post.toolTip = L10n.tr("Zapisz zmiany w bazie (bez COMMIT)")
-        editControls = [button("plus", L10n.tr("Wstaw rekord"), #selector(insertRecord)),
-                        button("minus", L10n.tr("Usuń rekord"), #selector(deleteRecord)), post]
-        editControls.forEach { $0.isHidden = true }
-        let separator = NSBox()
-        separator.boxType = .separator
-        separator.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([separator.widthAnchor.constraint(equalToConstant: 1), separator.heightAnchor.constraint(equalToConstant: 14)])
-        for v in [button("chevron.down", L10n.tr("Następna strona"), #selector(nextPage)),
-                  button("chevron.down.2", L10n.tr("Ostatnia strona (pobierz wszystkie)"), #selector(lastPage)),
-                  recordButton, export, button("tablecells", L10n.tr("Kopiuj do Excela"), #selector(copyToExcel)),
-                  separator, editButton] + editControls + [countLabel] as [NSView] {
-            bar.addArrangedSubview(v)
-        }
-        bar.spacing = 4
-        bar.edgeInsets = NSEdgeInsets(top: 2, left: 4, bottom: 2, right: 6)
+        countLabel.lineBreakMode = .byTruncatingTail
+        bar.actions = ["grid.insertRecord": { [weak self] in self?.insertRecord() },
+                       "grid.toggleRecordView": { [weak self] in self?.toggleRecord() }]
+        bar.onSymbols = ["grid.edit": "lock.open"]
+        bar.setState("grid.edit", on: false)
+        bar.setState("grid.toggleRecordView", on: false)
+        bar.setState("grid.valuePanel", on: false)
         record.isHidden = true
         record.onMove = { [weak self] delta in self?.moveRecord(delta) }
         for v in [bar, scroll, record] as [NSView] {
@@ -184,8 +130,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         NSLayoutConstraint.activate([
             bar.topAnchor.constraint(equalTo: topAnchor),
             bar.leadingAnchor.constraint(equalTo: leadingAnchor),
-            bar.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
-            { let c = bar.heightAnchor.constraint(equalToConstant: 24); c.priority = .defaultHigh; return c }(),
+            bar.trailingAnchor.constraint(equalTo: trailingAnchor),
+            { let c = bar.heightAnchor.constraint(equalToConstant: ResultCommandBar.height); c.priority = .defaultHigh; return c }(),
             scroll.topAnchor.constraint(equalTo: bar.bottomAnchor),
             scroll.leadingAnchor.constraint(equalTo: leadingAnchor),
             scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
@@ -302,6 +248,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         if valuePanel?.isHidden == showPanel {
             valuePanel?.isHidden = !showPanel
             panelWidth?.constant = showPanel ? 300 : 0
+            bar.setState("grid.valuePanel", on: showPanel)
         }
         let filterText = grid.filter?.text
         if filterText != lastFilter {
@@ -320,11 +267,10 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             + (edit.hasChanges ? "  ·  " + (grid.pendingSummary.isEmpty ? L10n.tr("zmiany do zatwierdzenia") : grid.pendingSummary.text) : "")
             + (tab.totals.isEmpty ? "" : "   ·   " + ColumnTotals.summary(grid, totals: tab.totals))
             + (grid.stoppedAtSizeLimit ? "   ·   " + L10n.tr("zatrzymano na limicie rozmiaru") : "")
+        bar.needsLayout = true
         if edit.isEditing != lastEditing {
             lastEditing = edit.isEditing
-            editButton.state = edit.isEditing ? .on : .off
-            editButton.image = NSImage(systemSymbolName: edit.isEditing ? "lock.open" : "lock", accessibilityDescription: L10n.tr("Edytuj dane"))
-            editControls.forEach { $0.isHidden = !edit.isEditing }
+            bar.setState("grid.edit", on: edit.isEditing)
             table.reloadData()
         } else if edit.isEditing {
             // Stan komórek (zmienione, wstawione, usunięte) — przerysowanie widocznych wierszy.
@@ -537,9 +483,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
 
     // MARK: Pasek siatki
 
-    @objc private func nextPage() { workspace.perform("grid.nextPage") }
-    @objc private func toggleEdit() { workspace.perform("grid.edit") }
-    @objc private func insertRecord() {
+    private func insertRecord() {
         workspace.perform("grid.insertRecord")
         DispatchQueue.main.async { [weak self] in
             guard let self, let row = self.tab.selectedRows?.first, row < self.grid.rowCount else { return }
@@ -551,18 +495,10 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             }
         }
     }
-    @objc private func deleteRecord() { workspace.perform("grid.deleteRecord") }
-    @objc private func lastPage() { workspace.perform("grid.lastPage") }
-    @objc private func copyToExcel() { workspace.perform("grid.copyToExcel") }
-
-    @objc private func exportAs(_ sender: NSMenuItem) {
-        guard let raw = sender.representedObject as? String else { return }
-        workspace.perform("grid.export", CommandArguments(["format": .string(raw)]))
-    }
 
     /// Przycisk w pasku siatki — ta sama komenda co „Rekord” na wstążce; widok i stan przycisku idą za stanem karty
     /// (`applyRecordMode` po zmianie `ResultTab.showsRecord`).
-    @objc private func toggleRecord() {
+    private func toggleRecord() {
         let task = workspace.perform("grid.toggleRecordView")
         // Przycisk sam zmienia stan po kliknięciu — wyrównany do karty także wtedy, gdy komenda się nie wykonała.
         Task { [weak self] in
@@ -573,7 +509,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
 
     private func applyRecordMode() {
         let show = tab.showsRecord
-        recordButton.state = show ? .on : .off
+        bar.setState("grid.toggleRecordView", on: show)
         guard record.isHidden == show else { return }
         record.isHidden = !show
         scroll.isHidden = show

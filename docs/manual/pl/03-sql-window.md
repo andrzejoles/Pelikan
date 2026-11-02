@@ -79,6 +79,11 @@ katalogu pliku okna.
 
 ![Edycja wyniku: nowy wiersz i licznik zmian oczekujących](../img/siatka-edycja.png)
 
+Bezpośrednio nad wynikiem jest **pasek czynności wyniku** — ikony wszystkich czynności dotyczących wyniku,
+w grupach jak na karcie wstążki **Wynik**: pobieranie, edycja danych, filtr i QBE, kopiowanie i eksport, analiza
+(wykres, sumy, rekord, panel wartości) i karty wyników; listy rozwijane mają strzałkę ▾. Podpowiedź ikony pokazuje
+nazwę, opis i skrót. Gdy pasek się nie mieści, pozostałe czynności są w menu **»**, a po prawej widać liczbę wierszy.
+
 Siatka pobiera wiersze porcjami (liczbę ustawisz w **Ustawienia › Okno SQL › Wierszy na stronę**) i dociąga kolejne
 przy przewijaniu. Opis „(więcej…)” przy liczbie wierszy oznacza, że wynik nie jest kompletny. **Następna strona** (⌘⇟)
 i **Ostatnia strona (pobierz wszystkie)** (⇧⌘⇟) są w menu **Sesja › Wynik** i na pasku nad siatką. Przy bardzo dużych

@@ -24,6 +24,9 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
 - **Przełącznik u góry po prawej:** różdżka na pasku narzędzi (wyłączona — przekreślona) włącza i wyłącza formatowanie
   przy Enter; także **Edycja › Formatuj linię przy Enter** (z zaznaczeniem stanu), wstążka (karta Edycja), paleta komend,
   skrót do przypisania i **Ustawienia › Formater › Podczas pisania**. Domyślnie włączone.
+- **Pasek czynności nad wynikiem:** wszystkie czynności dotyczące wyniku zapytania mają ikony bezpośrednio nad siatką —
+  pobieranie, edycja danych, filtr i QBE, kopiowanie i eksport, wykres, sumy, rekord, panel wartości i karty wyników,
+  w grupach jak na karcie wstążki **Wynik**. Gdy pasek się nie mieści, reszta jest w menu **»**.
 
 ## 1.10.0 — panel po lewej i foldery połączeń
 

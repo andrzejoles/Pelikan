@@ -84,6 +84,7 @@
 		B5689A7918B70D262B106C62 /* BreakpointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */; };
 		B6BD34E33D6E1D4419DB45F2 /* PreviewProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85EAEC90BFF3F92924007B12 /* PreviewProvider.swift */; };
 		BE5BF3E04ABB0999E4667B5C /* ProblemReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8A37D91D0CC74B7EDDA969F /* ProblemReportView.swift */; };
+		C1D60C1E2ED0FCDF0F4BF4F3 /* ResultCommandBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCAA0454A6D4E853A00B93A6 /* ResultCommandBar.swift */; };
 		C252BEC5D799ACD07E9F8B83 /* PelikanBridgeKit in Frameworks */ = {isa = PBXBuildFile; productRef = C7D733FBCA938D7C14616CD7 /* PelikanBridgeKit */; };
 		C37D703661685D5BF714A4E8 /* SSHTargetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF32F55F976564F7AA608BF /* SSHTargetManager.swift */; };
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
@@ -249,6 +250,7 @@
 		D7D6615E89A14B21F573B88A /* AppLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogging.swift; sourceTree = "<group>"; };
 		D823868EFA8AB35B9B9E1B7C /* TestExplorerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestExplorerView.swift; sourceTree = "<group>"; };
 		DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakpointsView.swift; sourceTree = "<group>"; };
+		DCAA0454A6D4E853A00B93A6 /* ResultCommandBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultCommandBar.swift; sourceTree = "<group>"; };
 		DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
 		E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramWindowViewController.swift; sourceTree = "<group>"; };
 		E41B68045DB74053B692C853 /* ProjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectView.swift; sourceTree = "<group>"; };
@@ -433,6 +435,7 @@
 				4DCBCC640C9755CF573D7C56 /* GridStage8Views.swift */,
 				3CD00EBBD1B1E5BDF5BE3469 /* GridToolViews.swift */,
 				578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */,
+				DCAA0454A6D4E853A00B93A6 /* ResultCommandBar.swift */,
 				F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */,
 				6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */,
 				553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */,
@@ -902,6 +905,7 @@
 				2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */,
 				CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */,
 				76955536F96C855C6F680CD5 /* ReportWindowViewController.swift in Sources */,
+				C1D60C1E2ED0FCDF0F4BF4F3 /* ResultCommandBar.swift in Sources */,
 				FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */,
 				172FB63958AF94B331B43375 /* Ribbon.swift in Sources */,
 				AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */,

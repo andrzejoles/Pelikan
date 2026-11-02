@@ -130,6 +130,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-GRID-025 | Ctrl +/− rozmiar czcionki siatki | NF13 | Siatka | 1 | P3 | — | ✅ test (większa/mniejsza/domyślna czcionka siatki, zapamiętana w preferencjach; skróty do przypisania w Klawiaturze) |
 | PD-GRID-026 | Wielkie/małe litery klawiszem w edytowalnej siatce | NF17 | Siatka | 1 | P3 | — | ✅ test (wielkie/małe litery w zaznaczonych komórkach edytowalnej kolumny) |
 | PD-GRID-027 | Numer wiersza w kopiowaniu/eksporcie (preferencja) | UG 23.20 | Preferences | 1 | P3 | — | ✅ test (preferencja: kolumna # z numerem wiersza widoku w kopii i eksporcie) |
+| PD-GRID-028 | Pasek czynności wyniku nad siatką: ikony wszystkich komend wyniku z rejestru w grupach karty „Wynik” wstążki (bez wykonania i transakcji), listy rozwijane, stan przełączników (edycja, rekord, panel wartości), przepełnienie w menu „»”, licznik wierszy (D207) | właściciel (D207) | Siatka | 8 | P1 | — | ✅ test (ResultBarTests: pokrycie komend grid.* z menu, ikony, grupy jak na wstążce, przepełnienie) 👁 zrzut 79-pasek-wyniku-glowne.png |
 
 ## PL/SQL Developer — zmienne
 

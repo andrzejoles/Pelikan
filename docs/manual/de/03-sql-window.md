@@ -82,6 +82,12 @@ Verzeichnis der Datei des Fensters.
 
 ![Bearbeiten eines Ergebnisses: neue Zeile und Zähler der ausstehenden Änderungen](../img/siatka-edycja.png)
 
+Direkt über dem Ergebnis liegt die **Ergebnisleiste** — Symbole für alle Aktionen am Ergebnis, gruppiert wie auf der
+Menüband-Registerkarte **Ergebnis**: Abrufen, Datenbearbeitung, Filter und QBE, Kopieren und Export, Analyse
+(Diagramm, Summen, Datensatz, Wertebereich) und Ergebnisregisterkarten; Auswahllisten haben einen Pfeil ▾. Der Tooltip
+eines Symbols zeigt Name, Beschreibung und Tastenkürzel. Passt die Leiste nicht, stehen die übrigen Aktionen im Menü
+**»**; rechts steht die Zeilenzahl.
+
 Das Raster ruft Zeilen portionsweise ab (die Anzahl legen Sie unter **Einstellungen › SQL Window › Zeilen pro Seite**
 fest) und lädt beim Scrollen weitere nach. Der Hinweis „(mehr …)“ bei der Zeilenzahl bedeutet, dass das Ergebnis nicht
 vollständig ist. **Nächste Seite** (⌘⇟) und **Letzte Seite (alle abrufen)** (⇧⌘⇟) stehen im Menü **Sitzung › Ergebnis**
