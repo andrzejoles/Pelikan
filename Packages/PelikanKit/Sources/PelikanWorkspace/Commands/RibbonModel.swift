@@ -165,6 +165,7 @@ public enum RibbonModel {
         RibbonTab("edit", L10n.tr("Edycja"), [
             RibbonGroup(L10n.tr("Formatowanie"), [
                 .large("edit.beautify", label: L10n.tr("Formatuj kod")),
+                .small("edit.formatOnEnter", label: L10n.tr("Formatuj przy Enter")),
                 .small("edit.uppercase"), .small("edit.lowercase"), .small("edit.commentLine"),
                 .small("edit.indent"), .small("edit.outdent"), .small("edit.removeTrailingSpaces"),
             ]),

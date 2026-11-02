@@ -86,8 +86,13 @@ public final class Document: Identifiable {
                 isModified = true
                 if kind == .program { isCompileStale = true }
                 if !foldedStarts.isEmpty { foldedStarts = CodeFolding.shift(foldedStarts, from: oldValue, to: text) }
-                if !bookmarks.isEmpty || !colorMarks.isEmpty {
+                if !bookmarks.isEmpty || !colorMarks.isEmpty || editSessionMarks.contains(where: { $0.range != nil }) {
                     let d = EditorShift.Change(old: oldValue, new: text)
+                    // Zakres, który zniknął w zmianie — znacznik pominięty (nie staje się znacznikiem całego tekstu).
+                    editSessionMarks = editSessionMarks.compactMap { m in
+                        guard let r = m.range else { return m }
+                        return d.shift(r).map { EditSessionMark(serial: m.serial, range: $0) }
+                    }
                     bookmarks = bookmarks.map { var b = $0; b.offset = d.shift(b.offset); return b }
                     colorMarks = colorMarks.compactMap { m in d.shift(m.range).map { ColorMark(range: $0, color: m.color) } }
                 }
@@ -173,7 +178,37 @@ public final class Document: Identifiable {
 
     public var selectedRange: Range<Int> = 0..<0
     public var isModified = false {
-        didSet { if !isModified { baselineText = text } }
+        didSet {
+            if !isModified {
+                baselineText = text
+                markEditSession(nil)
+            }
+        }
+    }
+    /// Początek nowej sesji edycji (D205): tekst z otwarcia, zapisu albo wczytania (`range` nil — cały tekst, inaczej
+    /// zakres pliku wczytanego w oknie pary, w bieżącym tekście) — edytor zapomina zmiany w tym zakresie (formatowanie
+    /// przy Enter dotyczy tylko linii zmienionych w sesji).
+    public struct EditSessionMark: Sendable, Equatable {
+        public var serial = 0
+        public var range: Range<Int>?
+    }
+    /// Kolejka znaczników (najnowsze na końcu) do zastosowania przez edytor — kilka wczytań pary przed synchronizacją
+    /// edytora; zakresy przesuwane przy zmianach tekstu tylko do czasu zastosowania (`consumeEditSessionMarks`), potem
+    /// znaczniki z zakresem znikają z kolejki (bez porównywania tekstu przy każdym znaku). Znacznik całego tekstu
+    /// zastępuje wcześniejsze.
+    public internal(set) var editSessionMarks: [EditSessionMark] = []
+    public private(set) var editSessionSerial = 0
+
+    func markEditSession(_ range: Range<Int>?) {
+        editSessionSerial += 1
+        let mark = EditSessionMark(serial: editSessionSerial, range: range)
+        editSessionMarks = range == nil ? [mark] : Array((editSessionMarks + [mark]).suffix(32))
+    }
+
+    /// Edytor zastosował znaczniki do `serial` — znaczniki z zakresem usunięte (nie trzeba ich już przesuwać).
+    public func consumeEditSessionMarks(through serial: Int) {
+        guard editSessionMarks.contains(where: { $0.serial <= serial && $0.range != nil }) else { return }
+        editSessionMarks.removeAll { $0.serial <= serial && $0.range != nil }
     }
     /// Tekst z chwili otwarcia, wczytania z bazy albo zapisu — status linii (PD-EDIT-003) i Revert (PD-PROG-009).
     public internal(set) var baselineText = ""

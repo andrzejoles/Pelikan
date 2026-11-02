@@ -43,6 +43,11 @@ public enum SmartIndent {
         return (n - 1) % unit.count + 1
     }
 
+    /// Czy znak przed kursorem to znak nowej linii (Enter nie został zużyty, np. przez AutoReplace z miejscem kursora).
+    public static func followsNewline(_ text: NSString, caret: Int) -> Bool {
+        caret > 0 && caret <= text.length && [0x0A, 0x0D].contains(text.character(at: caret - 1))
+    }
+
     static func leading(_ line: String) -> String { String(line.prefix { $0 == " " || $0 == "\t" }) }
 
     /// Słowa i nawiasy linii (wielkimi literami), bez komentarzy i literałów.
