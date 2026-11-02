@@ -26,6 +26,9 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   skrót do przypisania i **Ustawienia › Formater › Podczas pisania**. Domyślnie włączone.
 - **Podpowiedź po kropce za schematem:** `select * from schemat.` od razu pokazuje listę obiektów schematu (wcześniej
   pojawiała się dopiero po wpisaniu pierwszej litery — także ⌃Spacja tuż po kropce mówiła „Brak podpowiedzi”).
+- **Wstążka w wąskim oknie:** gdy karta wstążki się nie mieści, po bokach pojawiają się przyciski **‹ ›** — przewijają
+  do granicy kolejnej grupy (kółko myszy i gładzik przewijają jak dotąd). Tak samo przewija się pasek kart wstążki,
+  gdy nie mieści się obok pola „Szukaj czynności”.
 
 ## 1.10.0 — panel po lewej i foldery połączeń
 

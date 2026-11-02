@@ -413,6 +413,24 @@ public enum TabStripScrolling {
         clamp(offset + (forward ? 1 : -1) * step(visible: visible), content: content, visible: visible)
     }
 
+    /// Krok przycisku do granicy elementu (grupy wstążki, D206): ‹ › przesuwają o „stronę” wyrównaną do grup.
+    /// Naprzód — grupa ucięta przy prawej krawędzi (albo pierwsza za nią) staje się pierwszą od lewej; wstecz — grupa
+    /// ucięta przy lewej krawędzi staje się ostatnią widoczną. Ruch krótszy niż pół zwykłego kroku (grupa szersza niż
+    /// widoczny obszar) albo brak granic — zwykły krok `target`. `items` — zakresy elementów w treści (od lewej), `margin` — odstęp od krawędzi.
+    public static func pageTarget(offset: Double, content: Double, visible: Double, forward: Bool,
+                                  items: [ClosedRange<Double>], margin: Double = 8) -> Double {
+        let fallback = target(offset: offset, content: content, visible: visible, forward: forward)
+        var o: Double?
+        if forward {
+            if let item = items.first(where: { $0.upperBound > offset + visible + 0.5 }) { o = item.lowerBound - margin }
+        } else {
+            if let item = items.last(where: { $0.lowerBound < offset - 0.5 }) { o = item.upperBound + margin - visible }
+        }
+        // Za mały ruch (grupa szersza niż widok albo ucięta tuż przy krawędzi) — zwykły krok.
+        guard let o, (forward ? o - offset : offset - o) >= step(visible: visible) / 2 else { return fallback }
+        return clamp(o, content: content, visible: visible)
+    }
+
     /// Przesunięcie po obrocie kółka (pionowy obrót przewija poziomo; dodatnia delta — w lewo, jak w macOS).
     public static func wheel(offset: Double, delta: Double, content: Double, visible: Double) -> Double {
         clamp(offset - delta, content: content, visible: visible)

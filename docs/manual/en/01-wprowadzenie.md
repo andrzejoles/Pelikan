@@ -164,7 +164,9 @@ and returns to it when you switch windows.
 Frequent actions have large buttons, others small ones; rarer ones are in the groups' drop-down lists (marked ▾). A
 button's tooltip shows its description and shortcut, so you learn shortcuts along the way. Right-click a button to add
 the command to the quick access group. Double-click a tab or use the arrow on the right to collapse the ribbon to its
-tabs; **View › Ribbon** hides it (also in **Settings › General › Ribbon**).
+tabs; **View › Ribbon** hides it (also in **Settings › General › Ribbon**). When the window is narrow and a ribbon
+tab does not fit, **‹ ›** buttons appear at its sides — they scroll to the edge of the next group; the mouse wheel and
+trackpad scroll it too. The row of ribbon tabs scrolls the same way when it does not fit next to the search field.
 
 The **Search actions…** field to the right of the tabs finds any command — type a few letters: “plan”, “export tables”,
 a word without Polish diacritics, or an English name known from PL/SQL Developer, e.g. “beautifier”, “compile invalid”.

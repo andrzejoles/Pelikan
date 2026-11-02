@@ -3028,3 +3028,21 @@ przeszkadzać).” (PD-BEAU-003)
   dostaje kolumnę elementów (zaległe złamanie po komentarzu), nie kolumnę instrukcji; stanu przełącznika nie pokazują
   wstążka i paleta (tylko menu i pasek narzędzi); punkty kontrolne tylko w blokach PL/SQL (długie polecenie SQL
   leksowane od początku przy każdym Enter).
+
+### D206 · 2026-11-02 — Przewijanie wstążki przy przepełnieniu przyciskami ‹ ›
+
+**Prośba właściciela:** przy wąskim oknie wstążka nie mieści się w szerokości — mają się pojawić przyciski przewijania
+w lewo i w prawo (kółko myszy już przewija — nie zepsuć).
+
+- **Jeden mechanizm dla trzech pasów:** `OverflowScrollStrip` (wydzielony z paska kart okien, D201) — pasek kart okien,
+  pasek kart wstążki (Start … Widok i karty kontekstowe obok „Szukaj czynności”) i treść bieżącej karty wstążki.
+  Przyciski ‹ › po bokach tylko przy przepełnieniu (obszar treści zwęża się o nie), wyłączone na końcach, krok
+  z animacją 0,2 s (bez animacji przy „Ogranicz ruch”). Bez przepełnienia zdarzenia przewijania idą dalej.
+- **Krok do granicy grupy** (`TabStripScrolling.pageTarget`): › — grupa ucięta przy prawej krawędzi staje się pierwszą
+  od lewej; ‹ — grupa ucięta przy lewej krawędzi staje się ostatnią widoczną. Grupa szersza niż widoczny obszar albo
+  ruch krótszy niż pół zwykłego kroku — zwykły krok (60% szerokości). Pasek kart wstążki — zwykły krok.
+- **Kółko i gładzik:** obrót kółka przewija poziomo jak dotąd; w treści wstążki pionowy gest gładzika nie przewija
+  poziomo (działa jak w zwykłym widoku przewijanym — gest poziomy), na paskach kart — tak jak w D201.
+- Zmiana karty wstążki — treść od początku; wybrana karta (także kontekstowa na końcu paska) przewijana do widoku.
+- Komenda skryptu zrzutów `debug.windowSize` (szerokość, wysokość okna głównego) — scenariusz
+  `78-wstazka-przewijanie` (okno 900 pt).
