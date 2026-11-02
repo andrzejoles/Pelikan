@@ -940,7 +940,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             if let r = mark.range { editedRanges.clear(r) } else { editedRanges.reset() }
         }
         handledSessionMark = document.editSessionSerial
-        document.consumeEditSessionMarks(through: handledSessionMark)
+        // Podzielony edytor: drugi widok ma własne zmienione zakresy — znaczniki usuwa ten, który zastosuje je ostatni.
+        document.consumeEditSessionMarks(through: min(handledSessionMark, peer?.handledSessionMark ?? handledSessionMark))
     }
 
     /// Plan Entera z ustawień formatera (okno SQL, programu, testu; konsola i okna bez kodu — zwykły Enter).

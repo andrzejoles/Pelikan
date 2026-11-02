@@ -3021,6 +3021,8 @@ przeszkadzać).” (PD-BEAU-003)
   każdym znaku); zakres usunięty w zmianie — znacznik pominięty. Znak
   wstawionego tekstu czytany z magazynu bez kopiowania dokumentu. Test widoku: NSTextView poza ekranem z zapisem zmian
   jak w edytorze.
+- **Czwarte przejście przeglądu:** podzielony edytor — drugi widok ma własne zakresy zmian, więc znaczniki z zakresem
+  usuwa ten widok, który zastosuje je jako ostatni (mniejszy z numerów obsłużonych przez oba widoki).
 - **Pominięte:** wyrównanie do rzeki linii zaczynającej się słowem klauzuli przy CASE w jednej linii według formatera
   (krótki CASE — formater nie łamie, więc linia `ELSE` zostaje); po komentarzu `--` na końcu linii w SQL nowa linia
   dostaje kolumnę elementów (zaległe złamanie po komentarzu), nie kolumnę instrukcji; stanu przełącznika nie pokazują
