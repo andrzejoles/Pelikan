@@ -341,6 +341,10 @@ struct BeautifierEnterTests {
         let next = text.range(of: "select 41 from dual").location
         #expect(memory.context(forLineAt: next, in: text) == EnterContext(start: next))
         #expect(memory.scannedLength - before < 200)
+        // Dopisanie za „/” (już nie kończy bloku) unieważnia zapamiętany koniec.
+        let slash = text.range(of: "end;\n/\n").location + 5
+        memory.invalidate(from: slash + 1)
+        #expect(memory.blockEnds.isEmpty)
     }
 
     @Test("wydajność: pakiet ~20 tys. linii i para — Enter bez leksowania całego pliku")

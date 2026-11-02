@@ -90,8 +90,9 @@ enum Stage7Commands {
                                       mac: ["cmd+alt+v"], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Pokazuje albo ukrywa panel obok siatki z wartością bieżącej komórki (tekst, JSON, XML, HTML, obraz, hex)."),
                                       feature: "DB-PANEL-001"),
-                    // Włączony tylko wtedy, gdy panel jest widoczny — przy siatce wyniku.
-                    state: { $0.valuePanelVisible && GridCommands.activeGrid($0) != nil }) { ctx in
+                    // Ustawienie widoku dla wszystkich siatek (panel obok każdej) — stan to samo ustawienie, które komenda
+                    // przełącza (D208).
+                    state: { $0.valuePanelVisible }) { ctx in
                 ctx.workspace.valuePanelVisible.toggle()
                 return .ok
             },

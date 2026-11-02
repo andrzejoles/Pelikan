@@ -601,8 +601,9 @@ final class RibbonButton: NSControl {
     private func updateBackground() {
         let alpha: CGFloat = pressed ? 0.22 : hovering ? 0.12 : 0
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            if alpha == 0, toggleState == true {
-                layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.2).cgColor
+            if toggleState == true {
+                // Włączony — akcent także przy najechaniu i wciśnięciu (mocniejszy), stan widać przed kliknięciem.
+                layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.2 + alpha).cgColor
             } else {
                 layer?.backgroundColor = alpha == 0 ? nil : NSColor.labelColor.withAlphaComponent(alpha).cgColor
             }

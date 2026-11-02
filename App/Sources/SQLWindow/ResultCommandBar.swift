@@ -277,6 +277,13 @@ final class ResultCommandBar: NSView {
         return menu
     }
 
+    /// Stan przełącznika ustawiony przez widok siatki (`setState`, np. widok rekordu) — z przycisku.
+    private func viewState(_ id: String) -> Bool? {
+        guard toggles.contains(id) else { return nil }
+        for case .command(id, let b) in elements { return b.state == .on }
+        return nil
+    }
+
     private func commandItem(_ raw: String) -> NSMenuItem? {
         guard let d = workspace.registry.command(CommandID(rawValue: raw))?.descriptor else { return nil }
         let item = NSMenuItem(title: d.title, action: #selector(menuCommand(_:)), keyEquivalent: "")
@@ -285,7 +292,7 @@ final class ResultCommandBar: NSView {
         item.toolTip = d.summary
         item.isEnabled = workspace.isEnabled(d.id)
         // Stan przełącznika także w menu „»” i listach (jak na przycisku).
-        if let on = localState[raw]?() ?? workspace.toggleState(d.id) { item.state = on ? .on : .off }
+        if let on = localState[raw]?() ?? workspace.toggleState(d.id) ?? viewState(raw) { item.state = on ? .on : .off }
         if let symbol = CommandSymbols.symbol(for: raw) { item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil) }
         if let chord = workspace.keymap.chords(for: d.id).first(where: { MenuBuilder.keyEquivalent(for: $0) != nil }),
            let (key, mask) = MenuBuilder.keyEquivalent(for: chord) {

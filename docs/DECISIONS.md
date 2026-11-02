@@ -3100,6 +3100,16 @@ wydanie). Poprawione:
   kroku 2 w jednostkach UTF-16 (`expectedStart` zamiast zapamiętanego zakresu); stan przełączników także w menu „»”
   i listach wstążki; tło włączonego przełącznika po zmianie wyglądu i koloru akcentu; panel wartości włączony tylko przy
   siatce; formaty kopiowania i eksportu z jednej listy także w menu kontekstowym siatki i narzędziu eksportu.
+- **Piąte przejście:** zwykły Enter (plan nie powstał — długie polecenie, region bez formatowania) na końcu nieedytowanej
+  linii też bez wielkości liter słowa; koniec bloku zapamiętany do końca linii z `/` (dopisanie za `/` go unieważnia);
+  stan widoku rekordu w menu „»” z przycisku; włączony przełącznik na wstążce wyróżniony także przy najechaniu;
+  wspólna szerokość tabulatora dokumentu (`Beautifier.documentTabWidth`); bez powtórzonej listy wyrażeń w menu
+  kontekstowym siatki.
+- **AutoReplace przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** skrót działa jak bez formatowania (funkcja
+  edytora), a formatowana jest tylko linia edytowana — rozwinięcie skrótu nie czyni nieedytowanej linii edytowaną.
+  Skrót wpisany przed chwilą leży w linii edytowanej, więc ta i tak jest formatowana.
+- **Stan „Panel wartości” (rozstrzygnięte):** to ustawienie widoku wszystkich siatek (panel obok każdej), więc stan
+  przycisku i zaznaczenie w menu pokazują to ustawienie — to, co przełącza kliknięcie — także bez siatki na ekranie.
 - **Stan przełączników z trzech źródeł (rozstrzygnięte):** `Command.state` opisuje stan komendy dla aktywnego kontekstu
   (menu, wstążka, pasek narzędzi); pasek wyniku należy do konkretnej siatki, więc stan edycji czyta z jej modelu
   (`localState`), a widok rekordu jest stanem samego widoku (`setState`). Przekazywanie siatki do `Command.state`

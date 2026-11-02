@@ -73,11 +73,9 @@ public enum FormatOnEnter {
         // Wielkość liter słowa przed kursorem tylko w linii edytowanej (słowo właśnie wpisane) — nieedytowany kod
         // zostaje bez zmian i nie trafia do zmienionych zakresów (D205).
         if lineEdited, let cased = keywordCaseLine(left, keywordCase) { left = cased }
-        var replacedByAutoReplace = false
         if let r = autoReplaceLine(left, rules: autoReplace, text: ns, lineStart: lineStart, caret: caret) {
             guard let replaced = r else { return nil }   // zamiana z miejscem kursora zużywa Enter
             left = replaced
-            replacedByAutoReplace = true
         }
         var working = text
         var at = caret
@@ -98,8 +96,9 @@ public enum FormatOnEnter {
         }
         let context = memory.context(forLineAt: lineStart, in: ns)
         guard let result = Beautifier.formatOnEnter(working, caret: at, context: context,
-                                                    // Linia rozwinięta skrótem przy tym Enterze to tekst nowy — formatowany jak edytowany.
-                                                    formatLine: lineEdited || replacedByAutoReplace,
+                                                    // Tylko linia edytowana (D205). Skrót AutoReplace działa jak bez formatowania
+                                                    // (funkcja edytora), ale nie czyni nieedytowanej linii edytowaną (D208).
+                                                    formatLine: lineEdited,
                                                     options: options, tabWidth: tabWidth) else { return nil }
         let auto = SmartIndent.newlineIndent(lineBeforeCaret: left, mode: indentMode, unit: unit)
         let enter = Edit(range: at..<at, text: "\n" + auto)
@@ -111,7 +110,7 @@ public enum FormatOnEnter {
            let fixed = SmartIndent.reindentClosingLine(line, previous: previousLine(ns, before: lineStart), unit: unit) {
             // Przesunięcie i wcięcie w kolumnach formatera: tabulator ma tyle kolumn co w formaterze (jednostka wcięcia przy
             // `useTabs`, inaczej `tabWidth` — jak kolumny dokumentu w `Beautifier.formatOnEnter`), spacja — jedną.
-            let width = options.useTabs ? max(1, options.indent) : max(1, tabWidth)
+            let width = Beautifier.documentTabWidth(options: options, tabWidth: tabWidth)
             let shift = Beautifier.columns(SmartIndent.leading(fixed), tabWidth: width) - Beautifier.columns(SmartIndent.leading(line), tabWidth: width)
             if let i = formatterIndent {
                 let target = max(0, Beautifier.columns(i, tabWidth: width) + shift)
@@ -168,7 +167,6 @@ public enum FormatOnEnter {
         return .some(newLeft)
     }
 
-    /// Szerokość odstępów w kolumnach.
 
     /// Poprzednia niepusta linia przed `lineStart` (wcięcie Smart).
     static func previousLine(_ ns: NSString, before lineStart: Int) -> String? {

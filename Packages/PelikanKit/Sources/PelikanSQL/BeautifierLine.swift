@@ -19,6 +19,11 @@ public struct EnterFormatting: Sendable, Equatable {
 extension Beautifier {
     /// Szerokość tekstu w kolumnach: znaki (`Character` — emoji i znaki złożone to jedna kolumna), tabulator do
     /// następnej wielokrotności `tabWidth` (wspólne dla formatera przy Enter i edytora).
+    /// Szerokość tabulatora dokumentu w kolumnach formatera: jednostka wcięcia przy `useTabs`, inaczej `tabWidth`.
+    public static func documentTabWidth(options: BeautifierOptions, tabWidth: Int) -> Int {
+        options.useTabs ? max(1, options.indent) : max(1, tabWidth)
+    }
+
     public static func columns<S: StringProtocol>(_ s: S, tabWidth: Int, from start: Int = 0) -> Int {
         let width = max(1, tabWidth)
         return s.reduce(start) { c, ch in ch == "\t" ? (c / width + 1) * width : c + 1 }
@@ -89,7 +94,7 @@ extension Beautifier {
         let shift = (prefix as NSString).length - start
         let leftFrom = lineStart + shift, leftTo = caret + shift
         let restFrom = leftTo + 1, restTo = restFrom + (rest as NSString).length
-        let width = options.useTabs ? max(1, options.indent) : max(1, tabWidth)
+        let width = documentTabWidth(options: options, tabWidth: tabWidth)
         var f = Formatter(source: context as NSString, options: options)
         let toks = f.toks
         // Linia zaczyna się albo kursor stoi w komentarzu blokowym, literale, identyfikatorze w cudzysłowie.

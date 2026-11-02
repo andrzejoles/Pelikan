@@ -950,17 +950,22 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let kind = document.kind
         guard FormatOnEnter.applies(to: kind, options: options) else {
             textView.enterPlan = nil
+            textView.lineEdited = nil
             return
         }
         let tabWidth = max(1, ws.settings.tabSize)
-        textView.enterPlan = { [weak self] text, caret in
-            guard let self, self.document.additionalSelections.isEmpty else { return nil }
-            // Opuszczana linia formatowana tylko, gdy była zmieniona w tej sesji edycji (istniejący kod — na żądanie).
+        textView.lineEdited = { [weak self] text, caret in
+            guard let self else { return true }
             let ns = text as NSString
             let line = ns.lineRange(for: NSRange(location: caret, length: 0))
             var end = line.location + line.length
             while end > line.location, [0x0A, 0x0D].contains(ns.character(at: end - 1)) { end -= 1 }
-            let edited = self.editedRanges.touches(line: line.location..<end)
+            return self.editedRanges.touches(line: line.location..<end)
+        }
+        textView.enterPlan = { [weak self] text, caret in
+            guard let self, self.document.additionalSelections.isEmpty else { return nil }
+            // Opuszczana linia formatowana tylko, gdy była zmieniona w tej sesji edycji (istniejący kod — na żądanie).
+            let edited = self.textView.lineEdited?(text, caret) ?? true
             let rules = (NSApp.delegate as? AppDelegate)?.workspace.settings.autoReplace ?? []
             return FormatOnEnter.plan(text: text, caret: caret, kind: kind, options: options, indentMode: self.textView.indentMode,
                                       unit: self.textView.indentUnit, tabWidth: tabWidth, keywordCase: self.textView.keywordCase,
@@ -1244,7 +1249,7 @@ final class CodeTextView: NSTextView {
             (NSApp.delegate as? AppDelegate)?.workspace.recordTyping(text)
             return
         }
-        if !formattingEnter, keywordCase != .unchanged, let ch = text.unicodeScalars.first, !CharacterSet.alphanumerics.contains(ch), ch != "_", ch != "$", ch != "#" {
+        if !formattingEnter, !suppressKeywordCase, keywordCase != .unchanged, let ch = text.unicodeScalars.first, !CharacterSet.alphanumerics.contains(ch), ch != "_", ch != "$", ch != "#" {
             applyKeywordCase()
         }
         super.insertText(string, replacementRange: replacementRange)
@@ -1561,6 +1566,10 @@ final class CodeTextView: NSTextView {
     /// Formatowanie przy Enter (D205): plan Entera w miejscu kursora albo nil (wyłączone, konsola, okno bez kodu,
     /// linia w literale…) — wtedy zwykły Enter z wcięciem wg trybu. Ustawia edytor kodu.
     var enterPlan: ((String, Int) -> FormatOnEnter.Plan?)?
+    /// Czy linia z kursorem była edytowana w tej sesji (przy włączonym formatowaniu przy Enter; nil — wyłączone).
+    var lineEdited: ((String, Int) -> Bool)?
+    /// Zwykły Enter na końcu nieedytowanej linii przy formatowaniu przy Enter — bez zmiany wielkości liter słowa (D205).
+    private var suppressKeywordCase = false
 
     /// Enter z formatowaniem w toku: wielkość liter słowa i AutoReplace są już w planie (krok 0) — `insertText` ich nie
     /// powtarza.
@@ -1572,6 +1581,10 @@ final class CodeTextView: NSTextView {
            insertFormattedNewline(plan, sender) {
             return
         }
+        // Plan nie powstał (np. długie polecenie, region bez formatowania): nieedytowana linia zostaje bez zmian także
+        // w zwykłym Enterze — bez wielkości liter ostatniego słowa.
+        suppressKeywordCase = selectedRange().length == 0 && !(lineEdited?(string, selectedRange().location) ?? true)
+        defer { suppressKeywordCase = false }
         // Wcięcie nowej linii wg trybu (UG 23.12 None / Automatic / Smart, PD-EDIT-004).
         var ns = string as NSString
         let caret = selectedRange().location

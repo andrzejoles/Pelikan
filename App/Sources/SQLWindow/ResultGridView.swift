@@ -559,7 +559,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             item.representedObject = id
         }
         let copyAs = NSMenu()
-        for f in GridCommands.copyAsFormats {
+        // Lista wyrażeń ma własną pozycję wyżej („Kopiuj jako listę wyrażeń”).
+        for f in GridCommands.copyAsFormats where f != .expressionList {
             let item = copyAs.addItem(withTitle: f.displayName, action: #selector(copyAsFormat(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = f.rawValue

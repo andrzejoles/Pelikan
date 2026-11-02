@@ -60,7 +60,8 @@ public struct StatementStartMemory: Sendable, Equatable {
     public private(set) var starts: [Int] = []
     var regions: [Int: Region] = [:]
     var checkpoints: [Checkpoint] = []
-    /// Koniec bloku PL/SQL (`/` sam w linii) dla początku polecenia — linia za nim nie jest liczona od punktów bloku.
+    /// Koniec linii z `/` kończącym blok PL/SQL, dla początku polecenia — linia za nim nie jest liczona od punktów bloku.
+    /// Unieważniany zmianą do końca tej linii włącznie (dopisanie czegoś za `/` sprawia, że już nie kończy bloku).
     var blockEnds: [Int: Int] = [:]
     /// Łączna długość tekstu przeleksowanego przez pamięć (UTF-16) — test, że Enter nie leksuje całego pliku.
     public private(set) var scannedLength = 0
@@ -115,7 +116,7 @@ public struct StatementStartMemory: Sendable, Equatable {
             // blokiem punktu: punkty (także późniejszych jednostek) zostają, koniec bloku zapamiętany (kolejne linie za
             // nim — od razu podziałem), polecenie wyznacza podział.
             if scan.stale { checkpoints.remove(at: k) }
-            if scan.ended, let end = scan.endPosition { blockEnds[cp.statement] = end }
+            if scan.ended, let end = scan.endLineEnd { blockEnds[cp.statement] = end }
         }
         let base = starts.last { $0 <= lineStart } ?? 0
         guard base < lineStart else { return (base, regions[base] ?? Region(), true) }
@@ -145,7 +146,7 @@ public struct StatementStartMemory: Sendable, Equatable {
         // kolejność położeń (w jednym miejscu punkt podprogramu po zwykłym, żeby go zastąpił).
         let new = unsorted.sorted { $0.position < $1.position || $0.position == $1.position && !$0.subprogram && $1.subprogram }
         // Zwykle: nowe punkty za wszystkimi znanymi (także przy pustej pamięci) — dopisanie z łączeniem tego samego miejsca.
-        if checkpoints.last.map({ l in new.allSatisfy { $0.position > l.position } }) ?? true {
+        if checkpoints.last.map({ l in new[0].position > l.position }) ?? true {
             for c in new { appendOrMerge(c) }
             return
         }
@@ -195,8 +196,9 @@ public struct StatementStartMemory: Sendable, Equatable {
         var regionsAt: [Int: Region] = [:]
         var checkpoints: [Checkpoint] = []
         var ended = false
-        /// Położenie `/` kończącego blok (w dokumencie), gdy `ended`.
+        /// Położenie `/` kończącego blok i koniec jego linii (w dokumencie), gdy `ended`.
         var endPosition: Int?
+        var endLineEnd: Int?
         /// Miejsce, w którym przejście uznało punkt za nieaktualny (`stale`) — licznik leksowania.
         var stopPosition: Int?
         var stale = false
@@ -271,6 +273,7 @@ public struct StatementStartMemory: Sendable, Equatable {
                     if plsql, pos > statement, p >= utf.count || utf[p] == 0x0A || utf[p] == 0x0D {
                         ended = true
                         endPosition = pos
+                        endLineEnd = from + p
                         return
                     }
                 default:
