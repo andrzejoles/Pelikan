@@ -23,7 +23,14 @@ struct PermissionMatrixTests {
         let ro = PermissionMatrix.readOnly(all)
         #expect(ro.allSatisfy { $0.chosen <= .read })
         let o = PermissionMatrix.overrides(ro)
-        #expect(o.count == all.filter { $0.base > .read }.count && o.values.allSatisfy { $0 == .read })
+        let lowered2 = Set(all.filter { $0.base > .read }.map(\.command))
+        #expect(lowered2.isSubset(of: Set(o.keys)) && o.values.allSatisfy { $0 <= .read })
+        // „Wszystko tylko do odczytu” obejmuje komendy aplikacji przez run_command (np. edit.beautify).
+        let (session, _) = SessionRegistry().create(profile: AgentProfile.builtIn[0], directory: "", accessOverrides: o)
+        for id in AgentPolicy.appCommands {
+            let d = try #require(ws.registry.command(id)?.descriptor)
+            #expect(AgentPolicy.effectiveAccess(command: d, session: session, settings: AgentSettings(), viaRunCommand: true) <= .read, "\(id)")
+        }
     }
 
     @Test("WS1-21: poziom agenta wyższy niż Brak tylko dla agent.* i AgentPolicy.appCommands; te zmieniają tylko interfejs albo edytor")

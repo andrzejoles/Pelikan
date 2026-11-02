@@ -4,6 +4,7 @@ import Darwin
 import Foundation
 import Logging
 import MCP
+import PelikanWorkspace
 import Synchronization
 
 /// Deskryptor gniazda wspólny dla aktora, wątku odczytu i kolejki zapisu. Zamyka go tylko kolejka zapisu, po zapisach
@@ -96,20 +97,31 @@ public actor SocketTransport: Transport {
     /// Najdłuższe czekanie na odpowiedzi w toku po EOF od mostu.
     private let drainTimeout: TimeInterval
 
-    /// Diagnostyka: PELIKAN_MCP_TRACE=<plik> zapisuje wiadomości MCP (bez tokenu — token idzie tylko w hello).
+    /// Diagnostyka: PELIKAN_MCP_TRACE=<plik> zapisuje wiadomości MCP (bez tokenu — token idzie tylko w hello; hasła
+    /// w treści maskowane jak w panelu aktywności).
     static let traceFile: String? = ProcessInfo.processInfo.environment["PELIKAN_MCP_TRACE"]
 
     static func trace(_ direction: String, _ data: Data) {
         guard let path = traceFile else { return }
-        let line = Data("\(direction) \(String(decoding: data.prefix(4000), as: UTF8.self))\n".utf8)
-        if let h = FileHandle(forWritingAtPath: path) {
-            // Nowe API zgłasza błąd zapisu (pełny dysk) jako błąd Swift — stare `write(_:)` rzucało wyjątek ObjC (awaria).
-            defer { try? h.close() }
-            _ = try? h.seekToEnd()
-            try? h.write(contentsOf: line)
-        } else {
-            // Ślad zawiera wyniki zapytań — tylko dla właściciela.
-            FileManager.default.createFile(atPath: path, contents: line, attributes: [.posixPermissions: 0o600])
+        let text = SQLPlusEngine.maskPassword(String(decoding: data.prefix(4000), as: UTF8.self))
+        writeTrace(path, Data("\(direction) \(text)\n".utf8))
+    }
+
+    /// Dopisuje do pliku śladu tylko, gdy to zwykły plik właściciela bez dostępu dla innych (ślad zawiera wyniki
+    /// zapytań): bez podążania za dowiązaniem, nowy plik z prawami 0600.
+    static func writeTrace(_ path: String, _ line: Data) {
+        let fd = open(path, O_WRONLY | O_APPEND | O_CREAT | O_NOFOLLOW | O_CLOEXEC, 0o600)
+        guard fd >= 0 else { return }
+        defer { close(fd) }
+        var st = stat()
+        guard fstat(fd, &st) == 0, (st.st_mode & S_IFMT) == S_IFREG, st.st_uid == getuid(), st.st_mode & 0o077 == 0 else { return }
+        line.withUnsafeBytes { buf in
+            var off = 0
+            while off < buf.count {
+                let n = write(fd, buf.baseAddress! + off, buf.count - off)
+                if n <= 0 { break }
+                off += n
+            }
         }
     }
 

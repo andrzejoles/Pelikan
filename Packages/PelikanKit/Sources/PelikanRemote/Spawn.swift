@@ -62,6 +62,10 @@ public enum Spawn {
         if case .data = stdin {
             guard pipe(&inPipe) == 0 else { closeAll(); throw SSHError.io(code: errno, detail: executable) }
         }
+        // Deskryptory potoków z FD_CLOEXEC: równoległe forkpty+execve (terminal agenta) ich nie dziedziczy — inaczej
+        // koniec zapisu stdout zostaje otwarty w obcym procesie (brak EOF), a stdin z danymi czyta obcy proces.
+        // posix_spawn i tak przekazuje dziecku deskryptory przez dup2 (bez FD_CLOEXEC na 0/1/2).
+        for fd in outPipe + errPipe + inPipe where fd >= 0 { _ = fcntl(fd, F_SETFD, FD_CLOEXEC) }
         var actions: posix_spawn_file_actions_t?
         posix_spawn_file_actions_init(&actions)
         defer { posix_spawn_file_actions_destroy(&actions) }

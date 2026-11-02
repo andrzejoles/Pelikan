@@ -138,10 +138,16 @@ public final class AgentServer: @unchecked Sendable {
         }
         // 2. Ramka hello z tokenem w ograniczonym czasie.
         Wire.setReadTimeout(fd, seconds: Self.helloTimeout)
-        guard let data = try? Wire.readFrame(from: fd), data.count < 4096,
+        // Rozmiar sprawdzany przed odczytem treści — proces bez tokenu nie zajmie 4 MB na połączenie.
+        guard let data = try? Wire.readFrame(from: fd, limit: 4096),
               let hello = try? JSONDecoder().decode(Wire.Hello.self, from: data), hello.type == "hello"
         else {
             reject(fd, "no_hello", pid: peer.pid)
+            return
+        }
+        // Most z innej wersji protokołu — jasny błąd od razu, nie później w trakcie pracy.
+        guard hello.version == Wire.protocolVersion else {
+            reject(fd, "protocol_version", pid: peer.pid)
             return
         }
         // 3. Token (stały czas).

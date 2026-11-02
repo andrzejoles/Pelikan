@@ -40,7 +40,10 @@ public final class SSHSession: Sendable {
     let controlPath: String
     let secret: @Sendable () -> String?
     static let ssh = "/usr/bin/ssh", scp = "/usr/bin/scp"
-    private let startLock = Mutex(())
+    /// Chwila ostatniego potwierdzenia połączenia głównego (`ssh -O check` albo nawiązanie) — pod blokadą startu.
+    private let startLock = Mutex<ContinuousClock.Instant?>(nil)
+    /// Jak długo potwierdzenie połączenia głównego zwalnia z ponownego `ssh -O check` przed poleceniem.
+    static let checkValidity: Duration = .seconds(5)
     private let resolved = Mutex<ResolvedHost?>(nil)
 
     public init(config: Config, runDirectory: URL, secret: @escaping @Sendable () -> String?) throws {
@@ -120,11 +123,18 @@ public final class SSHSession: Sendable {
 
     /// Nawiązuje połączenie główne (pierwsze logowanie, także po wygaśnięciu ControlPersist).
     public func connect() throws {
-        try startLock.withLock { _ in
-            if isConnected { return }
+        try startLock.withLock { verified in
+            // Świeżo potwierdzone — bez kolejnego procesu `ssh -O check` (polecenia jedno po drugim, odpytywanie Stop).
+            if let v = verified, ContinuousClock.now - v < Self.checkValidity { return }
+            if isConnected {
+                verified = .now
+                return
+            }
+            verified = nil
             let clock = ContinuousClock.now
             do {
                 try startMaster()
+                verified = .now
                 Log.ssh.info("SSH: połączenie główne z \(config.host, privacy: .hash) w \(ms: clock)\(config.legacyAlgorithms ? " (starsze algorytmy)" : "", privacy: .public)")
             } catch {
                 Log.ssh.notice("SSH: brak połączenia z \(config.host, privacy: .hash) po \(ms: clock): \(error)")
@@ -334,6 +344,7 @@ public final class SSHSession: Sendable {
 
     public func disconnect() {
         Log.ssh.debug("SSH: zamknięcie połączenia głównego z \(config.host, privacy: .hash)")
+        startLock.withLock { $0 = nil }
         let args = (commonOptions(master: false) + ["-O", "exit", destination]).map { Array($0.utf8) }
         _ = try? Spawn.run(Self.ssh, args, environment: environment, timeout: 10)
     }
@@ -348,13 +359,15 @@ public final class SSHSession: Sendable {
         return args
     }
 
-    /// Polecenie powłoki na serwerze (tekst w kodowaniu serwera). Ponawia raz po zerwaniu połączenia.
-    /// `timeout: nil` — bez limitu.
-    public func run(_ command: String, stdin: SpawnInput = .null, timeout: TimeInterval? = 120) throws -> Spawn.Result {
+    /// Polecenie powłoki na serwerze (tekst w kodowaniu serwera). `timeout: nil` — bez limitu. Po zerwaniu połączenia
+    /// (kod 255, połączenie główne nie żyje) ponawia tylko polecenie `idempotent` — inne mogło się już wykonać na
+    /// serwerze w całości albo w części (wdrożenie, `mv`, DML), więc wynik 255 wraca do wywołującego.
+    public func run(_ command: String, stdin: SpawnInput = .null, timeout: TimeInterval? = 120, idempotent: Bool = false) throws -> Spawn.Result {
         try connect()
         let args = try commandArguments(command, tty: false)
         let r = try Spawn.run(Self.ssh, args, environment: environment, stdin: stdin, timeout: timeout)
-        if r.status == 255, !isConnected {
+        if r.status == 255 { startLock.withLock { $0 = nil } }
+        if r.status == 255, idempotent, !isConnected {
             try connect()
             return try Spawn.run(Self.ssh, args, environment: environment, stdin: stdin, timeout: timeout)
         }
@@ -508,14 +521,14 @@ public final class RemoteProcess: Sendable {
         process.cancel()
         guard let pid = remoteProcessID else { return }
         let group = "-\(pid)"
-        _ = try? session.run("kill -TERM \(group) 2>/dev/null; kill -TERM \(pid) 2>/dev/null; exit 0", timeout: 20)
+        _ = try? session.run("kill -TERM \(group) 2>/dev/null; kill -TERM \(pid) 2>/dev/null; exit 0", timeout: 20, idempotent: true)
         let deadline = Date().addingTimeInterval(grace)
         while Date() < deadline {
-            let r = try? session.run("kill -0 \(group) 2>/dev/null && echo alive", timeout: 20)
+            let r = try? session.run("kill -0 \(group) 2>/dev/null && echo alive", timeout: 20, idempotent: true)
             if r.map({ !String(decoding: $0.output, as: UTF8.self).contains("alive") }) ?? true { return }
             usleep(200_000)
         }
-        _ = try? session.run("kill -KILL \(group) 2>/dev/null; exit 0", timeout: 20)
+        _ = try? session.run("kill -KILL \(group) 2>/dev/null; exit 0", timeout: 20, idempotent: true)
     }
 }
 #endif

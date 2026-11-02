@@ -31,10 +31,17 @@ public enum PermissionMatrix {
         rows.map { var r = $0; r.chosen = min(r.base, .read); return r }
     }
 
-    /// Obniżenia dla sesji (tylko wiersze z poziomem niższym niż bazowy; wyższego wybrać się nie da).
+    /// Obniżenia dla sesji (tylko wiersze z poziomem niższym niż bazowy; wyższego wybrać się nie da). Gdy żaden
+    /// wiersz nie pozwala na więcej niż Odczyt („Wszystko tylko do odczytu”), komendy aplikacji dostępne przez
+    /// `run_command` (spoza katalogu narzędzi, np. `edit.beautify`) też dostają najwyżej ten poziom — sesja tylko do
+    /// odczytu nie zmienia tekstu edytora nawet po zgodzie.
     public static func overrides(_ rows: [PermissionRow]) -> [CommandID: AgentAccess] {
         var out: [CommandID: AgentAccess] = [:]
         for r in rows where r.chosen < r.base { out[r.command] = r.chosen }
+        let cap = rows.map(\.chosen).max() ?? .none
+        if cap < .approval {
+            for c in AgentPolicy.appCommands where out[c] == nil { out[c] = cap }
+        }
         return out
     }
 }

@@ -80,8 +80,23 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     /// Łączy się z bazą. `libraryDirectory` — katalog Instant Client z ustawień (nil = wykrywanie).
     public static func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions = ConnectOptions(),
                                libraryDirectory: String? = nil, configDirectory: String? = nil) async throws -> ODPISession {
-        let env = try ODPIEnvironment.get(libraryDirectory: libraryDirectory, configDirectory: configDirectory)
         let queue = DispatchQueue(label: "pelikan.odpi.session", qos: .userInitiated)
+        // Przygotowanie (biblioteka klienta, Kerberos, wyszukiwanie LDAP z limitami czasu — sieć) i logowanie na kolejce
+        // sesji, nie na wątku puli współbieżności (kilka połączeń naraz z nieosiągalnym LDAP zablokowałoby pulę).
+        return try await withCheckedThrowingContinuation { cont in
+            queue.async {
+                cont.resume(with: Result {
+                    let (env, finalTarget) = try prepare(target: target, libraryDirectory: libraryDirectory, configDirectory: configDirectory)
+                    return try connectSync(env: env, queue: queue, target: finalTarget, credentials: credentials, options: options)
+                })
+            }
+        }
+    }
+
+    /// Środowisko klienta i ostateczny cel połączenia (alias, portfel, katalog LDAP, token) — operacje blokujące.
+    private static func prepare(target: ConnectionTarget, libraryDirectory: String?, configDirectory: String?) throws
+        -> (ODPIEnvironment, ConnectionTarget) {
+        let env = try ODPIEnvironment.get(libraryDirectory: libraryDirectory, configDirectory: configDirectory)
         var resolved = target
         // Magazyn haseł (portfel z poświadczeniami) szuka wpisu po dokładnym tekście aliasu — bez rozwijania (D53).
         if target.walletAuth == true { resolved.externalAuth = true }
@@ -109,12 +124,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             resolved.externalAuth = true
             resolved.user = ""
         }
-        let finalTarget = resolved
-        return try await withCheckedThrowingContinuation { cont in
-            queue.async {
-                cont.resume(with: Result { try connectSync(env: env, queue: queue, target: finalTarget, credentials: credentials, options: options) })
-            }
-        }
+        return (env, resolved)
     }
 
     private static func connectSync(env: ODPIEnvironment, queue: DispatchQueue, target: ConnectionTarget,
@@ -245,8 +255,14 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     public func close() async {
         await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
             queue.async { [self] in
-                closedState.withLock { isClosed in
-                    guard !isClosed else { return }
+                // Znacznik zamknięcia pod blokadą (Break z wątku interfejsu już nie sięgnie do połączenia; Break w toku
+                // kończy się przed nim), wywołania sieciowe — poza blokadą: ROLLBACK na zerwanym połączeniu czeka na
+                // limit TCP i nie może wstrzymać wątku interfejsu czekającego na blokadę w `breakExecution`.
+                let alreadyClosed = closedState.withLock { isClosed in
+                    defer { isClosed = true }
+                    return isClosed
+                }
+                if !alreadyClosed {
                     for (_, rs) in resultSets { dpiStmt_release(rs.stmt) }
                     resultSets.removeAll()
                     // Sterownik nigdy nie zatwierdza po cichu: decyzję COMMIT/ROLLBACK podejmuje wcześniej interfejs
@@ -254,7 +270,6 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                     dpiConn_rollback(conn)
                     dpiConn_close(conn, dpiConnCloseMode(DPI_MODE_CONN_CLOSE_DEFAULT), nil, 0)
                     dpiConn_release(conn)
-                    isClosed = true
                 }
                 cont.resume()
             }
@@ -287,6 +302,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         let kind = Self.kind(stmtInfo)
 
         try check(dpiConn_setCallTimeout(conn, options.callTimeoutMs))
+        // Limit dotyczy tylko tego wykonania — dalsze pobieranie, COMMIT, ROLLBACK i ping bez niego.
+        defer { if options.callTimeoutMs != 0 { dpiConn_setCallTimeout(conn, 0) } }
         let vars = try bindVariables(binds, to: stmt)
         defer { for v in vars { dpiVar_release(v.handle) } }
 
@@ -331,6 +348,11 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                     continue
                 }
                 data = returned
+                // Wiele zmienionych wierszy — wszystkie wartości (nie tylko pierwsza).
+                let limit = options.lobLimit ?? self.options.lobPrefetchLimit
+                result.returnedValues[v.bind.name] = try (0..<Int(count)).map {
+                    try value(native: v.nativeType, oracle: v.oracleType, data: returned + $0, typeName: v.bind.type.rawValue, lobLimit: limit)
+                }
             }
             result.outBinds[v.bind.name] = try value(native: v.nativeType, oracle: v.oracleType, data: data, typeName: v.bind.type.rawValue, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
         }
@@ -570,11 +592,19 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         case DPI_NATIVE_TYPE_STMT:
             guard let child = v.asStmt else { return .null }
             dpiStmt_addRef(child)
-            var n: UInt32 = 0
-            try check(dpiStmt_getNumQueryColumns(child, &n))
-            try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
-            let columns = try describeColumns(child, count: n)
-            try limitFetchForNestedCursors(child, columns: columns)
+            // Kursor nieotwarty (ORA-24338) albo błąd opisu kolumn — dodatkowa referencja zwolniona (inaczej kursor
+            // zostaje otwarty na serwerze do końca sesji).
+            let columns: [ColumnInfo]
+            do {
+                var n: UInt32 = 0
+                try check(dpiStmt_getNumQueryColumns(child, &n))
+                try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
+                columns = try describeColumns(child, count: n)
+                try limitFetchForNestedCursors(child, columns: columns)
+            } catch {
+                dpiStmt_release(child)
+                throw error
+            }
             return .cursor(register(stmt: child, columns: columns, lobLimit: lobLimit, parent: parent).id)
         case DPI_NATIVE_TYPE_OBJECT:
             return .object(typeName: typeName, description: "")

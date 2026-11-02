@@ -16,6 +16,11 @@ final class RateLimiter {
         calls[session] = list
         return true
     }
+
+    /// Sesja zamknięta — jej historia wywołań usunięta (bez tego słownik rósł przez cały czas pracy aplikacji).
+    func forget(session: String) { calls[session] = nil }
+
+    var trackedSessions: Int { calls.count }
 }
 
 /// Zasada najmniejszego poziomu (PROMPT §7.4): poziom wywołania = minimum z poziomu komendy, macierzy sesji,

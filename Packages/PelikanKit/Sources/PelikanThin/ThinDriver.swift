@@ -161,11 +161,16 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     }
 
     func loadInfo() async throws {
-        let (_, rows) = try await queryAll("select sys_context('USERENV', 'SESSION_USER'), sys_context('USERENV', 'CURRENT_SCHEMA'), (select banner_full from v$version where rownum = 1) from dual")
+        let (_, rows) = try await queryAll("select sys_context('USERENV', 'SESSION_USER'), sys_context('USERENV', 'CURRENT_SCHEMA') from dual")
         if let r = rows.first {
             info.sessionUser = r[0].displayText ?? ""
             info.currentSchema = r[1].displayText ?? ""
-            info.server.banner = r[2].displayText ?? ""
+        }
+        // Opis wersji: BANNER_FULL od 18c, wcześniej BANNER (12.1/12.2) — brak opisu nie przerywa połączenia.
+        for column in ["banner_full", "banner"] {
+            guard let (_, rows) = try? await queryAll("select \(column) from v$version where rownum = 1") else { continue }
+            info.server.banner = rows.first?[0].displayText ?? ""
+            break
         }
     }
 

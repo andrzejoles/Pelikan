@@ -3064,3 +3064,29 @@ wynikami”.
   wierszy po prawej, najwyżej trzecia część szerokości (skracany).
 - Dawny pasek siatki (strony, rekord, eksport, Excel, kłódka i przyciski edycji widoczne tylko w trybie edycji) zastąpiony;
   przyciski edycji są teraz zawsze widoczne, wyłączone poza trybem edycji.
+
+### D209 · 2026-11-03 — Przegląd kodu warstw bazy, agentów, SSH i dziennika
+
+Przegląd pełnego kodu pakietów PelikanDB, PelikanODPI, PelikanThin, PelikanRemote, PelikanAgent, PelikanBridgeKit,
+PelikanLog i pelikan-mcp (na polecenie właściciela). Poprawione:
+- **Bezpieczeństwo:** ślad `PELIKAN_MCP_TRACE` z maskowaniem haseł (jak panel aktywności) i zapisem tylko do zwykłego pliku
+  właściciela 0600, bez podążania za dowiązaniem; „Wszystko tylko do odczytu” obniża też komendy aplikacji dostępne przez
+  `run_command` (np. `edit.beautify` nie zmieni tekstu nawet po zgodzie); deskryptory potoków `ssh` z FD_CLOEXEC
+  (równoległy terminal agenta ich nie dziedziczy); ramka hello najwyżej 4 KB przed odczytem treści i zgodna wersja
+  protokołu mostu (`protocol_version`).
+- **SSH:** polecenie po kodzie 255 ponawiane tylko, gdy jest idempotentne (odpytywanie i zatrzymanie procesu) — wdrożenie,
+  `mv` czy DML mogły się już wykonać; potwierdzenie połączenia głównego ważne 5 s (bez `ssh -O check` przed każdym
+  poleceniem); stały prywatny katalog gniazd w `/tmp` zamiast nowego przy każdym uruchomieniu.
+- **Oracle Net:** ścieżki portfela i pliku tokenu w cudzysłowie, gdy mają spacje albo znaki składni (deskryptor i EZConnect
+  Plus — Net Services Administrator's Guide, „About Easy Connect Plus”); sterownik thin łączy się z 12.1/12.2 (opis wersji
+  z `BANNER`, gdy brak `BANNER_FULL`; brak opisu nie przerywa połączenia).
+- **ODPI:** przygotowanie połączenia (LDAP, Kerberos, biblioteka) na kolejce sesji, nie w puli współbieżności; limit czasu
+  wywołania tylko dla wykonania (pobieranie, COMMIT i ping bez niego); referencja kursora zwalniana przy błędzie opisu
+  (kursor nieotwarty, ORA-24338); RETURNING INTO dla wielu wierszy — wszystkie wartości w `returnedValues`; zamknięcie
+  sesji bez trzymania blokady na czas ROLLBACK (Break z wątku interfejsu nie czeka na limit TCP).
+- **Agenci:** serwer MCP nie powstaje dla sesji zamkniętej w trakcie uzgadniania; wywołanie po zamknięciu sesji bez wpisu
+  „w toku”; obcinanie wyniku według długości po kodowaniu JSON (znaki sterujące `\uXXXX`); limiter zapomina zamknięte
+  sesje; dziennik bez tworzenia formaterów dat przy każdym wpisie.
+- **Most MCP:** komunikat na zamknięty stderr bez awarii; za długa linia wykrywana także, gdy kończy się w tym samym
+  kawałku danych.
+- **Dziennik aplikacji:** wpis na wyłączonym poziomie bez kopii konfiguracji pod blokadą; martwa `isEnabled` usunięta.

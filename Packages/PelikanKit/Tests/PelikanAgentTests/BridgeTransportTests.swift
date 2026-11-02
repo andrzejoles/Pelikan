@@ -4,6 +4,7 @@ import Foundation
 import MCP
 @testable import PelikanAgent
 @testable import PelikanBridgeKit
+import PelikanWorkspace
 import Testing
 
 @Suite("Most i transport gniazda: zamykanie bez wyścigów")
@@ -89,6 +90,11 @@ struct BridgeTransportTests {
         #expect(notice.hasPrefix("result_truncated") && notice.contains("\(text.utf8.count)") && notice.contains("nie polecenia"))
         // Po podwójnym kodowaniu JSON (najgorszy przypadek: każdy bajt dwa razy) mieści się w ramce mostu.
         #expect(2 * AgentController.maxResultBytes + 4096 < Wire.maxFrame)
+        // Znaki sterujące (`\uXXXX` w JSON — 6 bajtów): przycięte tak, by tekst po kodowaniu zmieścił się w ramce.
+        let control = String(repeating: "\u{01}", count: AgentController.maxResultBytes / 2)
+        let cparts = AgentController.limitedContent(control, untrusted: false)
+        let encoded = try JSONEncoder().encode(cparts[0])
+        #expect(cparts.count == 2 && encoded.count + 4096 < Wire.maxFrame)
 
         #expect(SocketTransport.fittingFrame(Data("{}".utf8)) == Data("{}".utf8))
         let big = Data(#"{"id":"a\/1","jsonrpc":"2.0","result":{"text":""#.utf8) + Data(repeating: 0x61, count: Wire.maxFrame) + Data(#""}}"#.utf8)
@@ -193,6 +199,43 @@ struct BridgeTransportTests {
         close(input[0])
         close(output[0])
         #expect(received == "odpowiedz:{\"id\":1}\n")
+    }
+
+    @Test("ślad MCP: hasła maskowane, plik 0600; istniejący plik dostępny dla innych albo dowiązanie — bez zapisu")
+    func traceFile() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("plk-trace-\(UUID().uuidString.prefix(6))")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let path = dir.appendingPathComponent("t.log").path
+        SocketTransport.writeTrace(path, Data("a\n".utf8))
+        let attrs = try FileManager.default.attributesOfItem(atPath: path)
+        #expect((attrs[.posixPermissions] as? Int) == 0o600)
+        #expect(SQLPlusEngine.maskPassword("create user x identified by tajne1").contains("tajne1") == false)
+        let open = dir.appendingPathComponent("open.log").path
+        FileManager.default.createFile(atPath: open, contents: Data(), attributes: [.posixPermissions: 0o644])
+        SocketTransport.writeTrace(open, Data("b\n".utf8))
+        #expect(try Data(contentsOf: URL(fileURLWithPath: open)).isEmpty)
+        let link = dir.appendingPathComponent("link.log").path
+        try FileManager.default.createSymbolicLink(atPath: link, withDestinationPath: path)
+        SocketTransport.writeTrace(link, Data("c\n".utf8))
+        #expect(try String(contentsOfFile: path, encoding: .utf8) == "a\n")
+    }
+
+    @Test("limiter wywołań: historia zamkniętej sesji usuwana")
+    func rateLimiterForget() {
+        let l = RateLimiter()
+        #expect(l.allow(session: "s", limit: 1) && !l.allow(session: "s", limit: 1))
+        l.forget(session: "s")
+        #expect(l.trackedSessions == 0 && l.allow(session: "s", limit: 1))
+    }
+
+    @Test("ramka hello: limit rozmiaru przed odczytem treści")
+    func helloLimit() throws {
+        var fds: [Int32] = [0, 0]
+        #expect(socketpair(AF_UNIX, SOCK_STREAM, 0, &fds) == 0)
+        defer { close(fds[0]); close(fds[1]) }
+        try Wire.writeFrame(Data(repeating: 0x61, count: 8000), to: fds[0])
+        #expect(throws: Wire.Error.frameTooLarge(8000)) { try Wire.readFrame(from: fds[1], limit: 4096) }
     }
 }
 

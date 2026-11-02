@@ -2,6 +2,18 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.13.3 — poprawki z przeglądu połączeń i agentów
+
+- **Sterownik thin z Oracle 12.1/12.2:** połączenie działa (wcześniej kończyło się błędem ORA-00904 przy odczycie opisu
+  wersji).
+- **Portfel i token w katalogu ze spacją** (np. `~/Oracle Wallets/ADB`): ścieżka trafia do Oracle Net w cudzysłowie.
+- **Sesja agenta „Wszystko tylko do odczytu”** nie zmienia już tekstu edytora komendami aplikacji (np. formatowanie),
+  także po zgodzie.
+- **SSH:** polecenie przerwane zerwaniem połączenia nie jest powtarzane (mogło się już wykonać na serwerze); mniej
+  procesów `ssh` przy kolejnych poleceniach.
+- **RETURNING INTO** przy zmianie wielu wierszy zwraca wszystkie wartości; zamknięcie zerwanej sesji nie blokuje
+  interfejsu; limit czasu wywołania agenta nie przerywa późniejszego pobierania wyników.
+
 ## 1.13.0 — formatowanie podczas pisania, pasek czynności nad wynikiem
 
 Zmiany z wersji 1.11.0–1.13.0 (bez osobnych wydań), wydane razem.

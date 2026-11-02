@@ -106,7 +106,8 @@ public enum Bridge {
                 line.append(0x0A)
                 if (try? Wire.writeAll(line, to: output)) == nil { break }
             }
-            if let failure { FileHandle.standardError.write(Data("pelikan-mcp: \(failure)\n".utf8)) }
+            // `write(contentsOf:)` zgłasza błąd Swift przy zamkniętym stderr (stare `write(_:)` rzucało wyjątek ObjC — awaria).
+            if let failure { try? FileHandle.standardError.write(contentsOf: Data("pelikan-mcp: \(failure)\n".utf8)) }
             drained.signal()
             // Aplikacja zamknęła sesję — kończymy proces mostu.
             if exitWhenClosed { exit(failure == nil ? 0 : 1) }
@@ -126,6 +127,8 @@ public enum Bridge {
                 buffer.removeSubrange(buffer.startIndex...newline)
                 let trimmed = line.filter { $0 != 0x0D }
                 if trimmed.isEmpty { continue }
+                // Każda linia (także zakończona w tym samym kawałku) — za długiej aplikacja nie przyjmie.
+                if trimmed.count > Wire.maxFrame { throw Failure.connection("za długa wiadomość") }
                 try Wire.writeFrame(Data(trimmed), to: fd)
             }
             if buffer.count > Wire.maxFrame { throw Failure.connection("za długa wiadomość") }

@@ -39,6 +39,11 @@ struct OracleNetTests {
         #expect(TNSNames.resolveForConnection(d, configDirectory: "/cfg", walletDirectory: "/w").contains("(SECURITY=(MY_WALLET_DIRECTORY=/w))"))
         #expect(TNSNames.resolveForConnection(d, configDirectory: "/cfg").contains("MY_WALLET_DIRECTORY=/cfg"))
         #expect(TNSNames.resolveForConnection("h:1521/s", configDirectory: nil, walletDirectory: nil) == "h:1521/s")
+        // Ścieżki ze spacjami — w cudzysłowie (deskryptor, EZConnect Plus, token z pliku).
+        #expect(TNSNames.resolveForConnection("tcps://h:1522/s", configDirectory: nil, walletDirectory: "/Oracle Wallets/a") == "tcps://h:1522/s?wallet_location=\"/Oracle Wallets/a\"")
+        #expect(TNSNames.resolveForConnection(d, configDirectory: nil, walletDirectory: "/W w").contains("(MY_WALLET_DIRECTORY=\"/W w\")"))
+        #expect(TNSNames.applyTokenAuth("h:1521/s", parameters: [("TOKEN_LOCATION", "/a b/t")]) == "h:1521/s?token_location=\"/a b/t\"")
+        #expect(TNSNames.applyTokenAuth("(DESCRIPTION=(ADDRESS=(HOST=h)))", parameters: [("TOKEN_LOCATION", "/a b")])?.contains("(TOKEN_LOCATION=\"/a b\")") == true)
         #expect(TNSNames.resolveForConnection("MOJ_ALIAS", configDirectory: "/nie/ma", keepAlias: true) == "MOJ_ALIAS")
         var t = ConnectionTarget(user: "", connectString: "a")
         #expect(!t.usesExternalCredentials)
