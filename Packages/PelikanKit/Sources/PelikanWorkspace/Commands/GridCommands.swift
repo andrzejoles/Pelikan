@@ -5,6 +5,8 @@ import PelikanDB
 public enum GridCommands {
     /// Formaty „Kopiuj jako” (parametr komendy, wybór ze wstążki, menu paska wyniku).
     static let copyAsFormats: [ExportFormat] = [.csv, .tsv, .html, .xml, .sql, .expressionList]
+    /// Formaty „Eksportuj wynik” (parametr komendy, menu paska wyniku).
+    static let exportFormats: [ExportFormat] = [.csv, .tsv, .html, .xml, .sql, .xlsx]
 
     @MainActor
     static func activeTab(_ ws: Workspace) -> ResultTab? {
@@ -142,7 +144,7 @@ public enum GridCommands {
                 return try copy(ctx, try formatArgument(ctx), header: true)
             },
             Command(CommandDescriptor(id: "grid.export", title: L10n.tr("Eksportuj wynik…"), category: .file,
-                                      parameters: [CommandParameter("format", .string, L10n.tr("Format"), allowed: ["csv", "tsv", "html", "xml", "sql", "xlsx"])],
+                                      parameters: [CommandParameter("format", .string, L10n.tr("Format"), allowed: exportFormats.map(\.rawValue))],
                                       agent: .none, effect: .external,
                                       summary: L10n.tr("Zapisuje zaznaczenie (albo cały pobrany wynik) do pliku."), feature: "PD-GRID-013"),
                     validate: hasGrid) { ctx in

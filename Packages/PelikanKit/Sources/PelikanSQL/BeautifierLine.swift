@@ -110,6 +110,16 @@ extension Beautifier {
             var p = pos
             while p > 0, ctx.character(at: p - 1) != 0x0A { p -= 1 }
             var c = 0
+            // Szybko: same znaki poniżej U+0300 (bez znaków łączących i par zastępczych) — jednostka = znak.
+            var q = p
+            while q < pos {
+                let u = ctx.character(at: q)
+                if u >= 0x300 { break }
+                c = u == 0x09 ? (c / width + 1) * width : c + 1
+                q += 1
+            }
+            guard q < pos else { return c }
+            c = 0
             for ch in ctx.substring(with: NSRange(location: p, length: pos - p)) { c = ch == "\t" ? (c / width + 1) * width : c + 1 }
             return c
         }

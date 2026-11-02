@@ -213,6 +213,12 @@ struct FormatOnEnterTests {
         let final = run(t2, try #require(p2)).final
         #expect(final.hasPrefix("begin\n\tif a then\n\t\tx := 1;\n\tend if;\n"))
         #expect(FormatOnEnter.columns(String(final.split(separator: "\n", omittingEmptySubsequences: false).last!), tabWidth: 2) == 2)
+        // Formater z tabulatorami (`useTabs`, wcięcie 4) przy tabulatorze edytora 2: nowa linia po END IF — jeden tabulator.
+        var o = BeautifierOptions()
+        o.useTabs = true
+        o.indent = 4
+        let (t3, p3) = plan("begin\n\tif a then\n\t\tx := 1;\n\t\tend if;|", options: o, mode: .smart, edited: false, unit: "\t")
+        #expect(run(t3, try #require(p3)).final == "begin\n\tif a then\n\t\tx := 1;\n\tend if;\n\t")
     }
 
     @Test("makro: komenda ustawień nie jest nagrywana")

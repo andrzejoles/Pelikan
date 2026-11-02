@@ -3085,7 +3085,12 @@ wydanie). Poprawione:
   śledzona tylko, gdy pasek jest w oknie (siatki kart wyników w pamięci okna nie przeliczają komend).
 - **Stan przełączników:** `Command(state:)` w rejestrze — menu (zaznaczenie), wstążka (wyróżnione tło, wartość dla
   VoiceOver), pasek wyniku i przełącznik na pasku narzędzi czytają `Workspace.toggleState`; stan mają formatowanie
-  przy Enter, edycja danych i panel wartości. Widok rekordu to stan widoku siatki — ustawia go widok.
+  przy Enter, edycja danych i panel wartości. Pasek wyniku bierze stan edycji z własnej siatki (`localState`), nie
+  z aktywnej; widok rekordu to stan widoku siatki — ustawia go widok.
+- **Drugie przejście:** koniec bloku PL/SQL (`/`) zapamiętany dla polecenia — linie za nim nie są leksowane od punktów
+  bloku przy każdym Enterze; jedna procedura wspólnego początku i końca (`EditorShift.Change`, bez dzielenia par
+  zastępczych); wcięcie formatera z tabulatorami liczone szerokością jego jednostki (`useTabs`); szybka ścieżka kolumn
+  dla tekstu bez znaków łączących; formaty eksportu jako stała jak formaty kopiowania.
 
 Uwagi rozstrzygnięte bez zmiany kodu:
 - **„Linia edytowana” z diffu z tekstem bazowym zamiast `EditedRanges`:** zostaje `EditedRanges`. Diff wymaga

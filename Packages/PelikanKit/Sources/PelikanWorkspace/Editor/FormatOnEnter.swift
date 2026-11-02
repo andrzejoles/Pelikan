@@ -25,19 +25,11 @@ public enum FormatOnEnter {
         /// wspólnego końca — magazyn tekstu, cofanie i znaczniki edytowanych linii widzą tylko to, co naprawdę zmienione.
         /// nil — teksty równe.
         public static func minimal(at: Int, old: String, new: String, suffix: Bool = true) -> Edit? {
-            let a = Array((old as NSString as String).utf16), b = Array(new.utf16)
-            guard a != b else { return nil }
-            var p = 0
-            while p < a.count, p < b.count, a[p] == b[p] { p += 1 }
-            // Nie dzielić pary zastępczej UTF-16.
-            if p > 0, UTF16.isLeadSurrogate(a[p - 1]) { p -= 1 }
-            var s = 0
-            if suffix {
-                while s < a.count - p, s < b.count - p, a[a.count - 1 - s] == b[b.count - 1 - s] { s += 1 }
-                if s > 0, UTF16.isTrailSurrogate(a[a.count - s]) { s -= 1 }
-            }
-            let text = String(utf16CodeUnits: Array(b[p..<(b.count - s)]), count: b.count - s - p)
-            return Edit(range: (at + p)..<(at + a.count - s), text: text)
+            // Porównanie jednostek UTF-16 (`==` na String uznaje „é” i „e\u{301}” za równe).
+            guard !old.utf16.elementsEqual(new.utf16) else { return nil }
+            let c = EditorShift.Change(old: old, new: new, suffix: suffix)
+            let text = (new as NSString).substring(with: NSRange(location: c.prefix, length: c.oldEnd + c.delta - c.prefix))
+            return Edit(range: (at + c.prefix)..<(at + c.oldEnd), text: text)
         }
     }
 
@@ -112,9 +104,12 @@ public enum FormatOnEnter {
             // Przesunięcie w kolumnach (tabulator do następnej wielokrotności `tabWidth`), nie w znakach.
             let shift = columns(SmartIndent.leading(fixed), tabWidth: tabWidth) - columns(SmartIndent.leading(line), tabWidth: tabWidth)
             if let i = formatterIndent {
-                let target = max(0, columns(i, tabWidth: tabWidth) + shift)
-                let width = max(1, tabWidth)
-                formatterIndent = i.contains("\t")
+                // Wcięcie formatera w jego kolumnach (tabulator = jednostka wcięcia przy `useTabs`, jak w formaterze),
+                // przesunięcie — w kolumnach dokumentu.
+                let width = options.useTabs ? max(1, options.indent) : max(1, tabWidth)
+                let docWidth = max(1, tabWidth)
+                let target = max(0, columns(i, tabWidth: width) + shift * width / docWidth)
+                formatterIndent = options.useTabs && options.indent > 0
                     ? String(repeating: "\t", count: target / width) + String(repeating: " ", count: target % width)
                     : String(repeating: " ", count: target)
             }

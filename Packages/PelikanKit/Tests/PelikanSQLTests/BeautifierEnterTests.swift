@@ -297,6 +297,24 @@ struct BeautifierEnterTests {
         #expect(memory.checkpoints.contains { $0.position == b4 - 2 })
     }
 
+    @Test("pamięć: linia za „/” bloku z punktami kontrolnymi — koniec bloku zapamiętany, bez ponownego leksowania bloku")
+    func lineAfterBlockEnd() {
+        var s = "create or replace package body a is\n"
+        for n in 0..<300 { s += "  procedure a\(n) is\n  begin\n    null;\n  end;\n" }
+        s += "end;\n/\n"
+        for n in 0..<50 { s += "select \(n) from dual;\n" }
+        let text = s as NSString
+        var memory = StatementStartMemory()
+        let inA = text.range(of: "procedure a250").location
+        _ = memory.context(forLineAt: inA - 2, in: text)
+        let line = text.range(of: "select 40 from dual").location
+        #expect(memory.context(forLineAt: line, in: text) == EnterContext(start: line))
+        let before = memory.scannedLength
+        let next = text.range(of: "select 41 from dual").location
+        #expect(memory.context(forLineAt: next, in: text) == EnterContext(start: next))
+        #expect(memory.scannedLength - before < 200)
+    }
+
     @Test("wydajność: pakiet ~20 tys. linii i para — Enter bez leksowania całego pliku")
     func performance() {
         func body(_ n: Int) -> String {

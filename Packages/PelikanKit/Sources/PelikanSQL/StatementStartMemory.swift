@@ -60,6 +60,8 @@ public struct StatementStartMemory: Sendable, Equatable {
     public private(set) var starts: [Int] = []
     var regions: [Int: Region] = [:]
     var checkpoints: [Checkpoint] = []
+    /// Koniec bloku PL/SQL (`/` sam w linii) dla początku polecenia — linia za nim nie jest liczona od punktów bloku.
+    var blockEnds: [Int: Int] = [:]
     /// Łączna długość tekstu przeleksowanego przez pamięć (UTF-16) — test, że Enter nie leksuje całego pliku.
     public private(set) var scannedLength = 0
 
@@ -72,6 +74,7 @@ public struct StatementStartMemory: Sendable, Equatable {
             starts.removeSubrange(k...)
         }
         if let k = checkpoints.firstIndex(where: { $0.position >= location }) { checkpoints.removeSubrange(k...) }
+        blockEnds = blockEnds.filter { $0.value < location }
     }
 
     /// Początek polecenia, w którym leży linia zaczynająca się w `lineStart` (albo sam `lineStart`, gdy poprzednie
@@ -97,18 +100,22 @@ public struct StatementStartMemory: Sendable, Equatable {
     /// Polecenie linii, stan regionów i leksera na jej początku: od ostatniego ważnego punktu kontrolnego (blok PL/SQL
     /// kończy tylko `/` sam w linii) albo podziałem od ostatniego znanego początku polecenia.
     mutating func statement(forLineAt lineStart: Int, in text: NSString) -> (statement: Int, region: Region, normal: Bool) {
-        if let k = checkpoints.lastIndex(where: { $0.position <= lineStart }) {
+        if let k = checkpoints.lastIndex(where: { $0.position <= lineStart }),
+           blockEnds[checkpoints[k].statement].map({ $0 >= lineStart }) ?? true {
             let cp = checkpoints[k]
             var scan = Scan(statement: cp.statement, region: cp.region, unit: cp.unit, checkpointsFrom: cp.position + 1, plsql: true)
             scan.run(text, from: cp.position, to: lineStart, expectSubprogram: cp.subprogram)
-            scannedLength += lineStart - cp.position
             if !scan.ended, !scan.stale {
+                scannedLength += lineStart - cp.position
                 merge(scan.checkpoints)
                 return (cp.statement, scan.region, scan.normal)
             }
+            scannedLength += (scan.endPosition ?? lineStart) - cp.position
             // Nieaktualny jest tylko ten punkt (linia nie zaczyna już podprogramu). `/` po drodze — linia leży za
-            // blokiem punktu: punkty (także późniejszych jednostek) zostają, polecenie wyznacza podział.
+            // blokiem punktu: punkty (także późniejszych jednostek) zostają, koniec bloku zapamiętany (kolejne linie za
+            // nim — od razu podziałem), polecenie wyznacza podział.
             if scan.stale { checkpoints.remove(at: k) }
+            if scan.ended, let end = scan.endPosition { blockEnds[cp.statement] = end }
         }
         let base = starts.last { $0 <= lineStart } ?? 0
         guard base < lineStart else { return (base, regions[base] ?? Region(), true) }
@@ -171,6 +178,8 @@ public struct StatementStartMemory: Sendable, Equatable {
         var regionsAt: [Int: Region] = [:]
         var checkpoints: [Checkpoint] = []
         var ended = false
+        /// Położenie `/` kończącego blok (w dokumencie), gdy `ended`.
+        var endPosition: Int?
         var stale = false
         var normal = true
 
@@ -236,7 +245,11 @@ public struct StatementStartMemory: Sendable, Equatable {
                     // `/` sam w linii kończy blok PL/SQL.
                     var p = t.end
                     while p < utf.count, utf[p] == 0x20 || utf[p] == 0x09 { p += 1 }
-                    if plsql, pos > statement, p >= utf.count || utf[p] == 0x0A || utf[p] == 0x0D { ended = true; return }
+                    if plsql, pos > statement, p >= utf.count || utf[p] == 0x0A || utf[p] == 0x0D {
+                        ended = true
+                        endPosition = pos
+                        return
+                    }
                 default:
                     break
                 }

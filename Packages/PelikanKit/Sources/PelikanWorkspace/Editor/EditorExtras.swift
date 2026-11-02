@@ -11,13 +11,18 @@ public enum EditorShift {
         public let oldEnd: Int
         public let delta: Int
 
-        public init(old: String, new: String) {
+        /// Wspólny początek i (gdy `suffix`) wspólny koniec w jednostkach UTF-16, bez dzielenia pary zastępczej.
+        public init(old: String, new: String, suffix: Bool = true) {
             let a = old as NSString, b = new as NSString
             let minLen = min(a.length, b.length)
             var p = 0
             while p < minLen, a.character(at: p) == b.character(at: p) { p += 1 }
+            if p > 0, UTF16.isLeadSurrogate(a.character(at: p - 1)) { p -= 1 }
             var s = 0
-            while s < minLen - p, a.character(at: a.length - 1 - s) == b.character(at: b.length - 1 - s) { s += 1 }
+            if suffix {
+                while s < minLen - p, a.character(at: a.length - 1 - s) == b.character(at: b.length - 1 - s) { s += 1 }
+                if s > 0, UTF16.isTrailSurrogate(a.character(at: a.length - s)) { s -= 1 }
+            }
             prefix = p
             oldEnd = a.length - s
             delta = b.length - a.length

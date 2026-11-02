@@ -4,8 +4,9 @@ import PelikanWorkspace
 /// Pasek ikon bezpośrednio nad wynikiem zapytania (D207): wszystkie czynności dotyczące wyniku z rejestru komend,
 /// w grupach karty „Wynik” wstążki (`ResultBarModel`) rozdzielonych kreską. Same ikony — opis, podsumowanie i skrót
 /// w podpowiedzi; listy rozwijane (▾) jak na wstążce. Gdy pasek się nie mieści, końcowe elementy trafiają do menu „»”
-/// (z podziałem na grupy). Dostępność przycisków — jak w menu (`Workspace.isEnabled`); stan przełączników (edycja,
-/// widok rekordu, panel wartości) ustawia widok siatki. Po prawej — licznik wierszy.
+/// (z podziałem na grupy). Dostępność przycisków — jak w menu (`Workspace.isEnabled`); stan przełączników — z rejestru
+/// komend (`Workspace.toggleState`, np. panel wartości), z modelu siatki paska (`localState`, edycja danych) albo od
+/// widoku siatki (`setState`, widok rekordu). Po prawej — licznik wierszy.
 final class ResultCommandBar: NSView {
     private enum Element {
         case command(String, NSButton)
@@ -28,7 +29,10 @@ final class ResultCommandBar: NSView {
     /// SQL poza oknem nie przeliczają komend przy każdej zmianie).
     private var tracking: ObservationToken?
     private var visibleCount = 0
-    /// Przyciski-przełączniki (stan z modelu siatki).
+    /// Stan przełącznika z modelu siatki tego paska (pierwszeństwo przed `toggleState`, który dotyczy aktywnej siatki);
+    /// odczyt śledzony jak dostępność.
+    var localState: [String: () -> Bool] = [:]
+    /// Przyciski-przełączniki (typ przycisku ustawiony przy pierwszym stanie).
     private var toggles: Set<String> = []
     /// Czynności z zachowaniem widoku siatki (np. wstawienie rekordu z edycją pierwszej komórki) zamiast samej komendy.
     var actions: [String: () -> Void] = [:]
@@ -143,7 +147,7 @@ final class ResultCommandBar: NSView {
             let on = workspace.isEnabled(CommandID(rawValue: id))
             if b.isEnabled != on { b.isEnabled = on }
             // Stan komendy-przełącznika z rejestru (edycja danych, panel wartości).
-            if let state = workspace.toggleState(CommandID(rawValue: id)) { setState(id, on: state) }
+            if let state = localState[id]?() ?? workspace.toggleState(CommandID(rawValue: id)) { setState(id, on: state) }
         }
     }
 

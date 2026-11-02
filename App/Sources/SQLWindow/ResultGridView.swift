@@ -118,6 +118,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         bar.actions = ["grid.insertRecord": { [weak self] in self?.insertRecord() },
                        "grid.toggleRecordView": { [weak self] in self?.toggleRecord() }]
         bar.onSymbols = ["grid.edit": "lock.open"]
+        bar.localState = ["grid.edit": { [weak self] in self?.grid.edit.isEditing ?? false }]
         bar.setState("grid.toggleRecordView", on: false)
         record.isHidden = true
         record.onMove = { [weak self] delta in self?.moveRecord(delta) }
