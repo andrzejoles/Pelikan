@@ -2,7 +2,9 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## 1.11.0 — formatowanie podczas pisania
+## 1.13.0 — formatowanie podczas pisania, pasek czynności nad wynikiem
+
+Zmiany z wersji 1.11.0–1.13.0 (bez osobnych wydań), wydane razem.
 
 - **Formater na bieżąco:** Enter w oknie SQL, programu i testu formatuje opuszczaną linię (zmienioną od otwarcia albo
   zapisu; istniejący, nieedytowany kod zostaje bez zmian) — wielkość liter słów
