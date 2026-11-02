@@ -132,8 +132,12 @@ final class AgentUIController: ApprovalPresenter {
             try? FileManager.default.removeItem(at: sessionDir)
         }
         showPane()
-        terminal.startProcess(executable: spec.shell, args: spec.shellArguments, environment: env.map { "\($0.key)=\($0.value)" },
-                              execName: nil, currentDirectory: directory)
+        // forkpty+execve bez zamykania deskryptorów — pod `DescriptorLock`, żeby nie odziedziczyć deskryptora utworzonego
+        // właśnie bez FD_CLOEXEC (potoki `ssh`, gniazdo agentów).
+        DescriptorLock.withLock {
+            terminal.startProcess(executable: spec.shell, args: spec.shellArguments, environment: env.map { "\($0.key)=\($0.value)" },
+                                  execName: nil, currentDirectory: directory)
+        }
         session.cliPID = terminal.process.shellPid
         terminal.window?.makeFirstResponder(terminal)
     }

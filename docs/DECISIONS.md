@@ -3082,7 +3082,8 @@ PelikanLog i pelikan-mcp (na polecenie właściciela). Poprawione:
   z `BANNER`, gdy brak `BANNER_FULL`; brak opisu nie przerywa połączenia).
 - **ODPI:** przygotowanie połączenia (LDAP, Kerberos, biblioteka) na kolejce sesji, nie w puli współbieżności; limit czasu
   wywołania tylko dla wykonania (pobieranie, COMMIT i ping bez niego); referencja kursora zwalniana przy błędzie opisu
-  (kursor nieotwarty, ORA-24338); RETURNING INTO dla wielu wierszy — wszystkie wartości w `returnedValues`; zamknięcie
+  (kursor nieotwarty, ORA-24338) — także dla wyników niejawnych; limit czasu zapytania (agent) zapamiętany przy wyniku
+  i ustawiany na czas każdego pobrania; zamknięcie
   sesji bez trzymania blokady na czas ROLLBACK (Break z wątku interfejsu nie czeka na limit TCP).
 - **Agenci:** serwer MCP nie powstaje dla sesji zamkniętej w trakcie uzgadniania; wywołanie po zamknięciu sesji bez wpisu
   „w toku”; obcinanie wyniku według długości po kodowaniu JSON (znaki sterujące `\uXXXX`); limiter zapomina zamknięte
@@ -3090,3 +3091,16 @@ PelikanLog i pelikan-mcp (na polecenie właściciela). Poprawione:
 - **Most MCP:** komunikat na zamknięty stderr bez awarii; za długa linia wykrywana także, gdy kończy się w tym samym
   kawałku danych.
 - **Dziennik aplikacji:** wpis na wyłączonym poziomie bez kopii konfiguracji pod blokadą; martwa `isEnabled` usunięta.
+
+Drugie przejście: ślad MCP maskuje hasła w rozkodowanych napisach JSON (wzorzec CONNECT działa od początku linii);
+`DescriptorLock` (PelikanLog) — tworzenie deskryptorów z FD_CLOEXEC (potoki `ssh`, gniazdo agentów; `accept` na
+gnieździe nieblokującym po `poll`) i start terminala agenta (forkpty) wzajemnie się wykluczają; gniazdo połączenia
+głównego SSH z numerem procesu w nazwie (kilka instancji Pelikana we wspólnym katalogu w /tmp); polecenia tylko do
+odczytu i sprzątające (stan serwera, kopie, historia, test celu, zwolnienie blokady) oznaczone jako idempotentne —
+ponawiane po zerwaniu; potwierdzenie połączenia zapominane po nieudanym `scp` i kodzie 255 w strumieniu; „tylko do
+odczytu” jako jawny wybór w macierzy (`readOnlySession`), nie wniosek z poziomów wierszy; opis wersji thin jednym
+zapytaniem według wersji serwera.
+
+Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
+testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
+`RETURNING … BULK COLLECT INTO` w bloku PL/SQL.

@@ -92,7 +92,7 @@ public enum SSHTargetTester {
     }
 
     public static func directoryState(_ path: String, session: SSHSession) throws -> RemoteDirectoryState {
-        switch text(try session.run(directoryCommand(path), timeout: 30), session.config.encoding) {
+        switch text(try session.run(directoryCommand(path), timeout: 30, idempotent: true), session.config.encoding) {
         case "W": .writable
         case "R": .readOnly
         default: .missing
@@ -119,7 +119,7 @@ public enum SSHTargetTester {
         checks.append(SSHTestCheck(title: L10n.tr("Logowanie"), status: .ok, detail: "\(t.user)@\(t.host)"))
         func simple(_ title: String, _ command: String, required: Bool) {
             do {
-                let r = try session.run(command, timeout: 30)
+                let r = try session.run(command, timeout: 30, idempotent: true)
                 let out = text(r, enc)
                 if r.status == 0, !out.isEmpty {
                     checks.append(SSHTestCheck(title: title, status: .ok, detail: out))
@@ -140,7 +140,7 @@ public enum SSHTargetTester {
         do {
             let wc = t.effectiveWorkingCopy
             let r = try session.run("LC_ALL=C; export LC_ALL; cd \(q(wc)) || exit 3; git rev-parse --abbrev-ref HEAD || exit 4; echo @@STATUS; git status --porcelain || exit 5",
-                                    timeout: 60)
+                                    timeout: 60, idempotent: true)
             let out = text(r, enc)
             if r.status != 0 {
                 checks.append(SSHTestCheck(title: L10n.tr("Kopia robocza"), status: .failed,
@@ -174,7 +174,7 @@ public enum SSHTargetTester {
 
     /// Utworzenie katalogu backupów (po potwierdzeniu w interfejsie).
     public static func createBackupDirectory(_ t: PelikanSSHTarget, session: SSHSession) throws {
-        let r = try session.run("mkdir -p \(q(t.backupDirectory)) && mkdir -p \(q(t.pelikanDirectory))", timeout: 30)
+        let r = try session.run("mkdir -p \(q(t.backupDirectory)) && mkdir -p \(q(t.pelikanDirectory))", timeout: 30, idempotent: true)
         guard r.status == 0 else { throw SSHError.io(code: r.status, detail: r.errorText) }
     }
 

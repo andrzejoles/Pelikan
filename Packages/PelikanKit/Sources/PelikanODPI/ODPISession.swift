@@ -29,6 +29,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         let stmt: OpaquePointer
         let columns: [ColumnInfo]
         let lobLimit: Int
+        /// Limit czasu wywołania z wykonania (np. zapytanie agenta) — obowiązuje też każde pobranie z tego wyniku.
+        var callTimeoutMs: UInt32 = 0
         /// Kursor zagnieżdżony (`CURSOR(…)` w wierszu): wynik nadrzędny, dopóki nikt nie pobrał z niego wierszy.
         var parent: UInt64?
     }
@@ -302,7 +304,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         let kind = Self.kind(stmtInfo)
 
         try check(dpiConn_setCallTimeout(conn, options.callTimeoutMs))
-        // Limit dotyczy tylko tego wykonania — dalsze pobieranie, COMMIT, ROLLBACK i ping bez niego.
+        // Limit dotyczy tego wykonania i pobierania jego wyników (zapamiętany przy wyniku, ustawiany na czas `fetchSync`);
+        // COMMIT, ROLLBACK, ping i inne polecenia — bez niego.
         defer { if options.callTimeoutMs != 0 { dpiConn_setCallTimeout(conn, 0) } }
         let vars = try bindVariables(binds, to: stmt)
         defer { for v in vars { dpiVar_release(v.handle) } }
@@ -330,7 +333,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             }
             let columns = try describeColumns(stmt, count: numCols)
             try limitFetchForNestedCursors(stmt, columns: columns)
-            result.resultSet = register(stmt: stmt, columns: columns, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
+            result.resultSet = register(stmt: stmt, columns: columns, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit,
+                                        callTimeoutMs: options.callTimeoutMs)
             keepStmt = true
         } else {
             var count: UInt64 = 0
@@ -347,17 +351,15 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                     result.outBinds[v.bind.name] = .null
                     continue
                 }
+                // Zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna testu) przechowuje jedną wartość — z pierwszego
+                // zmienionego wiersza; wiele wartości daje RETURNING … BULK COLLECT INTO w PL/SQL (D209).
                 data = returned
-                // Wiele zmienionych wierszy — wszystkie wartości (nie tylko pierwsza).
-                let limit = options.lobLimit ?? self.options.lobPrefetchLimit
-                result.returnedValues[v.bind.name] = try (0..<Int(count)).map {
-                    try value(native: v.nativeType, oracle: v.oracleType, data: returned + $0, typeName: v.bind.type.rawValue, lobLimit: limit)
-                }
             }
             result.outBinds[v.bind.name] = try value(native: v.nativeType, oracle: v.oracleType, data: data, typeName: v.bind.type.rawValue, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
         }
         if stmtInfo.isPLSQL != 0 {
-            result.implicitResults = try implicitResults(stmt, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
+            result.implicitResults = try implicitResults(stmt, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit,
+                                                         callTimeoutMs: options.callTimeoutMs)
         }
         result.elapsed = ContinuousClock.now - start
         return result
@@ -375,10 +377,11 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         }
     }
 
-    private func register(stmt: OpaquePointer, columns: [ColumnInfo], lobLimit: Int, parent: UInt64? = nil) -> ResultSetDescriptor {
+    private func register(stmt: OpaquePointer, columns: [ColumnInfo], lobLimit: Int, parent: UInt64? = nil,
+                          callTimeoutMs: UInt32 = 0) -> ResultSetDescriptor {
         let id = nextResultSetID
         nextResultSetID += 1
-        resultSets[id] = OpenResultSet(stmt: stmt, columns: columns, lobLimit: lobLimit, parent: parent)
+        resultSets[id] = OpenResultSet(stmt: stmt, columns: columns, lobLimit: lobLimit, callTimeoutMs: callTimeoutMs, parent: parent)
         if parent != nil {
             pendingNested.append(id)
             if pendingNested.count > Self.maxPendingNestedCursors { closeSync(ResultSetID(pendingNested[0])) }
@@ -392,19 +395,26 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         try check(dpiStmt_setFetchArraySize(stmt, Self.nestedCursorFetchArraySize))
     }
 
-    private func implicitResults(_ stmt: OpaquePointer, lobLimit: Int) throws -> [ResultSetDescriptor] {
+    private func implicitResults(_ stmt: OpaquePointer, lobLimit: Int, callTimeoutMs: UInt32) throws -> [ResultSetDescriptor] {
         var out: [ResultSetDescriptor] = []
         while true {
             var child: OpaquePointer?
             // Referencja należy już do nas (ODPI-C tworzy instrukcję z licznikiem 1 i sama trzyma rodzica) —
             // bez dpiStmt_addRef, inaczej struktura wyniku i połączenia nie byłyby nigdy zwolnione.
             guard dpiStmt_getImplicitResult(stmt, &child) == DPI_SUCCESS, let child else { break }
-            var n: UInt32 = 0
-            try check(dpiStmt_getNumQueryColumns(child, &n))
-            try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
-            let columns = try describeColumns(child, count: n)
-            try limitFetchForNestedCursors(child, columns: columns)
-            out.append(register(stmt: child, columns: columns, lobLimit: lobLimit))
+            // Błąd opisu — instrukcja zwolniona (inaczej kursor zostaje otwarty na serwerze do końca sesji).
+            let columns: [ColumnInfo]
+            do {
+                var n: UInt32 = 0
+                try check(dpiStmt_getNumQueryColumns(child, &n))
+                try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
+                columns = try describeColumns(child, count: n)
+                try limitFetchForNestedCursors(child, columns: columns)
+            } catch {
+                dpiStmt_release(child)
+                throw error
+            }
+            out.append(register(stmt: child, columns: columns, lobLimit: lobLimit, callTimeoutMs: callTimeoutMs))
         }
         return out
     }
@@ -492,6 +502,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
 
     func fetchSync(_ id: ResultSetID, maxRows: Int) throws -> RowBatch {
         guard let rs = resultSets[id.raw] else { throw DatabaseError.unknownResultSet }
+        if rs.callTimeoutMs != 0 {
+            try check(dpiConn_setCallTimeout(conn, rs.callTimeoutMs))
+        }
+        defer { if rs.callTimeoutMs != 0 { dpiConn_setCallTimeout(conn, 0) } }
         if rs.parent != nil {
             // Otwarty przez użytkownika — już nie podlega zamykaniu najstarszych.
             resultSets[id.raw]?.parent = nil

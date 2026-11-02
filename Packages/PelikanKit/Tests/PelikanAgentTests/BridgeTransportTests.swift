@@ -210,7 +210,10 @@ struct BridgeTransportTests {
         SocketTransport.writeTrace(path, Data("a\n".utf8))
         let attrs = try FileManager.default.attributesOfItem(atPath: path)
         #expect((attrs[.posixPermissions] as? Int) == 0o600)
-        #expect(SQLPlusEngine.maskPassword("create user x identified by tajne1").contains("tajne1") == false)
+        // Hasło w napisie JSON (skrypt z nową linią przed CONNECT) — zamaskowane po rozkodowaniu.
+        let frame = Data(#"{"params":{"arguments":{"sql":"select 1 from dual;\nconnect scott/Tiger123@prod\ncreate user x identified by tajne1"}}}"#.utf8)
+        let m = SocketTransport.masked(frame)
+        #expect(!m.contains("Tiger123") && !m.contains("tajne1") && m.contains("select 1 from dual"))
         let open = dir.appendingPathComponent("open.log").path
         FileManager.default.createFile(atPath: open, contents: Data(), attributes: [.posixPermissions: 0o644])
         SocketTransport.writeTrace(open, Data("b\n".utf8))

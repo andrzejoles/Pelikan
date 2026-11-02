@@ -22,7 +22,10 @@ struct PermissionMatrixTests {
         #expect(PermissionMatrix.overrides(all).isEmpty)
         let ro = PermissionMatrix.readOnly(all)
         #expect(ro.allSatisfy { $0.chosen <= .read })
-        let o = PermissionMatrix.overrides(ro)
+        // Bez wyboru „tylko do odczytu” — komendy aplikacji bez obniżenia (także gdy wszystkie wiersze ≤ Odczyt).
+        let plain = PermissionMatrix.overrides(ro)
+        #expect(plain.keys.allSatisfy { id in !AgentPolicy.appCommands.contains(id) || ro.contains { $0.command == id } })
+        let o = PermissionMatrix.overrides(ro, readOnlySession: true)
         let lowered2 = Set(all.filter { $0.base > .read }.map(\.command))
         #expect(lowered2.isSubset(of: Set(o.keys)) && o.values.allSatisfy { $0 <= .read })
         // „Wszystko tylko do odczytu” obejmuje komendy aplikacji przez run_command (np. edit.beautify).

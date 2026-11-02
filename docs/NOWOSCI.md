@@ -11,8 +11,8 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   także po zgodzie.
 - **SSH:** polecenie przerwane zerwaniem połączenia nie jest powtarzane (mogło się już wykonać na serwerze); mniej
   procesów `ssh` przy kolejnych poleceniach.
-- **RETURNING INTO** przy zmianie wielu wierszy zwraca wszystkie wartości; zamknięcie zerwanej sesji nie blokuje
-  interfejsu; limit czasu wywołania agenta nie przerywa późniejszego pobierania wyników.
+- **Zamknięcie zerwanej sesji** nie blokuje interfejsu; limit czasu zapytania agenta obejmuje pobieranie wierszy, a nie
+  zostaje na połączeniu dla późniejszych poleceń.
 
 ## 1.13.0 — formatowanie podczas pisania, pasek czynności nad wynikiem
 

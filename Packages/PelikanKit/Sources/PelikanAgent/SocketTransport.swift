@@ -103,8 +103,26 @@ public actor SocketTransport: Transport {
 
     static func trace(_ direction: String, _ data: Data) {
         guard let path = traceFile else { return }
-        let text = SQLPlusEngine.maskPassword(String(decoding: data.prefix(4000), as: UTF8.self))
-        writeTrace(path, Data("\(direction) \(text)\n".utf8))
+        writeTrace(path, Data("\(direction) \(String(masked(data).prefix(4000)))\n".utf8))
+    }
+
+    /// Wiadomość do śladu z hasłami zamaskowanymi w rozkodowanych napisach JSON (skrypt `connect u/hasło` po
+    /// rozkodowaniu ma znaki nowej linii, a `^` wzorca trafia na początek linii — w surowej ramce nie).
+    static func masked(_ data: Data) -> String {
+        guard let object = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) else {
+            return SQLPlusEngine.maskPassword(String(decoding: data, as: UTF8.self))
+        }
+        func mask(_ v: Any) -> Any {
+            switch v {
+            case let s as String: SQLPlusEngine.maskPassword(s)
+            case let a as [Any]: a.map(mask)
+            case let o as [String: Any]: o.mapValues(mask)
+            default: v
+            }
+        }
+        guard let out = try? JSONSerialization.data(withJSONObject: mask(object), options: [.fragmentsAllowed, .sortedKeys, .withoutEscapingSlashes])
+        else { return "<niezapisane>" }
+        return String(decoding: out, as: UTF8.self)
     }
 
     /// Dopisuje do pliku śladu tylko, gdy to zwykły plik właściciela bez dostępu dla innych (ślad zawiera wyniki
@@ -115,14 +133,7 @@ public actor SocketTransport: Transport {
         defer { close(fd) }
         var st = stat()
         guard fstat(fd, &st) == 0, (st.st_mode & S_IFMT) == S_IFREG, st.st_uid == getuid(), st.st_mode & 0o077 == 0 else { return }
-        line.withUnsafeBytes { buf in
-            var off = 0
-            while off < buf.count {
-                let n = write(fd, buf.baseAddress! + off, buf.count - off)
-                if n <= 0 { break }
-                off += n
-            }
-        }
+        try? Wire.writeAll(line, to: fd)
     }
 
     /// Klienci MCP deklarują możliwości z nowszych wersji specyfikacji (np. Codex:

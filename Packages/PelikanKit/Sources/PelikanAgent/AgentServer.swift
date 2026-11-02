@@ -2,6 +2,7 @@
 import PelikanBridgeKit
 import Darwin
 import Foundation
+import PelikanLog
 import Synchronization
 
 /// Wynik próby połączenia (do dziennika i testów).
@@ -45,10 +46,18 @@ public final class AgentServer: @unchecked Sendable {
         let path = socketURL.path(percentEncoded: false)
         unlink(path)
 
-        let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+        // Terminal agenta startuje przez forkpty+execve bez zamykania deskryptorów — gniazda nie mogą przejść do CLI
+        // (utworzenie z FD_CLOEXEC pod `DescriptorLock`, jak start terminala).
+        let fd = DescriptorLock.withLock {
+            let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+            if fd >= 0 {
+                _ = fcntl(fd, F_SETFD, FD_CLOEXEC)
+                // Nieblokujące: `accept` pod blokadą nigdy nie czeka (połączenie zerwane między `poll` a `accept`).
+                _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
+            }
+            return fd
+        }
         guard fd >= 0 else { throw StartError.socket(errno) }
-        // Terminal agenta startuje przez forkpty+execve bez zamykania deskryptorów — gniazda nie mogą przejść do CLI.
-        _ = fcntl(fd, F_SETFD, FD_CLOEXEC)
         var addr = sockaddr_un()
         addr.sun_family = sa_family_t(AF_UNIX)
         let bytes = Array(path.utf8)
@@ -106,12 +115,28 @@ public final class AgentServer: @unchecked Sendable {
 
     private func acceptLoop(_ listenFD: Int32) {
         while state.withLock({ $0.running }) {
-            let client = accept(listenFD, nil, nil)
-            if client < 0 {
+            // Czekanie bez blokady; samo `accept` (gniazdo gotowe — nie blokuje) i FD_CLOEXEC pod `DescriptorLock`.
+            var p = pollfd(fd: listenFD, events: Int16(POLLIN), revents: 0)
+            let ready = poll(&p, 1, 1000)
+            if ready < 0 {
                 if errno == EINTR { continue }
                 break
             }
-            _ = fcntl(client, F_SETFD, FD_CLOEXEC)
+            if ready == 0 { continue }
+            if p.revents & Int16(POLLNVAL | POLLHUP | POLLERR) != 0 { break }
+            let client = DescriptorLock.withLock {
+                let c = accept(listenFD, nil, nil)
+                if c >= 0 {
+                    _ = fcntl(c, F_SETFD, FD_CLOEXEC)
+                    // Połączenie dziedziczy O_NONBLOCK gniazda nasłuchu — uzgadnianie czyta z limitem czasu, blokująco.
+                    _ = fcntl(c, F_SETFL, fcntl(c, F_GETFL) & ~O_NONBLOCK)
+                }
+                return c
+            }
+            if client < 0 {
+                if errno == EINTR || errno == EAGAIN || errno == ECONNABORTED { continue }
+                break
+            }
             var on: Int32 = 1
             setsockopt(client, SOL_SOCKET, SO_NOSIGPIPE, &on, socklen_t(MemoryLayout<Int32>.size))
             let t = Thread { [self] in handshake(client) }

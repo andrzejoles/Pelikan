@@ -187,9 +187,6 @@ public struct ExecutionResult: Sendable {
     /// Ostrzeżenie serwera, np. „success with compilation error” (ORA-24344) po CREATE PROCEDURE.
     public var warning: OracleError?
     public var elapsed: Duration
-    /// DML … RETURNING INTO: wszystkie zwrócone wartości zmiennej (po jednej na zmieniony wiersz); `outBinds` ma
-    /// pierwszą z nich.
-    public var returnedValues: [String: [OracleValue]] = [:]
 
     public init(kind: StatementKind, resultSet: ResultSetDescriptor? = nil, rowsAffected: UInt64 = 0,
                 outBinds: [String: OracleValue] = [:], implicitResults: [ResultSetDescriptor] = [],

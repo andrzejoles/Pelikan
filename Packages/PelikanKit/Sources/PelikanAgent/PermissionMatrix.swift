@@ -31,16 +31,16 @@ public enum PermissionMatrix {
         rows.map { var r = $0; r.chosen = min(r.base, .read); return r }
     }
 
-    /// Obniżenia dla sesji (tylko wiersze z poziomem niższym niż bazowy; wyższego wybrać się nie da). Gdy żaden
-    /// wiersz nie pozwala na więcej niż Odczyt („Wszystko tylko do odczytu”), komendy aplikacji dostępne przez
-    /// `run_command` (spoza katalogu narzędzi, np. `edit.beautify`) też dostają najwyżej ten poziom — sesja tylko do
-    /// odczytu nie zmienia tekstu edytora nawet po zgodzie.
-    public static func overrides(_ rows: [PermissionRow]) -> [CommandID: AgentAccess] {
+    /// Obniżenia dla sesji (tylko wiersze z poziomem niższym niż bazowy; wyższego wybrać się nie da). Sesja wybrana
+    /// jako „Wszystko tylko do odczytu” (`readOnlySession`) — o ile żaden wiersz nie został potem podniesiony ponad
+    /// Odczyt — obniża też komendy aplikacji dostępne przez `run_command` (spoza katalogu narzędzi, np. `edit.beautify`)
+    /// do Odczytu: nie zmienia tekstu edytora nawet po zgodzie. Bez wyboru użytkownika — bez obniżenia (także gdy
+    /// ustawienia globalne obniżyły już wszystkie narzędzia).
+    public static func overrides(_ rows: [PermissionRow], readOnlySession: Bool = false) -> [CommandID: AgentAccess] {
         var out: [CommandID: AgentAccess] = [:]
         for r in rows where r.chosen < r.base { out[r.command] = r.chosen }
-        let cap = rows.map(\.chosen).max() ?? .none
-        if cap < .approval {
-            for c in AgentPolicy.appCommands where out[c] == nil { out[c] = cap }
+        if readOnlySession, rows.allSatisfy({ $0.chosen <= .read }) {
+            for c in AgentPolicy.appCommands where out[c] == nil { out[c] = .read }
         }
         return out
     }

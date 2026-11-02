@@ -104,6 +104,8 @@ struct PermissionMatrixView: View {
     @State var rows: [PermissionRow]
     let projectDirectory: String?
     @State private var useProjectDirectory = true
+    /// Wybrano „Wszystko tylko do odczytu” (obowiązuje, dopóki żaden wiersz nie jest wyżej niż Odczyt).
+    @State private var readOnlyChosen = false
     let onFinish: (PermissionChoice?) -> Void
 
     var body: some View {
@@ -142,14 +144,16 @@ struct PermissionMatrixView: View {
             HStack {
                 Button(L10n.tr("Wszystko tylko do odczytu")) {
                     rows = PermissionMatrix.readOnly(rows)
+                    readOnlyChosen = true
                 }
                 Button(L10n.tr("Domyślne")) {
                     for i in rows.indices { rows[i].chosen = rows[i].base }
+                    readOnlyChosen = false
                 }
                 Spacer()
                 Button(L10n.tr("Anuluj"), role: .cancel) { onFinish(nil) }.keyboardShortcut(.cancelAction)
                 Button(L10n.tr("Uruchom")) {
-                    onFinish(PermissionChoice(overrides: PermissionMatrix.overrides(rows), useProjectDirectory: useProjectDirectory))
+                    onFinish(PermissionChoice(overrides: PermissionMatrix.overrides(rows, readOnlySession: readOnlyChosen), useProjectDirectory: useProjectDirectory))
                 }
                 .keyboardShortcut(.defaultAction)
             }

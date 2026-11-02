@@ -22,7 +22,7 @@ public struct DeploySummary: Sendable, Hashable {
                                uatTargets: [UUID]) async -> DeploySummary {
         var s = DeploySummary()
         let serverHead: String? = await Task.detached {
-            guard let r = try? session.run(DeployScripts.serverHeadCommand(t), timeout: 60), r.status == 0 else { return nil }
+            guard let r = try? session.run(DeployScripts.serverHeadCommand(t), timeout: 60, idempotent: true), r.status == 0 else { return nil }
             let h = String(decoding: r.output, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
             return h.isEmpty ? nil : h
         }.value
@@ -195,10 +195,10 @@ public final class DeployPipeline: Identifiable {
         let t = target, session = session, id = plan.id
         let released: Bool = await Task.detached {
             var released = false
-            if releaseLock, let r = try? session.run(DeployScripts.releaseOwnLockCommand(t, id: id), timeout: 30) {
+            if releaseLock, let r = try? session.run(DeployScripts.releaseOwnLockCommand(t, id: id), timeout: 30, idempotent: true) {
                 released = String(decoding: r.output, as: UTF8.self).contains("released")
             }
-            _ = try? session.run(DeployScripts.cleanupCommand(t, id: id), timeout: 30)
+            _ = try? session.run(DeployScripts.cleanupCommand(t, id: id), timeout: 30, idempotent: true)
             return released
         }.value
         if released { progress.info(L10n.tr("Zdjęto blokadę tego wdrożenia")) }
@@ -216,20 +216,20 @@ public final class DeployPipeline: Identifiable {
 
     /// Ręczne zdjęcie cudzej/przeterminowanej blokady (wywołujący pyta o potwierdzenie; PROD — nazwa celu).
     public nonisolated static func forceReleaseLock(_ t: PelikanSSHTarget, session: SSHSession) async throws {
-        let r: Spawn.Result = try await Task.detached { try session.run(DeployScripts.forceReleaseLockCommand(t), timeout: 30) }.value
+        let r: Spawn.Result = try await Task.detached { try session.run(DeployScripts.forceReleaseLockCommand(t), timeout: 30, idempotent: true) }.value
         guard r.status == 0 else { throw SSHError.io(code: r.status, detail: r.errorText) }
     }
 
     /// Kopie binarek w katalogu backupów (najnowsze pierwsze).
     public nonisolated static func backups(_ t: PelikanSSHTarget, session: SSHSession) async throws -> [BackupEntry] {
-        let r: Spawn.Result = try await Task.detached { try session.run(DeployScripts.listBackupsCommand(t), timeout: 60) }.value
+        let r: Spawn.Result = try await Task.detached { try session.run(DeployScripts.listBackupsCommand(t), timeout: 60, idempotent: true) }.value
         guard r.status == 0 else { throw SSHError.io(code: r.status, detail: r.errorText) }
         return BackupEntry.list(String(decoding: r.output, as: UTF8.self), binaries: t.effectiveBinaries)
     }
 
     /// Historia z serwera (najnowsze pierwsze).
     public nonisolated static func serverHistory(_ t: PelikanSSHTarget, session: SSHSession) async throws -> [ServerHistoryEntry] {
-        let r: Spawn.Result = try await Task.detached { try session.run(DeployScripts.serverHistoryCommand(t), timeout: 60) }.value
+        let r: Spawn.Result = try await Task.detached { try session.run(DeployScripts.serverHistoryCommand(t), timeout: 60, idempotent: true) }.value
         return ServerHistoryEntry.parse(String(decoding: r.output, as: UTF8.self))
     }
 }

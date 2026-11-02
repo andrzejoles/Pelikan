@@ -58,7 +58,9 @@ public final class SSHSession: Sendable {
         self.config = config
         self.runDirectory = runDirectory
         self.secret = secret
-        let key = "\(config.user)@\(config.host):\(config.port ?? 22)"
+        // Proces w kluczu: wspólny katalog gniazd w /tmp (kilka instancji Pelikana, np. Debug i Release) — każda ma własne
+        // połączenie główne i nie usuwa cudzego gniazda przy starcie (`startMaster`).
+        let key = "\(config.user)@\(config.host):\(config.port ?? 22)#\(getpid())"
         let hash = SHA256.hash(data: Data(key.utf8)).prefix(5).map { String(format: "%02x", $0) }.joined()
         controlPath = runDirectory.appendingPathComponent("ssh-\(hash)").path
     }
@@ -342,6 +344,9 @@ public final class SSHSession: Sendable {
         }
     }
 
+    /// Zapomina ostatnie potwierdzenie połączenia głównego (błąd `ssh` w strumieniu).
+    func forgetVerification() { startLock.withLock { $0 = nil } }
+
     public func disconnect() {
         Log.ssh.debug("SSH: zamknięcie połączenia głównego z \(config.host, privacy: .hash)")
         startLock.withLock { $0 = nil }
@@ -420,7 +425,11 @@ public final class SSHSession: Sendable {
         if let port = config.port { args += [Array("-P".utf8), Array(String(port).utf8)] }
         args += paths
         let r = try Spawn.run(Self.scp, args, environment: environment, timeout: 24 * 3600, isCancelled: isCancelled, isPaused: isPaused)
-        guard r.status == 0 else { throw Self.explain(r.errorText) }
+        guard r.status == 0 else {
+            // Nieudany transfer mógł wynikać z zerwanego połączenia głównego — następne polecenie sprawdza je od nowa.
+            startLock.withLock { $0 = nil }
+            throw Self.explain(r.errorText)
+        }
     }
 
     /// Cudzysłów powłoki POSIX (ksh na AIX, sh, bash).
@@ -498,6 +507,8 @@ public final class RemoteProcess: Sendable {
                         let text = err.decode(d)
                         if !text.isEmpty { continuation.yield(.stderr(text)) }
                     case .exit(let code):
+                        // 255 — błąd `ssh` (np. zerwane połączenie główne): następne polecenie sprawdza połączenie od nowa.
+                        if code == 255 { session.forgetVerification() }
                         let rest = head + out.finish()
                         if !rest.isEmpty { continuation.yield(.stdout(rest)) }
                         let restErr = err.finish()

@@ -282,7 +282,7 @@ public final class AgentController: AgentInvocationGate {
         var head = String.UnicodeScalarView()
         var raw = 0, encoded = 0
         for s in text.unicodeScalars {
-            let r = utf8Length(s), e = jsonCost(s)
+            let r = UTF8.width(s), e = jsonCost(s)
             if raw + r > limit || encoded + e > 2 * limit { break }
             head.append(s)
             raw += r
@@ -296,13 +296,11 @@ public final class AgentController: AgentInvocationGate {
         switch s.value {
         case 0x22, 0x5C, 0x08, 0x0C, 0x0A, 0x0D, 0x09: 2
         case 0..<0x20: 6
-        default: utf8Length(s)
+        default: UTF8.width(s)
         }
     }
 
-    static func utf8Length(_ s: Unicode.Scalar) -> Int {
-        s.value < 0x80 ? 1 : s.value < 0x800 ? 2 : s.value < 0x10000 ? 3 : 4
-    }
+
 
     static func jsonEncodedLength(_ scalars: String.UnicodeScalarView) -> Int { scalars.reduce(0) { $0 + jsonCost($1) } }
 
@@ -403,12 +401,11 @@ final class AgentLog: Sendable {
         append(fields, file: "\(Self.day())-connections.jsonl")
     }
 
-    /// Style formatowania (wartości, bez kosztownych formaterów przy każdym wpisie): dzień pliku w strefie lokalnej,
-    /// czas wpisu ISO 8601.
-    private static let dayStyle = Date.ISO8601FormatStyle(timeZone: .current).year().month().day()
+    /// Style formatowania (wartości, bez kosztownych formaterów przy każdym wpisie): dzień pliku w bieżącej strefie
+    /// (zmiana strefy w trakcie pracy — od razu), czas wpisu ISO 8601.
     private static let timeStyle = Date.ISO8601FormatStyle()
 
-    private static func day() -> String { Date().formatted(dayStyle) }
+    private static func day() -> String { Date().formatted(Date.ISO8601FormatStyle(timeZone: .current).year().month().day()) }
 
     private func append(_ fields: [String: JSONValue], file: String) {
         var f = fields
