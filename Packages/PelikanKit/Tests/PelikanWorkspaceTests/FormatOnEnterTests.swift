@@ -197,7 +197,8 @@ struct FormatOnEnterTests {
         let (text, p) = plan("select a,\n       b\n  from t\n where x = 1|", edited: false)
         let steps = try #require(p)
         let lineEnd = (text as NSString).length
-        if let f = steps.format { #expect(f.range.lowerBound > lineEnd) }
+        let f = try #require(steps.format, "wcięcie nowej linii od formatera")
+        #expect(f.range.lowerBound > lineEnd)
         #expect(FormatOnEnter.Edit.minimal(at: 10, old: "ab", new: "ab") == nil)
         #expect(FormatOnEnter.Edit.minimal(at: 10, old: "x then", new: "x THEN") == FormatOnEnter.Edit(range: 12..<16, text: "THEN"))
         #expect(FormatOnEnter.Edit.minimal(at: 0, old: "😀a", new: "😁a") == FormatOnEnter.Edit(range: 0..<2, text: "😁"))

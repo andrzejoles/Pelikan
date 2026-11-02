@@ -74,7 +74,7 @@ public struct StatementStartMemory: Sendable, Equatable {
             starts.removeSubrange(k...)
         }
         if let k = checkpoints.firstIndex(where: { $0.position >= location }) { checkpoints.removeSubrange(k...) }
-        blockEnds = blockEnds.filter { $0.value < location }
+        if blockEnds.values.contains(where: { $0 >= location }) { blockEnds = blockEnds.filter { $0.value < location } }
     }
 
     /// Początek polecenia, w którym leży linia zaczynająca się w `lineStart` (albo sam `lineStart`, gdy poprzednie
@@ -110,7 +110,7 @@ public struct StatementStartMemory: Sendable, Equatable {
                 merge(scan.checkpoints)
                 return (cp.statement, scan.region, scan.normal)
             }
-            scannedLength += (scan.endPosition ?? lineStart) - cp.position
+            scannedLength += (scan.endPosition ?? scan.stopPosition ?? lineStart) - cp.position
             // Nieaktualny jest tylko ten punkt (linia nie zaczyna już podprogramu). `/` po drodze — linia leży za
             // blokiem punktu: punkty (także późniejszych jednostek) zostają, koniec bloku zapamiętany (kolejne linie za
             // nim — od razu podziałem), polecenie wyznacza podział.
@@ -137,15 +137,29 @@ public struct StatementStartMemory: Sendable, Equatable {
 
     /// Dołącza punkty kontrolne w kolejności położeń (także wcześniejsze niż znane — np. wcześniejszej jednostki, gdy
     /// pamięć ma już punkty późniejszej); punkt w znanym już miejscu zostaje bez zmian.
+    /// W jednym miejscu punkt podprogramu ma pierwszeństwo przed punktem co 200 linii (ten sam stan, ale tylko on
+    /// wyznacza kontekst od podprogramu).
     mutating func merge(_ new: [Checkpoint]) {
         guard !new.isEmpty else { return }
-        if let last = checkpoints.last, new.allSatisfy({ $0.position > last.position }) {
-            checkpoints += new
+        // Zwykle: nowe punkty za wszystkimi znanymi (także przy pustej pamięci) — dopisanie z łączeniem tego samego miejsca.
+        if checkpoints.last.map({ l in new.allSatisfy { $0.position > l.position } }) ?? true {
+            for c in new { appendOrMerge(c) }
             return
         }
-        var known = Set(checkpoints.map(\.position))
-        for c in new where known.insert(c.position).inserted { checkpoints.append(c) }
-        checkpoints.sort { $0.position < $1.position }
+        var byPosition: [Int: Checkpoint] = [:]
+        for c in checkpoints + new {
+            if let old = byPosition[c.position], old.subprogram || !c.subprogram { continue }
+            byPosition[c.position] = c
+        }
+        checkpoints = byPosition.values.sorted { $0.position < $1.position }
+    }
+
+    private mutating func appendOrMerge(_ c: Checkpoint) {
+        if let last = checkpoints.last, last.position == c.position {
+            if c.subprogram, !last.subprogram { checkpoints[checkpoints.count - 1] = c }
+            return
+        }
+        checkpoints.append(c)
     }
 
     /// Liczba linii między pozycjami (najwyżej `limit + 1` — liczenie od końca).
@@ -180,6 +194,8 @@ public struct StatementStartMemory: Sendable, Equatable {
         var ended = false
         /// Położenie `/` kończącego blok (w dokumencie), gdy `ended`.
         var endPosition: Int?
+        /// Miejsce, w którym przejście uznało punkt za nieaktualny (`stale`) — licznik leksowania.
+        var stopPosition: Int?
         var stale = false
         var normal = true
 
@@ -227,7 +243,11 @@ public struct StatementStartMemory: Sendable, Equatable {
                 let word = t.kind == .keyword || t.kind == .identifier ? lexer.string(t).uppercased() : ""
                 if !checkedFirst {
                     checkedFirst = true
-                    if !(Self.packageStarters.union(Self.typeStarters)).contains(word) { stale = true; return }
+                    if !(Self.packageStarters.union(Self.typeStarters)).contains(word) {
+                        stale = true
+                        stopPosition = pos
+                        return
+                    }
                 }
                 switch t.kind {
                 case .lineComment:

@@ -3091,6 +3091,14 @@ wydanie). Poprawione:
   bloku przy każdym Enterze; jedna procedura wspólnego początku i końca (`EditorShift.Change`, bez dzielenia par
   zastępczych); wcięcie formatera z tabulatorami liczone szerokością jego jednostki (`useTabs`); szybka ścieżka kolumn
   dla tekstu bez znaków łączących; formaty eksportu jako stała jak formaty kopiowania.
+- **Trzecie przejście:** punkt podprogramu ma pierwszeństwo przed punktem co 200 linii w tym samym miejscu (inaczej
+  kontekst spadał do samej wielkości liter); linia rozwinięta skrótem AutoReplace przy Enterze formatowana jak edytowana;
+  krok 0 porównywany w jednostkach UTF-16; wcięcie Smart zachowuje tabulatory wcięcia formatera; jedna funkcja kolumn
+  (`Beautifier.columns`) i jedno API AutoReplace (`apply` → `Match` z `setsCursor`).
+- **Stan przełączników z trzech źródeł (rozstrzygnięte):** `Command.state` opisuje stan komendy dla aktywnego kontekstu
+  (menu, wstążka, pasek narzędzi); pasek wyniku należy do konkretnej siatki, więc stan edycji czyta z jej modelu
+  (`localState`), a widok rekordu jest stanem samego widoku (`setState`). Przekazywanie siatki do `Command.state`
+  zmieniłoby sygnaturę wszystkich komend dla jednego przypadku — bez zmiany.
 
 Uwagi rozstrzygnięte bez zmiany kodu:
 - **„Linia edytowana” z diffu z tekstem bazowym zamiast `EditedRanges`:** zostaje `EditedRanges`. Diff wymaga

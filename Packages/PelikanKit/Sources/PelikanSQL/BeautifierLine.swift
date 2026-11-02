@@ -17,6 +17,13 @@ public struct EnterFormatting: Sendable, Equatable {
 }
 
 extension Beautifier {
+    /// Szerokość tekstu w kolumnach: znaki (`Character` — emoji i znaki złożone to jedna kolumna), tabulator do
+    /// następnej wielokrotności `tabWidth` (wspólne dla formatera przy Enter i edytora).
+    public static func columns<S: StringProtocol>(_ s: S, tabWidth: Int, from start: Int = 0) -> Int {
+        let width = max(1, tabWidth)
+        return s.reduce(start) { c, ch in ch == "\t" ? (c / width + 1) * width : c + 1 }
+    }
+
     /// Słowa, przed którymi formater łamie linię w toku instrukcji (klauzule, AND/OR, ON, gałęzie) — linia od nich
     /// wyrównana jak w formatowaniu; na początku instrukcji tylko słowa struktury bloku (zwykła instrukcja zachowuje
     /// wcięcie użytkownika).
@@ -106,21 +113,29 @@ extension Beautifier {
         let placed = tr.placed
 
         /// Kolumna w znakach (jak kolumny formatera — `Character`, nie jednostki UTF-16: emoji, znaki złożone).
+        /// Kolumna w znakach (jak kolumny formatera — `Character`, nie jednostki UTF-16: emoji, znaki złożone).
+        /// Szybko jednostka po jednostce, dopóki znak jest na pewno samodzielny (ASCII i Latin poniżej U+0300, litery
+        /// greckie i cyrylicy); dalej — znaki od poprzedniej jednostki (mogła się łączyć z następną). Wyniki zapamiętane.
+        var columnCache: [Int: Int] = [:]
         func column(_ pos: Int) -> Int {
+            if let c = columnCache[pos] { return c }
             var p = pos
             while p > 0, ctx.character(at: p - 1) != 0x0A { p -= 1 }
-            var c = 0
-            // Szybko: same znaki poniżej U+0300 (bez znaków łączących i par zastępczych) — jednostka = znak.
+            var c = 0, before = 0
             var q = p
             while q < pos {
                 let u = ctx.character(at: q)
-                if u >= 0x300 { break }
+                guard u < 0x300 || (0x370...0x482).contains(u) || (0x48A...0x52F).contains(u) else { break }
+                before = c
                 c = u == 0x09 ? (c / width + 1) * width : c + 1
                 q += 1
             }
-            guard q < pos else { return c }
-            c = 0
-            for ch in ctx.substring(with: NSRange(location: p, length: pos - p)) { c = ch == "\t" ? (c / width + 1) * width : c + 1 }
+            if q < pos {
+                let from = max(p, q - 1)
+                c = Beautifier.columns(ctx.substring(with: NSRange(location: from, length: pos - from)), tabWidth: width,
+                                       from: from == q ? c : before)
+            }
+            columnCache[pos] = c
             return c
         }
         func firstOnLine(_ k: Int) -> Bool {

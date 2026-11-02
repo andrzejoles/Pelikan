@@ -297,6 +297,23 @@ struct BeautifierEnterTests {
         #expect(memory.checkpoints.contains { $0.position == b4 - 2 })
     }
 
+    @Test("pamięć: punkt co 200 linii i punkt podprogramu w tym samym miejscu — zostaje punkt podprogramu")
+    func checkpointSamePosition() {
+        var s = "create or replace package body p is\n  procedure a is\n  begin\n"
+        while s.split(separator: "\n", omittingEmptySubsequences: false).count - 1 < 199 { s += "    null;\n" }
+        s += "  end;\n"
+        let lines = s.split(separator: "\n", omittingEmptySubsequences: false).count - 1
+        #expect(lines == 200)
+        s += "  procedure q is\n  begin\n    null;\n    null;\n"
+        let text = s as NSString
+        let q = text.range(of: "  procedure q").location
+        let inQ = text.range(of: "    null;", options: .backwards).location
+        var memory = StatementStartMemory()
+        let c = memory.context(forLineAt: inQ, in: text, lineLimit: 10)
+        #expect(c.mode == .format && c.start == q)
+        #expect(memory.checkpoints.filter { $0.position == q }.count == 1 && memory.checkpoints.first { $0.position == q }?.subprogram == true)
+    }
+
     @Test("pamięć: linia za „/” bloku z punktami kontrolnymi — koniec bloku zapamiętany, bez ponownego leksowania bloku")
     func lineAfterBlockEnd() {
         var s = "create or replace package body a is\n"
