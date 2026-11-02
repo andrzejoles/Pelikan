@@ -34,6 +34,12 @@ struct CodeAssistantTests {
         #expect(await labels(ws, "begin pelikan_ca_pkg.| end;") == ["DODAJ", "SUMA"])
         #expect(await labels(ws, "begin \(c.user.lowercased()).pelikan_ca_pkg.s| end;") == ["SUMA"])
         #expect(await labels(ws, "begin x := pelikan_ca_| end;").contains("PELIKAN_CA_SEQ"))
+        // Po kropce za nazwą schematu w FROM — obiekty schematu od razu, bez wpisywania litery (niedokończone
+        // `from schemat.` nie jest tabelą bez kolumn).
+        for text in ["select * from \(c.user.lowercased()).|", "select * from emp e, \(c.user.lowercased()).|"] {
+            let items = await labels(ws, text)
+            #expect(items.contains("PELIKAN_CA_T") && items.contains("PELIKAN_CA_PKG"), "\(text)")
+        }
         let plsql = """
             declare
               r pelikan_ca_t%rowtype;

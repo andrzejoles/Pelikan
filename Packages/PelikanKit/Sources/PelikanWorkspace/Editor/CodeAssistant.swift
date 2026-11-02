@@ -334,10 +334,11 @@ public enum CodeAssistant {
         }
         if q.count == 1 {
             let name = q[0]
-            // 1. Alias albo nazwa tabeli w instrukcji.
+            // 1. Alias albo nazwa tabeli w instrukcji. Bez kolumn — dalsze kroki: niedokończone `from schemat.` samo
+            // wygląda jak tabela SCHEMAT, a po kropce mają się pojawić obiekty schematu.
             if let t = c.tables.first(where: { $0.matches(name) }) {
-                if let sub = t.subquery { return selectItems(sub) }
-                return await columnItems(owner: t.owner, name: t.name, metadata: m)
+                let items = if let sub = t.subquery { selectItems(sub) } else { await columnItems(owner: t.owner, name: t.name, metadata: m) }
+                if !items.isEmpty { return items }
             }
             // 2. Rekord pętli FOR.
             if let src = c.loopRecords[name] {
