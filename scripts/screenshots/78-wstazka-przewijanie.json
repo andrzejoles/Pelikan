@@ -1,0 +1,4 @@
+[
+  {"command": "debug.windowSize", "args": {"width": 900, "height": 640}, "delay": 1},
+  {"command": "file.new.sql", "delay": 2}
+]

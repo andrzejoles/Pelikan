@@ -176,7 +176,9 @@ Häufige Aktionen haben große Schaltflächen, andere kleine; seltenere stehen i
 Der Tooltip einer Schaltfläche zeigt Beschreibung und Tastenkürzel, so lernen Sie die Kürzel nebenbei. Rechtsklick auf
 eine Schaltfläche fügt den Befehl zum Schnellzugriff hinzu. Doppelklick auf eine Registerkarte oder der Pfeil rechts
 reduziert das Menüband auf die Registerkarten; **Ansicht › Menüband** blendet es aus (auch unter **Einstellungen ›
-Allgemein › Menüband**).
+Allgemein › Menüband**). Ist das Fenster schmal und passt eine Menüband-Registerkarte nicht hinein, erscheinen seitlich
+die Schaltflächen **‹ ›** — sie blättern bis zur Grenze der nächsten Gruppe; Mausrad und Trackpad blättern ebenfalls.
+Die Zeile der Menüband-Registerkarten blättert genauso, wenn sie neben dem Suchfeld keinen Platz hat.
 
 Das Feld **Aktionen suchen…** rechts neben den Registerkarten findet jeden Befehl — tippen Sie ein paar Buchstaben:
 „plan“, „export tabel“, ein Wort ohne polnische Sonderzeichen oder einen englischen Namen aus PL/SQL Developer, z. B.

@@ -194,6 +194,33 @@ struct TabStripScrollingTests {
         #expect(TabStripScrolling.reveal(offset: 300, content: 900, visible: 500, minX: 100, maxX: 200) == 92)
         #expect(TabStripScrolling.reveal(offset: 100, content: 900, visible: 500, minX: 200, maxX: 300) == 100)
     }
+
+    @Test("Wstążka: krok do granicy grupy, granice, grupa szersza niż okno (D206)")
+    func ribbonPages() {
+        // Grupy 0–200, 200–450, 450–700, 700–1000; widoczne 500 z 1000.
+        let groups: [ClosedRange<Double>] = [0...200, 200...450, 450...700, 700...1000]
+        func page(_ offset: Double, _ forward: Bool, visible: Double = 500, items: [ClosedRange<Double>] = groups) -> Double {
+            TabStripScrolling.pageTarget(offset: offset, content: 1000, visible: visible, forward: forward, items: items)
+        }
+        // Naprzód: grupa ucięta przy prawej krawędzi (450–700) na początek widoku, z marginesem.
+        #expect(page(0, true) == 442)
+        // Dalej — do końca treści (granica 500).
+        #expect(page(442, true) == 500)
+        // Na końcu nie da się dalej; przycisk i tak wyłączony.
+        #expect(!TabStripScrolling.canScroll(offset: 500, content: 1000, visible: 500, forward: true))
+        #expect(page(500, true) == 500)
+        // Wstecz: grupa ucięta przy lewej krawędzi (450–700 przy przesunięciu 500) staje się ostatnią widoczną.
+        #expect(page(500, false) == 208)
+        #expect(page(208, false) == 0)
+        #expect(page(0, false) == 0)
+        // Grupa szersza niż widoczny obszar — zwykły krok (60% szerokości).
+        #expect(page(0, true, visible: 150, items: [0...400, 400...1000]) == 120)
+        #expect(page(300, false, visible: 150, items: [0...400, 400...1000]) == 180)
+        // Bez granic grup — zwykły krok.
+        #expect(page(0, true, items: []) == 300)
+        // Bez przepełnienia — zawsze 0.
+        #expect(TabStripScrolling.pageTarget(offset: 0, content: 400, visible: 500, forward: true, items: [0...400]) == 0)
+    }
 }
 
 @MainActor
