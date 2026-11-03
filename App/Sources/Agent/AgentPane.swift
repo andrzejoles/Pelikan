@@ -86,6 +86,7 @@ final class AgentPane: NSView {
             c.width = width
             activityTable.addTableColumn(c)
         }
+        HeaderSort.enable(activityTable)
         activityTable.dataSource = self
         activityTable.setAccessibilityLabel(L10n.tr("Aktywność agenta"))
         activityTable.delegate = self
@@ -236,7 +237,10 @@ final class AgentPane: NSView {
 
     private func refreshActivity() {
         let id = selectedSessionID
-        rows = controller.activities.filter { $0.sessionID == id }.reversed()
+        // Najnowsze na górze; klik nagłówka sortuje po kolumnie (D212).
+        rows = HeaderSort.sort(controller.activities.filter { $0.sessionID == id }.reversed(), by: activityTable.sortDescriptors) { a, key in
+            key == "time" ? a.started.sortKey : Self.activityText(a, key).text.sortKey
+        }
         activityTable.reloadData()
         let pending = controller.pending.count
         pendingLabel.stringValue = pending > 0 ? L10n.tr("Czeka na zgodę: \(pending)") : ""
@@ -246,29 +250,33 @@ final class AgentPane: NSView {
 extension AgentPane: NSTableViewDataSource, NSTableViewDelegate {
     func numberOfRows(in tableView: NSTableView) -> Int { rows.count }
 
-    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        let a = rows[row]
-        let text: String
-        var color = NSColor.labelColor
-        switch tableColumn?.identifier.rawValue {
+    /// Tekst i kolor komórki aktywności (także klucz sortowania kolumny).
+    static func activityText(_ a: AgentActivity, _ column: String?) -> (text: String, color: NSColor) {
+        switch column {
         case "time":
-            text = Self.time.string(from: a.started)
+            return (time.string(from: a.started), .labelColor)
         case "tool":
-            text = a.tool
+            return (a.tool, .labelColor)
         case "status":
             switch a.status {
-            case .running: text = L10n.tr("w toku")
-            case .waitingForApproval: text = L10n.tr("czeka na zgodę"); color = .systemOrange
-            case .succeeded: text = "✓ " + (a.duration.map { String(format: "%.0f ms", $0 * 1000) } ?? ""); color = .systemGreen
-            case .denied(let why): text = "✕ " + why; color = .systemRed
-            case .failed: text = L10n.tr("błąd"); color = .systemRed
+            case .running: return (L10n.tr("w toku"), .labelColor)
+            case .waitingForApproval: return (L10n.tr("czeka na zgodę"), .systemOrange)
+            case .succeeded: return ("✓ " + (a.duration.map { String(format: "%.0f ms", $0 * 1000) } ?? ""), .systemGreen)
+            case .denied(let why): return ("✕ " + why, .systemRed)
+            case .failed: return (L10n.tr("błąd"), .systemRed)
             }
         default:
             switch a.status {
-            case .failed(let m): text = a.arguments + "  ⟶  " + m
-            default: text = a.arguments + (a.result.map { "  ⟶  " + $0 } ?? "")
+            case .failed(let m): return (a.arguments + "  ⟶  " + m, .labelColor)
+            default: return (a.arguments + (a.result.map { "  ⟶  " + $0 } ?? ""), .labelColor)
             }
         }
+    }
+
+    func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) { refreshActivity() }
+
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+        let (text, color) = Self.activityText(rows[row], tableColumn?.identifier.rawValue)
         let field = NSTextField(labelWithString: text)
         field.font = InterfaceFonts.shared.small
         field.textColor = color
@@ -326,6 +334,7 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
         fileColumn.title = L10n.tr("Plik")
         fileColumn.width = 240
         files.addTableColumn(fileColumn)
+        HeaderSort.enable(files)
         files.dataSource = self
         files.setAccessibilityLabel(L10n.tr("Pliki dziennika"))
         files.delegate = self
@@ -336,6 +345,7 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
             c.width = width
             entries.addTableColumn(c)
         }
+        HeaderSort.enable(entries)
         entries.dataSource = self
         entries.setAccessibilityLabel(L10n.tr("Wpisy dziennika"))
         entries.delegate = self
@@ -386,6 +396,7 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
     func reload() {
         urls = ((try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? [])
             .filter { $0.pathExtension == "jsonl" }.sorted { $0.lastPathComponent > $1.lastPathComponent }
+        urls = HeaderSort.sort(urls, by: files.sortDescriptors) { u, _ in u.lastPathComponent.sortKey }
         files.reloadData()
         if let name = selectedName, let i = urls.firstIndex(where: { $0.lastPathComponent == name }) {
             files.selectRowIndexes([i], byExtendingSelection: false)
@@ -410,8 +421,9 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
     }
 
     private func show(_ raw: [String], _ parsed: [[String: String]]) {
-        rawLines = raw
-        lines = parsed
+        let pairs = HeaderSort.sort(Array(zip(parsed, raw)), by: entries.sortDescriptors) { p, key in Self.entryText(p.0, key).sortKey }
+        lines = pairs.map(\.0)
+        rawLines = pairs.map(\.1)
         entries.reloadData()
         self.raw.string = ""
     }
@@ -426,20 +438,31 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
 
     func numberOfRows(in tableView: NSTableView) -> Int { tableView === files ? urls.count : lines.count }
 
-    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        let text: String
-        if tableView === files {
-            text = urls[row].lastPathComponent
-        } else {
-            let e = lines[row]
-            func s(_ k: String) -> String? { e[k] }
-            switch tableColumn?.identifier.rawValue {
-            case "time": text = s("time") ?? ""
-            case "tool": text = s("tool") ?? s("approval").map { L10n.tr("zgoda: \($0)") } ?? s("event") ?? ""
-            case "decision": text = s("decision") ?? s("approved").map { $0 == "1" || $0 == "true" ? L10n.tr("zatwierdzone") : L10n.tr("odrzucone") } ?? s("reason") ?? ""
-            default: text = [s("arguments"), s("result").map { "⟶ " + $0 }, s("error").map { "✕ " + $0 }, s("preview")].compactMap { $0 }.joined(separator: "  ")
-            }
+    /// Tekst komórki wpisu dziennika (także klucz sortowania kolumny).
+    static func entryText(_ e: [String: String], _ column: String?) -> String {
+        func s(_ k: String) -> String? { e[k] }
+        switch column {
+        case "time": return s("time") ?? ""
+        case "tool": return s("tool") ?? s("approval").map { L10n.tr("zgoda: \($0)") } ?? s("event") ?? ""
+        case "decision": return s("decision") ?? s("approved").map { $0 == "1" || $0 == "true" ? L10n.tr("zatwierdzone") : L10n.tr("odrzucone") } ?? s("reason") ?? ""
+        default: return [s("arguments"), s("result").map { "⟶ " + $0 }, s("error").map { "✕ " + $0 }, s("preview")].compactMap { $0 }.joined(separator: "  ")
         }
+    }
+
+    /// Kolejność z nagłówków (D212): pliki po nazwie, wpisy po kolumnie (wiersz surowy razem z wpisem).
+    func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
+        if tableView === files {
+            urls = HeaderSort.sort(urls, by: files.sortDescriptors) { u, _ in u.lastPathComponent.sortKey }
+        } else {
+            let pairs = HeaderSort.sort(Array(zip(lines, rawLines)), by: entries.sortDescriptors) { p, key in Self.entryText(p.0, key).sortKey }
+            lines = pairs.map(\.0)
+            rawLines = pairs.map(\.1)
+        }
+        tableView.reloadData()
+    }
+
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+        let text = tableView === files ? urls[row].lastPathComponent : Self.entryText(lines[row], tableColumn?.identifier.rawValue)
         let field = NSTextField(labelWithString: text)
         field.font = InterfaceFonts.shared.small
         field.lineBreakMode = .byTruncatingTail

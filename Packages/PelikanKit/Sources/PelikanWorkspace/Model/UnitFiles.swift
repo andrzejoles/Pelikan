@@ -299,6 +299,7 @@ extension Workspace {
         restoreWindowState(doc)
         doc.showUnitTab(show == .spec ? 0 : 1)
         rememberRecentFile(show == .spec ? spec : body)
+        checkFileStandard(doc)
         return doc
     }
 

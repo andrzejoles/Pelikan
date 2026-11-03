@@ -469,6 +469,11 @@ public final class Workspace {
     @ObservationIgnored public private(set) lazy var recovery = RecoveryStore(directory: dataDirectory?.appendingPathComponent("Recovery", isDirectory: true))
     /// Czas ostatniej migawki odzyskiwania przed wykonaniem (PD-FILE-001) — co najwyżej jedna na kilka sekund.
     @ObservationIgnored var lastExecuteSnapshot: Date?
+    /// Standard plików (D210): przywracanie workseta i pulpitu projektu otwiera pliki bez pytania o konwersję.
+    @ObservationIgnored var fileStandardChecksSuspended = 0
+    /// Okna czekające na pytanie o konwersję do standardu plików — pytania po kolei, nie kilka naraz.
+    @ObservationIgnored var fileStandardQueue: [DocumentID] = []
+    @ObservationIgnored var fileStandardAsking = false
     /// Okna z poprzedniego, nieczysto zakończonego uruchomienia — do przywrócenia (Plik › Odzyskaj okna).
     public var pendingRecovery: Workset?
     /// Uruchomienie programu zewnętrznego bez powłoki (argumenty jako tablica); w testach podmieniane.
@@ -752,6 +757,8 @@ public final class Workspace {
         let n = (ordinals[kind] ?? 0) + 1
         ordinals[kind] = n
         let doc = Document(kind: kind, ordinal: n, text: text, fileURL: fileURL)
+        // Nowe okno zapisuje się w standardzie plików (D210); otwierany plik dostaje format z dysku.
+        if fileURL == nil { doc.fileFormat = settings.fileStandard.newFileFormat }
         // Ustawienia › Ogólne › „Przypinaj połączenie nowych okien” (PD-CONN-019, UG 23.1): nowe okno SQL, programu,
         // testu i poleceń zostaje przy bieżącym połączeniu głównym, gdy główne się zmieni. Bez połączenia głównego okno
         // nie ma czego przypiąć — dostanie główne przy logowaniu, jak nieprzypięte.

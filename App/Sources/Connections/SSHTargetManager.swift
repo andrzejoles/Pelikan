@@ -300,6 +300,23 @@ struct SSHTargetEditor: View {
                 })
     }
 
+    /// Lista wyboru pola (D211): wartości z innych celów i stałe podpowiedzi, bez powtórzeń.
+    private func choices(_ key: KeyPath<PelikanSSHTarget, String>, _ extra: [String] = []) -> [PreferenceChoice] {
+        var seen = Set<String>(), out: [PreferenceChoice] = []
+        for v in extra + model.store.targets.map({ $0[keyPath: key] }) where !v.isEmpty && seen.insert(v).inserted { out.append(PreferenceChoice(v)) }
+        return out
+    }
+
+    /// Hosty z ~/.ssh/config i klucze prywatne z ~/.ssh (z parą `.pub`) — tylko nazwy, bez treści kluczy.
+    private static let sshHosts: [String] = {
+        let config = try? String(contentsOf: URL(fileURLWithPath: NSHomeDirectory() + "/.ssh/config"), encoding: .utf8)
+        return config.map(ConnectionFieldChoices.sshConfigHosts) ?? []
+    }()
+    private static let sshKeys: [String] = {
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: NSHomeDirectory() + "/.ssh")) ?? []
+        return names.filter { n in !n.hasSuffix(".pub") && names.contains(n + ".pub") }.sorted().map { "~/.ssh/" + $0 }
+    }()
+
     private var binaries: Binding<String> {
         Binding(get: { draft.wrappedValue.binaries.joined(separator: ", ") },
                 set: { draft.wrappedValue.binaries = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } })
@@ -319,24 +336,17 @@ struct SSHTargetEditor: View {
                     }
                     .pickerStyle(.segmented)
                     HStack {
-                        TextField(L10n.tr("Host"), text: draft.host)
+                        ChoiceField(L10n.tr("Host"), text: draft.host, choices: choices(\.host, Self.sshHosts))
                         TextField(L10n.tr("Port"), value: draft.port, format: .number.grouping(.never)).frame(width: 80)
                     }
-                    TextField(L10n.tr("Użytkownik"), text: draft.user)
+                    ChoiceField(L10n.tr("Użytkownik"), text: draft.user, choices: choices(\.user))
                     Picker(L10n.tr("Uwierzytelnianie"), selection: draft.auth) {
                         Text(L10n.tr("Plik klucza")).tag(SSHAuthMethod.keyFile)
                         Text(L10n.tr("Agent SSH")).tag(SSHAuthMethod.agent)
                         Text(L10n.tr("Hasło SSH")).tag(SSHAuthMethod.password)
                     }
                     if draft.wrappedValue.auth == .keyFile {
-                        HStack {
-                            TextField(L10n.tr("Plik klucza"), text: draft.keyFile)
-                            Button(L10n.tr("Wybierz…")) {
-                                let panel = NSOpenPanel()
-                                panel.showsHiddenFiles = true
-                                if panel.runModal() == .OK, let u = panel.url { draft.wrappedValue.keyFile = u.path }
-                            }
-                        }
+                        ChoiceField(L10n.tr("Plik klucza"), text: draft.keyFile, choices: choices(\.keyFile, Self.sshKeys), browse: .file)
                     }
                     if draft.wrappedValue.auth != .agent {
                         SecureField(draft.wrappedValue.auth == .password ? L10n.tr("Hasło SSH") : L10n.tr("Hasło klucza (opcjonalne)"), text: $model.secret,
@@ -363,16 +373,16 @@ struct SSHTargetEditor: View {
                     }
                 }
                 Section(L10n.tr("Git i build")) {
-                    TextField(L10n.tr("Gałąź"), text: draft.branch)
-                    TextField(L10n.tr("Remote"), text: draft.remote)
-                    TextField(L10n.tr("Komenda builda"), text: draft.buildCommand)
+                    ChoiceField(L10n.tr("Gałąź"), text: draft.branch, choices: choices(\.branch, ["main", "master", "develop"]))
+                    ChoiceField(L10n.tr("Remote"), text: draft.remote, choices: choices(\.remote, ["origin", "upstream"]))
+                    ChoiceField(L10n.tr("Komenda builda"), text: draft.buildCommand, choices: choices(\.buildCommand, ["make", "make all", "make clean all"]), code: true)
                     TextField(L10n.tr("Binarki (po przecinku)"), text: binaries, prompt: Text(draft.wrappedValue.name))
                 }
                 Section(L10n.tr("Środowisko powłoki")) {
-                    TextField(L10n.tr("Powłoka ksh"), text: draft.kshPath)
-                    TextField("ORACLE_HOME", text: draft.oracleHome)
-                    TextField("LIBPATH", text: draft.libPath)
-                    TextField("PATH", text: draft.path)
+                    ChoiceField(L10n.tr("Powłoka ksh"), text: draft.kshPath, choices: choices(\.kshPath, ["/usr/bin/ksh", "/bin/ksh", "/usr/bin/ksh93"]))
+                    ChoiceField("ORACLE_HOME", text: draft.oracleHome, choices: choices(\.oracleHome))
+                    ChoiceField("LIBPATH", text: draft.libPath, choices: choices(\.libPath))
+                    ChoiceField("PATH", text: draft.path, choices: choices(\.path))
                     VStack(alignment: .leading) {
                         Text(L10n.tr("Dodatkowe zmienne (NAZWA=wartość, po jednej w wierszu)")).font(.uiSecondary)
                         CodeTextEditor(text: extraEnvironment).frame(height: 54)

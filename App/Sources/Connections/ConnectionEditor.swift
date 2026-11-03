@@ -126,6 +126,8 @@ struct ConnectionEditorView: View {
     @Bindable var draft: ConnectionDraft
     let folders: [ConnectionFolder]
     let tnsAliases: [String]
+    /// Listy wyboru pól (D211).
+    var choices = ConnectionFieldChoices()
     let onTest: () -> Void
     let onSave: () -> Void
     let onCancel: () -> Void
@@ -189,18 +191,12 @@ struct ConnectionEditorView: View {
                         }
                     }
                     Section(L10n.tr("Logowanie")) {
-                        TextField(L10n.tr("Użytkownik"), text: $draft.user).disabled(draft.authMode != .password)
+                        ChoiceField(L10n.tr("Użytkownik"), text: $draft.user, choices: choices.users).disabled(draft.authMode != .password)
                         SecureField(L10n.tr("Hasło"), text: $draft.password,
                                     prompt: Text(draft.isNew ? "" : L10n.tr("bez zmian"))).disabled(draft.authMode != .password)
                         Toggle(L10n.tr("Zapamiętaj hasło w Pęku kluczy"), isOn: $draft.savePassword).disabled(draft.authMode != .password)
-                        HStack {
-                            TextField(L10n.tr("Baza"), text: $draft.connectString, prompt: Text(L10n.tr("alias TNS albo host:port/usługa")))
-                            if !tnsAliases.isEmpty {
-                                Menu(L10n.tr("TNS")) {
-                                    ForEach(tnsAliases, id: \.self) { a in Button(a) { draft.connectString = a } }
-                                }.fixedSize()
-                            }
-                        }
+                        ChoiceField(L10n.tr("Baza"), text: $draft.connectString, prompt: L10n.tr("alias TNS albo host:port/usługa"),
+                                    choices: choices.databases)
                         Picker(L10n.tr("Połącz jako"), selection: $draft.role) {
                             ForEach(ConnectRole.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                         }
@@ -243,10 +239,11 @@ struct ConnectionEditorView: View {
                 Form {
                     Section(L10n.tr("Połączenie")) {
                         TextField(L10n.tr("Proxy: schemat docelowy"), text: $draft.proxyClient, prompt: Text(L10n.tr("użytkownik[schemat]")))
-                        TextField(L10n.tr("Katalog konfiguracji (tnsnames.ora)"), text: $draft.configDirectory, prompt: Text("~/Oracle/network/admin"))
+                        ChoiceField(L10n.tr("Katalog konfiguracji (tnsnames.ora)"), text: $draft.configDirectory, prompt: "~/Oracle/network/admin",
+                                    choices: choices.configDirectories, browse: .directory)
                         HStack {
-                            TextField(L10n.tr("Portfel TLS (mTLS, np. Autonomous Database)"), text: $draft.walletDirectory, prompt: Text(L10n.tr("katalog z cwallet.sso")))
-                            Button(L10n.tr("Wybierz…")) { if let u = Self.chooseDirectory() { draft.walletDirectory = u.path } }
+                            ChoiceField(L10n.tr("Portfel TLS (mTLS, np. Autonomous Database)"), text: $draft.walletDirectory,
+                                        prompt: L10n.tr("katalog z cwallet.sso"), choices: choices.walletDirectories, browse: .directory)
                             Button(L10n.tr("Importuj ZIP…")) { importWalletZip() }
                         }
                         if !draft.walletDirectory.isEmpty {
@@ -256,13 +253,13 @@ struct ConnectionEditorView: View {
                             case .missing: Text(L10n.tr("W katalogu nie ma portfela")).font(.uiSecondary).foregroundStyle(.red)
                             }
                         }
-                        TextField(L10n.tr("Edition (EBR)"), text: $draft.edition)
+                        ChoiceField(L10n.tr("Edition (EBR)"), text: $draft.edition, choices: choices.editions)
                         Picker(L10n.tr("Licencja Diagnostics/Tuning Pack"), selection: $draft.managementPacks) {
                             Text(L10n.tr("Nie określono (pytanie przy pierwszym użyciu)")).tag(ManagementPackLicense?.none)
                             ForEach(ManagementPackLicense.allCases, id: \.self) { Text($0.displayName).tag(ManagementPackLicense?.some($0)) }
                         }
                         TextField(L10n.tr("Workspace (DBMS_WM)"), text: $draft.workspaceManager)
-                        TextField(L10n.tr("Bieżący schemat"), text: $draft.currentSchema)
+                        ChoiceField(L10n.tr("Bieżący schemat"), text: $draft.currentSchema, choices: choices.schemas)
                     }
                     Section(L10n.tr("Zachowanie")) {
                         Toggle(L10n.tr("Tylko do odczytu (blokada zmian danych i obiektów)"), isOn: $draft.readOnly)
@@ -281,21 +278,14 @@ struct ConnectionEditorView: View {
                 Form {
                     Section {
                         Toggle(L10n.tr("Łącz przez tunel SSH"), isOn: $draft.sshEnabled)
-                        TextField(L10n.tr("Serwer SSH (bastion)"), text: $draft.sshHost, prompt: Text("bastion.example.com"))
+                        ChoiceField(L10n.tr("Serwer SSH (bastion)"), text: $draft.sshHost, prompt: "bastion.example.com", choices: choices.sshHosts)
                             .disabled(!draft.sshEnabled)
                         TextField(L10n.tr("Port"), value: $draft.sshPort, format: .number.grouping(.never)).disabled(!draft.sshEnabled)
-                        TextField(L10n.tr("Użytkownik SSH"), text: $draft.sshUser).disabled(!draft.sshEnabled)
-                        HStack {
-                            TextField(L10n.tr("Plik klucza prywatnego"), text: $draft.sshIdentity, prompt: Text(L10n.tr("puste — agent SSH i ~/.ssh/config")))
-                            Button(L10n.tr("Wybierz…")) {
-                                let panel = NSOpenPanel()
-                                panel.directoryURL = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent(".ssh")
-                                panel.showsHiddenFiles = true
-                                if panel.runModal() == .OK, let u = panel.url { draft.sshIdentity = u.path }
-                            }
-                        }
-                        .disabled(!draft.sshEnabled)
-                        TextField(L10n.tr("Host pośredni (ProxyJump)"), text: $draft.sshJump, prompt: Text(L10n.tr("opcjonalnie")))
+                        ChoiceField(L10n.tr("Użytkownik SSH"), text: $draft.sshUser, choices: choices.sshUsers).disabled(!draft.sshEnabled)
+                        ChoiceField(L10n.tr("Plik klucza prywatnego"), text: $draft.sshIdentity, prompt: L10n.tr("puste — agent SSH i ~/.ssh/config"),
+                                    choices: choices.sshKeys, browse: .file)
+                            .disabled(!draft.sshEnabled)
+                        ChoiceField(L10n.tr("Host pośredni (ProxyJump)"), text: $draft.sshJump, prompt: L10n.tr("opcjonalnie"), choices: choices.sshHosts)
                             .disabled(!draft.sshEnabled)
                         Toggle(L10n.tr("Logowanie hasłem SSH (zamiast klucza)"), isOn: $draft.sshUsesPassword).disabled(!draft.sshEnabled)
                         SecureField(L10n.tr("Hasło SSH"), text: $draft.sshPassword, prompt: Text(draft.isNew ? "" : L10n.tr("bez zmian")))
@@ -313,8 +303,8 @@ struct ConnectionEditorView: View {
                         Toggle(L10n.tr("Agent widzi to połączenie (tylko alias i środowisko)"), isOn: $draft.agentVisible)
                         Toggle(L10n.tr("Agent może zmieniać dane i obiekty (za zgodą)"), isOn: $draft.agentAllowChanges)
                             .disabled(!draft.agentVisible)
-                        TextField(L10n.tr("Osobny użytkownik bazy dla agenta"), text: $draft.agentUser,
-                                  prompt: Text(L10n.tr("proxy, zalecane dla produkcji (tylko z SELECT)")))
+                        ChoiceField(L10n.tr("Osobny użytkownik bazy dla agenta"), text: $draft.agentUser,
+                                    prompt: L10n.tr("proxy, zalecane dla produkcji (tylko z SELECT)"), choices: choices.users)
                         TextField(L10n.tr("Kolumny maskowane dla agenta"), text: $draft.maskedColumns, prompt: Text("PESEL, EMAIL"))
                     } footer: {
                         Text(L10n.tr("Na połączeniach produkcyjnych agent domyślnie tylko czyta. Użytkownik agenta łączy się przez proxy (główny[agent]) — wymaga ALTER USER agent GRANT CONNECT THROUGH główny; bez drugiego hasła. Kolumny maskowane: nazwy kolumn albo SCHEMAT.TABELA.KOLUMNA, rozdzielone przecinkami. Funkcje wywoływane w zapytaniach mogą mieć skutki uboczne — twardą granicą są uprawnienia użytkownika bazy."))
@@ -349,6 +339,16 @@ struct ConnectionEditorView: View {
 /// Prezentacja okna definicji połączenia jako arkusza okna głównego.
 @MainActor
 enum ConnectionEditorPresenter {
+    /// Listy wyboru pól (D211): inne połączenia, aliasy TNS, hosty z ~/.ssh/config i klucze prywatne z ~/.ssh (pliki
+    /// z parą `.pub`). Czytane tylko nazwy plików i linie `Host` — bez treści kluczy.
+    static func fieldChoices(_ workspace: Workspace, tnsAliases: [String]) -> ConnectionFieldChoices {
+        let ssh = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent(".ssh")
+        let config = try? String(contentsOf: ssh.appendingPathComponent("config"), encoding: .utf8)
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: ssh.path)) ?? []
+        let keys = names.filter { n in !n.hasSuffix(".pub") && names.contains(n + ".pub") }.sorted().map { "~/.ssh/" + $0 }
+        return ConnectionFieldChoices.from(workspace.connections.connections, tnsAliases: tnsAliases, sshConfig: config, sshKeys: keys)
+    }
+
     static func present(workspace: Workspace, connectionID: UUID?, in window: NSWindow?) {
         let existing = connectionID.flatMap { workspace.connections.connection($0) }
         let draft = ConnectionDraft(existing, isNew: existing == nil)
@@ -364,7 +364,7 @@ enum ConnectionEditorPresenter {
             draft.sshPassword = ""
         }
         let view = ConnectionEditorView(
-            draft: draft, folders: workspace.connections.folders, tnsAliases: tns,
+            draft: draft, folders: workspace.connections.folders, tnsAliases: tns, choices: Self.fieldChoices(workspace, tnsAliases: tns),
             onTest: { test(draft, workspace: workspace) },
             onSave: {
                 do {

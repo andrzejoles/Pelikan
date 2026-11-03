@@ -67,10 +67,12 @@ struct BrowserPane: View {
                             Button { customization.filters.removeAll { $0.id == f.id } } label: { Image(systemName: "minus.circle") }
                                 .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń filtr"))
                         }
-                        TextField(L10n.tr("WHERE (alias o; :browser_user, &browser_filter)"), text: $f.whereClause).font(.code)
+                        ChoiceField(L10n.tr("WHERE (alias o; :browser_user, &browser_filter)"), text: $f.whereClause,
+                                    choices: PreferenceChoices.browserWhere, code: true)
                         HStack {
-                            TextField(L10n.tr("ORDER BY"), text: $f.orderBy).font(.code)
-                            TextField(L10n.tr("Użytkownik bazy (puste — wszyscy)"), text: $f.forUser)
+                            ChoiceField(L10n.tr("ORDER BY"), text: $f.orderBy, choices: PreferenceChoices.browserOrder, code: true)
+                            ChoiceField(L10n.tr("Użytkownik bazy (puste — wszyscy)"), text: $f.forUser,
+                                        choices: PreferenceChoices.databaseUsers(workspace.connections.connections))
                         }
                     }
                 }
@@ -92,7 +94,8 @@ struct BrowserPane: View {
                         }
                         TextField(L10n.tr("Zapytanie: OWNER, OBJECT_NAME, OBJECT_TYPE (opcjonalne)"), text: $f.query).font(.code)
                         HStack {
-                            TextField(L10n.tr("Połączenia (wzorzec, puste — wszystkie)"), text: $f.connectionPattern)
+                            ChoiceField(L10n.tr("Połączenia (wzorzec, puste — wszystkie)"), text: $f.connectionPattern,
+                                        choices: PreferenceChoices.connectionPatterns(workspace.connections.connections))
                             Picker(L10n.tr("Folder nadrzędny"), selection: $f.parentID) {
                                 Text(L10n.tr("(brak)")).tag(UUID?.none)
                                 ForEach(customization.folders.filter { $0.id != f.id }) { Text($0.name).tag(UUID?.some($0.id)) }

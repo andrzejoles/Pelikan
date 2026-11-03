@@ -3064,3 +3064,68 @@ wynikami”.
   wierszy po prawej, najwyżej trzecia część szerokości (skracany).
 - Dawny pasek siatki (strony, rekord, eksport, Excel, kłódka i przyciski edycji widoczne tylko w trybie edycji) zastąpiony;
   przyciski edycji są teraz zawsze widoczne, wyłączone poza trybem edycji.
+
+### D210 · 2026-11-03 — Standard plików: UTF-8 bez BOM, pliki programów bez „/”
+
+**Prośba właściciela:** „w ustawieniach (i zaznaczone jako domyślne) pliki w UTF-8, bez BOM, bez znaków / na końcu czy
+w środku. Jeżeli przy otwarciu wykryje coś innego — pytanie o konwersję.”
+
+- **Ustawienia › Ogólne › Standard plików** (`Settings.fileStandard`): kodowanie (UTF-8, ISO-8859-2, Windows-1250),
+  znacznik BOM (tylko UTF-8), pliki programów bez linii „/”, pytanie przy otwarciu. Domyślnie: UTF-8, bez BOM, bez „/”,
+  pytanie włączone; przycisk przywraca te wartości.
+- **Nowe okna** zapisują się w standardzie (dotąd zawsze UTF-8 bez BOM — przy domyślnych ustawieniach bez zmiany).
+- **Otwarcie pliku** okna SQL albo programu (także pary specyfikacja/ciało, D194) w innym kodowaniu, z BOM albo — w pliku
+  programu — z liniami „/” kończy się pytaniem „Konwertuj / Zostaw bez zmian” z listą odstępstw i polem „Nie pytaj
+  więcej” (zapamiętana odpowiedź, przywracana w Ustawieniach › Narzędzia, PD-PREF-008). Kilka plików naraz — pytania po
+  kolei. Bez pytań przy przywracaniu workseta, odzyskiwaniu okien i pulpitu projektu (użytkownik już na nich pracował),
+  bez interfejsu (testy, agent bez okna) i w przebiegu zrzutów.
+- **Konwersja zmienia okno, nie plik:** kodowanie i BOM zapisu, usunięcie linii z samym „/” (lekser — „/” w tekście,
+  komentarzu i dzieleniu zostaje); okno oznaczone jako zmienione, plik zmienia się przy zapisie (⌘S, cofnięcie zmian
+  przez zamknięcie bez zapisu). Znak spoza docelowego kodowania jednobajtowego zatrzyma zapis jak dotąd (D55).
+- **„/” tylko w plikach programów:** skrypty `.sql` wykonuje okno poleceń, gdzie „/” uruchamia blok PL/SQL — tam jest
+  potrzebny (D192: „/” w pliku z kodem psuje wdrożenie, w skrypcie — nie). Opcja Oracle „Kończ jednostki okna programu
+  znakiem „/”” jest wyłączona, gdy standard zabrania „/”; ustawienia sprzed tej zmiany z włączonym „/” zachowują wybór
+  (standard dostaje „/” dozwolony).
+- **Kodowanie projektu ma pierwszeństwo:** plik w katalogu projektu z ustawionym kodowaniem (np. ISO-8859-2 dla źródeł
+  Pro*C, D55) nie jest odstępstwem i konwersja nie zmienia jego kodowania (BOM i „/” — tak).
+- Zakończenia linii (LF/CRLF) poza standardem — prośba ich nie obejmuje; zapis zachowuje zakończenia pliku jak dotąd.
+
+### D211 · 2026-11-03 — Pola ustawień z listą wyboru i wpisem ręcznym
+
+**Prośba właściciela:** „wszelkie ustawienia, gdzie obecnie trzeba podać wartość z palca — jeżeli jest możliwość, zrobić
+listę wyboru z opcją wpisania ręcznie.”
+
+- Wspólne pole `ChoiceField`: pole tekstowe i przycisk ▾ z listą (bieżąca wartość z ✓, „Wyczyść”, opcjonalnie „Wybierz
+  katalog…/plik…/aplikację…” z okna macOS). Pola z wartościami po przecinku (rozszerzenia, statystyki, PLSQL_CCFLAGS,
+  pisownia specjalna, listy debugowania) — wybór dopisuje pozycję albo ją usuwa.
+- **Listy** (`PreferenceChoices`, `ConnectionFieldChoices`): formaty DATE/TIMESTAMP i NLS_DATE/TIMESTAMP_FORMAT, pozostałe
+  parametry NLS sesji, PLSQL_WARNINGS, PLSCOPE_SETTINGS, PLSQL_CCFLAGS, prefiksy konwencji nazw, rozszerzenia programów,
+  testów i par specyfikacja/ciało, statystyki sesji, pisownia specjalna formatera, wzorce `user@baza` z listy połączeń
+  (wskaźniki połączeń, zestawy preferencji, foldery i filtry przeglądarki, debugowanie), użytkownicy baz, klauzule
+  WHERE/ORDER BY filtrów przeglądarki, katalogi startowe (projekt, katalogi ostatnich plików), wyszukiwania w sieci,
+  edytor zewnętrzny, program i argumenty porównywania plików, dokumenty Oracle, polecenia agentów CLI.
+- **Okno połączenia i cele SSH Pro*C:** użytkownik, baza (aliasy TNS — dawny przycisk „TNS” zastąpiony listą — i connect
+  stringi innych połączeń), katalog konfiguracji, portfel, edycja, schemat, host/użytkownik/klucz/ProxyJump tunelu SSH
+  (hosty z linii `Host` w `~/.ssh/config`, klucze prywatne z `~/.ssh` z parą `.pub` — czytane tylko nazwy, bez treści
+  kluczy), gałąź, remote, komenda builda, ksh, ORACLE_HOME, LIBPATH, PATH (wartości innych celów).
+- Bez listy zostają pola, dla których nie ma sensownych podpowiedzi: nazwy nadawane przez użytkownika, pola wyszukiwania,
+  własne zapytania SQL, skróty i treść AutoReplace, liczby (pola liczbowe mają już krokomierze albo wybór).
+
+### D212 · 2026-11-03 — Każda tabela sortowana po dowolnej kolumnie
+
+**Prośba właściciela:** „wszystkie tabelki, jakie się wyświetlają (np. tabelka sesji), aby mogły być sortowane po
+dowolnej kolumnie.”
+
+- **Klik nagłówka** sortuje rosnąco, drugi — malejąco; kolejność pierwotna do pierwszego kliknięcia. Wspólne
+  porównanie (`SortKey`, `CellOrder`): wartości z bazy pokazywane jako tekst (SID, SERIAL#, rozmiary) porównywane
+  liczbowo, gdy obie są liczbami (kropka albo przecinek dziesiętny, spacje tysięcy), inny tekst — bez wielkości liter,
+  liczby w tekście wg wartości (jak Finder); daty i liczby wg wartości; puste wartości na końcu.
+- **Tabele SwiftUI** (≈45: sesje, szczegóły sesji, DBA, Scheduler, SQL Monitor, porównania, plan i Autotrace, profiler,
+  śledzenie, statystyki, zmienne testu, punkty przerwania, użycia, historia lokalna, problemy, makra, TODO, wdrożenia
+  Pro*C, klawiatura, edytor tabeli…) — `ColumnSort` przez `TableColumn(…, sortKey:)`; tabele edytowalne
+  (`Table($wiersze)`: kolumny, klucze, indeksy, uprawnienia tabeli, zmienne testu, koszyk, punkty przerwania) sortują
+  widok, a dane zachowują swoją kolejność (kolejność kolumn w CREATE TABLE się nie zmienia). Plan wykonania sortuje
+  rodzeństwo w gałęziach — drzewo zostaje.
+- **Tabele AppKit** (`HeaderSort`): komunikaty kompilacji, aktywność i dziennik agenta (pliki i wpisy), informacje
+  o obiekcie, widok rekordu. Siatka wyników ma własne sortowanie (PD-GRID-009). Drzewa (przeglądarka obiektów,
+  połączenia, zawartość kodu, lista okien) i listy podpowiedzi bez nagłówków nie są tabelami — bez zmian.

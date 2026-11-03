@@ -18,8 +18,9 @@ struct ToolsPane: View {
                     HStack {
                         TextField(L10n.tr("Nazwa"), text: field(\.webSearches, s.id, \.name), prompt: Text(L10n.tr("Nazwa")))
                             .labelsHidden().textFieldStyle(.roundedBorder).frame(width: 200)
-                        TextField(L10n.tr("Adres z %s"), text: field(\.webSearches, s.id, \.url), prompt: Text(L10n.tr("Adres z %s")))
-                            .labelsHidden().textFieldStyle(.roundedBorder)
+                        ChoiceField(L10n.tr("Adres z %s"), text: field(\.webSearches, s.id, \.url), prompt: L10n.tr("Adres z %s"),
+                                    choices: PreferenceChoices.webSearches, hideLabel: true)
+                            .textFieldStyle(.roundedBorder)
                         Button { workspace.settings.webSearches.removeAll { $0.id == s.id } } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
                             .iconLabel(L10n.tr("Usuń wyszukiwanie"))
                     }
@@ -31,22 +32,22 @@ struct ToolsPane: View {
                 Text(L10n.tr("%s zastępuje zaznaczony tekst albo słowo pod kursorem; dozwolone tylko adresy http i https.")).font(.uiSecondary).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Edytor zewnętrzny")) {
-                TextField(L10n.tr("Aplikacja (nazwa albo ścieżka .app; puste — program skojarzony z plikiem)"),
-                          text: Binding(get: { workspace.settings.externalEditor ?? "" }, set: { workspace.settings.externalEditor = $0.isEmpty ? nil : $0 }),
-                          prompt: Text("Visual Studio Code"))
+                ChoiceField(L10n.tr("Aplikacja (nazwa albo ścieżka .app; puste — program skojarzony z plikiem)"),
+                            text: Binding(get: { workspace.settings.externalEditor ?? "" }, set: { workspace.settings.externalEditor = $0.isEmpty ? nil : $0 }),
+                            prompt: "Visual Studio Code", choices: PreferenceChoices.applications, browse: .application)
                 Text(L10n.tr("Po powrocie do Pelikana zmiany pliku są wczytywane do okna. Okno bez pliku trafia do pliku tymczasowego w katalogu danych."))
                     .font(.uiSecondary).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Zewnętrzna przeglądarka różnic")) {
-                TextField(L10n.tr("Program (puste — wbudowana przeglądarka)"),
+                ChoiceField(L10n.tr("Program (puste — wbudowana przeglądarka)"),
                           text: Binding(get: { workspace.settings.externalDiff?.program ?? "" }, set: { v in
                               if v.isEmpty { workspace.settings.externalDiff = nil } else {
                                   var t = workspace.settings.externalDiff ?? ExternalDiffTool(program: v)
                                   t.program = v
                                   workspace.settings.externalDiff = t
                               }
-                          }), prompt: Text("/usr/local/bin/opendiff"))
-                TextField(L10n.tr("Argumenty"), text: $diffArguments)
+                          }), prompt: "/usr/bin/opendiff", choices: PreferenceChoices.diffPrograms, browse: .file)
+                ChoiceField(L10n.tr("Argumenty"), text: $diffArguments, choices: PreferenceChoices.diffArguments, code: true)
                     .disabled(workspace.settings.externalDiff == nil)
                 Text(L10n.tr("%1 i %2 — pliki lewy i prawy, %3 i %4 — ich tytuły. Program jest uruchamiany bez powłoki; argumenty rozdziela spacja, cudzysłów grupuje."))
                     .font(.uiSecondary).foregroundStyle(.secondary)
@@ -55,7 +56,8 @@ struct ToolsPane: View {
                 ForEach(workspace.settings.userDocuments) { d in
                     HStack {
                         TextField(L10n.tr("Tytuł"), text: field(\.userDocuments, d.id, \.title)).frame(width: 160)
-                        TextField(L10n.tr("Plik albo adres http(s)"), text: field(\.userDocuments, d.id, \.location))
+                        ChoiceField(L10n.tr("Plik albo adres http(s)"), text: field(\.userDocuments, d.id, \.location),
+                                    choices: PreferenceChoices.oracleDocuments, browse: .file, hideLabel: true)
                         Button { workspace.settings.userDocuments.removeAll { $0.id == d.id } } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
                             .iconLabel(L10n.tr("Usuń dokument"))
                     }

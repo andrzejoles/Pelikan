@@ -43,7 +43,9 @@ struct PreferenceSetsPane: View {
                         ForEach(PreferenceSet.Kind.allCases.filter { $0 != .personalUser }, id: \.self) { Text($0.displayName).tag($0) }
                     }
                     .labelsHidden().fixedSize()
-                    TextField(L10n.tr("Wzorzec połączeń, np. app@prod*"), text: $newPattern).disabled(!newKind.isConnection)
+                    ChoiceField(L10n.tr("Wzorzec połączeń, np. app@prod*"), text: $newPattern,
+                                choices: PreferenceChoices.connectionPatterns(workspace.connections.connections), hideLabel: true)
+                        .disabled(!newKind.isConnection)
                     Button(L10n.tr("Dodaj")) { add() }.disabled(newName.isEmpty || (newKind.isConnection && newPattern.isEmpty))
                     Button(L10n.tr("Usuń")) { remove() }.disabled(selected == nil || selected?.kind == .personalUser)
                 }

@@ -39,6 +39,8 @@ struct LinkedQueriesView: View {
 
 /// Porównanie rekordów (UG 7.8): kolumna po kolumnie, różne wyróżnione, filtr „tylko różne”.
 struct CompareRecordsView: View {
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortRows: [ColumnSort<GridTools.ColumnComparison>] = []
     let comparison: [GridTools.ColumnComparison]
     @State private var onlyDifferent = false
 
@@ -47,10 +49,10 @@ struct CompareRecordsView: View {
             Toggle(L10n.tr("Tylko różne kolumny"), isOn: $onlyDifferent).toggleStyle(.checkbox)
             let rows = comparison.filter { !onlyDifferent || !$0.identical }
             let n = comparison.first?.values.count ?? 0
-            Table(rows) {
-                TableColumn(L10n.tr("Kolumna")) { c in Text(c.column).fontWeight(c.identical ? .regular : .semibold) }.width(min: 120, ideal: 160)
+            Table(rows.sorted(by: sortRows), sortOrder: $sortRows) {
+                TableColumn(L10n.tr("Kolumna"), sortKey: { c in c.column }) { c in Text(c.column).fontWeight(c.identical ? .regular : .semibold) }.width(min: 120, ideal: 160)
                 TableColumnForEach(Array(0..<n), id: \.self) { i in
-                    TableColumn(L10n.tr("Rekord \(i + 1)")) { (c: GridTools.ColumnComparison) in
+                    TableColumn(L10n.tr("Rekord \(i + 1)"), sortKey: { (c: GridTools.ColumnComparison) in c.values[i] }) { (c: GridTools.ColumnComparison) in
                         Text(c.values[i]).foregroundStyle(c.identical ? Color.primary : Color.orange).lineLimit(1)
                     }
                 }
@@ -64,6 +66,8 @@ struct CompareRecordsView: View {
 
 /// Porównanie wyników (UG 7.9): dwie karty obok siebie (albo jedna nad drugą), różne komórki podświetlone.
 struct CompareResultsView: View {
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortRows: [ColumnSort<DetailRow>] = []
     let left: ResultTab
     let right: ResultTab
     @State private var vertical = false
@@ -99,9 +103,9 @@ struct CompareResultsView: View {
         let rows = (0..<(grid?.rowCount ?? 0)).map { r in DetailRow(id: r, values: columns.indices.map { grid!.text(row: r, column: $0) }) }
         return VStack(alignment: .leading, spacing: 2) {
             Text(tab.title).font(.uiSecondary.bold())
-            Table(rows) {
+            Table(rows.sorted(by: sortRows), sortOrder: $sortRows) {
                 TableColumnForEach(columns.indices.map { $0 }, id: \.self) { i in
-                    TableColumn(columns[i]) { (r: DetailRow) in
+                    TableColumn(columns[i], sortKey: { (r: DetailRow) in i < r.values.count ? r.values[i] : "" }) { (r: DetailRow) in
                         let different = diff?.cells.contains(.init(row: r.id, column: columns[i].uppercased())) == true
                         Text(r.values[i]).lineLimit(1).padding(.horizontal, 2)
                             .background(different ? Color.orange.opacity(0.35) : Color.clear)

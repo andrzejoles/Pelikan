@@ -135,6 +135,8 @@ struct SpecBodyFilesTests {
         let ws = Workspace()
         let ui = FakeUI()
         ws.ui = ui
+        // Pliki z „/” — pytanie o standard plików (D210) nie jest tematem tego testu.
+        ws.settings.fileStandard.askOnOpen = false
         let (s, b) = try writePair()
         let doc = try ws.openFile(s)
         let full = doc.text
@@ -153,6 +155,8 @@ struct SpecBodyFilesTests {
         let ws = Workspace()
         let ui = FakeUI()
         ws.ui = ui
+        // Pliki z „/” — pytanie o standard plików (D210) nie jest tematem tego testu.
+        ws.settings.fileStandard.askOnOpen = false
         let doc = ws.newDocument(.program)
         doc.text = ProgramText.join([Self.spec, Self.body], slash: false)
         ui.saveURL = dir.appendingPathComponent("kadry.pks")
@@ -189,6 +193,8 @@ struct SpecBodyFilesTests {
         let ws = Workspace()
         let ui = FakeUI()
         ws.ui = ui
+        // Pliki z „/” — pytanie o standard plików (D210) nie jest tematem tego testu.
+        ws.settings.fileStandard.askOnOpen = false
         let doc = ws.newDocument(.program)
         doc.text = "CREATE OR REPLACE PROCEDURE p IS BEGIN NULL; END;\n\nCREATE OR REPLACE FUNCTION f RETURN NUMBER IS BEGIN RETURN 1; END;\n"
         ui.saveURL = dir.appendingPathComponent("p.prc")
@@ -287,6 +293,8 @@ struct SpecBodyFilesTests {
         let ws = Workspace()
         let ui = FakeUI()
         ws.ui = ui
+        // Pliki z „/” — pytanie o standard plików (D210) nie jest tematem tego testu.
+        ws.settings.fileStandard.askOnOpen = false
         let (s, b) = try writePair("istniejacy")
         let doc = ws.newDocument(.program)
         doc.text = ProgramText.join([Self.spec, Self.body], slash: false)
@@ -367,6 +375,8 @@ struct SpecBodyFilesTests {
         let ws = Workspace()
         let ui = FakeUI()
         ws.ui = ui
+        // Pliki z „/” — pytanie o standard plików (D210) nie jest tematem tego testu.
+        ws.settings.fileStandard.askOnOpen = false
         let (s, b) = try writePair()
         let doc = try ws.openFile(s)
         try Data("-- zmiana z zewnątrz\n".utf8).write(to: b)
@@ -385,6 +395,8 @@ struct SpecBodyFilesTests {
         let ws = Workspace()
         let ui = FakeUI()
         ws.ui = ui
+        // Pliki z „/” — pytanie o standard plików (D210) nie jest tematem tego testu.
+        ws.settings.fileStandard.askOnOpen = false
         let (s, b) = try writePair()
         let doc = try ws.openFile(s)
         // git checkout zmienia ciało; użytkownik edytuje tylko specyfikację.
@@ -398,6 +410,8 @@ struct SpecBodyFilesTests {
         let ws2 = Workspace()
         let ui2 = FakeUI()
         ws2.ui = ui2
+        // Pliki z „/” — pytanie o standard plików (D210) nie jest tematem tego testu.
+        ws2.settings.fileStandard.askOnOpen = false
         let ls = dir.appendingPathComponent("latin.pks"), lb = dir.appendingPathComponent("latin.pkb")
         let latinSpec = Self.spec.replacingOccurrences(of: "kadry", with: "latin").replacingOccurrences(of: "specyfikacja", with: "śćźżąę ŚĆŹŻ")
         try latinSpec.data(using: .isoLatin2)!.write(to: ls)
@@ -415,6 +429,8 @@ struct SpecBodyFilesTests {
         let ws = Workspace()
         let ui = FakeUI()
         ws.ui = ui
+        // Pliki z „/” — pytanie o standard plików (D210) nie jest tematem tego testu.
+        ws.settings.fileStandard.askOnOpen = false
         let (s, b) = try writePair()
         let doc = try ws.openFile(s)
         try await ws.invoke("file.encoding", CommandArguments(["encoding": .string("ISO-8859-2")]))

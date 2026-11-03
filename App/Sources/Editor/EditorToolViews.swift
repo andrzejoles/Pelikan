@@ -4,6 +4,8 @@ import SwiftUI
 
 /// Biblioteka makr (PD-EDIT-015): odtwarzanie, nazwa, skrót klawiszowy, usuwanie; zapis bieżącego nagrania.
 struct MacroLibraryView: View {
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortMacros: [ColumnSort<Macro>] = []
     let workspace: Workspace
     @State private var selection: UUID?
 
@@ -15,15 +17,15 @@ struct MacroLibraryView: View {
                 Spacer()
                 Button(L10n.tr("Zapisz bieżące…")) { workspace.perform("edit.macroSave") }.disabled(workspace.currentMacro == nil)
             }
-            Table(workspace.macroLibrary.macros, selection: $selection) {
-                TableColumn(L10n.tr("Nazwa")) { m in
+            Table(workspace.macroLibrary.macros.sorted(by: sortMacros), selection: $selection, sortOrder: $sortMacros) {
+                TableColumn(L10n.tr("Nazwa"), sortKey: { m in m.name }) { m in
                     CommitTextField(title: "", value: m.name) { run("edit.macroRename", m, ["name": .string($0)]) }.textFieldStyle(.plain)
                 }
-                TableColumn(L10n.tr("Skrót")) { m in
+                TableColumn(L10n.tr("Skrót"), sortKey: { m in m.key ?? "" }) { m in
                     CommitTextField(title: L10n.tr("np. ctrl+shift+1"), value: m.key ?? "") { run("edit.macroSetKey", m, ["key": .string($0)]) }
                         .textFieldStyle(.plain)
                 }.width(140)
-                TableColumn(L10n.tr("Kroki")) { m in Text("\(m.steps.count)").monospacedDigit() }.width(50)
+                TableColumn(L10n.tr("Kroki"), sortKey: { m in m.steps.count }) { m in Text("\(m.steps.count)").monospacedDigit() }.width(50)
             }
             .contextMenu(forSelectionType: UUID.self) { _ in } primaryAction: { ids in
                 if let id = ids.first, let m = workspace.macroLibrary.macros.first(where: { $0.id == id }) { play(m) }
@@ -106,6 +108,8 @@ struct ClipboardHistoryView: View {
 
 /// Zadania To-Do z komentarzy otwartych okien (PD-TODO-001): dwuklik przechodzi do linii, przełączanie zamknięcia.
 struct TodoItemsView: View {
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortRows: [ColumnSort<TodoItemsView.Row>] = []
     let workspace: Workspace
     @State private var showClosed = false
     @State private var selection: String?
@@ -146,13 +150,13 @@ struct TodoItemsView: View {
                 Spacer()
                 Text(L10n.tr("Składnia: -- TODO(właściciel) !priorytet #kategoria: tekst")).font(.uiSecondary).foregroundStyle(.secondary)
             }
-            Table(rows, selection: $selection) {
-                TableColumn("") { r in Image(systemName: r.item.closed ? "checkmark.circle.fill" : "circle").foregroundStyle(r.item.closed ? .green : .secondary) }.width(22)
-                TableColumn(L10n.tr("Zadanie")) { r in Text(r.item.text).strikethrough(r.item.closed) }
-                TableColumn(L10n.tr("Priorytet")) { r in Text(r.item.priority.map(String.init) ?? "") }.width(60)
-                TableColumn(L10n.tr("Kategoria")) { r in Text(r.item.category ?? "") }.width(90)
-                TableColumn(L10n.tr("Właściciel")) { r in Text(r.item.owner ?? "") }.width(90)
-                TableColumn(L10n.tr("Okno")) { r in Text("\(r.document.title):\(r.item.line)").foregroundStyle(.secondary) }.width(120)
+            Table(rows.sorted(by: sortRows), selection: $selection, sortOrder: $sortRows) {
+                TableColumn("", sortKey: { r in r.item.closed }) { r in Image(systemName: r.item.closed ? "checkmark.circle.fill" : "circle").foregroundStyle(r.item.closed ? .green : .secondary) }.width(22)
+                TableColumn(L10n.tr("Zadanie"), sortKey: { r in r.item.text }) { r in Text(r.item.text).strikethrough(r.item.closed) }
+                TableColumn(L10n.tr("Priorytet"), sortKey: { r in r.item.priority.map(String.init) ?? "" }) { r in Text(r.item.priority.map(String.init) ?? "") }.width(60)
+                TableColumn(L10n.tr("Kategoria"), sortKey: { r in r.item.category ?? "" }) { r in Text(r.item.category ?? "") }.width(90)
+                TableColumn(L10n.tr("Właściciel"), sortKey: { r in r.item.owner ?? "" }) { r in Text(r.item.owner ?? "") }.width(90)
+                TableColumn(L10n.tr("Okno"), sortKey: { r in "\(r.document.title):\(r.item.line)" }) { r in Text("\(r.document.title):\(r.item.line)").foregroundStyle(.secondary) }.width(120)
             }
             .contextMenu(forSelectionType: String.self) { ids in
                 Button(L10n.tr("Zamknij / otwórz")) { if let id = ids.first, let r = rows.first(where: { $0.id == id }) { toggle(r) } }
