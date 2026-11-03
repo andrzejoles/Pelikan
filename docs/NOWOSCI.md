@@ -9,8 +9,10 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
 - **Portfel i token w katalogu ze spacją** (np. `~/Oracle Wallets/ADB`): ścieżka trafia do Oracle Net w cudzysłowie.
 - **Sesja agenta „Wszystko tylko do odczytu”** nie zmienia już tekstu edytora komendami aplikacji (np. formatowanie),
   także po zgodzie.
-- **SSH:** polecenie przerwane zerwaniem połączenia nie jest powtarzane (mogło się już wykonać na serwerze); mniej
-  procesów `ssh` przy kolejnych poleceniach.
+- **SSH:** polecenie przerwane zerwaniem połączenia nie jest powtarzane (mogło się już wykonać na serwerze) — ponawiane
+  są tylko bezpieczne odczyty i sprzątanie.
+- **Terminal agenta** nie dziedziczy połączeń z bazą ani potoków aplikacji; hasła w wynikach narzędzi i w śladzie MCP
+  są maskowane (każde `CONNECT`, także hasło w cudzysłowie).
 - **Zamknięcie zerwanej sesji** nie blokuje interfejsu; limit czasu zapytania agenta obejmuje pobieranie wierszy, a nie
   zostaje na połączeniu dla późniejszych poleceń.
 

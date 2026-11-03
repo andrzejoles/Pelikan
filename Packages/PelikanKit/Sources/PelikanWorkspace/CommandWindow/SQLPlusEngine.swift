@@ -147,8 +147,11 @@ public final class SQLPlusEngine {
             // Hasło: w cudzysłowie — do cudzysłowu zamykającego (z `@` w środku); bez niego (także cudzysłów niezamknięty)
             // — do ostatniego `@` w słowie albo do końca słowa.
             let end: Int
-            let close = start < ns.length && ns.character(at: start) == 0x22
-                ? ns.range(of: "\"", range: NSRange(location: start + 1, length: ns.length - start - 1)) : NSRange(location: NSNotFound, length: 0)
+            // Cudzysłów zamykający szukany tylko do końca linii (niezamknięty — nie pochłania dalszej części skryptu).
+            var lineEnd = start
+            while lineEnd < ns.length, ![0x0A, 0x0D].contains(ns.character(at: lineEnd)) { lineEnd += 1 }
+            let close = start < lineEnd && ns.character(at: start) == 0x22
+                ? ns.range(of: "\"", range: NSRange(location: start + 1, length: lineEnd - start - 1)) : NSRange(location: NSNotFound, length: 0)
             if close.location != NSNotFound {
                 end = close.location + 1
             } else {

@@ -244,7 +244,9 @@ public final class AgentController: AgentInvocationGate {
             let content = Self.limitedContent(text, untrusted: result.value?["untrusted_content"] == .bool(true))
             // Wynik z hasłem (np. echo polecenia CREATE USER … IDENTIFIED BY) nie trafia do panelu ani dziennika.
             // Maskowanie na rozkodowanych wartościach (tekst wyniku to JSON — w nim `\n` jest zapisane, nie jest końcem linii).
-            let shown = result.value.map { Self.redacted($0).description } ?? SQLPlusEngine.maskPassword(text)
+            // Do panelu i dziennika trafia początek — maskowany ograniczony fragment wartości (długie napisy i tablice
+            // przycięte przed maskowaniem), nie cały wynik na głównym wątku.
+            let shown = result.value.map { Self.redacted(Self.preview($0)).description } ?? SQLPlusEngine.maskPassword(String(text.prefix(4000)))
             activity.status = .succeeded
             activity.result = String(shown.prefix(300))
             activity.duration = Date().timeIntervalSince(started)
@@ -330,6 +332,16 @@ public final class AgentController: AgentInvocationGate {
     static func summarize(_ args: CommandArguments) -> String {
         let visible = args.values.filter { !$0.key.hasPrefix("__") }.mapValues(redacted)
         return String(JSONValue.object(visible).description.prefix(500))
+    }
+
+    /// Fragment wartości do podglądu: napisy najwyżej 2000 znaków, tablice i obiekty najwyżej 20 elementów (głębiej też).
+    nonisolated static func preview(_ value: JSONValue) -> JSONValue {
+        switch value {
+        case .string(let s): s.count > 2000 ? .string(String(s.prefix(2000))) : value
+        case .array(let a): .array(a.prefix(20).map(preview))
+        case .object(let o): .object(Dictionary(uniqueKeysWithValues: o.sorted { $0.key < $1.key }.prefix(20).map { ($0.key, preview($0.value)) }))
+        default: value
+        }
     }
 
     nonisolated static func redacted(_ value: JSONValue) -> JSONValue {

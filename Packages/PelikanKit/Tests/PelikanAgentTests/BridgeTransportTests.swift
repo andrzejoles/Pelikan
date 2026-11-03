@@ -223,6 +223,8 @@ struct BridgeTransportTests {
         #expect(SQLPlusEngine.maskPassword(#"connect u/"tajne hasło"@db"#) == "connect u/********@db")
         #expect(SQLPlusEngine.maskPassword(#"connect u/"p@ss""#) == "connect u/********")
         #expect(SQLPlusEngine.maskPassword(#"connect u/"secret pw"#) == "connect u/******** pw")
+        // Niezamknięty cudzysłów nie pochłania następnej linii.
+        #expect(SQLPlusEngine.maskPassword("connect u/\"pw\nselect \"X\" from t;") == "connect u/********\nselect \"X\" from t;")
         #expect(SQLPlusEngine.maskPassword(#"connect u/ab\ncd@db"#) == "connect u/********@db")
         // Wynik narzędzia (JSON): maskowanie po rozkodowaniu — także zagnieżdżony tekst JSON.
         let result: JSONValue = .object(["output": .string("x;\n\tconnect u/Secret1@db"), "nested": .string(#"{"s":"connect a/Pass9"}"#)])
@@ -231,7 +233,9 @@ struct BridgeTransportTests {
         let open = dir.appendingPathComponent("open.log").path
         FileManager.default.createFile(atPath: open, contents: Data(), attributes: [.posixPermissions: 0o644])
         SocketTransport.writeTrace(open, Data("b\n".utf8))
-        #expect(try Data(contentsOf: URL(fileURLWithPath: open)).isEmpty)
+        // Własny plik 0644 — prawa poprawione na 0600 i zapis.
+        #expect(try String(contentsOfFile: open, encoding: .utf8) == "b\n")
+        #expect((try FileManager.default.attributesOfItem(atPath: open)[.posixPermissions] as? Int) == 0o600)
         let link = dir.appendingPathComponent("link.log").path
         try FileManager.default.createSymbolicLink(atPath: link, withDestinationPath: path)
         SocketTransport.writeTrace(link, Data("c\n".utf8))

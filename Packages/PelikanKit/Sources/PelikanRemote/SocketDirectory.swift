@@ -2,7 +2,6 @@
 #if canImport(Darwin)
 import Darwin
 import Foundation
-import PelikanLog
 
 /// Katalog gniazd ControlMaster: ścieżka gniazda (`ssh-<skrót>` w katalogu + dopiski `ssh`) nie może przekroczyć
 /// limitu `sun_path` (104 bajty). Gdy katalog preferowany (np. `~/Library/Application Support/…/run`) jest za długi —
@@ -17,10 +16,6 @@ public enum SocketDirectory {
             chmod(preferred.path, 0o700)
             return preferred
         }
-        // Stały katalog użytkownika (bez nowego katalogu przy każdym uruchomieniu) — tylko gdy to nasz katalog 0700,
-        // nie dowiązanie; inaczej (obcy albo podmieniony) — nowy katalog z losową nazwą.
-        let stable = URL(fileURLWithPath: "/tmp/pelikan-\(getuid())-run", isDirectory: true)
-        if mkdir(stable.path, 0o700) == 0 || errno == EEXIST, PrivateOwnership.isPrivateDirectory(stable.path) { return stable }
         let dir = URL(fileURLWithPath: "/tmp/pelikan-\(getuid())-\(UUID().uuidString.prefix(6))", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
         return dir

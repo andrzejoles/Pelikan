@@ -62,9 +62,6 @@ public enum Spawn {
         if case .data = stdin {
             guard pipe(&inPipe) == 0 else { closeAll(); throw SSHError.io(code: errno, detail: executable) }
         }
-        // FD_CLOEXEC — higiena wobec innych procesów potomnych (posix_spawn przekazuje dziecku deskryptory przez dup2 na
-        // 0/1/2, bez tej flagi). Terminal agenta zamyka odziedziczone deskryptory sam (`pelikan-mcp --exec`).
-        for fd in outPipe + errPipe + inPipe where fd >= 0 { _ = fcntl(fd, F_SETFD, FD_CLOEXEC) }
         var actions: posix_spawn_file_actions_t?
         posix_spawn_file_actions_init(&actions)
         defer { posix_spawn_file_actions_destroy(&actions) }

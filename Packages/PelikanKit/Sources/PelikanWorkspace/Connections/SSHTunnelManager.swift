@@ -86,8 +86,16 @@ public final class SSHTunnelManager {
     nonisolated static let runDirectory: URL = {
         let d = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-tunnel-\(getuid())", isDirectory: true)
         try? FileManager.default.createDirectory(at: d, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        chmod(d.path, 0o700)
-        return d
+        // Katalog musi być nasz (na Linuksie /tmp jest wspólny — cudzy katalog pozwoliłby podmienić skrypt askpass albo
+        // kolejkę z hasłem): własny z poprawionymi prawami, inaczej nowy katalog z losową nazwą.
+        var st = stat()
+        if lstat(d.path, &st) == 0, PrivateOwnership.ownedByUser(st, type: mode_t(S_IFDIR)) {
+            chmod(d.path, 0o700)
+            if PrivateOwnership.isPrivateDirectory(d.path) { return d }
+        }
+        let fallback = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-tunnel-\(getuid())-\(UUID().uuidString.prefix(8))", isDirectory: true)
+        try? FileManager.default.createDirectory(at: fallback, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+        return fallback
     }()
 
     /// Skrypt askpass (bez sekretu — czyta hasło z kolejki FIFO ze zmiennej środowiska): zapisany tylko, gdy go brak albo

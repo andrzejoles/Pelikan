@@ -3149,6 +3149,18 @@ zależy od warstwy SSH); `pelikan-mcp --exec` ustawia FD_CLOEXEC zamiast zamyka�
 systemowych); połączenie nawiązane w trakcie `disconnect` (inne pokolenie) nie jest potwierdzane i zostaje zamknięte;
 obcinanie wyniku narzędzia w jednym przejściu, `/` liczony z zapasem jak `\/`.
 
+Ósme przejście — **SSH wycofane do pierwotnego układu** (zastępuje zmiany SSH z przejść 1–7): każda kolejna zmiana
+(pamięć sprawdzenia przez 5 s, osobne gniazdo każdej sesji, stały katalog w /tmp, pokolenia potwierdzeń, sesje
+zastąpione) otwierała nowe przypadki brzegowe. Zostaje tylko istota pierwszej uwagi — polecenie po kodzie 255 ponawiane
+wyłącznie, gdy jest idempotentne (odpytywanie i zatrzymanie procesu, stan serwera, kopie, historia, test celu,
+`mkdir -p`, sprzątanie, zwolnienie własnej blokady) — oraz kanał hasła z O_CLOEXEC i skrypt askpass instalowany z prawami
+0700 przed zamianą nazwy. Rozstrzygnięte bez zmiany: `ssh -O check` przed każdym poleceniem (pewność, że połączenie
+żyje, jest ważniejsza niż jeden proces mniej); nowy katalog gniazd w /tmp przy długiej ścieżce preferowanej (system
+czyści /tmp przy restarcie; katalogi są puste po zamknięciu połączeń). Katalog tunelu SSH (PelikanWorkspace, także
+Linux z wspólnym /tmp) sprawdzany jako własny i prywatny (`PrivateOwnership`, PelikanLog — wspólny dla macOS i Linuksa);
+plik śladu MCP z prawami dla innych, ale własny — prawa poprawiane na 0600; panel i dziennik agenta maskują ograniczony
+podgląd wyniku; hasło w niezamkniętym cudzysłowie maskowane tylko do końca linii.
+
 Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
 testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
 `RETURNING … BULK COLLECT INTO` w bloku PL/SQL.

@@ -40,20 +40,7 @@ public final class SSHSession: Sendable {
     let controlPath: String
     let secret: @Sendable () -> String?
     static let ssh = "/usr/bin/ssh", scp = "/usr/bin/scp"
-    /// Nawiązywanie połączenia głównego — jedno naraz (trwa do 60 s).
     private let startLock = Mutex(())
-    /// Chwila ostatniego potwierdzenia połączenia głównego (`ssh -O check` albo nawiązanie) — osobna blokada: zapomnienie
-    /// (`disconnect`, błąd polecenia) nie czeka na trwające logowanie.
-    private let verified = Mutex<Verification>(Verification())
-    /// Potwierdzenie i jego pokolenie: zapomnienie podnosi pokolenie, więc sprawdzenie rozpoczęte wcześniej (gdy
-    /// połączenie jeszcze żyło) nie zapisze nieaktualnego potwierdzenia.
-    struct Verification {
-        var at: ContinuousClock.Instant?
-        var generation = 0
-        func fresh(_ validity: Duration) -> Bool { at.map { ContinuousClock.now - $0 < validity } ?? false }
-    }
-    /// Jak długo potwierdzenie połączenia głównego zwalnia z ponownego `ssh -O check` przed poleceniem.
-    static let checkValidity: Duration = .seconds(5)
     private let resolved = Mutex<ResolvedHost?>(nil)
 
     public init(config: Config, runDirectory: URL, secret: @escaping @Sendable () -> String?) throws {
@@ -68,10 +55,7 @@ public final class SSHSession: Sendable {
         self.config = config
         self.runDirectory = runDirectory
         self.secret = secret
-        // Własne gniazdo każdej sesji: `disconnect` jednej (np. test celu z tymczasową sesją) i `startMaster` (usuwa
-        // gniazdo) nie zrywają połączenia głównego innej sesji tego samego serwera — w tej samej aplikacji ani w innej
-        // instancji Pelikana we wspólnym katalogu w /tmp.
-        let key = "\(config.user)@\(config.host):\(config.port ?? 22)#\(UUID().uuidString)"
+        let key = "\(config.user)@\(config.host):\(config.port ?? 22)"
         let hash = SHA256.hash(data: Data(key.utf8)).prefix(5).map { String(format: "%02x", $0) }.joined()
         controlPath = runDirectory.appendingPathComponent("ssh-\(hash)").path
     }
@@ -134,38 +118,18 @@ public final class SSHSession: Sendable {
         return (try? Spawn.run(Self.ssh, args, environment: environment, timeout: 10).status) == 0
     }
 
-    /// Nawiązuje połączenie główne (pierwsze logowanie, także po wygaśnięciu ControlPersist). `reuseRecentCheck` —
-    /// świeże potwierdzenie (≤ 5 s) zwalnia z `ssh -O check`: tylko dla poleceń idempotentnych (odpytywanie Stop, stan
-    /// serwera), które po 255 i tak są ponawiane; pozostałe sprawdzają połączenie zawsze — nie mogą trafić na martwe.
-    public func connect(reuseRecentCheck: Bool = false) throws {
+    /// Nawiązuje połączenie główne (pierwsze logowanie, także po wygaśnięciu ControlPersist).
+    public func connect() throws {
         try startLock.withLock { _ in
-            if reuseRecentCheck, verified.withLock({ $0.fresh(Self.checkValidity) }) { return }
-            let generation = verified.withLock { $0.generation }
-            if isConnected {
-                verified.withLock { if $0.generation == generation { $0.at = .now } }
-                return
+            if isConnected { return }
+            let clock = ContinuousClock.now
+            do {
+                try startMaster()
+                Log.ssh.info("SSH: połączenie główne z \(config.host, privacy: .hash) w \(ms: clock)\(config.legacyAlgorithms ? " (starsze algorytmy)" : "", privacy: .public)")
+            } catch {
+                Log.ssh.notice("SSH: brak połączenia z \(config.host, privacy: .hash) po \(ms: clock): \(error)")
+                throw error
             }
-            try startVerified()
-        }
-    }
-
-    /// Nawiązanie połączenia głównego (pod `startLock`) i zapisanie potwierdzenia.
-    private func startVerified() throws {
-        forgetVerification()
-        let generation = verified.withLock { $0.generation }
-        let clock = ContinuousClock.now
-        do {
-            try startMaster()
-            // `disconnect` w trakcie logowania podniósł pokolenie — połączenie nie jest potwierdzone (i jest zamykane).
-            let current = verified.withLock { v -> Bool in
-                if v.generation == generation { v.at = .now }
-                return v.generation == generation
-            }
-            if !current { disconnect() }
-            Log.ssh.info("SSH: połączenie główne z \(config.host, privacy: .hash) w \(ms: clock)\(config.legacyAlgorithms ? " (starsze algorytmy)" : "", privacy: .public)")
-        } catch {
-            Log.ssh.notice("SSH: brak połączenia z \(config.host, privacy: .hash) po \(ms: clock): \(error)")
-            throw error
         }
     }
 
@@ -205,7 +169,7 @@ public final class SSHSession: Sendable {
             let bytes = Array((secret + "\n").utf8)
             Thread.detachNewThread {
                 while !writer.withLock({ $0 }) {
-                    // O_CLOEXEC atomowo: terminal agenta (forkpty) nie odziedziczy końca zapisu kanału hasła.
+                    // O_CLOEXEC atomowo: proces potomny uruchomiony w tej chwili nie odziedziczy końca zapisu kanału hasła.
                     let fd = open(fifo, O_WRONLY | O_NONBLOCK | O_CLOEXEC)
                     if fd >= 0 {
                         _ = fcntl(fd, F_SETFL, 0)
@@ -386,12 +350,8 @@ public final class SSHSession: Sendable {
         }
     }
 
-    /// Zapomina ostatnie potwierdzenie połączenia głównego (błąd `ssh` w strumieniu).
-    func forgetVerification() { verified.withLock { $0.at = nil; $0.generation += 1 } }
-
     public func disconnect() {
         Log.ssh.debug("SSH: zamknięcie połączenia głównego z \(config.host, privacy: .hash)")
-        forgetVerification()
         let args = (commonOptions(master: false) + ["-O", "exit", destination]).map { Array($0.utf8) }
         _ = try? Spawn.run(Self.ssh, args, environment: environment, timeout: 10)
     }
@@ -410,19 +370,11 @@ public final class SSHSession: Sendable {
     /// (kod 255 i połączenie główne nie żyje) ponawia tylko polecenie `idempotent` — inne mogło się już wykonać na
     /// serwerze w całości albo w części (wdrożenie, `mv`, DML), więc wynik 255 wraca do wywołującego.
     public func run(_ command: String, stdin: SpawnInput = .null, timeout: TimeInterval? = 120, idempotent: Bool = false) throws -> Spawn.Result {
-        try connect(reuseRecentCheck: idempotent)
+        try connect()
         let args = try commandArguments(command, tty: false)
         let r = try Spawn.run(Self.ssh, args, environment: environment, stdin: stdin, timeout: timeout)
-        guard r.status == 255 else { return r }
-        forgetVerification()
-        // Ponowienie tylko przy martwym połączeniu głównym (jedno sprawdzenie); żywe — 255 zwróciło samo polecenie.
-        if idempotent, !isConnected {
-            // Pod blokadą ponownie: równoległe ponowienie mogło już nawiązać połączenie (drugie `startMaster` usunęłoby
-            // jego gniazdo i zostawiło osierocony proces `ssh -M`).
-            try startLock.withLock { _ in
-                if verified.withLock({ $0.fresh(Self.checkValidity) }) { return }
-                try startVerified()
-            }
+        if r.status == 255, idempotent, !isConnected {
+            try connect()
             return try Spawn.run(Self.ssh, args, environment: environment, stdin: stdin, timeout: timeout)
         }
         return r
@@ -474,11 +426,7 @@ public final class SSHSession: Sendable {
         if let port = config.port { args += [Array("-P".utf8), Array(String(port).utf8)] }
         args += paths
         let r = try Spawn.run(Self.scp, args, environment: environment, timeout: 24 * 3600, isCancelled: isCancelled, isPaused: isPaused)
-        guard r.status == 0 else {
-            // Nieudany transfer mógł wynikać z zerwanego połączenia głównego — następne polecenie sprawdza je od nowa.
-            forgetVerification()
-            throw Self.explain(r.errorText)
-        }
+        guard r.status == 0 else { throw Self.explain(r.errorText) }
     }
 
     /// Cudzysłów powłoki POSIX (ksh na AIX, sh, bash).
@@ -556,8 +504,6 @@ public final class RemoteProcess: Sendable {
                         let text = err.decode(d)
                         if !text.isEmpty { continuation.yield(.stderr(text)) }
                     case .exit(let code):
-                        // 255 — błąd `ssh` (np. zerwane połączenie główne): następne polecenie sprawdza połączenie od nowa.
-                        if code == 255 { session.forgetVerification() }
                         let rest = head + out.finish()
                         if !rest.isEmpty { continuation.yield(.stdout(rest)) }
                         let restErr = err.finish()
