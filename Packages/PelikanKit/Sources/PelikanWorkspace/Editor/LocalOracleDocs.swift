@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 import PelikanLog
 
 /// Dokumentacja Oracle z lokalnego serwera MCP (D216): wyszukiwanie pełnotekstowe i semantyczne w dokumentacji
