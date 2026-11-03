@@ -136,11 +136,20 @@ public final class SQLPlusEngine {
     nonisolated public static func maskPassword(_ text: String) -> String {
         var t = text
         let star = "********"
-        if let r = t.range(of: #"(?im)^(\s*conn(ect)?\s+[^\s/]*/)"#, options: .regularExpression) {
+        // Każde CONNECT w tekście (skrypt z kilkoma połączeniami), nie tylko pierwsze.
+        var from = t.startIndex
+        while let r = t.range(of: #"(?im)^(\s*conn(ect)?\s+[^\s/]*/)"#, options: .regularExpression, range: from..<t.endIndex) {
             // Hasło: od `/` do ostatniego `@` w słowie (albo do końca słowa), jak w CONNECT.
             let wordEnd = t[r.upperBound...].firstIndex(where: \.isWhitespace) ?? t.endIndex
             let end = t[r.upperBound..<wordEnd].lastIndex(of: "@") ?? wordEnd
-            if end > r.upperBound { t.replaceSubrange(r.upperBound..<end, with: star) }
+            if end > r.upperBound {
+                let offset = t.distance(from: t.startIndex, to: r.upperBound)
+                t.replaceSubrange(r.upperBound..<end, with: star)
+                from = t.index(t.startIndex, offsetBy: offset + star.count)
+            } else {
+                from = r.upperBound
+            }
+            if from >= t.endIndex { break }
         }
         // IDENTIFIED BY hasło / "hasło" / VALUES 'skrót' (eksport DDL użytkownika).
         return t.replacingOccurrences(of: #"(?i)(identified\s+by\s+)(values\s+'[^']*'|"[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)

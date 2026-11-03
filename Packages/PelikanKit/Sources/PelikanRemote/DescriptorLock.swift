@@ -20,13 +20,38 @@ public enum DescriptorLock {
 
     /// FD_CLOEXEC na wszystkich otwartych deskryptorach powyżej 2 (przed `forkpty`+`execve` bez zamykania deskryptorów).
     /// Deskryptory przekazywane procesom przez `posix_spawn`/`Process` trafiają do nich przez dup2 na 0/1/2 — bez zmian.
+    /// Tylko otwarte deskryptory (`proc_pidinfo` PROC_PIDLISTFDS), nie każdy numer do limitu procesu.
     public static func markAllCloseOnExec() {
-        let limit = min(Int32(getdtablesize()), 65_536)
-        guard limit > 3 else { return }
-        for fd in 3..<limit {
+        for fd in openDescriptors() where fd > 2 {
             let flags = fcntl(fd, F_GETFD)
             if flags >= 0, flags & FD_CLOEXEC == 0 { _ = fcntl(fd, F_SETFD, flags | FD_CLOEXEC) }
         }
+    }
+
+    /// Numery otwartych deskryptorów procesu.
+    public static func openDescriptors() -> [Int32] {
+        let stride = MemoryLayout<proc_fdinfo>.stride
+        let needed = proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, nil, 0)
+        guard needed > 0 else { return [] }
+        // Zapas na deskryptory otwarte między pytaniem o rozmiar a odczytem.
+        var infos = [proc_fdinfo](repeating: proc_fdinfo(), count: Int(needed) / stride + 32)
+        let got = infos.withUnsafeMutableBytes { proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, $0.baseAddress, Int32($0.count)) }
+        guard got > 0 else { return [] }
+        return infos.prefix(Int(got) / stride).map(\.proc_fd)
+    }
+}
+
+/// Obiekt systemu plików tylko dla użytkownika: jego własność, właściwy rodzaj (nie dowiązanie) i bez praw dla innych
+/// (katalog gniazd, plik śladu MCP, katalog gniazda agentów).
+public enum PrivateOwnership {
+    /// Należy do bieżącego użytkownika i ma rodzaj `type` (`S_IFDIR`, `S_IFREG`).
+    public static func ownedByUser(_ st: stat, type: mode_t) -> Bool {
+        st.st_mode & S_IFMT == type && st.st_uid == getuid()
+    }
+
+    /// Jak `ownedByUser`, bez żadnych praw dla grupy i innych.
+    public static func isPrivate(_ st: stat, type: mode_t) -> Bool {
+        ownedByUser(st, type: type) && st.st_mode & 0o077 == 0
     }
 }
 #endif

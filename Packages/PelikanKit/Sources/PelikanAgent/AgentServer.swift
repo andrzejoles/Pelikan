@@ -88,7 +88,12 @@ public final class AgentServer: @unchecked Sendable {
         }
         var pipeFDs: [Int32] = [-1, -1]
         DescriptorLock.withLock {
-            if pipe(&pipeFDs) == 0 { for p in pipeFDs { _ = fcntl(p, F_SETFD, FD_CLOEXEC) } }
+            if pipe(&pipeFDs) == 0 {
+                for p in pipeFDs { _ = fcntl(p, F_SETFD, FD_CLOEXEC) }
+                // Pętla mogła się skończyć sama i zamknąć koniec odczytu — zapis w `stop` bez SIGPIPE (aplikacja go nie
+                // ignoruje), tylko EPIPE.
+                _ = fcntl(pipeFDs[1], F_SETNOSIGPIPE, 1)
+            }
         }
         wake.withLock { $0 = (pipeFDs[0], pipeFDs[1]) }
         state.withLock { $0 = (fd, true) }
@@ -129,12 +134,16 @@ public final class AgentServer: @unchecked Sendable {
             try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
             guard lstat(dir, &st) == 0 else { throw StartError.insecureDirectory(dir) }
         }
-        guard st.st_mode & S_IFMT == S_IFDIR, st.st_uid == getuid() else { throw StartError.insecureDirectory(dir) }
+        guard PrivateOwnership.ownedByUser(st, type: S_IFDIR) else { throw StartError.insecureDirectory(dir) }
         if st.st_mode & 0o777 != 0o700 { chmod(dir, 0o700) }
     }
 
     private func acceptLoop(_ listenFD: Int32, wake wakeRead: Int32) {
-        defer { if wakeRead >= 0 { close(wakeRead) } }
+        defer {
+            if wakeRead >= 0 { close(wakeRead) }
+            // Koniec bez `stop` — agenci nie mogą się połączyć do ponownego uruchomienia serwera.
+            if state.withLock({ $0.running }) { Log.agent.error("Serwer gniazda agentów zakończył przyjmowanie połączeń (errno \(errno, privacy: .public))") }
+        }
         while state.withLock({ $0.running }) {
             // Czekanie bez blokady i bez limitu czasu (budzi `stop` przez potok); samo `accept` (gniazdo gotowe,
             // nieblokujące) i FD_CLOEXEC pod `DescriptorLock`.

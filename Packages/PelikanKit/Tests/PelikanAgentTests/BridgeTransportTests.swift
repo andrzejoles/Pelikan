@@ -4,6 +4,7 @@ import Foundation
 import MCP
 @testable import PelikanAgent
 @testable import PelikanBridgeKit
+import PelikanRemote
 import PelikanWorkspace
 import Testing
 
@@ -214,6 +215,9 @@ struct BridgeTransportTests {
         let frame = Data(#"{"params":{"arguments":{"sql":"select 1 from dual;\nconnect scott/Tiger123@prod\ncreate user x identified by tajne1"}}}"#.utf8)
         let m = SocketTransport.masked(frame)
         #expect(!m.contains("Tiger123") && !m.contains("tajne1") && m.contains("select 1 from dual"))
+        // Kilka CONNECT w jednym skrypcie — każde hasło zamaskowane.
+        let two = SQLPlusEngine.maskPassword("connect a/Pass1@db1\nselect 1 from dual;\nconnect b/Pass2@db2")
+        #expect(!two.contains("Pass1") && !two.contains("Pass2") && two.contains("@db2"))
         let open = dir.appendingPathComponent("open.log").path
         FileManager.default.createFile(atPath: open, contents: Data(), attributes: [.posixPermissions: 0o644])
         SocketTransport.writeTrace(open, Data("b\n".utf8))
@@ -222,6 +226,17 @@ struct BridgeTransportTests {
         try FileManager.default.createSymbolicLink(atPath: link, withDestinationPath: path)
         SocketTransport.writeTrace(link, Data("c\n".utf8))
         #expect(try String(contentsOfFile: path, encoding: .utf8) == "a\n")
+    }
+
+    @Test("deskryptory przed startem terminala agenta: otwarte wyliczone, wszystkie z FD_CLOEXEC")
+    func closeOnExecSweep() {
+        var p: [Int32] = [-1, -1]
+        #expect(pipe(&p) == 0)
+        defer { close(p[0]); close(p[1]) }
+        #expect(fcntl(p[0], F_GETFD) & FD_CLOEXEC == 0)
+        #expect(Set(DescriptorLock.openDescriptors()).isSuperset(of: p))
+        DescriptorLock.withLock { DescriptorLock.markAllCloseOnExec() }
+        #expect(fcntl(p[0], F_GETFD) & FD_CLOEXEC != 0 && fcntl(p[1], F_GETFD) & FD_CLOEXEC != 0)
     }
 
     @Test("limiter wywołań: historia zamkniętej sesji usuwana")

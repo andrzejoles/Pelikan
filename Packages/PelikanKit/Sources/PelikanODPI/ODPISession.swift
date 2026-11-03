@@ -294,7 +294,12 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         }
     }
 
+    /// Wykonanie z limitem czasu wywołania (dotyczy wykonania i pobierania jego wyników — zapamiętany przy wyniku).
     func executeSync(_ sql: String, binds: [BindVariable], options: ExecuteOptions) throws -> ExecutionResult {
+        try withCallTimeout(options.callTimeoutMs) { try executeBody(sql, binds: binds, options: options) }
+    }
+
+    private func executeBody(_ sql: String, binds: [BindVariable], options: ExecuteOptions) throws -> ExecutionResult {
         let start = ContinuousClock.now
         var stmtOpt: OpaquePointer?
         try sql.withCString { try check(dpiConn_prepareStmt(conn, 0, $0, UInt32(sql.utf8.count), nil, 0, &stmtOpt)) }
@@ -306,14 +311,6 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         try check(dpiStmt_getInfo(stmt, &stmtInfo))
         let kind = Self.kind(stmtInfo)
 
-        // Limit dotyczy tego wykonania i pobierania jego wyników (zapamiętany przy wyniku, ustawiany na czas `fetchSync`);
-        // COMMIT, ROLLBACK, ping i inne polecenia — bez niego.
-        if options.callTimeoutMs != 0 { try check(dpiConn_setCallTimeout(conn, options.callTimeoutMs)) }
-        activeCallTimeoutMs = options.callTimeoutMs
-        defer {
-            if options.callTimeoutMs != 0 { dpiConn_setCallTimeout(conn, 0) }
-            activeCallTimeoutMs = 0
-        }
         // Błąd po zarejestrowaniu wyników (np. drugi wynik niejawny bez opisu) — wywołujący nie dostanie ich
         // identyfikatorów: zamknięte, zamiast zostać otwarte na serwerze do końca sesji.
         let firstResultSet = nextResultSetID
@@ -420,21 +417,37 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             // Referencja należy już do nas (ODPI-C tworzy instrukcję z licznikiem 1 i sama trzyma rodzica) —
             // bez dpiStmt_addRef, inaczej struktura wyniku i połączenia nie byłyby nigdy zwolnione.
             guard dpiStmt_getImplicitResult(stmt, &child) == DPI_SUCCESS, let child else { break }
-            // Błąd opisu — instrukcja zwolniona (inaczej kursor zostaje otwarty na serwerze do końca sesji).
-            let columns: [ColumnInfo]
-            do {
-                var n: UInt32 = 0
-                try check(dpiStmt_getNumQueryColumns(child, &n))
-                try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
-                columns = try describeColumns(child, count: n)
-                try limitFetchForNestedCursors(child, columns: columns)
-            } catch {
-                dpiStmt_release(child)
-                throw error
-            }
-            out.append(register(stmt: child, columns: columns, lobLimit: lobLimit, callTimeoutMs: callTimeoutMs))
+            out.append(register(stmt: child, columns: try describeChild(child), lobLimit: lobLimit, callTimeoutMs: callTimeoutMs))
         }
         return out
+    }
+
+    /// Opis kursora potomnego (wynik niejawny, REF CURSOR, `CURSOR(…)`); błąd — instrukcja zwolniona (inaczej kursor
+    /// zostaje otwarty na serwerze do końca sesji) i błąd dalej.
+    private func describeChild(_ child: OpaquePointer) throws -> [ColumnInfo] {
+        do {
+            var n: UInt32 = 0
+            try check(dpiStmt_getNumQueryColumns(child, &n))
+            try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
+            let columns = try describeColumns(child, count: n)
+            try limitFetchForNestedCursors(child, columns: columns)
+            return columns
+        } catch {
+            dpiStmt_release(child)
+            throw error
+        }
+    }
+
+    /// Limit czasu wywołania na czas `body` (0 — bez limitu): ustawiany na połączeniu, dziedziczony przez kursory
+    /// otwarte w tym czasie (`activeCallTimeoutMs`), potem zdejmowany — COMMIT, ROLLBACK i ping go nie mają.
+    private func withCallTimeout<T>(_ ms: UInt32, _ body: () throws -> T) throws -> T {
+        if ms != 0 { try check(dpiConn_setCallTimeout(conn, ms)) }
+        activeCallTimeoutMs = ms
+        defer {
+            if ms != 0 { dpiConn_setCallTimeout(conn, 0) }
+            activeCallTimeoutMs = 0
+        }
+        return try body()
     }
 
     private func describeColumns(_ stmt: OpaquePointer, count: UInt32) throws -> [ColumnInfo] {
@@ -520,14 +533,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
 
     func fetchSync(_ id: ResultSetID, maxRows: Int) throws -> RowBatch {
         guard let rs = resultSets[id.raw] else { throw DatabaseError.unknownResultSet }
-        if rs.callTimeoutMs != 0 {
-            try check(dpiConn_setCallTimeout(conn, rs.callTimeoutMs))
-        }
-        activeCallTimeoutMs = rs.callTimeoutMs
-        defer {
-            if rs.callTimeoutMs != 0 { dpiConn_setCallTimeout(conn, 0) }
-            activeCallTimeoutMs = 0
-        }
+        return try withCallTimeout(rs.callTimeoutMs) { try fetchBody(id, rs: rs, maxRows: maxRows) }
+    }
+
+    private func fetchBody(_ id: ResultSetID, rs: OpenResultSet, maxRows: Int) throws -> RowBatch {
         if rs.parent != nil {
             // Otwarty przez użytkownika — już nie podlega zamykaniu najstarszych.
             resultSets[id.raw]?.parent = nil
@@ -628,20 +637,14 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         case DPI_NATIVE_TYPE_STMT:
             guard let child = v.asStmt else { return .null }
             dpiStmt_addRef(child)
-            // Kursor nieotwarty (ORA-24338) albo błąd opisu kolumn — dodatkowa referencja zwolniona (inaczej kursor
-            // zostaje otwarty na serwerze do końca sesji).
-            let columns: [ColumnInfo]
+            // Kursor nieotwarty (ORA-24338, np. procedura warunkowo nie wykonała OPEN) — wartość NULL, reszta zmiennych
+            // OUT i wynik wykonania (DML już się wykonał) zostają; inny błąd opisu — błąd.
             do {
-                var n: UInt32 = 0
-                try check(dpiStmt_getNumQueryColumns(child, &n))
-                try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
-                columns = try describeColumns(child, count: n)
-                try limitFetchForNestedCursors(child, columns: columns)
-            } catch {
-                dpiStmt_release(child)
-                throw error
+                let columns = try describeChild(child)
+                return .cursor(register(stmt: child, columns: columns, lobLimit: lobLimit, parent: parent).id)
+            } catch let e as OracleError where e.code == 24338 {
+                return .null
             }
-            return .cursor(register(stmt: child, columns: columns, lobLimit: lobLimit, parent: parent).id)
         case DPI_NATIVE_TYPE_OBJECT:
             return .object(typeName: typeName, description: "")
         default:

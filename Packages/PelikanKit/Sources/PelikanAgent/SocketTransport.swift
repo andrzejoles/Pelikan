@@ -4,6 +4,7 @@ import Darwin
 import Foundation
 import Logging
 import MCP
+import PelikanRemote
 import PelikanWorkspace
 import Synchronization
 
@@ -123,7 +124,7 @@ public actor SocketTransport: Transport {
         guard fd >= 0 else { return }
         defer { close(fd) }
         var st = stat()
-        guard fstat(fd, &st) == 0, (st.st_mode & S_IFMT) == S_IFREG, st.st_uid == getuid(), st.st_mode & 0o077 == 0 else { return }
+        guard fstat(fd, &st) == 0, PrivateOwnership.isPrivate(st, type: S_IFREG) else { return }
         try? Wire.writeAll(line, to: fd)
     }
 

@@ -134,7 +134,7 @@ public final class DeployPipeline: Identifiable {
         // Przygotowanie: katalog roboczy Pelikana i skrypt przez scp -O (zapis lokalny z prawami tylko dla użytkownika).
         let upload: String? = await Task.detached {
             do {
-                let mk = try session.run(DeployScripts.prepareCommand(t), timeout: 60)
+                let mk = try session.run(DeployScripts.prepareCommand(t), timeout: 60, idempotent: true)
                 guard mk.status == 0 else { return L10n.tr("Nie można utworzyć katalogu \(t.pelikanDirectory): \(mk.errorText)") }
                 let local = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-run-\(id).ksh")
                 try Data(scriptText.utf8).write(to: local, options: .atomic)

@@ -3113,6 +3113,14 @@ budzenia przy `stop`), `errno` odczytywany pod blokadą, brak deskryptorów (EMF
 ślad MCP maskowany tą samą funkcją co panel aktywności. Zwolnienie własnej blokady wdrożenia zostaje ponawiane
 (idempotentne); po ponowieniu komunikat „Zdjęto blokadę” może się nie pokazać — blokady i tak już nie ma.
 
+Czwarte przejście: maskowanie każdego `CONNECT` w skrypcie (nie tylko pierwszego); potok budzenia pętli `accept`
+bez SIGPIPE i wpis w dzienniku, gdy pętla skończy się bez `stop`; kanał hasła askpass otwierany z O_CLOEXEC, skrypt
+askpass zapisywany atomowo; potwierdzenie połączenia SSH pod osobną blokadą (`disconnect` nie czeka na logowanie);
+ponowienie polecenia idempotentnego tylko przy martwym połączeniu głównym; `mkdir -p` przygotowania wdrożenia
+idempotentny; nieotwarty REF CURSOR w zmiennej OUT (ORA-24338) — wartość NULL zamiast błędu całego wykonania;
+`describeChild` i `withCallTimeout` jako jedno miejsce; `markAllCloseOnExec` tylko po otwartych deskryptorach
+(`proc_pidinfo`); wspólne `PrivateOwnership`.
+
 Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
 testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
 `RETURNING … BULK COLLECT INTO` w bloku PL/SQL.

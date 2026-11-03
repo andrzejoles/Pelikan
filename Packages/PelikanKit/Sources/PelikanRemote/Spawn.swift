@@ -2,7 +2,6 @@
 #if canImport(Darwin)
 import Darwin
 import Foundation
-import PelikanLog
 import Synchronization
 
 /// Wejście procesu.

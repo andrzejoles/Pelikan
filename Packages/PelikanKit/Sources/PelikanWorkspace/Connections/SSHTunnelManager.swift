@@ -94,7 +94,7 @@ public final class SSHTunnelManager {
     /// gdy `done` zostanie ustawione). Zwraca zmienne środowiska dla `ssh` i funkcję sprzątającą.
     nonisolated static func askpass(secret: String) throws -> (environment: [String: String], cleanup: @Sendable () -> Void) {
         let askpass = runDirectory.appendingPathComponent("askpass.sh").path
-        try Data("#!/bin/sh\nexec /bin/cat -- \"$PELIKAN_ASKPASS_FIFO\"\n".utf8).write(to: URL(fileURLWithPath: askpass))
+        try Data("#!/bin/sh\nexec /bin/cat -- \"$PELIKAN_ASKPASS_FIFO\"\n".utf8).write(to: URL(fileURLWithPath: askpass), options: .atomic)
         chmod(askpass, 0o700)
         let fifo = runDirectory.appendingPathComponent("askpass-\(UUID().uuidString.prefix(8))").path
         guard mkfifo(fifo, 0o600) == 0 else { throw DatabaseError.driverUnavailable(L10n.tr("Nie można utworzyć kolejki dla hasła SSH")) }
@@ -103,9 +103,9 @@ public final class SSHTunnelManager {
         Thread.detachNewThread {
             while !done.isSet {
                 #if canImport(Darwin)
-                let fd = Darwin.open(fifo, O_WRONLY | O_NONBLOCK)
+                let fd = Darwin.open(fifo, O_WRONLY | O_NONBLOCK | O_CLOEXEC)
                 #else
-                let fd = Glibc.open(fifo, O_WRONLY | O_NONBLOCK)
+                let fd = Glibc.open(fifo, O_WRONLY | O_NONBLOCK | O_CLOEXEC)
                 #endif
                 if fd >= 0 {
                     _ = fcntl(fd, F_SETFL, 0)
