@@ -3169,6 +3169,13 @@ przycinany; JSON rozpoznawany także po odstępach); sesja ODPI w stanie „zamy
 zerwanym połączeniu, uchwyt zwalniany pod blokadą; limit czasu wyniku zawsze z `withCallTimeout` (bez osobnych
 parametrów).
 
+Dziesiąte przejście: zakończenie sesji ODPI (zwalnianie uchwytów OCI) pod blokadą — Break przerywa tylko ROLLBACK, nie
+trafia w zwalniane uchwyty; hasło w niezamkniętym cudzysłowie maskowane do końca linii, stare hasło w `ALTER USER …
+REPLACE` też; ścieżka z cudzysłowem przekazywana do Oracle Net bez zmian (błąd zamiast cichej innej ścieżki); katalog
+tunelu sprawdzany i odtwarzany przy każdym logowaniu (`PrivateOwnership.ensurePrivateDirectory`, wspólne z katalogiem
+gniazda agentów); `markInheritedCloseOnExec` (nazwa i opisy zgodne z działaniem); podgląd i obcinanie wyniku po bajtach
+UTF-8; opis zastępczy przez `L10n`.
+
 Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
 testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
 `RETURNING … BULK COLLECT INTO` w bloku PL/SQL.

@@ -144,8 +144,8 @@ public final class SQLPlusEngine {
             let start = m.range.location + m.range.length   // za `/`
             guard start >= last else { continue }
             func isSpace(_ i: Int) -> Bool { [0x20, 0x09, 0x0A, 0x0D].contains(ns.character(at: i)) }
-            // Hasło: w cudzysłowie — do cudzysłowu zamykającego (z `@` w środku); bez niego (także cudzysłów niezamknięty)
-            // — do ostatniego `@` w słowie albo do końca słowa.
+            // Hasło: w cudzysłowie — do cudzysłowu zamykającego (z `@` w środku), niezamknięty — do końca linii; bez
+            // cudzysłowu — do ostatniego `@` w słowie albo do końca słowa.
             let end: Int
             // Cudzysłów zamykający szukany tylko do końca linii (niezamknięty — nie pochłania dalszej części skryptu).
             var lineEnd = start
@@ -154,6 +154,9 @@ public final class SQLPlusEngine {
                 ? ns.range(of: "\"", range: NSRange(location: start + 1, length: lineEnd - start - 1)) : NSRange(location: NSNotFound, length: 0)
             if close.location != NSNotFound {
                 end = close.location + 1
+            } else if start < lineEnd, ns.character(at: start) == 0x22 {
+                // Niezamknięty cudzysłów — hasło może mieć spacje: do końca linii.
+                end = lineEnd
             } else {
                 var wordEnd = start
                 while wordEnd < ns.length, !isSpace(wordEnd) { wordEnd += 1 }
@@ -165,8 +168,9 @@ public final class SQLPlusEngine {
             last = max(start, end)
         }
         out += ns.substring(from: last)
-        // IDENTIFIED BY hasło / "hasło" / VALUES 'skrót' (eksport DDL użytkownika).
+        // IDENTIFIED BY hasło / "hasło" / VALUES 'skrót' (eksport DDL użytkownika) i stare hasło w ALTER USER … REPLACE.
         return out.replacingOccurrences(of: #"(?i)(identified\s+by\s+)(values\s+'[^']*'|"[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)(identified\s+by\s+\*{8}\s+replace\s+)("[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)
     }
 
     nonisolated static let connectPattern = try! NSRegularExpression(pattern: #"(?im)^\s*conn(ect)?\s+[^\s/]*/"#)

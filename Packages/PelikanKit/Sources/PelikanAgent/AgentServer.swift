@@ -96,13 +96,12 @@ public final class AgentServer: @unchecked Sendable {
 
     /// Katalog gniazda: tworzony z 0700, musi należeć do bieżącego użytkownika i nie być dowiązaniem.
     static func prepareDirectory(_ dir: String) throws {
+        // Katalogi nadrzędne (Application Support) tworzone zwykle; sam katalog — wspólną regułą katalogu prywatnego.
         var st = stat()
         if lstat(dir, &st) != 0 {
             try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-            guard lstat(dir, &st) == 0 else { throw StartError.insecureDirectory(dir) }
         }
-        guard PrivateOwnership.ownedByUser(st, type: mode_t(S_IFDIR)) else { throw StartError.insecureDirectory(dir) }
-        if st.st_mode & 0o777 != 0o700 { chmod(dir, 0o700) }
+        guard PrivateOwnership.ensurePrivateDirectory(dir) else { throw StartError.insecureDirectory(dir) }
     }
 
     private func acceptLoop(_ listenFD: Int32) {

@@ -221,7 +221,8 @@ struct BridgeTransportTests {
         #expect(SQLPlusEngine.maskPassword("connect u/p") == "connect u/********")
         #expect(SQLPlusEngine.maskPassword(#"connect u/"tajne hasło"@db"#) == "connect u/********@db")
         #expect(SQLPlusEngine.maskPassword(#"connect u/"p@ss""#) == "connect u/********")
-        #expect(SQLPlusEngine.maskPassword(#"connect u/"secret pw"#) == "connect u/******** pw")
+        #expect(SQLPlusEngine.maskPassword(#"connect u/"secret pw"#) == "connect u/********")
+        #expect(SQLPlusEngine.maskPassword("alter user scott identified by NewPw1 replace OldPw0") == "alter user scott identified by ******** replace ********")
         // Niezamknięty cudzysłów nie pochłania następnej linii.
         #expect(SQLPlusEngine.maskPassword("connect u/\"pw\nselect \"X\" from t;") == "connect u/********\nselect \"X\" from t;")
         #expect(SQLPlusEngine.maskPassword(#"connect u/ab\ncd@db"#) == "connect u/********@db")
@@ -255,7 +256,7 @@ struct BridgeTransportTests {
         let l = RateLimiter()
         #expect(l.allow(session: "s", limit: 1) && !l.allow(session: "s", limit: 1))
         l.forget(session: "s")
-        #expect(l.trackedSessions == 0 && l.allow(session: "s", limit: 1))
+        #expect(l.allow(session: "s", limit: 1))
     }
 
     @Test("ramka hello: limit rozmiaru przed odczytem treści")

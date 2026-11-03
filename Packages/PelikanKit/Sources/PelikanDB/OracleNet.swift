@@ -25,8 +25,11 @@ public enum OracleNet {
 
     /// Wartość parametru deskryptora albo EZConnect Plus: w cudzysłowie, gdy ma spacje albo znaki składni
     /// (`( ) = & ?`) — np. ścieżka portfela `~/Oracle Wallets/ADB`; inaczej bez zmian.
+    /// Wartość z cudzysłowem nie da się zapisać bez zmiany — przekazywana bez zmian (Oracle Net zgłosi błąd składni
+    /// zamiast cicho użyć innej ścieżki).
     public static func netValue(_ value: String) -> String {
-        value.contains(where: { " \t()=&?".contains($0) }) ? quoted(value) : value
+        guard !value.contains("\"") else { return value }
+        return value.contains(where: { " \t()=&?".contains($0) }) ? quoted(value) : value
     }
 
     /// Zapisuje katalog zarządzany; zwraca jego ścieżkę albo nil, gdy nic nie skonfigurowano (klient korzysta wtedy

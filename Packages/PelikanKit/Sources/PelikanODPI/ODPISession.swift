@@ -277,8 +277,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                     // Sterownik nigdy nie zatwierdza po cichu: decyzję COMMIT/ROLLBACK podejmuje wcześniej interfejs
                     // (D10); tu zostaje bezpieczne ROLLBACK przed zamknięciem.
                     dpiConn_rollback(conn)
-                    dpiConn_close(conn, dpiConnCloseMode(DPI_MODE_CONN_CLOSE_DEFAULT), nil, 0)
+                    // Zakończenie sesji zwalnia uchwyty OCI — pod blokadą, żeby Break (OCIBreak) nie trafił w zwalniane
+                    // uchwyty; przerywalny zostaje tylko ROLLBACK.
                     closedState.withLock { state in
+                        dpiConn_close(conn, dpiConnCloseMode(DPI_MODE_CONN_CLOSE_DEFAULT), nil, 0)
                         dpiConn_release(conn)
                         state = .closed
                     }

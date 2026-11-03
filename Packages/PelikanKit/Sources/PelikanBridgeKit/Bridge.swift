@@ -11,7 +11,7 @@ public enum Bridge {
     /// Deskryptory powyżej 2 nie przechodzą przez `execv`: FD_CLOEXEC na każdym z listy otwartych (`proc_pidinfo`
     /// PROC_PIDLISTFDS — bez górnej granicy numerów), który go nie ma — bez `close` (deskryptory chronione bibliotek
     /// systemowych mają już FD_CLOEXEC, a ich zamknięcie kończyłoby proces); lista niedostępna — wszystkie do limitu.
-    public static func closeInheritedDescriptors() {
+    public static func markInheritedCloseOnExec() {
         func mark(_ fd: Int32) {
             let flags = fcntl(fd, F_GETFD)
             if flags >= 0, flags & FD_CLOEXEC == 0 { _ = fcntl(fd, F_SETFD, flags | FD_CLOEXEC) }

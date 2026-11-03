@@ -287,35 +287,31 @@ public final class AgentController: AgentInvocationGate {
         // Długość po kodowaniu JSON: znaki sterujące jako `\uXXXX` (6 bajtów), więc sam limit bajtów nie wystarcza.
         // W najgorszym razie 6 bajtów na bajt — krótszy tekst zawsze się mieści, bez liczenia.
         if 3 * total <= limit { return [.text(text: text, annotations: nil, _meta: nil)] }
-        // Jedno przejście: miejsce cięcia (pierwszy znak ponad limit) albo koniec — cały tekst się mieści.
-        var raw = 0, encoded = 0
-        var cut: String.UnicodeScalarView.Index?
-        let scalars = text.unicodeScalars
-        var i = scalars.startIndex
-        while i < scalars.endIndex {
-            let s = scalars[i]
-            raw += UTF8.width(s)
-            encoded += jsonCost(s)
-            if raw > limit || encoded > 2 * limit {
+        // Jedno przejście po bajtach UTF-8 (znaki sterujące i znaki ucieczki JSON są w ASCII; bajty wielobajtowych znaków
+        // kodowane bez zmian): miejsce cięcia albo koniec — cały tekst się mieści.
+        var encoded = 0
+        var cut: Int?
+        for (i, b) in text.utf8.enumerated() {
+            encoded += jsonCost(byte: b)
+            if i + 1 > limit || encoded > 2 * limit {
                 cut = i
                 break
             }
-            i = scalars.index(after: i)
         }
         guard let cut else { return [.text(text: text, annotations: nil, _meta: nil)] }
-        return truncated(String(scalars[..<cut]), total: total, untrusted: untrusted)
+        var head = String(decoding: text.utf8.prefix(cut), as: UTF8.self)
+        if head.unicodeScalars.last == "\u{FFFD}" { head.unicodeScalars.removeLast() }   // przecięty znak wielobajtowy
+        return truncated(head, total: total, untrusted: untrusted)
     }
 
-    /// Bajty znaku w napisie JSON.
-    static func jsonCost(_ s: Unicode.Scalar) -> Int {
-        switch s.value {
-        // `/` z zapasem jak `\/` — koder serwera MCP mógłby go zapisywać z ukośnikiem.
+    /// Bajty bajtu UTF-8 w napisie JSON (`/` z zapasem jak `\/` — koder serwera MCP mógłby go zapisywać z ukośnikiem).
+    static func jsonCost(byte b: UInt8) -> Int {
+        switch b {
         case 0x22, 0x5C, 0x2F, 0x08, 0x0C, 0x0A, 0x0D, 0x09: 2
         case 0..<0x20: 6
-        default: UTF8.width(s)
+        default: 1
         }
     }
-
 
     private static func truncated(_ head: String, total: Int, untrusted: Bool) -> [Tool.Content] {
         var notice = "result_truncated: wynik narzędzia ma \(total) bajtów, przekazano pierwsze \(head.utf8.count) (limit kanału MCP). "
@@ -340,8 +336,9 @@ public final class AgentController: AgentInvocationGate {
     /// zastępuje go opis.
     nonisolated static func preview(_ value: JSONValue) -> JSONValue {
         switch value {
-        case .string(let s) where s.count > 2000:
-            Self.looksLikeJSON(s) ? .string("<tekst JSON, \(s.count) znaków>") : .string(String(s.prefix(2000)))
+        // Długość w bajtach UTF-8 (bez przechodzenia całego napisu po znakach).
+        case .string(let s) where s.utf8.count > 2000:
+            Self.looksLikeJSON(s) ? .string(L10n.tr("<tekst JSON, \(s.utf8.count) bajtów>")) : .string(String(s.prefix(2000)))
         case .array(let a): .array(a.prefix(20).map(preview))
         case .object(let o): .object(Dictionary(uniqueKeysWithValues: o.sorted { $0.key < $1.key }.prefix(20).map { ($0.key, preview($0.value)) }))
         default: value

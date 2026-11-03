@@ -83,25 +83,21 @@ public final class SSHTunnelManager {
     }
 
     /// Katalog prywatny (0700) na skrypt askpass i kolejki FIFO.
-    nonisolated static let runDirectory: URL = {
+    /// Sprawdzany (i odtwarzany, gdy system go usunął) przy każdym logowaniu — na Linuksie /tmp jest wspólny: cudzy
+    /// katalog pozwoliłby podmienić skrypt askpass albo kolejkę z hasłem; wtedy katalog z losową nazwą.
+    nonisolated static var runDirectory: URL {
         let d = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-tunnel-\(getuid())", isDirectory: true)
-        try? FileManager.default.createDirectory(at: d, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        // Katalog musi być nasz (na Linuksie /tmp jest wspólny — cudzy katalog pozwoliłby podmienić skrypt askpass albo
-        // kolejkę z hasłem): własny z poprawionymi prawami, inaczej nowy katalog z losową nazwą.
-        var st = stat()
-        if lstat(d.path, &st) == 0, PrivateOwnership.ownedByUser(st, type: mode_t(S_IFDIR)) {
-            chmod(d.path, 0o700)
-            if PrivateOwnership.isPrivateDirectory(d.path) { return d }
-        }
+        if PrivateOwnership.ensurePrivateDirectory(d.path) { return d }
         let fallback = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-tunnel-\(getuid())-\(UUID().uuidString.prefix(8))", isDirectory: true)
-        try? FileManager.default.createDirectory(at: fallback, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+        _ = PrivateOwnership.ensurePrivateDirectory(fallback.path)
         return fallback
-    }()
+    }
 
     /// Przygotowuje askpass: skrypt bez sekretu, kolejka FIFO 0600 i wątek, który zapisze hasło raz (albo zakończy się,
     /// gdy `done` zostanie ustawione). Zwraca zmienne środowiska dla `ssh` i funkcję sprzątającą.
     nonisolated static func askpass(secret: String) throws -> (environment: [String: String], cleanup: @Sendable () -> Void) {
         // Katalog skryptu i kolejki musi być prywatny (także zapasowy z losową nazwą) — inaczej jasny błąd, bez hasła.
+        let runDirectory = Self.runDirectory
         guard PrivateOwnership.isPrivateDirectory(runDirectory.path) else {
             throw DatabaseError.driverUnavailable(L10n.tr("Katalog tymczasowy tunelu SSH nie jest prywatny — hasło nie zostanie przekazane"))
         }
