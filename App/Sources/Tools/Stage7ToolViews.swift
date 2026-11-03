@@ -163,9 +163,7 @@ struct PredefinedReportsView: View {
 
 struct DatabaseDiffView: View {
 
-    /// Sortowanie tabeli po kolumnie (D212).
 
-    @State private var sortDiffs: [ColumnSort<ObjectDifference>] = []
     let workspace: Workspace
     @State private var connection: UUID?
     @State private var sourceOwner = ""
@@ -195,10 +193,10 @@ struct DatabaseDiffView: View {
                 .toggleStyle(.checkbox)
             }
             ObjectTypesPicker(types: $options.types)
-            Table(diffs.sorted(by: sortDiffs), selection: $selection, sortOrder: $sortDiffs) {
-                TableColumn(L10n.tr("Obiekt"), sortKey: { d in d.name }) { d in Text(d.name) }
-                TableColumn(L10n.tr("Typ"), sortKey: { d in d.type.rawValue }) { d in Text(d.type.rawValue) }.width(130)
-                TableColumn(L10n.tr("Różnica"), sortKey: { d in d.status == .onlySource ? L10n.tr("tylko w źródle") : d.status == .onlyTarget ? L10n.tr("tylko w celu") : L10n.tr("różny") }) { d in Text(d.status == .onlySource ? L10n.tr("tylko w źródle") : d.status == .onlyTarget ? L10n.tr("tylko w celu") : L10n.tr("różny")) }.width(130)
+            DataTable(diffs, selection: .single($selection)) {
+                DataColumn(L10n.tr("Obiekt"), sortKey: { d in d.name }) { d in Text(d.name) }
+                DataColumn(L10n.tr("Typ"), sortKey: { d in d.type.rawValue }) { d in Text(d.type.rawValue) }.width(130)
+                DataColumn(L10n.tr("Różnica"), sortKey: { d in d.status == .onlySource ? L10n.tr("tylko w źródle") : d.status == .onlyTarget ? L10n.tr("tylko w celu") : L10n.tr("różny") }) { d in Text(d.status == .onlySource ? L10n.tr("tylko w źródle") : d.status == .onlyTarget ? L10n.tr("tylko w celu") : L10n.tr("różny")) }.width(130)
             }
             HStack {
                 Text(message).font(.uiSecondary).foregroundStyle(.secondary)
@@ -249,9 +247,7 @@ struct DatabaseDiffView: View {
 
 struct CartView: View {
 
-    /// Sortowanie tabeli po kolumnie (D212).
 
-    @State private var sortItems: [ColumnSort<Binding<CartItem>>] = []
     let workspace: Workspace
     @State private var connection: UUID?
     @State private var cart = DeploymentCart(name: "")
@@ -267,12 +263,12 @@ struct CartView: View {
                 Toggle(L10n.tr("Nazwa schematu w DDL"), isOn: $cart.includeOwner).toggleStyle(.checkbox)
                 Toggle(L10n.tr("Uprawnienia"), isOn: $cart.includeGrants).toggleStyle(.checkbox)
             }
-            Table(Binding.sorted($cart.items, by: sortItems), selection: $selection, sortOrder: $sortItems) {
-                TableColumn(L10n.tr("Obiekt"), sortKey: { i in "\(i.owner).\(i.name)" }) { $i in Text("\(i.owner).\(i.name)") }
-                TableColumn(L10n.tr("Typ"), sortKey: { i in i.type }) { $i in Text(i.type) }.width(110)
-                TableColumn("DDL", sortKey: { i in i.includeDDL }) { $i in Toggle("", isOn: $i.includeDDL).labelsHidden() }.width(40)
-                TableColumn(L10n.tr("Dane"), sortKey: { i in i.includeData }) { $i in Toggle("", isOn: $i.includeData).labelsHidden().disabled(i.type != "TABLE") }.width(44)
-                TableColumn("WHERE", sortKey: { i in i.whereClause }) { $i in TextField("", text: $i.whereClause).disabled(!i.includeData) }
+            DataTable(Binding.rows($cart.items), selection: .multi($selection)) {
+                DataColumn(L10n.tr("Obiekt"), sortKey: { i in "\(i.owner).\(i.name)" }) { $i in Text("\(i.owner).\(i.name)") }
+                DataColumn(L10n.tr("Typ"), sortKey: { i in i.type }) { $i in Text(i.type) }.width(110)
+                DataColumn("DDL", sortKey: { i in i.includeDDL }) { $i in Toggle("", isOn: $i.includeDDL).labelsHidden() }.width(40)
+                DataColumn(L10n.tr("Dane"), sortKey: { i in i.includeData }) { $i in Toggle("", isOn: $i.includeData).labelsHidden().disabled(i.type != "TABLE") }.width(44)
+                DataColumn("WHERE", sortKey: { i in i.whereClause }) { $i in TextField("", text: $i.whereClause).disabled(!i.includeData) }
             }
             HStack {
                 TextField(L10n.tr("Dodaj obiekt (schemat.nazwa)"), text: $objectName).frame(maxWidth: 260)
@@ -693,9 +689,7 @@ struct DataTransferJobView: View {
 
 struct LocalTasksView: View {
 
-    /// Sortowanie tabeli po kolumnie (D212).
 
-    @State private var sortDefinitions: [ColumnSort<LocalTaskDefinition>] = []
     let workspace: Workspace
     @State private var selection: UUID?
     @State private var draft = LocalTasksView.empty
@@ -710,11 +704,11 @@ struct LocalTasksView: View {
     var body: some View {
         HSplitView {
             VStack(alignment: .leading) {
-                Table(scheduler.definitions.sorted(by: sortDefinitions), selection: $selection, sortOrder: $sortDefinitions) {
-                    TableColumn(L10n.tr("Zadanie"), sortKey: { d in d.name }) { d in Text(d.name) }
-                    TableColumn(L10n.tr("Harmonogram"), sortKey: { d in d.schedule.displayText }) { d in Text(d.schedule.displayText) }
-                    TableColumn(L10n.tr("Ostatnio"), sortKey: { d in scheduler.state[d.id]?.lastStatus ?? "—" }) { d in Text(scheduler.state[d.id]?.lastStatus ?? "—").lineLimit(1) }
-                    TableColumn(L10n.tr("Następne"), sortKey: { d in scheduler.state[d.id]?.nextRun?.formatted(date: .abbreviated, time: .shortened) ?? "—" }) { d in Text(scheduler.state[d.id]?.nextRun?.formatted(date: .abbreviated, time: .shortened) ?? "—") }
+                DataTable(scheduler.definitions, selection: .single($selection)) {
+                    DataColumn(L10n.tr("Zadanie"), sortKey: { d in d.name }) { d in Text(d.name) }
+                    DataColumn(L10n.tr("Harmonogram"), sortKey: { d in d.schedule.displayText }) { d in Text(d.schedule.displayText) }
+                    DataColumn(L10n.tr("Ostatnio"), sortKey: { d in scheduler.state[d.id]?.lastStatus ?? "—" }) { d in Text(scheduler.state[d.id]?.lastStatus ?? "—").lineLimit(1) }
+                    DataColumn(L10n.tr("Następne"), sortKey: { d in scheduler.state[d.id]?.nextRun?.formatted(date: .abbreviated, time: .shortened) ?? "—" }) { d in Text(scheduler.state[d.id]?.nextRun?.formatted(date: .abbreviated, time: .shortened) ?? "—") }
                 }
                 HStack {
                     Button(L10n.tr("Nowe")) { selection = nil; draft = Self.empty }

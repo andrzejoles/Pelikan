@@ -2,7 +2,7 @@ import AppKit
 import PelikanWorkspace
 import SwiftUI
 
-/// Sortowanie kolumny tabeli SwiftUI po kluczu (D212): klik nagłówka sortuje rosnąco, drugi — malejąco. Porównanie
+/// Sortowanie kolumny tabeli SwiftUI po kluczu (D212; kolumny `DataColumn`, D214): klik nagłówka sortuje rosnąco, drugi — malejąco. Porównanie
 /// wspólne dla wszystkich tabel (`SortKey`): liczby wg wartości, tekst bez wielkości liter, puste na końcu.
 struct ColumnSort<Row>: SortComparator, @unchecked Sendable {
     let id: String
@@ -31,20 +31,6 @@ struct ColumnSort<Row>: SortComparator, @unchecked Sendable {
     }
 }
 
-extension TableColumn where Sort == ColumnSort<RowValue>, Label == Text {
-    /// Kolumna sortowana po kluczu z wiersza.
-    init<K: SortKeyConvertible>(_ title: String, sortKey: @escaping (RowValue) -> K, @ViewBuilder content: @escaping (RowValue) -> Content) {
-        self.init(title, sortUsing: ColumnSort(title) { sortKey($0).sortKey }, content: content)
-    }
-}
-
-extension TableColumn where Sort == ColumnSort<RowValue>, Label == Text, Content == Text {
-    /// Kolumna z tekstem z wiersza, sortowana po nim (liczby w tekście — wg wartości).
-    init(_ title: String, text: @escaping (RowValue) -> String) {
-        self.init(title, sortUsing: ColumnSort(title) { text($0).sortKey }) { Text(text($0)) }
-    }
-}
-
 extension Sequence {
     /// Wiersze w kolejności wybranej w nagłówkach tabeli (pusta lista — kolejność oryginalna).
     func sorted(by sort: [ColumnSort<Element>]) -> [Element] {
@@ -52,32 +38,8 @@ extension Sequence {
     }
 }
 
-extension Binding {
-    /// Wiązanie z widokiem posortowanym tablicy edytowanej w tabeli (`Table($wiersze)`): zmiany wierszy wracają do
-    /// oryginału po identyfikatorze, a kolejność w oryginale (np. kolejność kolumn tabeli) się nie zmienia.
-    @MainActor
-    static func sorted<Row: Identifiable>(_ base: Binding<[Row]>, by sort: [ColumnSort<Binding<Row>>]) -> Binding<[Row]> where Value == [Row] {
-        guard !sort.isEmpty else { return base }
-        return Binding<[Row]>(get: {
-            base.wrappedValue.sorted { a, b in
-                for s in sort {
-                    let r = s.compare(.constant(a), .constant(b))
-                    if r != .orderedSame { return r == .orderedAscending }
-                }
-                return false
-            }
-        }, set: { new in
-            var rows = base.wrappedValue
-            for r in new {
-                if let i = rows.firstIndex(where: { $0.id == r.id }) { rows[i] = r }
-            }
-            base.wrappedValue = rows
-        })
-    }
-}
-
 extension Binding: @retroactive SortKeyConvertible where Value: SortKeyConvertible {
-    /// Kolumny tabel edytowalnych (`Table($wiersze)`) sortują po wartości pola.
+    /// Kolumny tabel edytowalnych (wiersze jako wiązania, `Binding.rows`) sortują po wartości pola.
     public var sortKey: SortKey { wrappedValue.sortKey }
 }
 

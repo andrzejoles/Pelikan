@@ -411,10 +411,6 @@ struct RollbackView: View {
 
 /// Historia lokalna (z logami) i z serwera wybranego celu.
 struct DeployHistoryView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortServer: [ColumnSort<ServerHistoryEntry>] = []
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortRecords: [ColumnSort<DeployRecord>] = []
     let model: ProCDeployModel
     @State private var selection: DeployRecord.ID?
     @State private var serverTarget: UUID?
@@ -424,15 +420,15 @@ struct DeployHistoryView: View {
     var body: some View {
         VSplitView {
             VStack(alignment: .leading) {
-                Table(model.history.records.sorted(by: sortRecords), selection: $selection, sortOrder: $sortRecords) {
-                    TableColumn(L10n.tr("Kiedy"), sortKey: { r in r.started }) { r in Text(r.started.formatted(date: .numeric, time: .shortened)) }.width(130)
-                    TableColumn(L10n.tr("Cel"), sortKey: { r in "\(r.targetName) · \(r.environment.rawValue)" }) { r in Text("\(r.targetName) · \(r.environment.rawValue)").foregroundStyle(r.environment.color) }
-                    TableColumn(L10n.tr("Rodzaj"), sortKey: { r in r.kind == .deploy ? L10n.tr("wdrożenie") : L10n.tr("wycofanie") }) { r in Text(r.kind == .deploy ? L10n.tr("wdrożenie") : L10n.tr("wycofanie")) }.width(90)
-                    TableColumn(L10n.tr("Kto"), text: { $0.owner })
-                    TableColumn(L10n.tr("Commit przed → po"), sortKey: { r in "\(r.headBefore.map { String($0.prefix(8)) } ?? "—") → \(r.headAfter.map { String($0.prefix(8)) } ?? "—")" }) { r in
+                DataTable(model.history.records, selection: .single($selection)) {
+                    DataColumn(L10n.tr("Kiedy"), sortKey: { r in r.started }) { r in Text(r.started.formatted(date: .numeric, time: .shortened)) }.width(130)
+                    DataColumn(L10n.tr("Cel"), sortKey: { r in "\(r.targetName) · \(r.environment.rawValue)" }) { r in Text("\(r.targetName) · \(r.environment.rawValue)").foregroundStyle(r.environment.color) }
+                    DataColumn(L10n.tr("Rodzaj"), sortKey: { r in r.kind == .deploy ? L10n.tr("wdrożenie") : L10n.tr("wycofanie") }) { r in Text(r.kind == .deploy ? L10n.tr("wdrożenie") : L10n.tr("wycofanie")) }.width(90)
+                    DataColumn(L10n.tr("Kto"), text: { $0.owner })
+                    DataColumn(L10n.tr("Commit przed → po"), sortKey: { r in "\(r.headBefore.map { String($0.prefix(8)) } ?? "—") → \(r.headAfter.map { String($0.prefix(8)) } ?? "—")" }) { r in
                         Text("\(r.headBefore.map { String($0.prefix(8)) } ?? "—") → \(r.headAfter.map { String($0.prefix(8)) } ?? "—")").font(.code)
                     }
-                    TableColumn(L10n.tr("Wynik"), sortKey: { r in r.outcome?.title ?? "—" }) { r in Text(r.outcome?.title ?? "—").foregroundStyle(r.outcome == .success ? .green : .red) }
+                    DataColumn(L10n.tr("Wynik"), sortKey: { r in r.outcome?.title ?? "—" }) { r in Text(r.outcome?.title ?? "—").foregroundStyle(r.outcome == .success ? .green : .red) }
                 }
                 ScrollView {
                     Text(selection.flatMap { model.history.log($0) } ?? "").font(.code).textSelection(.enabled)
@@ -449,12 +445,12 @@ struct DeployHistoryView: View {
                     Button(L10n.tr("Pobierz")) { Task { await loadServer() } }.disabled(serverTarget == nil)
                     if let message { Text(message).font(.uiSecondary).foregroundStyle(.red) }
                 }
-                Table(server.sorted(by: sortServer), sortOrder: $sortServer) {
-                    TableColumn(L10n.tr("Czas"), text: { $0.timestamp }).width(130)
-                    TableColumn(L10n.tr("Rodzaj"), text: { $0.kind }).width(80)
-                    TableColumn(L10n.tr("Kto"), text: { $0.owner })
-                    TableColumn(L10n.tr("Przed → po"), sortKey: { e in "\(e.headBefore.prefix(8)) → \(e.headAfter.prefix(8))" }) { e in Text("\(e.headBefore.prefix(8)) → \(e.headAfter.prefix(8))").font(.code) }
-                    TableColumn(L10n.tr("Wynik"), sortKey: { e in e.succeeded ? L10n.tr("powodzenie") : "\(e.step) \(e.code)" }) { e in Text(e.succeeded ? L10n.tr("powodzenie") : "\(e.step) \(e.code)").foregroundStyle(e.succeeded ? .green : .red) }
+                DataTable(server) {
+                    DataColumn(L10n.tr("Czas"), text: { $0.timestamp }).width(130)
+                    DataColumn(L10n.tr("Rodzaj"), text: { $0.kind }).width(80)
+                    DataColumn(L10n.tr("Kto"), text: { $0.owner })
+                    DataColumn(L10n.tr("Przed → po"), sortKey: { e in "\(e.headBefore.prefix(8)) → \(e.headAfter.prefix(8))" }) { e in Text("\(e.headBefore.prefix(8)) → \(e.headAfter.prefix(8))").font(.code) }
+                    DataColumn(L10n.tr("Wynik"), sortKey: { e in e.succeeded ? L10n.tr("powodzenie") : "\(e.step) \(e.code)" }) { e in Text(e.succeeded ? L10n.tr("powodzenie") : "\(e.step) \(e.code)").foregroundStyle(e.succeeded ? .green : .red) }
                 }
             }
             .frame(minHeight: 160)
@@ -473,8 +469,6 @@ struct DeployHistoryView: View {
 
 /// „Gdzie co jest”: lokalne repo i commit wdrożony na każdym celu (historia + `git rev-parse HEAD` na serwerze).
 struct GitDeployStatusView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortTargets: [ColumnSort<PelikanSSHTarget>] = []
     let model: ProCDeployModel
     @State private var local: LocalGitStatus?
     @State private var serverHeads: [UUID: String] = [:]
@@ -492,13 +486,13 @@ struct GitDeployStatusView: View {
                 Text(L10n.tr("Gałąź: \(s.branch) · niezatwierdzone: \(s.uncommitted.count) · niewypchnięte: \(s.ahead.map(String.init) ?? "?") · do pobrania: \(s.behind.map(String.init) ?? "?")"))
                 ForEach(s.warnings, id: \.self) { Label($0, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.uiSecondary) }
             }
-            Table(model.store.targets.sorted(by: sortTargets), sortOrder: $sortTargets) {
-                TableColumn(L10n.tr("Cel"), sortKey: { t in "\(t.name) · \(t.environment.rawValue)" }) { t in Text("\(t.name) · \(t.environment.rawValue)").foregroundStyle(t.environment.color) }
-                TableColumn(L10n.tr("Ostatnie wdrożenie (historia)"), sortKey: { t in model.history.lastSuccess(target: t.id)?.headAfter.map { String($0.prefix(12)) } ?? "—" }) { t in
+            DataTable(model.store.targets) {
+                DataColumn(L10n.tr("Cel"), sortKey: { t in "\(t.name) · \(t.environment.rawValue)" }) { t in Text("\(t.name) · \(t.environment.rawValue)").foregroundStyle(t.environment.color) }
+                DataColumn(L10n.tr("Ostatnie wdrożenie (historia)"), sortKey: { t in model.history.lastSuccess(target: t.id)?.headAfter.map { String($0.prefix(12)) } ?? "—" }) { t in
                     Text(model.history.lastSuccess(target: t.id)?.headAfter.map { String($0.prefix(12)) } ?? "—").font(.code)
                 }
-                TableColumn(L10n.tr("HEAD na serwerze"), sortKey: { t in serverHeads[t.id].map { String($0.prefix(12)) } ?? "—" }) { t in Text(serverHeads[t.id].map { String($0.prefix(12)) } ?? "—").font(.code) }
-                TableColumn(L10n.tr("HEAD zdalnej gałęzi"), sortKey: { t in local?.remoteHead.map { String($0.prefix(12)) } ?? "—" }) { t in Text(local?.remoteHead.map { String($0.prefix(12)) } ?? "—").font(.code) }
+                DataColumn(L10n.tr("HEAD na serwerze"), sortKey: { t in serverHeads[t.id].map { String($0.prefix(12)) } ?? "—" }) { t in Text(serverHeads[t.id].map { String($0.prefix(12)) } ?? "—").font(.code) }
+                DataColumn(L10n.tr("HEAD zdalnej gałęzi"), sortKey: { t in local?.remoteHead.map { String($0.prefix(12)) } ?? "—" }) { t in Text(local?.remoteHead.map { String($0.prefix(12)) } ?? "—").font(.code) }
             }
             if let message { Text(message).font(.uiSecondary).foregroundStyle(.red) }
         }

@@ -5,8 +5,6 @@ import SwiftUI
 
 /// Wyniki Find Usages (DG-USE-001): baza (zależności, źródło, PL/Scope), okna i pliki; dwuklik przechodzi do miejsca.
 struct UsagesView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortHits: [ColumnSort<UsageHit>] = []
     let workspace: Workspace
     let title: String
     let hits: [UsageHit]
@@ -26,14 +24,13 @@ struct UsagesView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Table(hits.sorted(by: sortHits), selection: $selection, sortOrder: $sortHits) {
-                TableColumn(L10n.tr("Rodzaj"), sortKey: { (h: UsageHit) in Self.kindText(h.kind) }) { (h: UsageHit) in Text(Self.kindText(h.kind)) }.width(min: 70, ideal: 90)
-                TableColumn(L10n.tr("Miejsce"), sortKey: { (h: UsageHit) in h.title + (h.type.map { " (\($0.lowercased()))" } ?? "") }) { (h: UsageHit) in Text(h.title + (h.type.map { " (\($0.lowercased()))" } ?? "")) }.width(min: 140, ideal: 220)
-                TableColumn(L10n.tr("Linia"), sortKey: { (h: UsageHit) in h.line > 0 ? String(h.line) : "" }) { (h: UsageHit) in Text(h.line > 0 ? String(h.line) : "") }.width(min: 40, ideal: 50)
-                TableColumn(L10n.tr("Tekst"), sortKey: { (h: UsageHit) in h.text }) { (h: UsageHit) in Text(h.text).font(.code).lineLimit(1) }
-            }
-            .contextMenu(forSelectionType: UsageHit.ID.self) { _ in } primaryAction: { ids in
+            DataTable(hits, selection: .single($selection), primaryAction: { ids in
                 if let id = ids.first, let h = hits.first(where: { $0.id == id }) { open(h) }
+            }) {
+                DataColumn(L10n.tr("Rodzaj"), sortKey: { (h: UsageHit) in Self.kindText(h.kind) }) { (h: UsageHit) in Text(Self.kindText(h.kind)) }.width(min: 70, ideal: 90)
+                DataColumn(L10n.tr("Miejsce"), sortKey: { (h: UsageHit) in h.title + (h.type.map { " (\($0.lowercased()))" } ?? "") }) { (h: UsageHit) in Text(h.title + (h.type.map { " (\($0.lowercased()))" } ?? "")) }.width(min: 140, ideal: 220)
+                DataColumn(L10n.tr("Linia"), sortKey: { (h: UsageHit) in h.line > 0 ? String(h.line) : "" }) { (h: UsageHit) in Text(h.line > 0 ? String(h.line) : "") }.width(min: 40, ideal: 50)
+                DataColumn(L10n.tr("Tekst"), sortKey: { (h: UsageHit) in h.text }) { (h: UsageHit) in Text(h.text).font(.code).lineLimit(1) }
             }
             Text(summary ?? (hits.isEmpty ? L10n.tr("Brak użyć \(title)") : L10n.tr("Użycia \(title): \(hits.count)")))
                 .foregroundStyle(.secondary).font(.ui)
@@ -105,8 +102,6 @@ struct RefactoringPreviewView: View {
 
 /// Historia lokalna okna (DG-HIST-001): wersje od najnowszej, podgląd, porównanie z bieżącym tekstem, przywrócenie.
 struct LocalHistoryView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortEntries: [ColumnSort<LocalHistoryEntry>] = []
     let workspace: Workspace
     let document: PelikanWorkspace.Document
     @State private var selection: LocalHistoryEntry.ID?
@@ -121,13 +116,12 @@ struct LocalHistoryView: View {
         let list = entries
         VStack(alignment: .leading, spacing: 8) {
             HSplitView {
-                Table(list.sorted(by: sortEntries), selection: $selection, sortOrder: $sortEntries) {
-                    TableColumn(L10n.tr("Czas"), sortKey: { (e: LocalHistoryEntry) in e.date }) { (e: LocalHistoryEntry) in Text(e.date, format: .dateTime.year().month().day().hour().minute().second()) }
-                        .width(min: 130, ideal: 150)
-                    TableColumn(L10n.tr("Zdarzenie"), sortKey: { (e: LocalHistoryEntry) in e.label }) { (e: LocalHistoryEntry) in Text(e.label) }.width(min: 80, ideal: 120)
-                }
-                .contextMenu(forSelectionType: LocalHistoryEntry.ID.self) { _ in } primaryAction: { ids in
+                DataTable(list, selection: .single($selection), primaryAction: { ids in
                     if let id = ids.first { run("file.localHistoryCompare", id) }
+                }) {
+                    DataColumn(L10n.tr("Czas"), sortKey: { (e: LocalHistoryEntry) in e.date }) { (e: LocalHistoryEntry) in Text(e.date, format: .dateTime.year().month().day().hour().minute().second()) }
+                        .width(min: 130, ideal: 150)
+                    DataColumn(L10n.tr("Zdarzenie"), sortKey: { (e: LocalHistoryEntry) in e.label }) { (e: LocalHistoryEntry) in Text(e.label) }.width(min: 80, ideal: 120)
                 }
                 .frame(minWidth: 260)
                 Group {
@@ -165,8 +159,6 @@ struct LocalHistoryView: View {
 
 /// Lista problemów analizy kodu okna (DG-RES-001, DG-INSP-001); wybór zaznacza miejsce w tekście.
 struct ProblemsView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortProblems: [ColumnSort<EditorDiagnostic>] = []
     let workspace: Workspace
     let document: PelikanWorkspace.Document
     @State private var selection: EditorDiagnostic.ID?
@@ -174,13 +166,13 @@ struct ProblemsView: View {
     var body: some View {
         let list = workspace.diagnostics[document.id] ?? []
         VStack(alignment: .leading, spacing: 8) {
-            Table(list.sorted(by: sortProblems), selection: $selection, sortOrder: $sortProblems) {
-                TableColumn("", sortKey: { (d: EditorDiagnostic) in d.severity == .error ? 0 : 1 }) { (d: EditorDiagnostic) in
+            DataTable(list, selection: .single($selection)) {
+                DataColumn("", sortKey: { (d: EditorDiagnostic) in d.severity == .error ? 0 : 1 }) { (d: EditorDiagnostic) in
                     Image(systemName: d.severity == .error ? "xmark.octagon.fill" : "exclamationmark.triangle.fill")
                         .foregroundStyle(d.severity == .error ? .red : .orange)
                 }.width(20)
-                TableColumn(L10n.tr("Linia"), sortKey: { (d: EditorDiagnostic) in String(d.line(in: document.text)) }) { (d: EditorDiagnostic) in Text(String(d.line(in: document.text))) }.width(min: 40, ideal: 50)
-                TableColumn(L10n.tr("Problem"), sortKey: { (d: EditorDiagnostic) in d.message }) { (d: EditorDiagnostic) in Text(d.message) }
+                DataColumn(L10n.tr("Linia"), sortKey: { (d: EditorDiagnostic) in String(d.line(in: document.text)) }) { (d: EditorDiagnostic) in Text(String(d.line(in: document.text))) }.width(min: 40, ideal: 50)
+                DataColumn(L10n.tr("Problem"), sortKey: { (d: EditorDiagnostic) in d.message }) { (d: EditorDiagnostic) in Text(d.message) }
             }
             .onChange(of: selection) { _, id in
                 guard let d = list.first(where: { $0.id == id }) else { return }

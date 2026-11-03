@@ -34,6 +34,7 @@ final class AgentPane: NSView {
     private let terminalContainer = NSView()
     private let activityTable = NSTableView()
     private var rows: [AgentActivity] = []
+    private var activityTools: AppKitTableTools!
     private var token: ObservationToken?
     private var fontToken: ObservationToken?
     private let split = NSSplitView()
@@ -101,7 +102,12 @@ final class AgentPane: NSView {
         split.isVertical = false
         split.dividerStyle = .thin
         split.addArrangedSubview(terminalContainer)
-        split.addArrangedSubview(activityScroll)
+        activityTools = AppKitTableTools(table: activityTable, title: { L10n.tr("Aktywność agenta") },
+                                         total: { [weak self] in self.map { s in s.controller.activities.filter { $0.sessionID == s.selectedSessionID }.count } ?? 0 },
+                                         cell: { [weak self] r, id in self.map { $0.rows.indices.contains(r) ? Self.activityText($0.rows[r], id).text : "" } ?? "" },
+                                         onFilterChange: { [weak self] in self?.refreshActivity() })
+        let activityBox = activityTools.wrap(activityScroll)
+        split.addArrangedSubview(activityBox)
         split.setHoldingPriority(.defaultLow, forSubviewAt: 0)
 
         let stack = NSStackView(views: [header, warnings, split])
@@ -238,10 +244,15 @@ final class AgentPane: NSView {
     private func refreshActivity() {
         let id = selectedSessionID
         // Najnowsze na górze; klik nagłówka sortuje po kolumnie (D212).
-        rows = HeaderSort.sort(controller.activities.filter { $0.sessionID == id }.reversed(), by: activityTable.sortDescriptors) { a, key in
+        let sorted = HeaderSort.sort(controller.activities.filter { $0.sessionID == id }.reversed(), by: activityTable.sortDescriptors) { a, key in
             key == "time" ? a.started.sortKey : Self.activityText(a, key).text.sortKey
         }
+        rows = activityTools.filter(sorted) { a, key in
+            let t = Self.activityText(a, key).text
+            return (t, key == "time" ? a.started.sortKey : t.sortKey)
+        }
         activityTable.reloadData()
+        activityTools.reloaded()
         let pending = controller.pending.count
         pendingLabel.stringValue = pending > 0 ? L10n.tr("Czeka na zgodę: \(pending)") : ""
     }
@@ -326,6 +337,11 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
     private var selectedName: String?
     private var loadTask: Task<Void, Never>?
     private var fontToken: ObservationToken?
+    /// Pliki i wpisy przed filtrem (D214).
+    private var allURLs: [URL] = []
+    private var allEntries: [([String: String], String)] = []
+    private var fileTools: AppKitTableTools!
+    private var entryTools: AppKitTableTools!
 
     init(directory: URL) {
         self.directory = directory
@@ -352,12 +368,21 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
         entries.usesAlternatingRowBackgroundColors = true
         for t in [files, entries] { t.rowSizeStyle = .custom }
         entries.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle
-        let left = NSScrollView()
-        left.documentView = files
-        left.hasVerticalScroller = true
-        let middle = NSScrollView()
-        middle.documentView = entries
-        middle.hasVerticalScroller = true
+        let leftScroll = NSScrollView()
+        leftScroll.documentView = files
+        leftScroll.hasVerticalScroller = true
+        let middleScroll = NSScrollView()
+        middleScroll.documentView = entries
+        middleScroll.hasVerticalScroller = true
+        fileTools = AppKitTableTools(table: files, title: { L10n.tr("Pliki dziennika agenta") }, total: { [weak self] in self?.allURLs.count ?? 0 },
+                                     cell: { [weak self] r, _ in self.map { $0.urls.indices.contains(r) ? $0.urls[r].lastPathComponent : "" } ?? "" },
+                                     onFilterChange: { [weak self] in self?.applyFiles() })
+        entryTools = AppKitTableTools(table: entries, title: { [weak self] in self?.selectedName ?? L10n.tr("Dziennik agenta") },
+                                      total: { [weak self] in self?.allEntries.count ?? 0 },
+                                      cell: { [weak self] r, id in self.map { $0.lines.indices.contains(r) ? Self.entryText($0.lines[r], id) : "" } ?? "" },
+                                      onFilterChange: { [weak self] in self?.applyEntries() })
+        let left = fileTools.wrap(leftScroll)
+        let middle = entryTools.wrap(middleScroll)
         raw.isEditable = false
         raw.autoresizingMask = [.width]
         let bottom = NSScrollView()
@@ -396,8 +421,8 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
     func reload() {
         urls = ((try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? [])
             .filter { $0.pathExtension == "jsonl" }.sorted { $0.lastPathComponent > $1.lastPathComponent }
-        urls = HeaderSort.sort(urls, by: files.sortDescriptors) { u, _ in u.lastPathComponent.sortKey }
-        files.reloadData()
+        allURLs = urls
+        applyFiles()
         if let name = selectedName, let i = urls.firstIndex(where: { $0.lastPathComponent == name }) {
             files.selectRowIndexes([i], byExtendingSelection: false)
             load(urls[i])
@@ -421,11 +446,33 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
     }
 
     private func show(_ raw: [String], _ parsed: [[String: String]]) {
-        let pairs = HeaderSort.sort(Array(zip(parsed, raw)), by: entries.sortDescriptors) { p, key in Self.entryText(p.0, key).sortKey }
+        allEntries = Array(zip(parsed, raw))
+        applyEntries()
+        self.raw.string = ""
+    }
+
+    /// Pliki w kolejności z nagłówka i po filtrze (D212, D214).
+    private func applyFiles() {
+        urls = fileTools.filter(HeaderSort.sort(allURLs, by: files.sortDescriptors) { u, _ in u.lastPathComponent.sortKey }) { u, _ in
+            (u.lastPathComponent, u.lastPathComponent.sortKey)
+        }
+        files.reloadData()
+        if let name = selectedName, let i = urls.firstIndex(where: { $0.lastPathComponent == name }) {
+            files.selectRowIndexes([i], byExtendingSelection: false)
+        }
+        fileTools.reloaded()
+    }
+
+    /// Wpisy w kolejności z nagłówka i po filtrze (wiersz surowy razem z wpisem).
+    private func applyEntries() {
+        let pairs = entryTools.filter(HeaderSort.sort(allEntries, by: entries.sortDescriptors) { p, key in Self.entryText(p.0, key).sortKey }) { p, id in
+            let t = Self.entryText(p.0, id)
+            return (t, t.sortKey)
+        }
         lines = pairs.map(\.0)
         rawLines = pairs.map(\.1)
         entries.reloadData()
-        self.raw.string = ""
+        entryTools.reloaded()
     }
 
     nonisolated private static func read(_ url: URL) -> ([String], [[String: String]]) {
@@ -451,14 +498,7 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
 
     /// Kolejność z nagłówków (D212): pliki po nazwie, wpisy po kolumnie (wiersz surowy razem z wpisem).
     func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
-        if tableView === files {
-            urls = HeaderSort.sort(urls, by: files.sortDescriptors) { u, _ in u.lastPathComponent.sortKey }
-        } else {
-            let pairs = HeaderSort.sort(Array(zip(lines, rawLines)), by: entries.sortDescriptors) { p, key in Self.entryText(p.0, key).sortKey }
-            lines = pairs.map(\.0)
-            rawLines = pairs.map(\.1)
-        }
-        tableView.reloadData()
+        if tableView === files { applyFiles() } else { applyEntries() }
     }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {

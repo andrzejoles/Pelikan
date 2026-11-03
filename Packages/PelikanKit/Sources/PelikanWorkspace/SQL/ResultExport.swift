@@ -4,7 +4,7 @@ import PelikanSQL
 
 /// Formaty eksportu i kopiowania wyniku (UG 7.2: Export Results, Copy…, Copy to Excel).
 public enum ExportFormat: String, CaseIterable, Sendable, Codable {
-    case csv, tsv, html, xml, sql, expressionList, xlsx
+    case csv, tsv, html, xml, sql, expressionList, xlsx, json, text
 
     public var displayName: String {
         switch self {
@@ -15,6 +15,8 @@ public enum ExportFormat: String, CaseIterable, Sendable, Codable {
         case .sql: L10n.tr("SQL (INSERT)")
         case .expressionList: L10n.tr("Lista wyrażeń (IN)")
         case .xlsx: L10n.tr("Excel (xlsx)")
+        case .json: L10n.tr("JSON")
+        case .text: L10n.tr("Tekst (kolumny wyrównane)")
         }
     }
 
@@ -27,6 +29,8 @@ public enum ExportFormat: String, CaseIterable, Sendable, Codable {
         case .sql: "sql"
         case .expressionList: "txt"
         case .xlsx: "xlsx"
+        case .json: "json"
+        case .text: "txt"
         }
     }
 }
@@ -64,6 +68,8 @@ public enum ResultExporter {
         case .sql: sqlInserts(data)
         case .expressionList: expressionList(data)
         case .xlsx: delimited(data, separator: "\t", options: options)   // schowek: Excel wkleja TSV
+        case .json: json(data, options: options)
+        case .text: alignedText(data, options: options)
         }
     }
 
@@ -161,6 +167,75 @@ public enum ResultExporter {
             s += " </ROW>\n"
         }
         return s + "</ROWSET>\n"
+    }
+
+    /// JSON: tablica obiektów w kolejności kolumn (D214); liczby i wartości logiczne bez cudzysłowów, NULL jako `null`.
+    static func json(_ data: ExportData, options: ExportOptions) -> String {
+        func str(_ s: String) -> String {
+            var out = "\""
+            for u in s.unicodeScalars {
+                switch u {
+                case "\"": out += "\\\""
+                case "\\": out += "\\\\"
+                case "\n": out += "\\n"
+                case "\r": out += "\\r"
+                case "\t": out += "\\t"
+                default:
+                    if u.value < 0x20 { out += String(format: "\\u%04x", u.value) } else { out.unicodeScalars.append(u) }
+                }
+            }
+            return out + "\""
+        }
+        func value(_ v: OracleValue) -> String {
+            switch v {
+            case .null: return "null"
+            case .boolean(let b): return b ? "true" : "false"
+            case .number(let n) where isJSONNumber(n): return n
+            case .number(let n) where isJSONNumber(leadingZero(n)): return leadingZero(n)   // Oracle: .5 → 0.5
+            case .double(let d) where d.isFinite: return String(d)
+            default: return str(cell(v, options.format))
+            }
+        }
+        let names = data.columns.map { str($0.name) }
+        if data.rows.isEmpty { return "[]\n" }
+        let objects = data.rows.map { row in
+            "  {" + row.enumerated().map { "\(names[$0]): \(value($1))" }.joined(separator: ", ") + "}"
+        }
+        return "[\n" + objects.joined(separator: ",\n") + "\n]\n"
+    }
+
+    static func leadingZero(_ n: String) -> String {
+        if n.hasPrefix(".") { return "0" + n }
+        if n.hasPrefix("-.") { return "-0" + n.dropFirst() }
+        return n
+    }
+
+    /// Liczba w zapisie dopuszczalnym w JSON (bez wiodących zer, kropka dziesiętna).
+    static func isJSONNumber(_ s: String) -> Bool {
+        s.range(of: #"^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$"#, options: .regularExpression) != nil
+    }
+
+    /// Zwykły tekst z kolumnami wyrównanymi spacjami (D214): nagłówek, linia kresek, liczby do prawej, nowe linie
+    /// w wartościach jako spacje.
+    static func alignedText(_ data: ExportData, options: ExportOptions) -> String {
+        let flat: (String) -> String = { $0.replacingOccurrences(of: "\r\n", with: " ").replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\t", with: " ") }
+        let cells = data.rows.map { $0.map { flat(cell($0, options.format)) } }
+        var widths = data.columns.map { options.includeHeader ? $0.name.count : 0 }
+        for r in cells { for (i, c) in r.enumerated() where i < widths.count { widths[i] = max(widths[i], c.count) } }
+        let numeric = data.columns.map(\.type.isNumeric)
+        func line(_ values: [String], right: [Bool]) -> String {
+            values.enumerated().map { i, v in
+                let pad = String(repeating: " ", count: max(0, widths[i] - v.count))
+                return right[i] ? pad + v : v + pad
+            }.joined(separator: "  ").replacingOccurrences(of: #" +$"#, with: "", options: .regularExpression)
+        }
+        var lines: [String] = []
+        if options.includeHeader {
+            lines.append(line(data.columns.map(\.name), right: numeric))
+            lines.append(widths.map { String(repeating: "-", count: max(1, $0)) }.joined(separator: "  "))
+        }
+        for r in cells { lines.append(line(r, right: numeric)) }
+        return lines.joined(separator: "\n") + "\n"
     }
 
     // MARK: SQL

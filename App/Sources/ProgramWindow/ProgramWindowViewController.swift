@@ -13,6 +13,9 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     private let unitBar = NSStackView()
     private let messages = NSTableView()
     private let messagesScroll = NSScrollView()
+    /// Filtr, kopiowanie i eksport komunikatów (D214) z paskiem nad listą.
+    private var messageTools: AppKitTableTools!
+    private var messagesBox: NSView!
     private let split = NSSplitView()
     private let caretLabel = NSTextField(labelWithString: "1:1")
     private let hierarchyLabel = NSTextField(labelWithString: "")
@@ -85,6 +88,11 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         messages.setAccessibilityLabel(L10n.tr("Błędy kompilacji"))
         messagesScroll.documentView = messages
         messagesScroll.hasVerticalScroller = true
+        messageTools = AppKitTableTools(table: messages, title: { L10n.tr("Komunikaty kompilacji") },
+                                        total: { [weak self] in self?.document.compileMessages.count ?? 0 },
+                                        cell: { [weak self] r, id in self?.messageText(row: r, id) ?? "" },
+                                        onFilterChange: { [weak self] in self?.refreshMessages() })
+        messagesBox = messageTools.wrap(messagesScroll)
 
         caretLabel.textColor = .secondaryLabelColor
         modifiedDot.textColor = .systemBlue
@@ -127,8 +135,8 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         split.isVertical = false
         split.dividerStyle = .thin
         split.addArrangedSubview(editorPane)
-        split.addArrangedSubview(messagesScroll)
-        messagesScroll.isHidden = true
+        split.addArrangedSubview(messagesBox)
+        messagesBox.isHidden = true
         view = panel.split
         tokens.append(trackChanges { [weak self] in self?.refreshUnits() })
         tokens.append(trackChanges { [weak self] in self?.refreshMessages() })
@@ -300,13 +308,18 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
 
     private func refreshMessages() {
         // Kolejność z nagłówka listy (D212); bez sortowania — jak z kompilatora.
-        shownMessages = HeaderSort.sort(document.compileMessages, by: messages.sortDescriptors) { m, key in
+        let sorted = HeaderSort.sort(document.compileMessages, by: messages.sortDescriptors) { m, key in
             switch key {
             case "sev": (m.severity == .error ? 0 : m.severity == .warning ? 1 : 2).sortKey
             case "unit": m.unit.sortKey
             case "line": (m.line * 100_000 + m.column).sortKey
             default: m.text.sortKey
             }
+        }
+        // Filtr wartości kolumn (D214): linia porównywana jako liczba.
+        shownMessages = messageTools.filter(sorted) { m, id in
+            let t = Self.messageText(m, id, line: "\(m.line)")
+            return (t, id == "line" ? m.line.sortKey : t.sortKey)
         }
         shownLines = shownMessages.map { "\($0.line)" }
         messages.reloadData()
@@ -327,10 +340,12 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
                 self.messages.reloadData()
             }
         }
-        let show = !shownMessages.isEmpty
+        messageTools.reloaded()
+        // Lista widoczna, gdy są komunikaty — także gdy filtr ukrył wszystkie (pasek filtra zostaje).
+        let show = !document.compileMessages.isEmpty
         if show != messagesVisible {
             messagesVisible = show
-            messagesScroll.isHidden = !show
+            messagesBox.isHidden = !show
             split.adjustSubviews()
             if show {
                 let h = split.bounds.height
@@ -346,6 +361,22 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int { shownMessages.count }
+
+    /// Tekst komórki komunikatu (lista, kopia, eksport, filtr).
+    static func messageText(_ m: CompileMessage, _ column: String, line: String) -> String {
+        switch column {
+        case "sev": m.severity == .error ? L10n.tr("Błąd") : m.severity == .warning ? L10n.tr("Ostrzeżenie") : L10n.tr("Podpowiedź")
+        case "unit": m.unit
+        case "line": line + ":\(m.column)"
+        default: m.text
+        }
+    }
+
+    private func messageText(row: Int, _ column: String) -> String {
+        guard shownMessages.indices.contains(row) else { return "" }
+        let m = shownMessages[row]
+        return Self.messageText(m, column, line: shownLines.indices.contains(row) ? shownLines[row] : "\(m.line)")
+    }
 
     func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) { refreshMessages() }
 

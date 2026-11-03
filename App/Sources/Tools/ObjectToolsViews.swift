@@ -129,8 +129,6 @@ struct ExportObjectsView: View {
 
 /// Porównanie obiektów użytkowników (UG 24.11, PD-TOOL-012). Źródło — połączenie okna (ustalone przy otwarciu).
 struct CompareObjectsView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortDiffs: [ColumnSort<ObjectDifference>] = []
     let workspace: Workspace
     @State private var connection: UUID?
     @State private var owner = ""
@@ -167,13 +165,12 @@ struct CompareObjectsView: View {
                         Toggle(L10n.tr("Usuń nadmiarowe"), isOn: $options.dropExtra)
                     }
                     .toggleStyle(.checkbox).font(.uiSecondary)
-                    Table(diffs.sorted(by: sortDiffs), selection: $diffSelection, sortOrder: $sortDiffs) {
-                        TableColumn(L10n.tr("Obiekt"), sortKey: { d in d.name }) { d in Text(d.name) }
-                        TableColumn(L10n.tr("Typ"), sortKey: { d in d.type.rawValue }) { d in Text(d.type.rawValue) }.width(110)
-                        TableColumn(L10n.tr("Różnica"), sortKey: { d in status(d.status) }) { d in Text(status(d.status)) }.width(140)
-                    }
-                    .contextMenu(forSelectionType: ObjectDifference.ID.self) { _ in } primaryAction: { ids in
+                    DataTable(diffs, selection: .single($diffSelection), primaryAction: { ids in
                         if let d = diffs.first(where: { ids.contains($0.id) }) { show(d) }
+                    }) {
+                        DataColumn(L10n.tr("Obiekt"), sortKey: { d in d.name }) { d in Text(d.name) }
+                        DataColumn(L10n.tr("Typ"), sortKey: { d in d.type.rawValue }) { d in Text(d.type.rawValue) }.width(110)
+                        DataColumn(L10n.tr("Różnica"), sortKey: { d in status(d.status) }) { d in Text(status(d.status)) }.width(140)
                     }
                 }
                 .frame(minWidth: 380)

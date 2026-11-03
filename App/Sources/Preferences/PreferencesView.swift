@@ -681,8 +681,6 @@ struct OraclePane: View {
 
 /// Karta Klawiatura (UG 23.29): profil skrótów, lista komend z wyszukiwaniem, nagrywanie skrótu z wykrywaniem konfliktu.
 struct KeyboardPane: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortRows: [ColumnSort<Row>] = []
     let workspace: Workspace
     @State private var search = ""
     @State private var selection: String?
@@ -712,10 +710,10 @@ struct KeyboardPane: View {
                 Spacer()
                 TextField(L10n.tr("Szukaj komendy"), text: $search).frame(width: 220)
             }
-            Table(rows.sorted(by: sortRows), selection: $selection, sortOrder: $sortRows) {
-                TableColumn(L10n.tr("Komenda"), sortKey: { (r: Row) in r.d.submenu.map { "\($0) › \(r.d.title)" } ?? r.d.title }) { (r: Row) in Text(r.d.submenu.map { "\($0) › \(r.d.title)" } ?? r.d.title) }
-                TableColumn(L10n.tr("Menu"), sortKey: { (r: Row) in r.d.category.displayName }) { (r: Row) in Text(r.d.category.displayName).foregroundStyle(.secondary) }.width(110)
-                TableColumn(L10n.tr("Skróty"), sortKey: { (r: Row) in workspace.keymap.chords(for: r.d.id).map(\.displayString).joined(separator: "  ") }) { (r: Row) in
+            DataTable(rows, selection: .single($selection)) {
+                DataColumn(L10n.tr("Komenda"), sortKey: { (r: Row) in r.d.submenu.map { "\($0) › \(r.d.title)" } ?? r.d.title }) { (r: Row) in Text(r.d.submenu.map { "\($0) › \(r.d.title)" } ?? r.d.title) }
+                DataColumn(L10n.tr("Menu"), sortKey: { (r: Row) in r.d.category.displayName }) { (r: Row) in Text(r.d.category.displayName).foregroundStyle(.secondary) }.width(110)
+                DataColumn(L10n.tr("Skróty"), sortKey: { (r: Row) in workspace.keymap.chords(for: r.d.id).map(\.displayString).joined(separator: "  ") }) { (r: Row) in
                     Text(workspace.keymap.chords(for: r.d.id).map(\.displayString).joined(separator: "  ")).font(.code)
                 }.width(170)
             }

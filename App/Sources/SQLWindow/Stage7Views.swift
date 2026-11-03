@@ -80,8 +80,6 @@ struct HTMLPreview: NSViewRepresentable {
 
 /// Grupowanie z licznikami (DB-GRID-001): dwuklik filtruje siatkę po wartości.
 struct GroupCountsView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortCounts: [ColumnSort<GroupCount>] = []
     let workspace: Workspace
     let tab: ResultTab
     let column: Int
@@ -92,12 +90,11 @@ struct GroupCountsView: View {
         let name = tab.grid?.columns[column].name ?? ""
         VStack(alignment: .leading, spacing: 6) {
             Text(L10n.tr("Kolumna \(name): różnych wartości \(counts.count)")).font(.uiSecondary)
-            Table(counts.sorted(by: sortCounts), selection: $selection, sortOrder: $sortCounts) {
-                TableColumn(L10n.tr("Wartość"), sortKey: { g in g.value }) { g in Text(g.value).foregroundStyle(g.isNull ? .secondary : .primary) }
-                TableColumn(L10n.tr("Liczba"), sortKey: { g in g.count }) { g in Text("\(g.count)").monospacedDigit() }.width(70)
-            }
-            .contextMenu(forSelectionType: GroupCount.ID.self) { _ in } primaryAction: { ids in
+            DataTable(counts, selection: .single($selection), primaryAction: { ids in
                 if let id = ids.first, let g = counts.first(where: { $0.id == id }) { apply(g) }
+            }) {
+                DataColumn(L10n.tr("Wartość"), sortKey: { g in g.value }) { g in Text(g.value).foregroundStyle(g.isNull ? .secondary : .primary) }
+                DataColumn(L10n.tr("Liczba"), sortKey: { g in g.count }) { g in Text("\(g.count)").monospacedDigit() }.width(70)
             }
             Text(L10n.tr("Dwukrotne kliknięcie — pokaż w siatce tylko wiersze z tą wartością.")).font(.uiSecondary).foregroundStyle(.secondary)
         }
