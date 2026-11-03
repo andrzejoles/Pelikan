@@ -29,6 +29,8 @@ public struct EnterContext: Sendable, Equatable {
 /// ze stanem regionów bez formatowania i kompilacji warunkowej oraz jednostki CREATE … BODY, w której leżą) zostają
 /// ważne, dopóki tekst przed nimi się nie zmienia — podział i leksowanie idą od początku tekstu, więc zmiana dalej nie
 /// zmienia niczego przed nią. Enter leksuje tylko od ostatniego ważnego punktu do linii kursora, a nie cały plik.
+/// Każdą zmianę tekstu zgłasza `invalidate(from:)` (edytor przy każdej edycji magazynu tekstu); sprawdzenie punktu
+/// podprogramu (`stale`) to tylko zabezpieczenie, nie zastępuje unieważniania.
 public struct StatementStartMemory: Sendable, Equatable {
     /// Region bez formatowania (`-- NoFormat Start`, `-- @formatter:off`) i głębokość `$IF … $END` w danym miejscu.
     struct Region: Sendable, Equatable {
@@ -87,10 +89,11 @@ public struct StatementStartMemory: Sendable, Equatable {
         let s = statement(forLineAt: lineStart, in: text)
         if !s.normal || s.region.open || Self.isRawUnit(at: s.statement, in: text) { return EnterContext(start: lineStart, mode: .none) }
         if Self.lines(from: s.statement, to: lineStart, in: text, limit: lineLimit) <= lineLimit { return EnterContext(start: s.statement) }
-        if let cp = lastCheckpoint(atOrBefore: lineStart).flatMap({ k in
-               checkpoints[...k].last { $0.subprogram || $0.statement != s.statement }
-           }).flatMap({ $0.subprogram && $0.statement == s.statement ? $0 : nil }),
-           let unit = cp.unit, unit.body, Self.lines(from: cp.position, to: lineStart, in: text, limit: lineLimit) <= lineLimit {
+        // Najbliższy punkt podprogramu tego polecenia: ostatni punkt, który jest podprogramem albo należy do innego
+        // polecenia (punkty jednego polecenia leżą obok siebie) — przyjęty, gdy to podprogram tego polecenia.
+        if let k = lastCheckpoint(atOrBefore: lineStart),
+           let cp = checkpoints[...k].last(where: { $0.subprogram || $0.statement != s.statement }),
+           cp.subprogram, cp.statement == s.statement, let unit = cp.unit, unit.body, Self.lines(from: cp.position, to: lineStart, in: text, limit: lineLimit) <= lineLimit {
             return EnterContext(start: cp.position, header: "CREATE OR REPLACE \(unit.typeBody ? "TYPE" : "PACKAGE") BODY pelikan_context IS\n")
         }
         return EnterContext(start: lineStart, mode: .caseOnly)
@@ -117,6 +120,8 @@ public struct StatementStartMemory: Sendable, Equatable {
                 checkpoints.remove(at: k)
                 continue
             }
+            // Punkty zebrane przed `/` są ważne (tekst bloku do `/`).
+            merge(scan.checkpoints)
             // `/` po drodze — linia leży za blokiem punktu: punkty (także późniejszych jednostek) zostają, granica
             // podziału za linią z `/` (początek polecenia w `starts`, unieważniany jak inne) — linie za blokiem, także
             // same odstępy, z których podział nie tworzy polecenia, dzielone od niej, a punkty bloku pomijane.

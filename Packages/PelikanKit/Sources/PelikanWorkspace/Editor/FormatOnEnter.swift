@@ -194,6 +194,16 @@ public struct EditedRanges: Sendable, Equatable {
         var edited = input
         if newlineFirst, delta == edited.count, !edited.isEmpty { edited = (edited.lowerBound + 1)..<edited.upperBound }
         let oldEnd = input.upperBound - delta
+        // Sam znak nowej linii (Enter na początku linii albo na jej końcu bez wcięcia) — żadna treść się nie zmieniła:
+        // tylko przesunięcie zakresów za miejscem wstawienia, bez pustego zakresu na początku przeniesionej linii.
+        if newlineFirst, edited.isEmpty {
+            ranges = ranges.map { r in
+                if r.lowerBound >= input.lowerBound { return (r.lowerBound + delta)..<(r.upperBound + delta) }
+                if r.upperBound > input.lowerBound { return r.lowerBound..<(r.upperBound + delta) }
+                return r
+            }
+            return
+        }
         var out: [Range<Int>] = []
         var merged = edited
         for r in ranges {

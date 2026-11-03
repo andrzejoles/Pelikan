@@ -1592,10 +1592,12 @@ final class CodeTextView: NSTextView {
            insertFormattedNewline(plan, sender) {
             return
         }
-        untouchedNewline = selectedRange().length == 0 && !(lineEdited?(string, selectedRange().location) ?? true)
+        // Jedna kopia tekstu (każdy odczyt `string` kopiuje cały dokument).
+        let current = string
+        untouchedNewline = selectedRange().length == 0 && !(lineEdited?(current, selectedRange().location) ?? true)
         defer { untouchedNewline = nil }
         // Wcięcie nowej linii wg trybu (UG 23.12 None / Automatic / Smart, PD-EDIT-004).
-        var ns = string as NSString
+        var ns = current as NSString
         let caret = selectedRange().location
         var lineRange = ns.lineRange(for: NSRange(location: caret, length: 0))
         if indentMode == .smart, selectedRange().length == 0 {

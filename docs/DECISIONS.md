@@ -3113,6 +3113,13 @@ wydanie). Poprawione:
   z zakresem — `insertText` pyta sam, poza `insertNewline`); nieaktualny punkt kontrolny — próba od poprzedniego, nie
   od początku polecenia; granica za `/` przy CRLF na początku następnej linii; wyszukiwanie binarne punktów i początków
   poleceń; wyrównanie Smart w zwykłym Enterze najmniejszą zmianą; stan na wstążce liczony tylko dla przełączników.
+- **Dziewiąte przejście:** sam znak nowej linii (Enter na początku linii) tylko przesuwa zmienione zakresy — bez
+  pustego zakresu oznaczającego przeniesioną linię; punkty kontrolne zebrane do `/` zachowane; jedna kopia tekstu
+  w zwykłym Enterze. Rozstrzygnięte: wyrównanie Smart linii END/ELSE/EXCEPTION to funkcja trybu wcięć edytora (D205) —
+  działa jak bez formatowania także w linii nieedytowanej (zmienia jej wcięcie, więc linia staje się edytowana);
+  reguła nieedytowanej linii ma dwa źródła z konieczności (`insertNewline` ustala ją przed wyrównaniem Smart, inne drogi
+  nowej linii pytają w `insertText`); pamięć podziału zakłada `invalidate` przy każdej zmianie tekstu — sprawdzenie
+  `stale` jest tylko zabezpieczeniem.
 - **AutoReplace i wielkość liter przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** przy włączonym
   formatowaniu przy Enter obie zmiany słowa przed kursorem działają tylko w linii edytowanej — także w zwykłym Enterze,
   gdy plan nie powstał (jedno miejsce reguły: `insertText` dla znaku nowej linii pyta `lineEdited`). Skrót albo słowo

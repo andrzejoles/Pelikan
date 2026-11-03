@@ -6,8 +6,9 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
 
 - **AutoReplace przy Enter:** zamiana z kursorem na końcu (np. `nvl(|`) przy włączonym formatowaniu przy Enter nie gubi
   już ostatniego znaku i nie dodaje nowej linii.
-- **Istniejący kod zostaje bez zmian:** Enter na końcu nieedytowanej linii nie oznacza jej jako zmienionej (następny
-  Enter w niej nie formatuje jej), a zmiana wielkości liter ostatniego słowa nie formatuje całej linii.
+- **Istniejący kod zostaje bez zmian:** Enter na końcu albo na początku nieedytowanej linii nie oznacza jej jako
+  zmienionej (następny Enter w niej nie formatuje jej), a wielkość liter ostatniego słowa i skróty AutoReplace przy Enter
+  działają tylko w linii edytowanej.
 - **Wyrównanie:** wcięcie tabulatorami w trybie Smart i emoji albo znaki złożone przed podzapytaniem nie przesuwają
   wcięcia nowej linii.
 - **Długie skrypty z kilkoma pakietami:** Enter we wcześniejszym ciele pakietu formatuje linię także po pracy
