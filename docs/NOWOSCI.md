@@ -14,6 +14,10 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   lokalnych i zmiennych pakietu (w ciele i w specyfikacji); w polu można podać kilka przedrostków po przecinku. Listy
   wyboru podpowiadają konwencję pakietów RMS (`I_item`, `O_error_message`, `L_program`, `LP_vdate`, `GP_…`, `C_…`),
   a przycisk „Konwencja RMS” ustawia ją jednym kliknięciem.
+- **Dokumentacja Oracle z lokalnego serwera MCP:** w Ustawieniach › Oracle można włączyć serwer dokumentacji na tym
+  komputerze (np. `oracle-docs` pod `http://127.0.0.1:8765/mcp`). F1 i „Dokumentacja Oracle…” pokazują wtedy fragmenty
+  dokumentacji 19c albo 11g w oknie Pelikana — z całą sekcją, kopiowaniem i stroną online jednym kliknięciem.
+  Dokumentacja online działa jak dotąd, także gdy serwer nie odpowiada. Agent Pelikana też może z niej korzystać.
 
 ## 1.15.2 — standard plików i UTF-8 dla Pro*C, listy wyboru w ustawieniach, sortowanie tabel
 

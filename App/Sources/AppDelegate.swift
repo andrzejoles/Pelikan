@@ -830,6 +830,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolWindowController.show(key: "spatial-" + UUID().uuidString, title: L10n.tr("Podgląd przestrzenny: \(title)"), size: NSSize(width: 640, height: 520)) { SpatialPreviewView(wkt: wkt) }
     }
 
+    /// Dokumentacja Oracle z lokalnego serwera MCP (D216): jedno okno, nowe zapytanie wyszukuje od nowa.
+    func showLocalDocs(query: String) {
+        let model = LocalDocsModel.shared
+        if !query.isEmpty { model.search(query) }
+        ToolWindowController.show(key: "localDocs", title: L10n.tr("Dokumentacja Oracle (lokalna)"), size: NSSize(width: 960, height: 600)) {
+            LocalDocsView(workspace: workspace, model: model)
+        }
+    }
+
     func showUserManual() {
         ToolWindowController.show(key: "userManual", title: L10n.tr("Instrukcja Pelikana"), size: NSSize(width: 900, height: 640)) { UserManualView(workspace: workspace) }
     }

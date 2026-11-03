@@ -51,6 +51,7 @@ public enum ToolCatalog {
         Entry("generate_test_skeleton", "agent.generateTest"),
         Entry("run_tests", "agent.runTests"),
         Entry("install_utplsql", "agent.installUtplsql"),
+        Entry("search_oracle_docs", "agent.oracleDocs"),
     ]
 
     public static func entry(named name: String) -> Entry? { entries.first { $0.tool == name } }

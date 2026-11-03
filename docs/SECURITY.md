@@ -130,6 +130,10 @@
   filtry `clean`/`smudge`/`process` z konfiguracji lokalnej repozytorium wyłączone (git status liczy nimi treść plików),
   podmoduły pomijane, `show --no-textconv`. Ustawienia przekazywane przez `GIT_CONFIG_KEY_n`, filtry z konfiguracji
   globalnej (np. git-lfs) zostają. Dodawanie i zatwierdzanie — czynności jawne — działają jak git w terminalu (hooki).
+- Dokumentacja lokalna (PD-DOC-002, D216): klient MCP łączy się tylko z adresem HTTPS albo HTTP na tym komputerze
+  (127.0.0.1, localhost, ::1) — zapytania nie idą do sieci otwartym tekstem; wysyłane są wyłącznie szukane słowa
+  (bez treści okna, połączeń i danych z bazy). Wyłączone domyślnie. Agent korzysta z wyszukiwania tylko do odczytu
+  (narzędzie `search_oracle_docs`, treść oznaczona jako niezaufana); dziennik zapisuje wersję dokumentacji, nie treść zapytania.
 
 ### 4.1 Pierwotny opis (Etap 0)
 Jak w Bifoldzie SECURITY §4: gniazdo i katalog sprawdzane przy starcie (właściciel, brak dowiązań), kolejność
