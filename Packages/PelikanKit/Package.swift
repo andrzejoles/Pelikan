@@ -64,7 +64,7 @@ let package = Package(
         // Kanał agentów AI (PROMPT §7): most stdio ↔ gniazdo Unix, serwer MCP, polityka uprawnień — tylko macOS.
         .target(name: "PelikanBridgeKit", swiftSettings: strict),
         .executableTarget(name: "pelikan-mcp", dependencies: ["PelikanBridgeKit"], swiftSettings: strict),
-        .target(name: "PelikanAgent", dependencies: ["PelikanWorkspace", "PelikanBridgeKit", "PelikanLog", "PelikanRemote",
+        .target(name: "PelikanAgent", dependencies: ["PelikanWorkspace", "PelikanBridgeKit", "PelikanLog",
                                                      .product(name: "MCP", package: "swift-sdk", condition: .when(platforms: [.macOS]))],
                 swiftSettings: strict),
 

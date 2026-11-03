@@ -135,37 +135,38 @@ public final class SQLPlusEngine {
     /// Tekst polecenia do echa, SPOOL i konsoli bez hasła: `CONNECT u/hasło@baza`, `IDENTIFIED BY hasło`.
     nonisolated public static func maskPassword(_ text: String) -> String {
         let star = "********"
-        // Każde CONNECT (skrypt z kilkoma połączeniami), także po znaku nowej linii zapisanym jako `\n` (tekst JSON
-        // w wyniku narzędzia agenta) — jedno przejście, wynik budowany po kolei.
-        var t = ""
-        var rest = text[...]
-        while let r = rest.range(of: #"(?im)(^|\\n|\\r|")(\s*conn(ect)?\s+[^\s/\\"]*/)"#, options: .regularExpression) {
-            // Hasło: od `/` do ostatniego `@` w słowie, jak w CONNECT.
-            let tail = rest[r.upperBound...]
-            // Koniec słowa: odstęp, cudzysłów kończący napis JSON albo zapisane `\n`/`\r`/`\t` (sam `\` może być
-            // częścią hasła).
-            var wordEnd = rest.endIndex
-            var q = tail.startIndex
-            // Hasło w cudzysłowie (`u/"tajne hasło"@db`, w JSON `u/\"…\"`) — do cudzysłowu zamykającego.
-            let quote = tail.hasPrefix("\\\"") ? "\\\"" : tail.hasPrefix("\"") ? "\"" : nil
-            if let quote, let close = tail.dropFirst(quote.count).range(of: quote) {
-                q = close.upperBound
+        // Każde CONNECT w tekście (skrypt z kilkoma połączeniami) — jedno przejście wyrażenia, wynik budowany po kolei.
+        // Tylko zwykły tekst: wartości JSON (wyniki narzędzi agenta) maskuje się po rozkodowaniu (`AgentController.redacted`).
+        let ns = text as NSString
+        var out = ""
+        var last = 0
+        for m in Self.connectPattern.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
+            let start = m.range.location + m.range.length   // za `/`
+            guard start >= last else { continue }
+            func isSpace(_ i: Int) -> Bool { [0x20, 0x09, 0x0A, 0x0D].contains(ns.character(at: i)) }
+            // Hasło: w cudzysłowie — do cudzysłowu zamykającego (z `@` w środku); bez niego (także cudzysłów niezamknięty)
+            // — do ostatniego `@` w słowie albo do końca słowa.
+            let end: Int
+            let close = start < ns.length && ns.character(at: start) == 0x22
+                ? ns.range(of: "\"", range: NSRange(location: start + 1, length: ns.length - start - 1)) : NSRange(location: NSNotFound, length: 0)
+            if close.location != NSNotFound {
+                end = close.location + 1
+            } else {
+                var wordEnd = start
+                while wordEnd < ns.length, !isSpace(wordEnd) { wordEnd += 1 }
+                let at = ns.range(of: "@", options: .backwards, range: NSRange(location: start, length: wordEnd - start))
+                end = at.location != NSNotFound ? at.location : wordEnd
             }
-            while q < tail.endIndex {
-                let ch = tail[q]
-                if ch.isWhitespace || ch == "\"" { wordEnd = q; break }
-                if ch == "\\", let n = tail.index(q, offsetBy: 1, limitedBy: tail.endIndex), n < tail.endIndex, "nrt".contains(tail[n]) { wordEnd = q; break }
-                q = tail.index(after: q)
-            }
-            let end = rest[r.upperBound..<wordEnd].lastIndex(of: "@") ?? wordEnd
-            t += rest[..<r.upperBound]
-            if end > r.upperBound { t += star }
-            rest = rest[end...]
+            out += ns.substring(with: NSRange(location: last, length: start - last))
+            if end > start { out += star }
+            last = max(start, end)
         }
-        t += rest
+        out += ns.substring(from: last)
         // IDENTIFIED BY hasło / "hasło" / VALUES 'skrót' (eksport DDL użytkownika).
-        return t.replacingOccurrences(of: #"(?i)(identified\s+by\s+)(values\s+'[^']*'|"[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)
+        return out.replacingOccurrences(of: #"(?i)(identified\s+by\s+)(values\s+'[^']*'|"[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)
     }
+
+    nonisolated static let connectPattern = try! NSRegularExpression(pattern: #"(?im)^\s*conn(ect)?\s+[^\s/]*/"#)
 
     /// Czy tekst z linii poleceń (karta Dialog) to całe polecenie: SQL*Plus — od razu, SQL — po „;”,
     /// PL/SQL — po linii „/” (albo „.” kończącej bez wykonania), jak w SQL*Plus.

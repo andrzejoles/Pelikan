@@ -218,15 +218,16 @@ struct BridgeTransportTests {
         // Kilka CONNECT w jednym skrypcie — każde hasło zamaskowane.
         let two = SQLPlusEngine.maskPassword("connect a/Pass1@db1\nselect 1 from dual;\nconnect b/Pass2@db2")
         #expect(!two.contains("Pass1") && !two.contains("Pass2") && two.contains("@db2"))
-        // Wynik narzędzia: tekst JSON z nową linią zapisaną jako `\n` (drugi poziom kodowania).
-        let inner = SQLPlusEngine.maskPassword(#"{"text":"select 1 from dual;\nconnect scott/Tiger123@prod"}"#)
-        #expect(!inner.contains("Tiger123") && inner.contains("@prod"))
+        // Zwykły tekst: hasło w cudzysłowie (także z `@`), niezamknięty cudzysłów, ukośnik wsteczny w haśle.
         #expect(SQLPlusEngine.maskPassword("connect u/p") == "connect u/********")
-        // Na początku napisu JSON, hasło w cudzysłowie (także w JSON) i z ukośnikiem wstecznym.
-        #expect(!SQLPlusEngine.maskPassword(#"{"output":"connect scott/Tiger123@prod\n"}"#).contains("Tiger123"))
         #expect(SQLPlusEngine.maskPassword(#"connect u/"tajne hasło"@db"#) == "connect u/********@db")
-        #expect(!SQLPlusEngine.maskPassword(#"{"s":"connect u/\"tajne hasło\"@db"}"#).contains("tajne"))
-        #expect(SQLPlusEngine.maskPassword(#"connect u/ab\cd@db"#) == "connect u/********@db")
+        #expect(SQLPlusEngine.maskPassword(#"connect u/"p@ss""#) == "connect u/********")
+        #expect(SQLPlusEngine.maskPassword(#"connect u/"secret pw"#) == "connect u/******** pw")
+        #expect(SQLPlusEngine.maskPassword(#"connect u/ab\ncd@db"#) == "connect u/********@db")
+        // Wynik narzędzia (JSON): maskowanie po rozkodowaniu — także zagnieżdżony tekst JSON.
+        let result: JSONValue = .object(["output": .string("x;\n\tconnect u/Secret1@db"), "nested": .string(#"{"s":"connect a/Pass9"}"#)])
+        let shown = AgentController.redacted(result).description
+        #expect(!shown.contains("Secret1") && !shown.contains("Pass9"))
         let open = dir.appendingPathComponent("open.log").path
         FileManager.default.createFile(atPath: open, contents: Data(), attributes: [.posixPermissions: 0o644])
         SocketTransport.writeTrace(open, Data("b\n".utf8))

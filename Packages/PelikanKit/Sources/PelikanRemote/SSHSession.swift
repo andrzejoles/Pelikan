@@ -152,10 +152,16 @@ public final class SSHSession: Sendable {
     /// Nawiązanie połączenia głównego (pod `startLock`) i zapisanie potwierdzenia.
     private func startVerified() throws {
         forgetVerification()
+        let generation = verified.withLock { $0.generation }
         let clock = ContinuousClock.now
         do {
             try startMaster()
-            verified.withLock { $0.at = .now }
+            // `disconnect` w trakcie logowania podniósł pokolenie — połączenie nie jest potwierdzone (i jest zamykane).
+            let current = verified.withLock { v -> Bool in
+                if v.generation == generation { v.at = .now }
+                return v.generation == generation
+            }
+            if !current { disconnect() }
             Log.ssh.info("SSH: połączenie główne z \(config.host, privacy: .hash) w \(ms: clock)\(config.legacyAlgorithms ? " (starsze algorytmy)" : "", privacy: .public)")
         } catch {
             Log.ssh.notice("SSH: brak połączenia z \(config.host, privacy: .hash) po \(ms: clock): \(error)")

@@ -3141,6 +3141,14 @@ nieaktualnego); maskowanie `CONNECT` także na początku napisu JSON, hasło w c
 diagnostyczne przy każdym wpisie (bez kopii tablic); opis wersji thin w tym samym zapytaniu co kontekst sesji, drugie
 zapytanie tylko przy braku uprawnień.
 
+Siódme przejście: `maskPassword` znowu tylko dla zwykłego tekstu (próba rozpoznawania zapisu JSON w tej funkcji dawała
+wycieki) — każde `CONNECT` jednym przejściem wyrażenia, hasło w cudzysłowie w całości (także z `@`), niezamknięty
+cudzysłów do końca słowa; wyniki narzędzi agenta maskowane na rozkodowanych wartościach (`redacted`, także zagnieżdżony
+tekst JSON), ślad MCP dla wiadomości ponad 256 KB zapisuje tylko rozmiar; `PrivateOwnership` w PelikanLog (agent nie
+zależy od warstwy SSH); `pelikan-mcp --exec` ustawia FD_CLOEXEC zamiast zamykać (deskryptory chronione bibliotek
+systemowych); połączenie nawiązane w trakcie `disconnect` (inne pokolenie) nie jest potwierdzane i zostaje zamknięte;
+obcinanie wyniku narzędzia w jednym przejściu, `/` liczony z zapasem jak `\/`.
+
 Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
 testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
 `RETURNING … BULK COLLECT INTO` w bloku PL/SQL.

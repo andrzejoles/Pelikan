@@ -243,7 +243,8 @@ public final class AgentController: AgentInvocationGate {
             let text = result.value.map { $0.description } ?? result.message ?? "ok"
             let content = Self.limitedContent(text, untrusted: result.value?["untrusted_content"] == .bool(true))
             // Wynik z hasłem (np. echo polecenia CREATE USER … IDENTIFIED BY) nie trafia do panelu ani dziennika.
-            let shown = SQLPlusEngine.maskPassword(text)
+            // Maskowanie na rozkodowanych wartościach (tekst wyniku to JSON — w nim `\n` jest zapisane, nie jest końcem linii).
+            let shown = result.value.map { Self.redacted($0).description } ?? SQLPlusEngine.maskPassword(text)
             activity.status = .succeeded
             activity.result = String(shown.prefix(300))
             activity.duration = Date().timeIntervalSince(started)
@@ -282,32 +283,37 @@ public final class AgentController: AgentInvocationGate {
     static func limitedContent(_ text: String, untrusted: Bool, limit: Int = maxResultBytes) -> [Tool.Content] {
         let total = text.utf8.count
         // Długość po kodowaniu JSON: znaki sterujące jako `\uXXXX` (6 bajtów), więc sam limit bajtów nie wystarcza.
-        // Pełne liczenie tylko, gdy w najgorszym razie (6 bajtów na bajt) tekst mógłby przekroczyć limit po kodowaniu.
-        guard total > limit || 3 * total > limit && jsonEncodedLength(text.unicodeScalars) > 2 * limit else {
-            return [.text(text: text, annotations: nil, _meta: nil)]
-        }
-        var head = String.UnicodeScalarView()
+        // W najgorszym razie 6 bajtów na bajt — krótszy tekst zawsze się mieści, bez liczenia.
+        if 3 * total <= limit { return [.text(text: text, annotations: nil, _meta: nil)] }
+        // Jedno przejście: miejsce cięcia (pierwszy znak ponad limit) albo koniec — cały tekst się mieści.
         var raw = 0, encoded = 0
-        for s in text.unicodeScalars {
-            let r = UTF8.width(s), e = jsonCost(s)
-            if raw + r > limit || encoded + e > 2 * limit { break }
-            head.append(s)
-            raw += r
-            encoded += e
+        var cut: String.UnicodeScalarView.Index?
+        let scalars = text.unicodeScalars
+        var i = scalars.startIndex
+        while i < scalars.endIndex {
+            let s = scalars[i]
+            raw += UTF8.width(s)
+            encoded += jsonCost(s)
+            if raw > limit || encoded > 2 * limit {
+                cut = i
+                break
+            }
+            i = scalars.index(after: i)
         }
-        return truncated(String(head), total: total, untrusted: untrusted)
+        guard let cut else { return [.text(text: text, annotations: nil, _meta: nil)] }
+        return truncated(String(scalars[..<cut]), total: total, untrusted: untrusted)
     }
 
     /// Bajty znaku w napisie JSON.
     static func jsonCost(_ s: Unicode.Scalar) -> Int {
         switch s.value {
-        case 0x22, 0x5C, 0x08, 0x0C, 0x0A, 0x0D, 0x09: 2
+        // `/` z zapasem jak `\/` — koder serwera MCP mógłby go zapisywać z ukośnikiem.
+        case 0x22, 0x5C, 0x2F, 0x08, 0x0C, 0x0A, 0x0D, 0x09: 2
         case 0..<0x20: 6
         default: UTF8.width(s)
         }
     }
 
-    static func jsonEncodedLength(_ scalars: String.UnicodeScalarView) -> Int { scalars.reduce(0) { $0 + jsonCost($1) } }
 
     private static func truncated(_ head: String, total: Int, untrusted: Bool) -> [Tool.Content] {
         var notice = "result_truncated: wynik narzędzia ma \(total) bajtów, przekazano pierwsze \(head.utf8.count) (limit kanału MCP). "
@@ -328,7 +334,13 @@ public final class AgentController: AgentInvocationGate {
 
     nonisolated static func redacted(_ value: JSONValue) -> JSONValue {
         switch value {
-        case .string(let s): .string(SQLPlusEngine.maskPassword(s))
+        // Napis z zagnieżdżonym tekstem JSON (np. wynik polecenia jako JSON) — maskowany po rozkodowaniu.
+        case .string(let s):
+            if s.first == "{" || s.first == "[", let inner = try? JSONDecoder().decode(JSONValue.self, from: Data(s.utf8)) {
+                .string(redacted(inner).description)
+            } else {
+                .string(SQLPlusEngine.maskPassword(s))
+            }
         case .array(let a): .array(a.map(redacted))
         case .object(let o): .object(o.mapValues(redacted))
         default: value

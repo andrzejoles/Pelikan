@@ -4,7 +4,7 @@ import Darwin
 import Foundation
 import Logging
 import MCP
-import PelikanRemote
+import PelikanLog
 import PelikanWorkspace
 import Synchronization
 
@@ -104,8 +104,9 @@ public actor SocketTransport: Transport {
 
     static func trace(_ direction: String, _ data: Data) {
         guard let path = traceFile else { return }
-        // Duża wiadomość (wynik zapytania) — maskowany sam początek, który i tak trafia do śladu.
-        let text = data.count > 64 * 1024 ? SQLPlusEngine.maskPassword(String(decoding: data.prefix(8000), as: UTF8.self)) : masked(data)
+        // Duża wiadomość (wynik zapytania) — w śladzie tylko jej rozmiar (początek wycięty z JSON nie da się bezpiecznie
+        // rozkodować i zamaskować).
+        let text = data.count > 256 * 1024 ? "<wiadomość \(data.count) bajtów — treść pominięta w śladzie>" : masked(data)
         writeTrace(path, Data("\(direction) \(String(text.prefix(4000)))\n".utf8))
     }
 

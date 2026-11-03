@@ -1,6 +1,6 @@
 #if canImport(Darwin)
 import PelikanBridgeKit
-import PelikanRemote
+import PelikanLog
 import Darwin
 import Foundation
 import Synchronization

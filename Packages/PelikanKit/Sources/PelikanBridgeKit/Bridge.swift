@@ -8,21 +8,26 @@ public enum Bridge {
     /// Tryb startu powłoki agenta (`pelikan-mcp --exec program …`): zamknięcie odziedziczonych deskryptorów i `execv`.
     public static let execFlag = "--exec"
 
-    /// Zamyka deskryptory powyżej 2 (w świeżym procesie przed `execv` — nic tu ich nie używa): według listy otwartych
-    /// (`proc_pidinfo` PROC_PIDLISTFDS — bez górnej granicy numerów), a gdy lista niedostępna — wszystkie do limitu.
+    /// Deskryptory powyżej 2 nie przechodzą przez `execv`: FD_CLOEXEC na każdym z listy otwartych (`proc_pidinfo`
+    /// PROC_PIDLISTFDS — bez górnej granicy numerów), który go nie ma — bez `close` (deskryptory chronione bibliotek
+    /// systemowych mają już FD_CLOEXEC, a ich zamknięcie kończyłoby proces); lista niedostępna — wszystkie do limitu.
     public static func closeInheritedDescriptors() {
+        func mark(_ fd: Int32) {
+            let flags = fcntl(fd, F_GETFD)
+            if flags >= 0, flags & FD_CLOEXEC == 0 { _ = fcntl(fd, F_SETFD, flags | FD_CLOEXEC) }
+        }
         let stride = MemoryLayout<proc_fdinfo>.stride
         let needed = proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, nil, 0)
         if needed > 0 {
             var infos = [proc_fdinfo](repeating: proc_fdinfo(), count: Int(needed) / stride + 16)
             let got = infos.withUnsafeMutableBytes { proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, $0.baseAddress, Int32($0.count)) }
             if got > 0 {
-                for info in infos.prefix(Int(got) / stride) where info.proc_fd > 2 { close(info.proc_fd) }
+                for info in infos.prefix(Int(got) / stride) where info.proc_fd > 2 { mark(info.proc_fd) }
                 return
             }
         }
         let limit = getdtablesize()
-        if limit > 3 { for fd in 3..<limit { close(fd) } }
+        if limit > 3 { for fd in 3..<limit { mark(fd) } }
     }
 
     /// Argumenty terminala: powłoka przez `pelikan-mcp --exec`.
