@@ -89,7 +89,10 @@ enum Stage7Commands {
             Command(CommandDescriptor(id: "grid.valuePanel", title: L10n.tr("Panel wartości"), category: .view,
                                       mac: ["cmd+alt+v"], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Pokazuje albo ukrywa panel obok siatki z wartością bieżącej komórki (tekst, JSON, XML, HTML, obraz, hex)."),
-                                      feature: "DB-PANEL-001")) { ctx in
+                                      feature: "DB-PANEL-001"),
+                    // Ustawienie widoku dla wszystkich siatek (panel obok każdej) — stan to samo ustawienie, które komenda
+                    // przełącza (D208).
+                    state: { $0.valuePanelVisible }) { ctx in
                 ctx.workspace.valuePanelVisible.toggle()
                 return .ok
             },

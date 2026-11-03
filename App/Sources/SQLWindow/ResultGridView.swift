@@ -118,9 +118,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         bar.actions = ["grid.insertRecord": { [weak self] in self?.insertRecord() },
                        "grid.toggleRecordView": { [weak self] in self?.toggleRecord() }]
         bar.onSymbols = ["grid.edit": "lock.open"]
-        bar.setState("grid.edit", on: false)
+        bar.localState = ["grid.edit": { [weak self] in self?.grid.edit.isEditing ?? false }]
         bar.setState("grid.toggleRecordView", on: false)
-        bar.setState("grid.valuePanel", on: false)
         record.isHidden = true
         record.onMove = { [weak self] delta in self?.moveRecord(delta) }
         for v in [bar, scroll, record] as [NSView] {
@@ -248,7 +247,6 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         if valuePanel?.isHidden == showPanel {
             valuePanel?.isHidden = !showPanel
             panelWidth?.constant = showPanel ? 300 : 0
-            bar.setState("grid.valuePanel", on: showPanel)
         }
         let filterText = grid.filter?.text
         if filterText != lastFilter {
@@ -270,7 +268,6 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         bar.needsLayout = true
         if edit.isEditing != lastEditing {
             lastEditing = edit.isEditing
-            bar.setState("grid.edit", on: edit.isEditing)
             table.reloadData()
         } else if edit.isEditing {
             // Stan komórek (zmienione, wstawione, usunięte) — przerysowanie widocznych wierszy.
@@ -562,7 +559,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             item.representedObject = id
         }
         let copyAs = NSMenu()
-        for f in [ExportFormat.csv, .html, .xml, .sql] {
+        // Lista wyrażeń ma własną pozycję wyżej („Kopiuj jako listę wyrażeń”).
+        for f in GridCommands.copyAsFormats where f != .expressionList {
             let item = copyAs.addItem(withTitle: f.displayName, action: #selector(copyAsFormat(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = f.rawValue

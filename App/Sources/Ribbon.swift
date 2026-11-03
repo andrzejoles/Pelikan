@@ -115,21 +115,34 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         ])
         view = root
 
-        tokens.append(trackChanges { [weak self] in
-            guard let self else { return }
-            let kind = self.workspace.activeDocument?.kind
-            if kind != self.activeKind || self.visibleTabs.isEmpty { self.show(kind: kind) }
+        // Śledzony tylko rodzaj aktywnego okna; przebudowa (odczyt stanu wszystkich przycisków) — poza śledzeniem.
+        tokens.append(trackChanges(of: { [weak self] () -> DocumentKind?? in
+            guard let self else { return nil }
+            return .some(self.workspace.activeDocument?.kind)
+        }) { [weak self] kind in
+            guard let self, kind != self.activeKind || self.visibleTabs.isEmpty else { return }
+            self.show(kind: kind)
         })
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
             self.applyVisibility(shown: self.workspace.settings.showRibbon, collapsed: self.workspace.settings.ribbonCollapsed)
         })
-        tokens.append(trackChanges { [weak self] in self?.refreshEnabled() })
+        rearmRefresh()
+        // Zmiana koloru akcentu — jeden obserwator, odświeżane tylko włączone przełączniki (tło w kolorze akcentu).
+        NotificationCenter.default.addObserver(self, selector: #selector(systemColorsChanged),
+                                               name: NSColor.systemColorsDidChangeNotification, object: nil)
         // Czcionka interfejsu z Preferencji (D178): wysokości pasów (R3-13), przebudowa kart i grup.
-        tokens.append(trackChanges { [weak self] in
+        // Śledzona tylko czcionka; przebudowa poza śledzeniem. Pierwsze wywołanie (rejestracja) i ta sama czcionka — bez
+        // przebudowy (wstążkę zbudował już `show`).
+        tokens.append(trackChanges(of: { [weak self] () -> String? in
+            guard self != nil else { return nil }
             let f = InterfaceFonts.shared
-            _ = (f.family, f.size, f.weight)
-            guard let self else { return }
+            return "\(f.family)|\(f.size)|\(f.weight)"
+        }) { [weak self] font in
+            guard let self, font != self.appliedFont else { return }
+            let first = self.appliedFont == nil
+            self.appliedFont = font
+            if first { return }
             for (c, value) in self.heightConstraints where c.constant != value() { c.constant = value() }
             self.updateFrameHeight()
             guard !self.visibleTabs.isEmpty else { return }
@@ -212,7 +225,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             }
             groupStack.addArrangedSubview(groupView(group))
         }
-        refreshEnabled()
+        rearmRefresh()
         // Nowa karta — od początku (D206).
         contentStrip.scrollToStart()
     }
@@ -284,6 +297,8 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         let title = label ?? d.title.replacingOccurrences(of: "…", with: "")
         let b = RibbonButton(style: style, title: title, symbol: CommandSymbols.symbol(for: id) ?? "circle.dashed", dropdown: false)
         b.commandID = d.id
+        // Komenda-przełącznik: stan od razu (nil — bez stanu; odświeżane potem tylko przyciski ze stanem).
+        b.toggleState = workspace.toggleState(d.id)
         b.toolTip = tooltip(for: d)
         b.onPress = { [weak self] _ in self?.run(d.id) }
         b.contextMenuProvider = { [weak self] in self?.contextMenu(for: d.id) }
@@ -297,11 +312,31 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         return s
     }
 
+    @objc private func systemColorsChanged() {
+        for b in buttons where b.toggleState == true { b.systemColorsChanged() }
+    }
+
+    /// Śledzenie dostępności i stanu przycisków — od nowa po każdej przebudowie (nowe przyciski mają inne zależności).
+    private var refreshToken: ObservationToken?
+
+    private func rearmRefresh() {
+        refreshToken?.cancel()
+        refreshToken = trackChanges { [weak self] in self?.refreshEnabled() }
+    }
+
+    /// Czcionka interfejsu, dla której zbudowano wstążkę.
+    private var appliedFont: String?
+
     private func refreshEnabled() {
         for b in buttons {
             guard let id = b.commandID else { continue }
             let on = workspace.isEnabled(id)
             if b.isEnabled != on { b.isEnabled = on }
+            // Stan tylko dla komend-przełączników (ustalone przy budowie przycisku) — bez zbędnych wywołań przy każdym
+            // odświeżeniu (każde zdarzenie okna).
+            guard b.toggleState != nil else { continue }
+            let state = workspace.toggleState(id)
+            if b.toggleState != state { b.toggleState = state }
         }
     }
 
@@ -312,21 +347,9 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         menu.autoenablesItems = false
         for raw in RibbonModel.expand(commands, in: workspace.registry) {
             if raw == RibbonModel.separator { menu.addItem(.separator()); continue }
-            guard let d = workspace.registry.command(CommandID(rawValue: raw))?.descriptor else { continue }
-            let item = NSMenuItem(title: d.title, action: #selector(menuCommand(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = raw
-            item.toolTip = d.summary
-            item.isEnabled = workspace.isEnabled(d.id)
-            if let symbol = CommandSymbols.symbol(for: raw) {
-                item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+            if let item = MenuBuilder.commandItem(raw, workspace: workspace, target: self, action: #selector(menuCommand(_:))) {
+                menu.addItem(item)
             }
-            if let chord = workspace.keymap.chords(for: d.id).first(where: { MenuBuilder.keyEquivalent(for: $0) != nil }),
-               let (key, mask) = MenuBuilder.keyEquivalent(for: chord) {
-                item.keyEquivalent = key
-                item.keyEquivalentModifierMask = mask
-            }
-            menu.addItem(item)
         }
         menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 2), in: button)
     }
@@ -521,6 +544,13 @@ final class RibbonButton: NSControl {
     private let label: NSTextField
     private var hovering = false { didSet { updateBackground() } }
     private var pressed = false { didSet { updateBackground() } }
+    /// Stan komendy-przełącznika (włączona — wyróżnione tło); nil — komenda bez stanu.
+    var toggleState: Bool? {
+        didSet {
+            updateBackground()
+            setAccessibilityValue(toggleState.map { $0 ? L10n.tr("włączone") : L10n.tr("wyłączone") })
+        }
+    }
 
     init(style: Style, title: String, symbol: String, dropdown: Bool) {
         self.style = style
@@ -583,10 +613,27 @@ final class RibbonButton: NSControl {
         }
     }
 
+    /// Kolory dynamiczne (akcent, etykieta) zamieniane na `cgColor` w bieżącym wyglądzie — po zmianie trybu jasny/ciemny
+    /// albo koloru akcentu przeliczane od nowa (`viewDidChangeEffectiveAppearance`).
     private func updateBackground() {
         let alpha: CGFloat = pressed ? 0.22 : hovering ? 0.12 : 0
-        layer?.backgroundColor = alpha == 0 ? nil : NSColor.labelColor.withAlphaComponent(alpha).cgColor
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            if toggleState == true {
+                // Włączony — akcent także przy najechaniu i wciśnięciu (mocniejszy), stan widać przed kliknięciem.
+                layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.2 + alpha).cgColor
+            } else {
+                layer?.backgroundColor = alpha == 0 ? nil : NSColor.labelColor.withAlphaComponent(alpha).cgColor
+            }
+        }
     }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateBackground()
+    }
+
+    /// Zmiana koloru akcentu (Ustawienia systemowe) — od kontrolera wstążki, tylko dla włączonych przełączników.
+    func systemColorsChanged() { updateBackground() }
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()

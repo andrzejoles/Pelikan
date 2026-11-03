@@ -3065,6 +3065,116 @@ wynikami”.
 - Dawny pasek siatki (strony, rekord, eksport, Excel, kłódka i przyciski edycji widoczne tylko w trybie edycji) zastąpiony;
   przyciski edycji są teraz zawsze widoczne, wyłączone poza trybem edycji.
 
+### D208 · 2026-11-03 — Przegląd kodu po wydaniu 1.13.0
+
+Przegląd zmian 1.10.0 → 1.13.0 (na polecenie właściciela: przegląd, poprawki, ponowny przegląd aż bez uwag, potem
+wydanie). Poprawione:
+- **AutoReplace przy Enter:** reguła ze znacznikiem kursora `|` na końcu zamiany (`nvl(|`) zużywa Enter jak w zwykłym
+  Enterze — wcześniej traciła ostatni znak i dodawała nową linię (`AutoReplace.match` zwraca, czy reguła ustawia kursor).
+- **Najmniejsze zmiany tekstu:** krok 0 (wielkość liter słowa, skrót) i krok 2 Entera oraz wielkość liter po wpisaniu
+  znaku zastępują tylko różniący się fragment (`FormatOnEnter.Edit.minimal`), nie całą linię — nieedytowana linia
+  z innym wcięciem nowej linii nie trafia do zmienionych zakresów (D205: istniejący kod tylko na żądanie), a cofanie
+  i kolorowanie obejmują samo słowo. Krok 2 sprawdza dalej cały oczekiwany tekst (`expectedRange`).
+- **Linia nieedytowana:** sama zmiana wielkości liter ostatniego słowa przy Enter nie formatuje już całej linii.
+- **Wcięcie Smart z tabulatorami:** przesunięcie linii END/ELSE liczone w kolumnach, nie w znakach.
+- **Kolumny w znakach:** kolumny dokumentu przy wyrównaniu liczone w znakach (jak w formaterze), nie w jednostkach
+  UTF-16 — emoji i znaki złożone przed słowem otwierającym nie przesuwają wyrównania.
+- **Pamięć podziału:** punkty kontrolne scalane w kolejności położeń (także wcześniejszej jednostki, gdy znane są punkty
+  późniejszej); `/` po drodze nie usuwa punktów, nieaktualny jest tylko punkt, od którego liczono.
+- **Pasek wyniku:** formaty „Kopiuj jako” i „Eksportuj” z parametru komendy (doszły TSV i lista IN); dostępność komend
+  śledzona tylko, gdy pasek jest w oknie (siatki kart wyników w pamięci okna nie przeliczają komend).
+- **Stan przełączników:** `Command(state:)` w rejestrze — menu (zaznaczenie), wstążka (wyróżnione tło, wartość dla
+  VoiceOver), pasek wyniku i przełącznik na pasku narzędzi czytają `Workspace.toggleState`; stan mają formatowanie
+  przy Enter, edycja danych i panel wartości. Pasek wyniku bierze stan edycji z własnej siatki (`localState`), nie
+  z aktywnej; widok rekordu to stan widoku siatki — ustawia go widok.
+- **Drugie przejście:** koniec bloku PL/SQL (`/`) zapamiętany dla polecenia — linie za nim nie są leksowane od punktów
+  bloku przy każdym Enterze; jedna procedura wspólnego początku i końca (`EditorShift.Change`, bez dzielenia par
+  zastępczych); wcięcie formatera z tabulatorami liczone szerokością jego jednostki (`useTabs`); szybka ścieżka kolumn
+  dla tekstu bez znaków łączących; formaty eksportu jako stała jak formaty kopiowania.
+- **Trzecie przejście:** punkt podprogramu ma pierwszeństwo przed punktem co 200 linii w tym samym miejscu (inaczej
+  kontekst spadał do samej wielkości liter); linia rozwinięta skrótem AutoReplace przy Enterze formatowana jak edytowana;
+  krok 0 porównywany w jednostkach UTF-16; wcięcie Smart zachowuje tabulatory wcięcia formatera; jedna funkcja kolumn
+  (`Beautifier.columns`) i jedno API AutoReplace (`apply` → `Match` z `setsCursor`).
+- **Czwarte przejście:** punkty z jednego przejścia sortowane przed scaleniem (ORDER/MAP dopisany dopiero przy MEMBER);
+  przesunięcie Smart liczone w kolumnach formatera; wielkość liter słowa przy Enter tylko w linii edytowanej; kontrola
+  kroku 2 w jednostkach UTF-16 (`expectedStart` zamiast zapamiętanego zakresu); stan przełączników także w menu „»”
+  i listach wstążki; tło włączonego przełącznika po zmianie wyglądu i koloru akcentu; panel wartości włączony tylko przy
+  siatce; formaty kopiowania i eksportu z jednej listy także w menu kontekstowym siatki i narzędziu eksportu.
+- **Piąte przejście:** zwykły Enter (plan nie powstał — długie polecenie, region bez formatowania) na końcu nieedytowanej
+  linii też bez wielkości liter słowa; koniec bloku zapamiętany do końca linii z `/` (dopisanie za `/` go unieważnia);
+  stan widoku rekordu w menu „»” z przycisku; włączony przełącznik na wstążce wyróżniony także przy najechaniu;
+  wspólna szerokość tabulatora dokumentu (`Beautifier.documentTabWidth`); bez powtórzonej listy wyrażeń w menu
+  kontekstowym siatki.
+- **Siódme przejście:** koniec bloku wyprowadzany z samego `starts` (granica za linią z `/` — początek polecenia
+  unieważniany jak inne; bez osobnej struktury); punkty kontrolne wstawiane wyszukiwaniem binarnym; nieedytowana linia
+  ustalana raz w `insertNewline`, przed wyrównaniem Smart; jedna funkcja pozycji menu komendy
+  (`MenuBuilder.commandItem`); jeden obserwator koloru akcentu na wstążce.
+- **Ósme przejście:** reguła nieedytowanej linii dla każdej drogi nowej linii (⌥↩, podział linii, wstawienie
+  z zakresem — `insertText` pyta sam, poza `insertNewline`); nieaktualny punkt kontrolny — próba od poprzedniego, nie
+  od początku polecenia; granica za `/` przy CRLF na początku następnej linii; wyszukiwanie binarne punktów i początków
+  poleceń; wyrównanie Smart w zwykłym Enterze najmniejszą zmianą; stan na wstążce liczony tylko dla przełączników.
+- **Dziewiąte przejście:** sam znak nowej linii (Enter na początku linii) tylko przesuwa zmienione zakresy — bez
+  pustego zakresu oznaczającego przeniesioną linię; punkty kontrolne zebrane do `/` zachowane; jedna kopia tekstu
+  w zwykłym Enterze. Rozstrzygnięte: wyrównanie Smart linii END/ELSE/EXCEPTION to funkcja trybu wcięć edytora (D205) —
+  działa jak bez formatowania także w linii nieedytowanej (zmienia jej wcięcie, więc linia staje się edytowana);
+  reguła nieedytowanej linii ma dwa źródła z konieczności (`insertNewline` ustala ją przed wyrównaniem Smart, inne drogi
+  nowej linii pytają w `insertText`); pamięć podziału zakłada `invalidate` przy każdej zmianie tekstu — sprawdzenie
+  `stale` jest tylko zabezpieczeniem.
+- **Dziesiąte przejście:** pusty zakres usunięcia na końcu linii zostaje przy niej po Enterze bez wcięcia; jedna kopia
+  tekstu na Enter i najpierw tanie warunki przed pytaniem o edytowaną linię; koniec treści linii dla każdego separatora
+  (`getLineStart`); jedno wyszukiwanie binarne (`partition`) dla punktów, początków poleceń i unieważniania; krok 0
+  w jednym bloku `if lineEdited`; stan przycisku wstążki bez osobnej flagi.
+- **Jedenaste przejście:** pusty zakres usunięcia w miejscu Entera oznacza obie strony (nie wiadomo, czy dotyczył końca
+  linii przed nim, czy początku treści za nim); świeży odczyt tekstu, gdy plan Entera nie przeszedł po kroku 0;
+  początki poleceń wstawiane w kolejności także między znanymi (bez osieroconych regionów); jedna reguła poprzedniej
+  linii i jedna najmniejsza zmiana (`applyMulti`); kolumny bez ręcznych zakresów Unicode (`Beautifier.columns`
+  z pamięcią wyników); stan widoku rekordu w menu tylko dla komend bez stanu w rejestrze.
+- **Dwunaste przejście:** przebudowa wstążki po zmianie czcionki poza śledzeniem (zmiana przełącznika nie przebudowuje
+  wstążki); nowa linia CRLF, U+2028, U+2029 i NEL nie oznacza linii, za którą wstawiono; kursor za odstępami reszty linii,
+  gdy krok 2 niczego nie zmienia; jedna kopia dokumentu w `applyMulti` i jedno przejście w `Edit.minimal`.
+  Rozstrzygnięte: komendy paska wyniku działają na aktywnej siatce (jak wstążka); pasek innej siatki jest w innym oknie,
+  a pierwsze kliknięcie w nieaktywnym oknie tylko je aktywuje (przycisk go nie dostaje), więc stan przycisku i siatka
+  komendy się zgadzają.
+- **Trzynaste przejście:** punkt podprogramu dokładnie na początku linii sprawdzany słowem linii (zmiana za wcięciem
+  go nie unieważnia); zakres zaczynający się w miejscu Entera bez wcięcia oznacza obie strony (jak z wcięciem); reguła
+  linii edytowanej w jednym miejscu (`EditedRanges.touches(lineAt:in:)` — edytor i test); wstążka przebudowywana poza
+  śledzeniem także przy zmianie rodzaju okna, bez drugiej przebudowy przy otwarciu; pasek wyniku odświeża stan tylko
+  przycisków-przełączników. Rozstrzygnięte: koniec bloku `/` rozpoznawany tylko przed LF/CR — jak w SQL*Plus (U+2028
+  nie kończy tam linii polecenia); separatory U+2028/U+2029/NEL dotyczą linii edytora.
+- **Czternaste przejście:** `trackChanges(of:apply:)` — śledzone tylko dane wejściowe (rodzaj okna, czcionka),
+  przebudowa wstążki poza śledzeniem (zamiast obejść przez `async`); słowo podprogramu z leksera, ta sama reguła co
+  w przejściu (`procedure_cnt` to identyfikator); odczyty z magazynu tekstu bez kopii dokumentu; jedno wstawianie
+  początków poleceń (`insertStart`); pozycja menu komendy ze stanem z rejestru, pasek wyniku nadpisuje własnym.
+- **Piętnaste przejście:** pisanie wieloma kursorami — zmiana przy każdym kursorze osobno (zmienione zakresy tylko
+  w ich miejscach, nie na wszystkich liniach między nimi); słowa podprogramu według rodzaju jednostki (MAP w ciele
+  pakietu to identyfikator); śledzenie stanu przycisków wstążki od nowa po każdej przebudowie; nowa linia rozpoznawana
+  tym samym zbiorem separatorów co w `EditedRanges` (bez VT i FF); wielkość liter po wpisaniu znaku tą samą najmniejszą
+  zmianą co krok 0 Entera.
+- **AutoReplace i wielkość liter przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** przy włączonym
+  formatowaniu przy Enter obie zmiany słowa przed kursorem działają tylko w linii edytowanej — także w zwykłym Enterze,
+  gdy plan nie powstał (jedno miejsce reguły: `insertText` dla znaku nowej linii pyta `lineEdited`). Skrót albo słowo
+  wpisane przed chwilą leżą w linii edytowanej, więc działają jak dotąd; nieedytowany kod zostaje bez zmian i nie
+  trafia do zmienionych zakresów (D205).
+- **Szóste przejście:** granica podziału za linią z `/` zapamiętana w `starts` (puste linie za dużym blokiem nie dzielą
+  go od nowa); osobny typ `StateHandler` dla stanu przełącznika.
+- **Stan „Panel wartości” (rozstrzygnięte):** to ustawienie widoku wszystkich siatek (panel obok każdej), więc stan
+  przycisku i zaznaczenie w menu pokazują to ustawienie — to, co przełącza kliknięcie — także bez siatki na ekranie.
+- **Stan przełączników z trzech źródeł (rozstrzygnięte):** `Command.state` opisuje stan komendy dla aktywnego kontekstu
+  (menu, wstążka, pasek narzędzi); pasek wyniku należy do konkretnej siatki, więc stan edycji czyta z jej modelu
+  (`localState`), a widok rekordu jest stanem samego widoku (`setState`). Przekazywanie siatki do `Command.state`
+  zmieniłoby sygnaturę wszystkich komend dla jednego przypadku — bez zmiany.
+
+Uwagi rozstrzygnięte bez zmiany kodu:
+- **„Linia edytowana” z diffu z tekstem bazowym zamiast `EditedRanges`:** zostaje `EditedRanges`. Diff wymaga
+  porównania całego dokumentu (numery linii przesuwają się przy wstawieniach wyżej) przy każdym Enterze; zakresy
+  zmienione w sesji kosztują O(liczba zakresów) i są przesuwane razem z tekstem. Słowo „bez zmian od otwarcia albo
+  zapisu” w D205 to sesja edycji, nie treść — linia zmieniona i przywrócona ręcznie liczy się jako edytowana.
+- **Formater od początku polecenia przy każdym Enterze:** zostaje. Pomiar (Release, M-series): blok 1900 linii — 27 ms
+  na Enter, w tym 10 ms kontroli tokenów; dłuższe polecenia już dziś przechodzą na samą wielkość liter (`enterLineLimit`),
+  a ciało pakietu liczy od podprogramu (punkty kontrolne).
+- **Słowo po kropce:** reguła identyfikatora obejmowała słowa kluczowe po kropce już przed 1.11.0 (`keywordAsIdentifier`);
+  zmiana dotyczy tylko typów danych (`j.doc.date`) — bez regresji `s.NEXTVAL` czy `v.COUNT`.
+
 ### D210 · 2026-11-03 — Standard plików: UTF-8 bez BOM, pliki programów bez „/”
 
 **Prośba właściciela:** „w ustawieniach (i zaznaczone jako domyślne) pliki w UTF-8, bez BOM, bez znaków / na końcu czy
