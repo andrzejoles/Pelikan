@@ -3129,6 +3129,12 @@ wydanie). Poprawione:
   początki poleceń wstawiane w kolejności także między znanymi (bez osieroconych regionów); jedna reguła poprzedniej
   linii i jedna najmniejsza zmiana (`applyMulti`); kolumny bez ręcznych zakresów Unicode (`Beautifier.columns`
   z pamięcią wyników); stan widoku rekordu w menu tylko dla komend bez stanu w rejestrze.
+- **Dwunaste przejście:** przebudowa wstążki po zmianie czcionki poza śledzeniem (zmiana przełącznika nie przebudowuje
+  wstążki); nowa linia CRLF, U+2028, U+2029 i NEL nie oznacza linii, za którą wstawiono; kursor za odstępami reszty linii,
+  gdy krok 2 niczego nie zmienia; jedna kopia dokumentu w `applyMulti` i jedno przejście w `Edit.minimal`.
+  Rozstrzygnięte: komendy paska wyniku działają na aktywnej siatce (jak wstążka); pasek innej siatki jest w innym oknie,
+  a pierwsze kliknięcie w nieaktywnym oknie tylko je aktywuje (przycisk go nie dostaje), więc stan przycisku i siatka
+  komendy się zgadzają.
 - **AutoReplace i wielkość liter przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** przy włączonym
   formatowaniu przy Enter obie zmiany słowa przed kursorem działają tylko w linii edytowanej — także w zwykłym Enterze,
   gdy plan nie powstał (jedno miejsce reguły: `insertText` dla znaku nowej linii pyta `lineEdited`). Skrót albo słowo

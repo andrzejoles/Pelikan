@@ -136,8 +136,12 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             for (c, value) in self.heightConstraints where c.constant != value() { c.constant = value() }
             self.updateFrameHeight()
             guard !self.visibleTabs.isEmpty else { return }
-            self.rebuildTabs()
-            self.rebuildGroups()
+            // Przebudowa poza śledzeniem — inaczej zamknięcie śledziłoby też stan przycisków (przełączniki, dostępność)
+            // i każda zmiana stanu przebudowywałaby całą wstążkę.
+            DispatchQueue.main.async { [weak self] in
+                self?.rebuildTabs()
+                self?.rebuildGroups()
+            }
         })
     }
 

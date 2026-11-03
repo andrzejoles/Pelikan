@@ -25,9 +25,9 @@ public enum FormatOnEnter {
         /// wspólnego końca — magazyn tekstu, cofanie i znaczniki edytowanych linii widzą tylko to, co naprawdę zmienione.
         /// nil — teksty równe.
         public static func minimal(at: Int, old: String, new: String, suffix: Bool = true) -> Edit? {
-            // Porównanie jednostek UTF-16 (`==` na String uznaje „é” i „e\u{301}” za równe).
-            guard !old.utf16.elementsEqual(new.utf16) else { return nil }
+            // Jednostki UTF-16 (`==` na String uznaje „é” i „e\u{301}” za równe); równość z samej zmiany — jedno przejście.
             let c = EditorShift.Change(old: old, new: new, suffix: suffix)
+            guard c.prefix < c.oldEnd || c.delta != 0 else { return nil }
             let text = (new as NSString).substring(with: NSRange(location: c.prefix, length: c.oldEnd + c.delta - c.prefix))
             return Edit(range: (at + c.prefix)..<(at + c.oldEnd), text: text)
         }
@@ -133,7 +133,8 @@ public enum FormatOnEnter {
         let replacement = line + "\n" + indent
         // Tylko różniący się fragment: nieedytowana linia z innym wcięciem nowej linii nie jest oznaczana jako zmieniona.
         let format = Edit.minimal(at: lineStart, old: expected, new: replacement)
-        let caretAfter = lineStart + ((format == nil ? left + "\n" + auto : replacement) as NSString).length
+        // Za wcięciem nowej linii (z odstępami reszty linii, gdy krok 2 niczego nie zmienia).
+        let caretAfter = lineStart + (replacement as NSString).length
         return Plan(prepare: prepare, enter: enter, format: format, expected: expected, expectedStart: lineStart, caret: caretAfter)
     }
 
@@ -192,9 +193,12 @@ public struct EditedRanges: Sendable, Equatable {
     /// Zmiana tekstu: `edited` — zakres nowego tekstu w tekście po zmianie, `delta` — zmiana długości;
     /// `newlineFirst` — wstawiony tekst zaczyna się znakiem nowej linii (Enter na końcu linii): linia, za którą wstawiono,
     /// nie jest zmieniona.
-    public mutating func record(edited input: Range<Int>, delta: Int, newlineFirst: Bool = false) {
+    public mutating func record(edited input: Range<Int>, delta: Int, newlineFirst: Bool = false, newlineLength: Int = 1) {
         var edited = input
-        if newlineFirst, delta == edited.count, !edited.isEmpty { edited = (edited.lowerBound + 1)..<edited.upperBound }
+        // Znak nowej linii na początku wstawienia (CRLF — oba znaki) nie zmienia linii, za którą wstawiono.
+        if newlineFirst, delta == edited.count, !edited.isEmpty {
+            edited = (edited.lowerBound + min(newlineLength, edited.count))..<edited.upperBound
+        }
         let oldEnd = input.upperBound - delta
         // Sam znak nowej linii (Enter na początku linii albo na jej końcu bez wcięcia) — żadna treść się nie zmieniła:
         // tylko przesunięcie zakresów za miejscem wstawienia, bez pustego zakresu na początku przeniesionej linii.
@@ -235,7 +239,11 @@ public struct EditedRanges: Sendable, Equatable {
     /// dokumentu): wstawienie zaczynające się znakiem nowej linii (Enter) zapisane od następnej linii.
     public mutating func record(edited: NSRange, delta: Int, character: (Int) -> UInt16?) {
         let first = edited.length > 0 ? character(edited.location) : nil
-        record(edited: edited.location..<(edited.location + edited.length), delta: delta, newlineFirst: first == 0x0A || first == 0x0D)
+        let second = edited.length > 1 ? character(edited.location + 1) : nil
+        // Separatory linii jak w `NSString.lineRange`: LF, CR, CRLF, U+2028, U+2029, NEL.
+        let newline = first.map { [0x0A, 0x0D, 0x2028, 0x2029, 0x85].contains($0) } ?? false
+        record(edited: edited.location..<(edited.location + edited.length), delta: delta, newlineFirst: newline,
+               newlineLength: first == 0x0D && second == 0x0A ? 2 : 1)
     }
 
     /// Czy treść linii (`line` — od początku linii do znaku nowej linii, bez niego) była zmieniona: zakres zmiany

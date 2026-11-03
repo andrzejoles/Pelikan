@@ -1288,9 +1288,10 @@ final class CodeTextView: NSTextView {
     /// Zmiana tekstu we wszystkich zaznaczeniach jedną operacją cofania; zaznaczenia po zmianie z funkcji.
     private func applyMulti(_ edit: (String, [Range<Int>]) -> (text: String, ranges: [Range<Int>])) {
         let ranges = selectedRanges.map(\.rangeValue).map { $0.location..<($0.location + $0.length) }
-        let result = edit(string, ranges)
+        let old = string   // jedna kopia dokumentu
+        let result = edit(old, ranges)
         // Najmniejsza zmiana (ta sama funkcja co przy Enterze — jednostki UTF-16, bez dzielenia par zastępczych).
-        guard let change = FormatOnEnter.Edit.minimal(at: 0, old: string, new: result.text) else {
+        guard let change = FormatOnEnter.Edit.minimal(at: 0, old: old, new: result.text) else {
             selectedRanges = result.ranges.map { NSValue(range: NSRange(location: $0.lowerBound, length: $0.count)) }
             return
         }
@@ -1653,11 +1654,16 @@ final class CodeTextView: NSTextView {
         guard selectedRange() == NSRange(location: plan.enter.range.lowerBound, length: 0) else { return false }
         insertText(plan.enter.text, replacementRange: selectedRange())
         // Krok 2 tylko na oczekiwanym tekście (inaczej coś zmieniło go po drodze — formatowanie pominięte).
-        guard let format = plan.format, plan.expectedRange.upperBound <= textLength,
+        guard plan.expectedRange.upperBound <= textLength,
               // Jednostki UTF-16 (`==` na String uznaje „é” i „e\u{301}” za równe — zakres kroku 2 byłby przesunięty).
               (string as NSString).substring(with: NSRange(location: plan.expectedRange.lowerBound, length: plan.expectedRange.count))
                 .utf16.elementsEqual(plan.expected.utf16)
         else { return true }
+        // Krok 2 niczego nie zmienia — kursor za wcięciem (także za odstępami reszty linii).
+        guard let format = plan.format else {
+            setSelectedRange(NSRange(location: min(plan.caret, textLength), length: 0))
+            return true
+        }
         breakUndoCoalescing()
         // Grupa cofania zdarzenia (Enter) zamknięta, formatowanie w nowej — zamyka ją menedżer cofania na końcu zdarzenia.
         if let undo = undoManager, undo.groupsByEvent, undo.groupingLevel == 1 {

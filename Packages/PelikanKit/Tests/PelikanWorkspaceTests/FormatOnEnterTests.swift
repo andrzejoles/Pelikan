@@ -178,6 +178,14 @@ struct FormatOnEnterTests {
         b.record(edited: 6..<6, delta: -4)
         b.record(edited: 6..<7, delta: 1, newlineFirst: true)
         #expect(b.touches(line: 7..<10))
+        // CRLF i separator linii U+2028 na końcu nieedytowanej linii — linia nie jest edytowana.
+        var crlf = EditedRanges()
+        let inserted: [Int: UInt16] = [5: 0x0D, 6: 0x0A]
+        crlf.record(edited: NSRange(location: 5, length: 2), delta: 2) { inserted[$0] }
+        #expect(!crlf.touches(line: 0..<5) && !crlf.touches(line: 7..<12))
+        var ls = EditedRanges()
+        ls.record(edited: NSRange(location: 5, length: 1), delta: 1) { $0 == 5 ? 0x2028 : nil }
+        #expect(!ls.touches(line: 0..<5))
         // Nowa sesja w zakresie (plik wczytany w oknie pary) — zmiany w nim zapomniane, poza nim zostają.
         var c = EditedRanges()
         c.record(edited: 2..<4, delta: 2)
@@ -208,6 +216,14 @@ struct FormatOnEnterTests {
         doc.consumeEditSessionMarks(through: serial)
         #expect(doc.editSessionMarks.map(\.range) == [nil] && doc.editSessionSerial == serial)
         #expect(SmartIndent.followsNewline("ab\n" as NSString, caret: 3) && !SmartIndent.followsNewline("put_line()" as NSString, caret: 9))
+    }
+
+    @Test("krok 2 bez zmian: kursor za wcięciem i odstępami reszty linii")
+    func caretWithoutFormat() throws {
+        let (text, p) = plan("select a,|       b from t")
+        let steps = try #require(p)
+        let after = run(text, steps).final as NSString
+        #expect(after.substring(from: steps.caret).hasPrefix("b from t"))
     }
 
     @Test("najmniejsza zmiana: nieedytowana linia nie trafia do zakresu kroku 2; para zastępcza nie jest dzielona")
