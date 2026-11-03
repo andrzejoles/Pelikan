@@ -3176,6 +3176,15 @@ tunelu sprawdzany i odtwarzany przy każdym logowaniu (`PrivateOwnership.ensureP
 gniazda agentów); `markInheritedCloseOnExec` (nazwa i opisy zgodne z działaniem); podgląd i obcinanie wyniku po bajtach
 UTF-8; opis zastępczy przez `L10n`.
 
+Jedenaste przejście: zamykanie sesji ODPI w stanach — ROLLBACK (Break go przerywa), wylogowanie (Break nic nie robi
+i od razu wraca; uchwyty OCI zwalniane bez blokady, wątek interfejsu nigdy nie czeka na limit TCP); portfel dopisywany
+do istniejącej sekcji SECURITY deskryptora; zapasowy katalog tunelu jeden na uruchomienie; dziennik — flaga ujścia
+diagnostycznego liczona przy zmianie ujść (`receivesEverything` stałe — wymóg protokołu); obcinanie wyniku narzędzia
+poza głównym wątkiem. Rozstrzygnięte: błąd opisu wyniku niejawnego (DBMS_SQL.RETURN_RESULT) to błąd wykonania (np.
+nieobsługiwany typ kolumny) — inaczej niż nieotwarty REF CURSOR w zmiennej OUT, który jest zwykłym przebiegiem programu;
+tabela kosztów JSON (`jsonCost`) zostaje — koder SDK nie zamienia znaków spoza ASCII ani U+2028 na `\uXXXX`, a `/`
+liczony z zapasem; nadmiarową ramkę i tak zastępuje `SocketTransport.fittingFrame`.
+
 Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
 testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
 `RETURNING … BULK COLLECT INTO` w bloku PL/SQL.

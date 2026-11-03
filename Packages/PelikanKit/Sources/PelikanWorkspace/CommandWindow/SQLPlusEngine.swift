@@ -144,19 +144,14 @@ public final class SQLPlusEngine {
             let start = m.range.location + m.range.length   // za `/`
             guard start >= last else { continue }
             func isSpace(_ i: Int) -> Bool { [0x20, 0x09, 0x0A, 0x0D].contains(ns.character(at: i)) }
-            // Hasło: w cudzysłowie — do cudzysłowu zamykającego (z `@` w środku), niezamknięty — do końca linii; bez
-            // cudzysłowu — do ostatniego `@` w słowie albo do końca słowa.
-            let end: Int
-            // Cudzysłów zamykający szukany tylko do końca linii (niezamknięty — nie pochłania dalszej części skryptu).
             var lineEnd = start
             while lineEnd < ns.length, ![0x0A, 0x0D].contains(ns.character(at: lineEnd)) { lineEnd += 1 }
-            let close = start < lineEnd && ns.character(at: start) == 0x22
-                ? ns.range(of: "\"", range: NSRange(location: start + 1, length: lineEnd - start - 1)) : NSRange(location: NSNotFound, length: 0)
-            if close.location != NSNotFound {
-                end = close.location + 1
-            } else if start < lineEnd, ns.character(at: start) == 0x22 {
-                // Niezamknięty cudzysłów — hasło może mieć spacje: do końca linii.
-                end = lineEnd
+            // Hasło: w cudzysłowie — do cudzysłowu zamykającego w tej linii (z `@` w środku), niezamknięty — do końca
+            // linii (może mieć spacje); bez cudzysłowu — do ostatniego `@` w słowie albo do końca słowa.
+            let end: Int
+            if start < lineEnd, ns.character(at: start) == 0x22 {
+                let close = ns.range(of: "\"", range: NSRange(location: start + 1, length: lineEnd - start - 1))
+                end = close.location != NSNotFound ? close.location + 1 : lineEnd
             } else {
                 var wordEnd = start
                 while wordEnd < ns.length, !isSpace(wordEnd) { wordEnd += 1 }

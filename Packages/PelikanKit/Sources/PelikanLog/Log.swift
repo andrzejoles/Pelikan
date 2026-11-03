@@ -51,6 +51,7 @@ public protocol LogSink: Sendable {
     func write(_ entry: LogEntry)
     /// Ujście diagnostyczne (testy): dostaje wpisy wszystkich poziomów z jawnymi wartościami prywatnymi — niezależnie
     /// od ustawień, więc testy nie zmieniają globalnej konfiguracji i mogą działać równolegle.
+    /// Stałe przez całe życie ujścia (odczytywane przy dodaniu ujścia, nie przy każdym wpisie).
     var receivesEverything: Bool { get }
 }
 
@@ -92,11 +93,13 @@ public enum Log {
         var level: LogLevel = .info
         var revealNames = false
         var hashKey: [UInt8] = []
-        var sinks: [any LogSink] = []
-        var extraSinks: [UUID: any LogSink] = [:]
-        /// Czy któreś ujście przyjmuje wszystkie wpisy (diagnostyka, testy) — liczone przy każdym wpisie (właściwość
-        /// ujścia może się zmieniać), bez kopiowania tablic.
-        var hasDiagnosticSink: Bool { sinks.contains { $0.receivesEverything } || extraSinks.values.contains { $0.receivesEverything } }
+        var sinks: [any LogSink] = [] { didSet { updateDiagnostic() } }
+        var extraSinks: [UUID: any LogSink] = [:] { didSet { updateDiagnostic() } }
+        /// Czy któreś ujście przyjmuje wszystkie wpisy (diagnostyka, testy) — liczone przy zmianie ujść (`receivesEverything`
+        /// jest stałe przez życie ujścia — wymóg protokołu), w `emit` jedno porównanie.
+        private(set) var hasDiagnosticSink = false
+
+        private mutating func updateDiagnostic() { hasDiagnosticSink = all.contains { $0.receivesEverything } }
 
         var all: [any LogSink] { sinks + extraSinks.values }
     }

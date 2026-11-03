@@ -195,9 +195,14 @@ public extension TNSNames {
             }
             s = e.descriptor
         }
-        if let w = walletDir, s.hasPrefix("("), (value("PROTOCOL", in: s) ?? "").uppercased() == "TCPS", value("MY_WALLET_DIRECTORY", in: s) == nil,
-           let close = s.lastIndex(of: ")") {
-            s.insert(contentsOf: "(SECURITY=(MY_WALLET_DIRECTORY=\(OracleNet.netValue(w))))", at: close)
+        if let w = walletDir, s.hasPrefix("("), (value("PROTOCOL", in: s) ?? "").uppercased() == "TCPS", value("MY_WALLET_DIRECTORY", in: s) == nil {
+            // Do istniejącej sekcji SECURITY (np. `ssl_server_dn_match` z tnsnames.ora ADB) — Oracle Net czyta jedną.
+            let item = "(MY_WALLET_DIRECTORY=\(OracleNet.netValue(w)))"
+            if let r = s.range(of: "(SECURITY=", options: .caseInsensitive) {
+                s.insert(contentsOf: item, at: r.upperBound)
+            } else if let close = s.lastIndex(of: ")") {
+                s.insert(contentsOf: "(SECURITY=\(item))", at: close)
+            }
         }
         return s
     }

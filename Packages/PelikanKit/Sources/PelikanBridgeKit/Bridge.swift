@@ -26,7 +26,8 @@ public enum Bridge {
                 return
             }
         }
-        let limit = getdtablesize()
+        // Zapas (lista praktycznie zawsze dostępna): do 65 536 — bez milionów wywołań przy podniesionym limicie plików.
+        let limit = min(getdtablesize(), 65_536)
         if limit > 3 { for fd in 3..<limit { mark(fd) } }
     }
 

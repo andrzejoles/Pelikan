@@ -96,11 +96,9 @@ public final class AgentServer: @unchecked Sendable {
 
     /// Katalog gniazda: tworzony z 0700, musi należeć do bieżącego użytkownika i nie być dowiązaniem.
     static func prepareDirectory(_ dir: String) throws {
-        // Katalogi nadrzędne (Application Support) tworzone zwykle; sam katalog — wspólną regułą katalogu prywatnego.
-        var st = stat()
-        if lstat(dir, &st) != 0 {
-            try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        }
+        // Katalog nadrzędny (Application Support) tworzony zwykle; sam katalog — wspólną regułą katalogu prywatnego.
+        let parent = (dir as NSString).deletingLastPathComponent
+        try FileManager.default.createDirectory(atPath: parent, withIntermediateDirectories: true)
         guard PrivateOwnership.ensurePrivateDirectory(dir) else { throw StartError.insecureDirectory(dir) }
     }
 

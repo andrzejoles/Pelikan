@@ -88,10 +88,13 @@ public final class SSHTunnelManager {
     nonisolated static var runDirectory: URL {
         let d = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-tunnel-\(getuid())", isDirectory: true)
         if PrivateOwnership.ensurePrivateDirectory(d.path) { return d }
-        let fallback = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-tunnel-\(getuid())-\(UUID().uuidString.prefix(8))", isDirectory: true)
-        _ = PrivateOwnership.ensurePrivateDirectory(fallback.path)
-        return fallback
+        _ = PrivateOwnership.ensurePrivateDirectory(fallbackDirectory.path)
+        return fallbackDirectory
     }
+
+    /// Zapasowy katalog z losową nazwą — jeden na uruchomienie (nie nowy przy każdym logowaniu).
+    nonisolated static let fallbackDirectory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("pelikan-tunnel-\(getuid())-\(UUID().uuidString.prefix(8))", isDirectory: true)
 
     /// Przygotowuje askpass: skrypt bez sekretu, kolejka FIFO 0600 i wątek, który zapisze hasło raz (albo zakończy się,
     /// gdy `done` zostanie ustawione). Zwraca zmienne środowiska dla `ssh` i funkcję sprzątającą.
