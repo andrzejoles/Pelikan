@@ -43,22 +43,32 @@ struct EncodingTests {
         #expect(String(data: try Data(contentsOf: file), encoding: .utf8)?.contains("ząbka") == true)
     }
 
-    @Test("Kodowanie projektu: plik ASCII w projekcie ISO-8859-2 zapisany z polskimi literami zostaje w ISO-8859-2")
+    @Test("Kodowanie projektu to wskazówka odczytu (D213): plik ASCII/UTF-8 zostaje UTF-8, plik Windows-1250 czyta się poprawnie mimo ISO-8859-2")
     func projectEncoding() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-enc-\(UUID().uuidString.prefix(6))")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
-        let file = dir.appendingPathComponent("nowy.h")
-        try Data("int x;\n".utf8).write(to: file)
         let ws = Workspace()
         ws.project = Project(name: "pc")
         ws.project?.options.encoding = "ISO-8859-2"
         ws.projectURL = dir.appendingPathComponent("pc.prj")
+        let file = dir.appendingPathComponent("nowy.h")
+        try Data("int x;\n".utf8).write(to: file)
         let doc = try ws.openFile(file)
-        #expect(doc.fileFormat.encoding == .isoLatin2)
+        #expect(doc.fileFormat.encoding == .utf8)
         doc.text += "/* łódź */\n"
         try ws.save(doc, to: file)
-        #expect(String(data: try Data(contentsOf: file), encoding: .utf8) == nil)
+        #expect(String(data: try Data(contentsOf: file), encoding: .utf8) == "int x;\n/* łódź */\n")
+        // „istnieją porządki, ś, ź” w Windows-1250 — w ISO-8859-2 wyszłoby „istniejš porzšdki”.
+        let cp = dir.appendingPathComponent("otb.pc")
+        try Data([0x69, 0x73, 0x74, 0x6E, 0x69, 0x65, 0x6A, 0xB9, 0x20, 0x70, 0x6F, 0x72, 0x7A, 0xB9, 0x64, 0x6B, 0x69, 0x2C, 0x20, 0x9C, 0x2C, 0x20, 0x9F, 0x0A]).write(to: cp)
+        let d2 = try ws.openFile(cp)
+        #expect(d2.text == "istnieją porządki, ś, ź\n" && d2.fileFormat.encoding == .windowsCP1250)
+        // Same litery wspólne obu kodowaniom (ó ł ę ń) — rozstrzyga projekt.
+        let common = dir.appendingPathComponent("prepost.pc")
+        try Data([0x69, 0x74, 0x65, 0x6D, 0xF3, 0x77, 0x0A]).write(to: common)
+        let d3 = try ws.openFile(common)
+        #expect(d3.text == "itemów\n" && d3.fileFormat.encoding == .isoLatin2)
     }
 
     @Test("Szukanie w projekcie czyta pliki w kodowaniu projektu (ISO-8859-2) i bez CR z CRLF")

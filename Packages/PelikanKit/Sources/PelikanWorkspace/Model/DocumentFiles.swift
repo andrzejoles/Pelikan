@@ -41,7 +41,7 @@ public enum TextFileCodec {
             text = String(data: data.dropFirst(2), encoding: .utf16BigEndian) ?? ""
         } else if let s = String(data: data, encoding: .utf8) {
             text = s
-        } else if let enc = guessSingleByte(data), let s = String(data: data, encoding: enc) {
+        } else if let enc = guessSingleByte(data), let s = CodeHTML.decodeSingleByte(data, enc) {
             f.encoding = enc
             text = s
         } else {
@@ -58,14 +58,24 @@ public enum TextFileCodec {
         return (text, f)
     }
 
-    /// Odczyt z kodowaniem ustawionym (np. w projekcie, D55): plik bez BOM czytany w nim, gdy się w nim dekoduje.
+    /// Odczyt z kodowaniem ustawionym w projekcie (D55, D213) — wskazówka dla plików spoza UTF-8, nie przymus:
+    /// plik z BOM albo poprawny w UTF-8 zostaje UTF-8, a plik jednobajtowy, który w ustawionym kodowaniu dałby znaki
+    /// sterujące albo przekłamane polskie litery (np. Windows-1250 przy ustawionym ISO-8859-2), czyta się w kodowaniu
+    /// wykrytym. Dzięki temu tekst w oknie jest zawsze poprawny, a konwersja do UTF-8 zapisuje te same znaki.
     public static func decode(_ data: Data, preferred enc: String.Encoding?) -> (text: String, format: TextFileFormat) {
         var (text, format) = decode(data)
-        if let enc, !format.hasBOM, enc != format.encoding, let s = String(data: data, encoding: enc) {
-            format.encoding = enc
-            text = format.lineEnding == .lf ? s : s.replacingOccurrences(of: format.lineEnding.rawValue, with: "\n")
-        }
+        guard let enc, !format.hasBOM, enc != format.encoding, format.encoding != .utf8,
+              [String.Encoding.isoLatin2, .windowsCP1250].contains(enc), enc == guessSingleByte(data) || !distinguishes(data),
+              let s = CodeHTML.decodeSingleByte(data, enc) else { return (text, format) }
+        format.encoding = enc
+        text = format.lineEnding == .lf ? s : s.replacingOccurrences(of: format.lineEnding.rawValue, with: "\n")
         return (text, format)
+    }
+
+    /// Czy w danych są bajty, które ISO-8859-2 i Windows-1250 czytają inaczej (ą ś ź Ą Ś Ź, 0x80–0x9F) — bez nich
+    /// oba kodowania dają ten sam tekst i wybór należy do ustawienia projektu.
+    static func distinguishes(_ data: Data) -> Bool {
+        data.contains { (0x80...0x9F).contains($0) || [0xB9, 0xA5, 0xB1, 0xB6, 0xBC, 0xA1, 0xA6, 0xAC].contains($0) }
     }
 
     /// Kodowanie jednobajtowe pliku bez BOM i spoza UTF-8 (reguła wspólna z podglądem Quick Look: `CodeHTML`).
@@ -177,8 +187,8 @@ extension Workspace {
             return doc
         }
         let data = try Data(contentsOf: std)
-        // Plik projektu bez BOM: kodowanie ustawione w projekcie (np. ISO-8859-2 dla źródeł Pro*C z AIX), żeby nie
-        // przekodował się po cichu przy pierwszej edycji (D55).
+        // Kodowanie pliku zachowane do zapisu (D55) — zmiana tylko jawnie albo po pytaniu o standard plików (D210);
+        // kodowanie projektu rozstrzyga pliki jednobajtowe niejednoznaczne (D213).
         let (text, format) = TextFileCodec.decode(data, preferred: projectEncoding(for: std))
         let docKind = kind ?? documentKind(for: std)
         // Pliki JSON dekodowane przed utworzeniem okna: uszkodzony albo nowszy plik nie zostawia pustego okna, które
@@ -218,6 +228,7 @@ extension Workspace {
         rememberDiskState(doc, url: std, data: data)
         restoreWindowState(doc)
         rememberRecentFile(std)
+        checkFileStandard(doc)
         return doc
     }
 

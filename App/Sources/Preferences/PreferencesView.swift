@@ -109,6 +109,20 @@ func setting<E: Identifiable, T>(_ ws: Workspace, _ list: WritableKeyPath<Pelika
 
 struct GeneralPane: View {
     let workspace: Workspace
+
+    /// Katalogi startowe do wyboru: katalog projektu, katalogi ostatnich plików, Dokumenty i katalog domowy.
+    private var startDirectoryChoices: [PreferenceChoice] {
+        var seen = Set<String>(), out: [PreferenceChoice] = []
+        func add(_ path: String, _ note: String? = nil) {
+            if seen.insert(path).inserted { out.append(PreferenceChoice(path, note)) }
+        }
+        if let p = workspace.projectURL { add(p.deletingLastPathComponent().path, L10n.tr("projekt")) }
+        for f in workspace.settings.recentFiles.prefix(10) { add((f as NSString).deletingLastPathComponent) }
+        add(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path ?? NSHomeDirectory() + "/Documents")
+        add(NSHomeDirectory())
+        return out
+    }
+
     var body: some View {
         Form {
             Section(L10n.tr("Sesje (UG 23.1)")) {
@@ -133,7 +147,8 @@ struct GeneralPane: View {
                     .font(.uiSecondary).foregroundStyle(.secondary)
                 ForEach(workspace.settings.connectionIndicators) { r in
                     HStack {
-                        TextField(L10n.tr("Wzorzec, np. sys@*"), text: setting(workspace, \.connectionIndicators, r.id, \.pattern, fallback: ""))
+                        ChoiceField(L10n.tr("Wzorzec, np. sys@*"), text: setting(workspace, \.connectionIndicators, r.id, \.pattern, fallback: ""),
+                                    choices: PreferenceChoices.connectionPatterns(workspace.connections.connections), hideLabel: true)
                         ColorPicker("", selection: Binding(get: {
                             let c = r.color
                             return Color(red: c.red, green: c.green, blue: c.blue)
@@ -208,22 +223,26 @@ struct GeneralPane: View {
             }
             Section(L10n.tr("Katalogi startowe i rozszerzenia")) {
                 ForEach([("sql", L10n.tr("Skrypty SQL")), ("program", L10n.tr("Programy")), ("test", L10n.tr("Testy")), ("report", L10n.tr("Raporty"))], id: \.0) { key, label in
-                    TextField(label, text: Binding(get: { workspace.settings.startDirectories[key] ?? "" },
-                                                   set: { workspace.settings.startDirectories[key] = $0.isEmpty ? nil : $0 }),
-                              prompt: Text(L10n.tr("katalog projektu albo ostatni")))
+                    ChoiceField(label, text: Binding(get: { workspace.settings.startDirectories[key] ?? "" },
+                                                     set: { workspace.settings.startDirectories[key] = $0.isEmpty ? nil : $0 }),
+                                prompt: L10n.tr("katalog projektu albo ostatni"), choices: startDirectoryChoices, browse: .directory)
                 }
-                TextField(L10n.tr("Dodatkowe rozszerzenia programów"), text: Binding(get: { workspace.settings.programExtensions.joined(separator: ", ") },
-                    set: { workspace.settings.programExtensions = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.filter { !$0.isEmpty } }))
-                TextField(L10n.tr("Dodatkowe rozszerzenia testów"), text: Binding(get: { workspace.settings.testExtensions.joined(separator: ", ") },
-                    set: { workspace.settings.testExtensions = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.filter { !$0.isEmpty } }))
+                ChoiceField(L10n.tr("Dodatkowe rozszerzenia programów"), text: .commaList(workspace, \.programExtensions, transform: { $0.lowercased() }),
+                            choices: PreferenceChoices.programExtensions, mode: .list)
+                ChoiceField(L10n.tr("Dodatkowe rozszerzenia testów"), text: .commaList(workspace, \.testExtensions, transform: { $0.lowercased() }),
+                            choices: PreferenceChoices.testExtensions, mode: .list)
             }
             // D194: specyfikacja i ciało w osobnych plikach (zapis okna programu, otwieranie pary, eksport obiektów).
             Section(L10n.tr("Specyfikacja i ciało w osobnych plikach")) {
                 Toggle(L10n.tr("Otwieraj parę specyfikacja/ciało w jednym oknie"), isOn: setting(workspace, \.openSpecBodyPair))
-                TextField(L10n.tr("Rozszerzenie specyfikacji pakietu"), text: setting(workspace, \.specBodyExtensions.packageSpec), prompt: Text("pks"))
-                TextField(L10n.tr("Rozszerzenie ciała pakietu"), text: setting(workspace, \.specBodyExtensions.packageBody), prompt: Text("pkb"))
-                TextField(L10n.tr("Rozszerzenie specyfikacji typu"), text: setting(workspace, \.specBodyExtensions.typeSpec), prompt: Text("tps"))
-                TextField(L10n.tr("Rozszerzenie ciała typu"), text: setting(workspace, \.specBodyExtensions.typeBody), prompt: Text("tpb"))
+                ChoiceField(L10n.tr("Rozszerzenie specyfikacji pakietu"), text: setting(workspace, \.specBodyExtensions.packageSpec), prompt: "pks",
+                            choices: PreferenceChoices.packageSpecExtensions)
+                ChoiceField(L10n.tr("Rozszerzenie ciała pakietu"), text: setting(workspace, \.specBodyExtensions.packageBody), prompt: "pkb",
+                            choices: PreferenceChoices.packageBodyExtensions)
+                ChoiceField(L10n.tr("Rozszerzenie specyfikacji typu"), text: setting(workspace, \.specBodyExtensions.typeSpec), prompt: "tps",
+                            choices: PreferenceChoices.typeSpecExtensions)
+                ChoiceField(L10n.tr("Rozszerzenie ciała typu"), text: setting(workspace, \.specBodyExtensions.typeBody), prompt: "tpb",
+                            choices: PreferenceChoices.typeBodyExtensions)
                 if workspace.settings.specBodyExtensions.isInvalid {
                     Text(L10n.tr("Rozszerzenia specyfikacji muszą różnić się od rozszerzeń ciała (pakiet i typ mogą mieć wspólne), składać się z liter, cyfr albo „_” i być inne niż sql, tst, pck, typ, rep, pdd, sqlnb i txt — do czasu poprawki używane są domyślne pks, pkb, tps i tpb."))
                         .font(.uiSecondary).foregroundStyle(.red)
@@ -239,6 +258,31 @@ struct GeneralPane: View {
                 Toggle(L10n.tr("Wykrywaj zmiany plików na dysku"), isOn: setting(workspace, \.detectExternalFileChanges))
                 Toggle(L10n.tr("Wczytuj bez pytania pliki zmienione na zewnątrz, gdy okno nie ma zmian"), isOn: setting(workspace, \.reloadExternalChangesSilently))
                     .disabled(!workspace.settings.detectExternalFileChanges)
+            }
+            // D210: standard plików z kodem — nowe pliki w nim, pytanie o konwersję przy otwarciu innego.
+            Section(L10n.tr("Standard plików")) {
+                Picker(L10n.tr("Kodowanie"), selection: setting(workspace, \.fileStandard.encoding)) {
+                    ForEach(TextFileCodec.encodingNames, id: \.self) { Text(TextFileCodec.encodingLabel($0)).tag($0) }
+                }
+                Toggle(L10n.tr("Znacznik BOM na początku pliku (UTF-8)"), isOn: setting(workspace, \.fileStandard.byteOrderMark))
+                    .disabled(workspace.settings.fileStandard.encoding != "UTF-8")
+                Toggle(L10n.tr("Pliki programów bez linii „/” (na końcu ani w środku)"), isOn: Binding(
+                    get: { workspace.settings.fileStandard.slashFreePrograms },
+                    set: { v in
+                        workspace.settings.fileStandard.slashFreePrograms = v
+                        if v { workspace.settings.programUnitSlash = false }
+                    }))
+                Toggle(L10n.tr("Pytaj o konwersję przy otwarciu pliku w innym formacie"), isOn: setting(workspace, \.fileStandard.askOnOpen))
+                HStack {
+                    Spacer()
+                    Button(L10n.tr("Przywróć domyślne (UTF-8, bez BOM, bez „/”)")) {
+                        workspace.settings.fileStandard = FileStandard()
+                        workspace.settings.programUnitSlash = false
+                    }
+                    .disabled(workspace.settings.fileStandard == FileStandard())
+                }
+                Text(L10n.tr("Nowe okna zapisują się w tym formacie. Konwersja zmienia okno (kodowanie zapisu, BOM, usunięcie linii „/” z pliku programu) — plik zmienia się dopiero przy zapisie. Skrypty SQL zachowują „/”, bo wykonuje je okno poleceń; kodowanie plików projektu z ustawionym kodowaniem zostaje."))
+                    .font(.uiSecondary).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Dziennik aplikacji")) {
                 Picker(L10n.tr("Zapisuj w dzienniku"), selection: setting(workspace, \.logLevel)) {
@@ -266,9 +310,9 @@ struct SQLWindowPane: View {
             Section(L10n.tr("Wykonywanie (UG 23.20)")) {
                 Toggle(L10n.tr("AutoSelect — bez zaznaczenia wykonuj polecenie pod kursorem"), isOn: setting(workspace, \.autoSelectStatement))
                 Toggle(L10n.tr("AutoCommit poleceń SQL"), isOn: setting(workspace, \.autoCommitSQL))
-                TextField(L10n.tr("Statystyki po wykonaniu"), text: Binding(get: { workspace.settings.selectedStatistics.joined(separator: ", ") },
-                    set: { workspace.settings.selectedStatistics = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }),
-                          prompt: Text(L10n.tr("puste — wszystkie niezerowe, np. consistent gets, physical reads")))
+                ChoiceField(L10n.tr("Statystyki po wykonaniu"), text: .commaList(workspace, \.selectedStatistics),
+                            prompt: L10n.tr("puste — wszystkie niezerowe, np. consistent gets, physical reads"),
+                            choices: PreferenceChoices.statistics, mode: .list)
                 Toggle(L10n.tr("AutoCommit po wykonaniu okna testu"), isOn: setting(workspace, \.autoCommitTestWindow))
                 Toggle(L10n.tr("Potwierdzaj COMMIT i ROLLBACK"), isOn: setting(workspace, \.confirmCommitRollback))
                 Toggle(L10n.tr("Potwierdzaj polecenia zmieniające na połączeniach produkcyjnych"), isOn: setting(workspace, \.confirmProductionChanges))
@@ -315,8 +359,8 @@ struct SQLWindowPane: View {
                 }
             }
             Section(L10n.tr("Formaty dat (UG 23.17)")) {
-                TextField(L10n.tr("DATE"), text: setting(workspace, \.dateFormat)).font(.code)
-                TextField(L10n.tr("TIMESTAMP"), text: setting(workspace, \.timestampFormat)).font(.code)
+                ChoiceField(L10n.tr("DATE"), text: setting(workspace, \.dateFormat), choices: PreferenceChoices.dateFormats, code: true)
+                ChoiceField(L10n.tr("TIMESTAMP"), text: setting(workspace, \.timestampFormat), choices: PreferenceChoices.timestampFormats, code: true)
             }
         }
         .formStyle(.grouped)
@@ -509,9 +553,9 @@ struct OraclePane: View {
             }
             Section(L10n.tr("Ustawienia NLS sesji")) {
                 ForEach(["NLS_DATE_FORMAT", "NLS_TIMESTAMP_FORMAT", "NLS_NUMERIC_CHARACTERS", "NLS_LANGUAGE", "NLS_TERRITORY", "NLS_SORT", "NLS_COMP"], id: \.self) { name in
-                    TextField(name, text: Binding(get: { workspace.settings.sessionNLS[name] ?? "" },
-                                                  set: { v in workspace.settings.sessionNLS[name] = v.isEmpty ? nil : v }),
-                              prompt: Text(L10n.tr("ustawienie serwera")))
+                    ChoiceField(name, text: Binding(get: { workspace.settings.sessionNLS[name] ?? "" },
+                                                    set: { v in workspace.settings.sessionNLS[name] = v.isEmpty ? nil : v }),
+                                prompt: L10n.tr("ustawienie serwera"), choices: PreferenceChoices.sessionNLS(name))
                 }
                 Text(L10n.tr("Wartości ustawiane poleceniem ALTER SESSION w każdej nowej sesji.")).font(.uiSecondary).foregroundStyle(.secondary)
                 Stepper(value: setting(workspace, \.closeIdleSessionsMinutes), in: 0...1440, step: 15) {
@@ -548,7 +592,8 @@ struct OraclePane: View {
                     .font(.uiSecondary).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Kompilator (UG 23.3)")) {
-                TextField(L10n.tr("Ostrzeżenia PLSQL_WARNINGS"), text: setting(workspace, \.plsqlWarnings), prompt: Text("ENABLE:ALL"))
+                ChoiceField(L10n.tr("Ostrzeżenia PLSQL_WARNINGS"), text: setting(workspace, \.plsqlWarnings), prompt: "ENABLE:ALL",
+                            choices: PreferenceChoices.plsqlWarnings)
                 Picker(L10n.tr("Poziom optymalizacji PLSQL_OPTIMIZE_LEVEL"), selection: setting(workspace, \.compiler.optimizeLevel)) {
                     Text(L10n.tr("Jak serwer")).tag(Int?.none)
                     ForEach(0...3, id: \.self) { Text("\($0)").tag(Int?.some($0)) }
@@ -558,33 +603,35 @@ struct OraclePane: View {
                     Text("INTERPRETED").tag("INTERPRETED")
                     Text("NATIVE").tag("NATIVE")
                 }
-                TextField(L10n.tr("PL/Scope PLSCOPE_SETTINGS"), text: setting(workspace, \.compiler.plscope), prompt: Text("IDENTIFIERS:ALL"))
-                TextField(L10n.tr("Flagi kompilacji warunkowej PLSQL_CCFLAGS"), text: setting(workspace, \.compiler.ccflags), prompt: Text("debug:TRUE"))
+                ChoiceField(L10n.tr("PL/Scope PLSCOPE_SETTINGS"), text: setting(workspace, \.compiler.plscope), prompt: "IDENTIFIERS:ALL",
+                            choices: PreferenceChoices.plscope)
+                ChoiceField(L10n.tr("Flagi kompilacji warunkowej PLSQL_CCFLAGS"), text: setting(workspace, \.compiler.ccflags), prompt: "debug:TRUE",
+                            choices: PreferenceChoices.ccflags, mode: .list)
                 Text(L10n.tr("Puste pole albo „Jak serwer” — parametr sesji kompilacji nie jest zmieniany. Wartości z apostrofem albo średnikiem są pomijane."))
                     .font(.uiSecondary).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Debuger (UG 23.4)")) {
                 Toggle(L10n.tr("Dodawaj informację debugowania przy kompilacji okna programu"), isOn: setting(workspace, \.debugInfoOnCompile))
-                TextField(L10n.tr("Zawsze z informacją debugowania"), text: Binding(get: { workspace.settings.debugInfoAlways.joined(separator: ", ") },
-                    set: { workspace.settings.debugInfoAlways = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }),
-                          prompt: Text(L10n.tr("np. scott@dev*, HR.PKG_*")))
-                TextField(L10n.tr("Nigdy z informacją debugowania"), text: Binding(get: { workspace.settings.debugInfoNever.joined(separator: ", ") },
-                    set: { workspace.settings.debugInfoNever = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }),
-                          prompt: Text(L10n.tr("np. *@prod*")))
+                ChoiceField(L10n.tr("Zawsze z informacją debugowania"), text: .commaList(workspace, \.debugInfoAlways),
+                            prompt: L10n.tr("np. scott@dev*, HR.PKG_*"), choices: PreferenceChoices.connectionPatterns(workspace.connections.connections), mode: .list)
+                ChoiceField(L10n.tr("Nigdy z informacją debugowania"), text: .commaList(workspace, \.debugInfoNever),
+                            prompt: L10n.tr("np. *@prod*"), choices: PreferenceChoices.connectionPatterns(workspace.connections.connections), mode: .list)
                 Toggle(L10n.tr("Kompilacja tylko do odczytu plików"), isOn: setting(workspace, \.compileReadOnlyFiles))
                 Toggle(L10n.tr("Kończ jednostki okna programu znakiem „/” (tekst z bazy, nowe jednostki)"), isOn: setting(workspace, \.programUnitSlash))
+                    .disabled(workspace.settings.fileStandard.slashFreePrograms)
+                    .help(workspace.settings.fileStandard.slashFreePrograms ? L10n.tr("Wyłączone przez standard plików (Ogólne › Standard plików)") : "")
                 Toggle(L10n.tr("Podpowiedzi kompilatora (inspekcje kodu po kompilacji; „-- Ignore” wycisza linię)"), isOn: setting(workspace, \.compilerHints))
                 Toggle(L10n.tr("Sprawdzaj konwencje nazw"), isOn: setting(workspace, \.namingConventions.enabled))
                 if workspace.settings.namingConventions.enabled {
                     HStack {
-                        TextField(L10n.tr("Parametry"), text: setting(workspace, \.namingConventions.parameter))
-                        TextField(L10n.tr("Lokalne"), text: setting(workspace, \.namingConventions.local))
-                        TextField(L10n.tr("Globalne"), text: setting(workspace, \.namingConventions.global))
+                        ChoiceField(L10n.tr("Parametry"), text: setting(workspace, \.namingConventions.parameter), choices: PreferenceChoices.naming("parameter"))
+                        ChoiceField(L10n.tr("Lokalne"), text: setting(workspace, \.namingConventions.local), choices: PreferenceChoices.naming("local"))
+                        ChoiceField(L10n.tr("Globalne"), text: setting(workspace, \.namingConventions.global), choices: PreferenceChoices.naming("global"))
                     }
                     HStack {
-                        TextField(L10n.tr("Stałe"), text: setting(workspace, \.namingConventions.constant))
-                        TextField(L10n.tr("Kursory"), text: setting(workspace, \.namingConventions.cursor))
-                        TextField(L10n.tr("Typy"), text: setting(workspace, \.namingConventions.type))
+                        ChoiceField(L10n.tr("Stałe"), text: setting(workspace, \.namingConventions.constant), choices: PreferenceChoices.naming("constant"))
+                        ChoiceField(L10n.tr("Kursory"), text: setting(workspace, \.namingConventions.cursor), choices: PreferenceChoices.naming("cursor"))
+                        ChoiceField(L10n.tr("Typy"), text: setting(workspace, \.namingConventions.type), choices: PreferenceChoices.naming("type"))
                     }
                 }
                 Toggle(L10n.tr("Pomijaj inicjalizację pakietów przy krokowaniu"), isOn: setting(workspace, \.debuggerSkipPackageInit))
@@ -634,6 +681,8 @@ struct OraclePane: View {
 
 /// Karta Klawiatura (UG 23.29): profil skrótów, lista komend z wyszukiwaniem, nagrywanie skrótu z wykrywaniem konfliktu.
 struct KeyboardPane: View {
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortRows: [ColumnSort<Row>] = []
     let workspace: Workspace
     @State private var search = ""
     @State private var selection: String?
@@ -663,10 +712,10 @@ struct KeyboardPane: View {
                 Spacer()
                 TextField(L10n.tr("Szukaj komendy"), text: $search).frame(width: 220)
             }
-            Table(rows, selection: $selection) {
-                TableColumn(L10n.tr("Komenda")) { (r: Row) in Text(r.d.submenu.map { "\($0) › \(r.d.title)" } ?? r.d.title) }
-                TableColumn(L10n.tr("Menu")) { (r: Row) in Text(r.d.category.displayName).foregroundStyle(.secondary) }.width(110)
-                TableColumn(L10n.tr("Skróty")) { (r: Row) in
+            Table(rows.sorted(by: sortRows), selection: $selection, sortOrder: $sortRows) {
+                TableColumn(L10n.tr("Komenda"), sortKey: { (r: Row) in r.d.submenu.map { "\($0) › \(r.d.title)" } ?? r.d.title }) { (r: Row) in Text(r.d.submenu.map { "\($0) › \(r.d.title)" } ?? r.d.title) }
+                TableColumn(L10n.tr("Menu"), sortKey: { (r: Row) in r.d.category.displayName }) { (r: Row) in Text(r.d.category.displayName).foregroundStyle(.secondary) }.width(110)
+                TableColumn(L10n.tr("Skróty"), sortKey: { (r: Row) in workspace.keymap.chords(for: r.d.id).map(\.displayString).joined(separator: "  ") }) { (r: Row) in
                     Text(workspace.keymap.chords(for: r.d.id).map(\.displayString).joined(separator: "  ")).font(.code)
                 }.width(170)
             }

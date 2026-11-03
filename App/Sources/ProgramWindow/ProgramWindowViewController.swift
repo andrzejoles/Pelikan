@@ -75,6 +75,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             c.width = [60, 180, 60, 600][i]
             messages.addTableColumn(c)
         }
+        HeaderSort.enable(messages)
         messages.usesAlternatingRowBackgroundColors = true
         messages.rowSizeStyle = .custom
         messages.dataSource = self
@@ -298,7 +299,15 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     // MARK: Komunikaty kompilacji
 
     private func refreshMessages() {
-        shownMessages = document.compileMessages
+        // Kolejność z nagłówka listy (D212); bez sortowania — jak z kompilatora.
+        shownMessages = HeaderSort.sort(document.compileMessages, by: messages.sortDescriptors) { m, key in
+            switch key {
+            case "sev": (m.severity == .error ? 0 : m.severity == .warning ? 1 : 2).sortKey
+            case "unit": m.unit.sortKey
+            case "line": (m.line * 100_000 + m.column).sortKey
+            default: m.text.sortKey
+            }
+        }
         shownLines = shownMessages.map { "\($0.line)" }
         messages.reloadData()
         // Linie na liście liczone raz na listę (nie przy rysowaniu komórki): linia jednostki karty jak ALL_ERRORS.
@@ -337,6 +346,8 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int { shownMessages.count }
+
+    func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) { refreshMessages() }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let m = shownMessages[row]

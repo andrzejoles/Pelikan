@@ -760,6 +760,7 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
             c.width = width
             table.addTableColumn(c)
         }
+        HeaderSort.enable(table)
         table.usesAlternatingRowBackgroundColors = true
         table.style = .plain
         table.setAccessibilityLabel(L10n.tr("Rekord w pionie"))
@@ -795,13 +796,30 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
     required init?(coder: NSCoder) { fatalError() }
 
     func show(row: Int, of count: Int, fields: [Field]) {
-        self.fields = fields
+        self.fields = Self.sorted(fields, by: table.sortDescriptors)
         label.font = .monospacedDigitSystemFont(ofSize: InterfaceFonts.shared.small.pointSize, weight: .regular)
         label.stringValue = count == 0 ? "" : L10n.tr("Rekord \(row + 1) z \(count)")
         table.reloadData()
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int { fields.count }
+
+    /// Pola rekordu w kolejności z nagłówka (D212); bez sortowania — kolejność kolumn wyniku.
+    private static func sorted(_ fields: [Field], by descriptors: [NSSortDescriptor]) -> [Field] {
+        HeaderSort.sort(fields, by: descriptors) { f, key in
+            switch key {
+            case "name": f.name.sortKey
+            case "value": f.isNull ? .none : f.value.sortKey
+            case "comment": f.comment.sortKey
+            default: f.type.sortKey
+            }
+        }
+    }
+
+    func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
+        fields = Self.sorted(fields, by: tableView.sortDescriptors)
+        tableView.reloadData()
+    }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let f = fields[row]
