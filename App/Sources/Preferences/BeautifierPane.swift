@@ -384,7 +384,8 @@ struct BeautifierPane: View {
                 }
             }
             row("specialCase") {
-                TextField(L10n.tr("Pisownia specjalna (po przecinku)"), text: $specialCase, prompt: Text("DBMS_Output, UTL_File"))
+                ChoiceField(L10n.tr("Pisownia specjalna (po przecinku)"), text: $specialCase, prompt: "DBMS_Output, UTL_File",
+                            choices: PreferenceChoices.specialCase, mode: .list)
             }
             Text(L10n.tr("Literały, identyfikatory w cudzysłowie i komentarze nigdy nie są zmieniane."))
                 .font(.uiSecondary).foregroundStyle(.secondary)

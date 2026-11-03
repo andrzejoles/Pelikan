@@ -406,6 +406,9 @@ extension Workspace {
     /// Otwiera okna workseta obok bieżących (odzyskiwanie po awarii); zwraca pominięte ścieżki.
     @discardableResult
     public func appendWorksetDocuments(_ w: Workset) -> [String] {
+        // Przywracane okna bez pytań o standard plików (D210) — użytkownik pracował już na tych plikach.
+        fileStandardChecksSuspended += 1
+        defer { fileStandardChecksSuspended -= 1 }
         var missing: [String] = []
         // Indeks wpisu → otwarte okno: pominięte wpisy nie przesuwają okna aktywnego (R6-14).
         var opened: [Int: Document] = [:]

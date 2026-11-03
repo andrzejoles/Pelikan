@@ -246,7 +246,7 @@ public enum ProjectEngine {
         for w in project.desktop {
             let url = w.path.hasPrefix("/") ? URL(fileURLWithPath: w.path) : projectURL.deletingLastPathComponent().appendingPathComponent(w.path)
             if ws.documents.contains(where: { $0.fileURLs.contains(url.standardizedFileURL) }) { continue }
-            if (try? ws.openFile(url, as: w.kind)) != nil { n += 1 }
+            if (try? ws.withoutFileStandardChecks({ try ws.openFile(url, as: w.kind) })) != nil { n += 1 }
         }
         return n
     }

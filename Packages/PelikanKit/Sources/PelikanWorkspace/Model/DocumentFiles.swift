@@ -218,6 +218,7 @@ extension Workspace {
         rememberDiskState(doc, url: std, data: data)
         restoreWindowState(doc)
         rememberRecentFile(std)
+        checkFileStandard(doc)
         return doc
     }
 

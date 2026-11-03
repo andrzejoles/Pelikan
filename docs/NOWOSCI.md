@@ -2,6 +2,19 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.14.0 — standard plików, listy wyboru w ustawieniach, sortowanie tabel
+
+- **Standard plików (Ustawienia › Ogólne):** domyślnie UTF-8 bez BOM, pliki programów bez linii „/”. Nowe okna zapisują
+  się w standardzie, a otwarcie pliku w innym kodowaniu, z BOM albo z „/” w pliku programu pyta o konwersję
+  (Konwertuj / Zostaw bez zmian, „Nie pytaj więcej”). Konwersja zmienia okno — plik zmienia się przy zapisie. Skrypty
+  `.sql` zachowują „/”, a pliki projektu z ustawionym kodowaniem — swoje kodowanie.
+- **Listy wyboru zamiast wpisywania:** pola ustawień (formaty dat, NLS, ostrzeżenia kompilatora, PL/Scope, konwencje
+  nazw, rozszerzenia, statystyki, wzorce połączeń, programy zewnętrzne…), okno połączenia (aliasy TNS, użytkownicy,
+  hosty i klucze SSH z `~/.ssh`) i cele SSH Pro*C mają przycisk ▾ z podpowiedziami; wartość można nadal wpisać ręcznie.
+- **Sortowanie każdej tabeli:** klik nagłówka sortuje po dowolnej kolumnie (sesje, DBA, Scheduler, porównania, plan,
+  profiler, punkty przerwania, komunikaty kompilacji, aktywność agenta…). Liczby pokazywane jako tekst (SID, rozmiary)
+  sortują się liczbowo; w tabelach edytowalnych dane zachowują swoją kolejność.
+
 ## 1.13.0 — formatowanie podczas pisania, pasek czynności nad wynikiem
 
 Zmiany z wersji 1.11.0–1.13.0 (bez osobnych wydań), wydane razem.

@@ -6,6 +6,16 @@ import SwiftUI
 /// Edytor definicji tabeli (UG 9.1): karty Ogólne, Kolumny, Klucze, Warunki, Indeksy i SQL (DDL zmian);
 /// Zastosuj wykonuje DDL po potwierdzeniu strażnika, Odśwież wczytuje definicję z bazy.
 struct TableEditorView: View {
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortIndexes: [ColumnSort<Binding<TableDefinition.Index>>] = []
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortChecks: [ColumnSort<Binding<TableDefinition.Check>>] = []
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortKeys: [ColumnSort<Binding<TableDefinition.Key>>] = []
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortColumns: [ColumnSort<Binding<TableDefinition.Column>>] = []
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortGrants: [ColumnSort<Binding<TableDefinition.Grant>>] = []
     let workspace: Workspace
     let connectionID: UUID
     @State var definition: TableDefinition
@@ -131,14 +141,14 @@ struct TableEditorView: View {
 
     private var privileges: some View {
         VStack(alignment: .leading) {
-            Table($definition.grants) {
-                TableColumn(L10n.tr("Odbiorca")) { $g in TextField("", text: upper($g.grantee)) }.width(min: 140, ideal: 200)
-                TableColumn(L10n.tr("Uprawnienie")) { $g in
+            Table(Binding.sorted($definition.grants, by: sortGrants), sortOrder: $sortGrants) {
+                TableColumn(L10n.tr("Odbiorca"), sortKey: { g in g.grantee }) { $g in TextField("", text: upper($g.grantee)) }.width(min: 140, ideal: 200)
+                TableColumn(L10n.tr("Uprawnienie"), sortKey: { g in g.privilege }) { $g in
                     Picker("", selection: $g.privilege) {
                         ForEach(["SELECT", "INSERT", "UPDATE", "DELETE", "REFERENCES", "ALTER", "INDEX", "READ", "DEBUG", "FLASHBACK"], id: \.self) { Text($0).tag($0) }
                     }.labelsHidden()
                 }.width(140)
-                TableColumn(L10n.tr("Z prawem nadawania")) { $g in Toggle("", isOn: $g.grantable).labelsHidden() }.width(120)
+                TableColumn(L10n.tr("Z prawem nadawania"), sortKey: { g in g.grantable }) { $g in Toggle("", isOn: $g.grantable).labelsHidden() }.width(120)
             }
             listButtons(add: { definition.grants.append(TableDefinition.Grant(grantee: "PUBLIC", privilege: "SELECT")) },
                         remove: { if !definition.grants.isEmpty { definition.grants.removeLast() } })
@@ -248,19 +258,19 @@ struct TableEditorView: View {
 
     private var columns: some View {
         VStack(alignment: .leading) {
-            Table($definition.columns) {
-                TableColumn(L10n.tr("Nazwa")) { $c in TextField("", text: upper($c.name)) }.width(min: 110, ideal: 150)
-                TableColumn(L10n.tr("Typ")) { $c in typeField($c.type) }.width(min: 140, ideal: 170)
-                TableColumn(L10n.tr("Null")) { $c in Toggle("", isOn: $c.nullable).labelsHidden() }.width(40)
-                TableColumn(L10n.tr("Domyślna")) { $c in TextField("", text: $c.defaultValue).disabled(!c.virtualExpression.isEmpty || c.identity) }
+            Table(Binding.sorted($definition.columns, by: sortColumns), sortOrder: $sortColumns) {
+                TableColumn(L10n.tr("Nazwa"), sortKey: { c in c.name }) { $c in TextField("", text: upper($c.name)) }.width(min: 110, ideal: 150)
+                TableColumn(L10n.tr("Typ"), sortKey: { c in c.type }) { $c in typeField($c.type) }.width(min: 140, ideal: 170)
+                TableColumn(L10n.tr("Null"), sortKey: { c in c.nullable }) { $c in Toggle("", isOn: $c.nullable).labelsHidden() }.width(40)
+                TableColumn(L10n.tr("Domyślna"), sortKey: { c in c.defaultValue }) { $c in TextField("", text: $c.defaultValue).disabled(!c.virtualExpression.isEmpty || c.identity) }
                     .width(min: 80, ideal: 110)
-                TableColumn(L10n.tr("Wirtualna (wyrażenie)")) { $c in TextField("", text: $c.virtualExpression).disabled(c.originalName != nil) }
+                TableColumn(L10n.tr("Wirtualna (wyrażenie)"), sortKey: { c in c.virtualExpression }) { $c in TextField("", text: $c.virtualExpression).disabled(c.originalName != nil) }
                     .width(min: 80, ideal: 120)
-                TableColumn(L10n.tr("Identity")) { $c in Toggle("", isOn: $c.identity).labelsHidden().disabled(c.originalName != nil) }.width(52)
-                TableColumn(L10n.tr("Niewidoczna")) { $c in Toggle("", isOn: $c.invisible).labelsHidden() }.width(70)
-                TableColumn(L10n.tr("Domena")) { $c in TextField("", text: upper($c.domain)) }.width(min: 80, ideal: 110)
-                TableColumn(L10n.tr("Adnotacje")) { $c in ListTextField("", text: annotations($c.annotations)) }.width(min: 80, ideal: 120)
-                TableColumn(L10n.tr("Komentarz")) { $c in TextField("", text: $c.comment) }
+                TableColumn(L10n.tr("Identity"), sortKey: { c in c.identity }) { $c in Toggle("", isOn: $c.identity).labelsHidden().disabled(c.originalName != nil) }.width(52)
+                TableColumn(L10n.tr("Niewidoczna"), sortKey: { c in c.invisible }) { $c in Toggle("", isOn: $c.invisible).labelsHidden() }.width(70)
+                TableColumn(L10n.tr("Domena"), sortKey: { c in c.domain }) { $c in TextField("", text: upper($c.domain)) }.width(min: 80, ideal: 110)
+                TableColumn(L10n.tr("Adnotacje"), sortKey: { c in annotations(c.annotations) }) { $c in ListTextField("", text: annotations($c.annotations)) }.width(min: 80, ideal: 120)
+                TableColumn(L10n.tr("Komentarz"), sortKey: { c in c.comment }) { $c in TextField("", text: $c.comment) }
             }
             listButtons(add: { definition.columns.append(TableDefinition.Column(name: "KOLUMNA\(definition.columns.count + 1)", type: "VARCHAR2(30 CHAR)")) },
                         remove: { if !definition.columns.isEmpty { definition.columns.removeLast() } })
@@ -269,23 +279,23 @@ struct TableEditorView: View {
 
     private var keys: some View {
         VStack(alignment: .leading) {
-            Table($definition.keys) {
-                TableColumn(L10n.tr("Nazwa")) { $k in TextField("", text: upper($k.name)) }.width(min: 120, ideal: 160)
-                TableColumn(L10n.tr("Rodzaj")) { $k in
+            Table(Binding.sorted($definition.keys, by: sortKeys), sortOrder: $sortKeys) {
+                TableColumn(L10n.tr("Nazwa"), sortKey: { k in k.name }) { $k in TextField("", text: upper($k.name)) }.width(min: 120, ideal: 160)
+                TableColumn(L10n.tr("Rodzaj"), sortKey: { k in k.wrappedValue.kind.rawValue }) { $k in
                     Picker("", selection: $k.kind) {
                         Text(L10n.tr("Główny")).tag(TableDefinition.Key.Kind.primary)
                         Text(L10n.tr("Unikalny")).tag(TableDefinition.Key.Kind.unique)
                         Text(L10n.tr("Obcy")).tag(TableDefinition.Key.Kind.foreign)
                     }.labelsHidden()
                 }.width(100)
-                TableColumn(L10n.tr("Kolumny")) { $k in ListTextField("", text: list($k.columns)) }.width(min: 100, ideal: 140)
-                TableColumn(L10n.tr("Tabela wskazywana")) { $k in TextField("", text: upper($k.referencedTable)).disabled(k.kind != .foreign) }
-                TableColumn(L10n.tr("Kolumny wskazywane")) { $k in ListTextField("", text: list($k.referencedColumns)).disabled(k.kind != .foreign) }
-                TableColumn("ON DELETE") { $k in
+                TableColumn(L10n.tr("Kolumny"), sortKey: { k in list(k.columns) }) { $k in ListTextField("", text: list($k.columns)) }.width(min: 100, ideal: 140)
+                TableColumn(L10n.tr("Tabela wskazywana"), sortKey: { k in k.referencedTable }) { $k in TextField("", text: upper($k.referencedTable)).disabled(k.kind != .foreign) }
+                TableColumn(L10n.tr("Kolumny wskazywane"), sortKey: { k in list(k.referencedColumns) }) { $k in ListTextField("", text: list($k.referencedColumns)).disabled(k.kind != .foreign) }
+                TableColumn("ON DELETE", sortKey: { k in k.onDelete }) { $k in
                     Picker("", selection: $k.onDelete) { Text("—").tag(""); Text("CASCADE").tag("CASCADE"); Text("SET NULL").tag("SET NULL") }
                         .labelsHidden().disabled(k.kind != .foreign)
                 }.width(100)
-                TableColumn(L10n.tr("Włączony")) { $k in Toggle("", isOn: $k.enabled).labelsHidden() }.width(60)
+                TableColumn(L10n.tr("Włączony"), sortKey: { k in k.enabled }) { $k in Toggle("", isOn: $k.enabled).labelsHidden() }.width(60)
             }
             HStack {
                 listButtons(add: { definition.keys.append(TableDefinition.Key(name: "\(definition.name)_UK\(definition.keys.count + 1)", kind: .unique, columns: [])) },
@@ -300,10 +310,10 @@ struct TableEditorView: View {
 
     private var checks: some View {
         VStack(alignment: .leading) {
-            Table($definition.checks) {
-                TableColumn(L10n.tr("Nazwa")) { $c in TextField("", text: upper($c.name)) }.width(min: 140, ideal: 180)
-                TableColumn(L10n.tr("Warunek")) { $c in TextField("", text: $c.condition).font(.code) }
-                TableColumn(L10n.tr("Włączony")) { $c in Toggle("", isOn: $c.enabled).labelsHidden() }.width(60)
+            Table(Binding.sorted($definition.checks, by: sortChecks), sortOrder: $sortChecks) {
+                TableColumn(L10n.tr("Nazwa"), sortKey: { c in c.name }) { $c in TextField("", text: upper($c.name)) }.width(min: 140, ideal: 180)
+                TableColumn(L10n.tr("Warunek"), sortKey: { c in c.condition }) { $c in TextField("", text: $c.condition).font(.code) }
+                TableColumn(L10n.tr("Włączony"), sortKey: { c in c.enabled }) { $c in Toggle("", isOn: $c.enabled).labelsHidden() }.width(60)
             }
             listButtons(add: { definition.checks.append(TableDefinition.Check(name: "\(definition.name)_CK\(definition.checks.count + 1)", condition: "")) },
                         remove: { if !definition.checks.isEmpty { definition.checks.removeLast() } })
@@ -312,18 +322,18 @@ struct TableEditorView: View {
 
     private var indexes: some View {
         VStack(alignment: .leading) {
-            Table($definition.indexes) {
-                TableColumn(L10n.tr("Nazwa")) { $x in TextField("", text: upper($x.name)) }.width(min: 140, ideal: 180)
-                TableColumn(L10n.tr("Rodzaj")) { $x in
+            Table(Binding.sorted($definition.indexes, by: sortIndexes), sortOrder: $sortIndexes) {
+                TableColumn(L10n.tr("Nazwa"), sortKey: { x in x.name }) { $x in TextField("", text: upper($x.name)) }.width(min: 140, ideal: 180)
+                TableColumn(L10n.tr("Rodzaj"), sortKey: { x in x.wrappedValue.kind.rawValue }) { $x in
                     Picker("", selection: $x.kind) {
                         Text(L10n.tr("Zwykły")).tag(TableDefinition.Index.Kind.normal)
                         Text(L10n.tr("Unikalny")).tag(TableDefinition.Index.Kind.unique)
                         Text("Bitmap").tag(TableDefinition.Index.Kind.bitmap)
                     }.labelsHidden()
                 }.width(110)
-                TableColumn(L10n.tr("Kolumny / wyrażenia (DESC)")) { $x in ListTextField("", text: list($x.columns)) }
-                TableColumn(L10n.tr("Przestrzeń tabel")) { $x in TextField("", text: upper($x.tablespace)) }.width(min: 90, ideal: 120)
-                TableColumn(L10n.tr("Kompresja")) { $x in
+                TableColumn(L10n.tr("Kolumny / wyrażenia (DESC)"), sortKey: { x in list(x.columns) }) { $x in ListTextField("", text: list($x.columns)) }
+                TableColumn(L10n.tr("Przestrzeń tabel"), sortKey: { x in x.tablespace }) { $x in TextField("", text: upper($x.tablespace)) }.width(min: 90, ideal: 120)
+                TableColumn(L10n.tr("Kompresja"), sortKey: { x in x.compression }) { $x in
                     Picker("", selection: $x.compression) {
                         Text("—").tag("")
                         ForEach(["1", "2", "3"], id: \.self) { Text("COMPRESS \($0)").tag($0) }
@@ -332,10 +342,10 @@ struct TableEditorView: View {
                         if !["", "1", "2", "3", "ADVANCED LOW", "ADVANCED HIGH"].contains(x.compression) { Text(x.compression).tag(x.compression) }
                     }.labelsHidden()
                 }.width(130)
-                TableColumn("PCTFREE") { $x in TextField("", text: $x.pctFree) }.width(56)
-                TableColumn(L10n.tr("Odwrócony")) { $x in Toggle("", isOn: $x.reverse).labelsHidden().disabled(x.kind == .bitmap) }.width(70)
-                TableColumn(L10n.tr("Lokalny")) { $x in Toggle("", isOn: $x.local).labelsHidden() }.width(56)
-                TableColumn(L10n.tr("Niewidoczny")) { $x in Toggle("", isOn: $x.invisible).labelsHidden() }.width(76)
+                TableColumn("PCTFREE", sortKey: { x in x.pctFree }) { $x in TextField("", text: $x.pctFree) }.width(56)
+                TableColumn(L10n.tr("Odwrócony"), sortKey: { x in x.reverse }) { $x in Toggle("", isOn: $x.reverse).labelsHidden().disabled(x.kind == .bitmap) }.width(70)
+                TableColumn(L10n.tr("Lokalny"), sortKey: { x in x.local }) { $x in Toggle("", isOn: $x.local).labelsHidden() }.width(56)
+                TableColumn(L10n.tr("Niewidoczny"), sortKey: { x in x.invisible }) { $x in Toggle("", isOn: $x.invisible).labelsHidden() }.width(76)
             }
             listButtons(add: { definition.indexes.append(TableDefinition.Index(name: "\(definition.name)_IX\(definition.indexes.count + 1)", columns: [])) },
                         remove: { if !definition.indexes.isEmpty { definition.indexes.removeLast() } })

@@ -65,6 +65,8 @@ struct ToolConnectionPicker: View {
 /// Find Database Objects (UG 24.2): kryteria, wyszukiwanie w tle, wyniki z przejściem do linii źródła; połączenie
 /// ustalone przy otwarciu (aktywne okno albo główne, D185) — wyszukiwanie i otwarcie trafienia na tej samej bazie.
 struct FindObjectsView: View {
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortHits: [ColumnSort<DatabaseSearchHit>] = []
     let workspace: Workspace
     @State var criteria: DatabaseSearchCriteria
     @State private var connection: UUID?
@@ -182,11 +184,11 @@ struct FindObjectsView: View {
     }
 
     private var resultsTable: some View {
-        Table(hits, selection: $selection) {
-            TableColumn(L10n.tr("Obiekt")) { (h: DatabaseSearchHit) in Text(h.object.owner + "." + h.object.name) }.width(min: 140, ideal: 200)
-            TableColumn(L10n.tr("Typ")) { (h: DatabaseSearchHit) in Text(h.object.type.rawValue.lowercased()) }.width(min: 70, ideal: 100)
-            TableColumn(L10n.tr("Linia")) { (h: DatabaseSearchHit) in Text(h.line > 0 ? String(h.line) : "") }.width(min: 40, ideal: 50)
-            TableColumn(L10n.tr("Tekst")) { (h: DatabaseSearchHit) in Text(h.text).font(.code).lineLimit(1) }
+        Table(hits.sorted(by: sortHits), selection: $selection, sortOrder: $sortHits) {
+            TableColumn(L10n.tr("Obiekt"), sortKey: { (h: DatabaseSearchHit) in h.object.owner + "." + h.object.name }) { (h: DatabaseSearchHit) in Text(h.object.owner + "." + h.object.name) }.width(min: 140, ideal: 200)
+            TableColumn(L10n.tr("Typ"), sortKey: { (h: DatabaseSearchHit) in h.object.type.rawValue.lowercased() }) { (h: DatabaseSearchHit) in Text(h.object.type.rawValue.lowercased()) }.width(min: 70, ideal: 100)
+            TableColumn(L10n.tr("Linia"), sortKey: { (h: DatabaseSearchHit) in h.line > 0 ? String(h.line) : "" }) { (h: DatabaseSearchHit) in Text(h.line > 0 ? String(h.line) : "") }.width(min: 40, ideal: 50)
+            TableColumn(L10n.tr("Tekst"), sortKey: { (h: DatabaseSearchHit) in h.text }) { (h: DatabaseSearchHit) in Text(h.text).font(.code).lineLimit(1) }
         }
         .contextMenu(forSelectionType: DatabaseSearchHit.ID.self) { _ in } primaryAction: { ids in
             if let id = ids.first, let h = hits.first(where: { $0.id == id }) { open(h) }
@@ -258,6 +260,8 @@ struct FindObjectsView: View {
 /// Compile Invalid Objects (UG 24.3): lista nieprawidłowych obiektów, kompilacja, błędy; połączenie ustalone przy
 /// otwarciu (aktywne okno albo główne, D185) — lista, kompilacja i otwarcie obiektu na tej samej bazie.
 struct CompileInvalidView: View {
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortObjects: [ColumnSort<DBObject>] = []
     let workspace: Workspace
     @State private var connection: UUID?
     @State private var owner = ""
@@ -295,10 +299,10 @@ struct CompileInvalidView: View {
     }
 
     private var objectsTable: some View {
-        Table(objects, selection: $selection) {
-            TableColumn(L10n.tr("Obiekt")) { (o: DBObject) in Text(o.owner + "." + o.name) }.width(min: 160, ideal: 220)
-            TableColumn(L10n.tr("Typ")) { (o: DBObject) in Text(o.type.rawValue.lowercased()) }.width(min: 80, ideal: 110)
-            TableColumn(L10n.tr("Wynik")) { (o: DBObject) in resultCell(o) }
+        Table(objects.sorted(by: sortObjects), selection: $selection, sortOrder: $sortObjects) {
+            TableColumn(L10n.tr("Obiekt"), sortKey: { (o: DBObject) in o.owner + "." + o.name }) { (o: DBObject) in Text(o.owner + "." + o.name) }.width(min: 160, ideal: 220)
+            TableColumn(L10n.tr("Typ"), sortKey: { (o: DBObject) in o.type.rawValue.lowercased() }) { (o: DBObject) in Text(o.type.rawValue.lowercased()) }.width(min: 80, ideal: 110)
+            TableColumn(L10n.tr("Wynik"), sortKey: { (o: DBObject) in resultText(o) }) { (o: DBObject) in resultCell(o) }
         }
         .contextMenu(forSelectionType: DBObject.ID.self) { _ in } primaryAction: { ids in
             if let id = ids.first, let o = objects.first(where: { $0.id == id }) {
@@ -309,6 +313,12 @@ struct CompileInvalidView: View {
                 }
             }
         }
+    }
+
+    /// Tekst wyniku do sortowania kolumny „Wynik”.
+    private func resultText(_ o: DBObject) -> String {
+        guard let r = results[o.id] else { return o.status.lowercased() }
+        return r.valid ? L10n.tr("poprawny") : r.errors.first ?? L10n.tr("błędy")
     }
 
     @ViewBuilder private func resultCell(_ o: DBObject) -> some View {

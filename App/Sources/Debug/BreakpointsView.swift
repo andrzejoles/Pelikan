@@ -5,14 +5,16 @@ import SwiftUI
 /// Punkty przerwania (UG 5.10 „Modify Breakpoints”): lista z włączeniem, licznikiem przejść, warunkiem, komunikatem
 /// (`{zmienna}`), „nie zatrzymuj” (logpoint) i usuwaniem; znacznik punktu niezastosowanego; punkty na kodach błędów.
 struct BreakpointsView: View {
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortBreakpoints: [ColumnSort<Binding<Breakpoint>>] = []
     @Bindable var workspace: Workspace
     @State private var codes = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Table($workspace.breakpoints) {
-                TableColumn(L10n.tr("Włączony")) { $b in Toggle("", isOn: $b.enabled).labelsHidden() }.width(60)
-                TableColumn(L10n.tr("Miejsce")) { $b in
+            Table(Binding.sorted($workspace.breakpoints, by: sortBreakpoints), sortOrder: $sortBreakpoints) {
+                TableColumn(L10n.tr("Włączony"), sortKey: { b in b.enabled }) { $b in Toggle("", isOn: $b.enabled).labelsHidden() }.width(60)
+                TableColumn(L10n.tr("Miejsce"), sortKey: { b in place(b.wrappedValue) }) { $b in
                     HStack(spacing: 4) {
                         if workspace.unappliedBreakpoints.contains(b.id) {
                             Image(systemName: "circle").foregroundStyle(.red)
@@ -21,20 +23,20 @@ struct BreakpointsView: View {
                         Text(place(b)).font(.code)
                     }
                 }
-                TableColumn(L10n.tr("Linia")) { $b in Text("\(b.line)") }.width(50)
-                TableColumn(L10n.tr("Liczba przejść")) { $b in
+                TableColumn(L10n.tr("Linia"), sortKey: { b in b.line }) { $b in Text("\(b.line)") }.width(50)
+                TableColumn(L10n.tr("Liczba przejść"), sortKey: { b in b.passCount }) { $b in
                     TextField("", value: $b.passCount, format: .number).frame(width: 60)
                 }.width(100)
-                TableColumn(L10n.tr("Warunek")) { $b in
+                TableColumn(L10n.tr("Warunek"), sortKey: { b in b.wrappedValue.condition ?? "" }) { $b in
                     TextField(L10n.tr("np. i > 3"), text: Binding(get: { b.condition ?? "" }, set: { b.condition = $0.isEmpty ? nil : $0 }))
                 }
-                TableColumn(L10n.tr("Komunikat")) { $b in
+                TableColumn(L10n.tr("Komunikat"), sortKey: { b in b.wrappedValue.message ?? "" }) { $b in
                     TextField(L10n.tr("np. i={i}"), text: Binding(get: { b.message ?? "" }, set: { b.message = $0.isEmpty ? nil : $0 }))
                 }
-                TableColumn(L10n.tr("Nie zatrzymuj")) { $b in
+                TableColumn(L10n.tr("Nie zatrzymuj"), sortKey: { b in b.wrappedValue.dontBreak ?? false }) { $b in
                     Toggle("", isOn: Binding(get: { b.dontBreak ?? false }, set: { b.dontBreak = $0 ? true : nil })).labelsHidden()
                 }.width(90)
-                TableColumn("") { $b in
+                TableColumn("", sortKey: { b in b.wrappedValue.enabled }) { $b in
                     Button { workspace.perform("debug.removeBreakpoint", CommandArguments(["id": .string(b.id.uuidString)])) } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń")).buttonStyle(.borderless)
                 }.width(30)
             }

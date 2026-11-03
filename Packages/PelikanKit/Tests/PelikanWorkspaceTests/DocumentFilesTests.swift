@@ -99,6 +99,7 @@ struct DocumentFilesTests {
         // Plik w Windows-1250 z CRLF zostaje w tym formacie.
         let legacy = dir.appendingPathComponent("stary.sql")
         try "select 'łódź' from dual;\r\n".data(using: .windowsCP1250)!.write(to: legacy)
+        ws.settings.fileStandard.askOnOpen = false      // zachowanie formatu bez konwersji (D210 — osobny test)
         let d2 = try ws.openFile(legacy)
         d2.text += "-- zmiana\n"
         try await ws.invoke("file.save")
