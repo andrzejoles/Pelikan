@@ -2,7 +2,9 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## 1.14.0 — standard plików, listy wyboru w ustawieniach, sortowanie tabel
+## 1.15.2 — standard plików i UTF-8 dla Pro*C, listy wyboru w ustawieniach, sortowanie tabel
+
+Zmiany z wersji 1.14.0–1.15.2 (bez osobnych wydań), wydane razem.
 
 - **Standard plików (Ustawienia › Ogólne):** domyślnie UTF-8 bez BOM, pliki programów bez linii „/”. Nowe okna zapisują
   się w standardzie, a otwarcie pliku w innym kodowaniu, z BOM albo z „/” w pliku programu pyta o konwersję

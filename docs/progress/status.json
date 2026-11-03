@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-28T11:49:39+01:00",
+  "heartbeat": "2026-11-03T11:47:44+01:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
@@ -58,6 +58,7 @@
     }
   ],
   "done": [
+    "Rozwiązane konflikty szkiców #129 i #130 z main (D208/D209 obok D210–D213; poprawki w sekcji 1.14.0 NOWOSCI)",
     "Wydanie 1.3.0 opublikowane (Latest, kanał aktualizacji 1.3.0): połączenia alfabetycznie, kopia i przenoszenie, foldery DBA i DBMS, ochrona obiektów Oracle; lustro GitLab wyrównane",
     "PR #110 (D190) scalony — połączenia alfabetycznie, kopia i przenoszenie połączeń, foldery DBA i DBMS, potwierdzanie zmian obiektów schematów Oracle; trzy przejścia przeglądu kodu, CI zielone",
     "PR #110: przegląd kodu (1 średnie, 9 niskich zgłoszeń) — poprawione: potwierdzanie zmian obiektów schematów Oracle (SYS, XDB…), unikalna nazwa kopii, filtr folderów DBA/DBMS",
@@ -96,8 +97,7 @@
     "Zgłaszanie problemów na GitHubie z aplikacji (PL-INFRA-013, D173)",
     "Dziennik aplikacji z prywatnością wpisów (PL-INFRA-011, D170)",
     "Logo aplikacji: ikona pelikana we wszystkich rozmiarach (PL-INFRA-012, D172)",
-    "Wstążka z kartami kontekstowymi i polem „Szukaj czynności” (PD-UI-012, D171)",
-    "Scalono #87 — drugie przejście przeglądu kodu (D169)"
+    "Wstążka z kartami kontekstowymi i polem „Szukaj czynności” (PD-UI-012, D171)"
   ],
   "next": [
     "Zgłoszenia OracleNIO (pliki gotowe, wysyła właściciel)",
