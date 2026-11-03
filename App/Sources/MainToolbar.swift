@@ -30,7 +30,7 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
         }
         formatToken = trackChanges { [weak self] in
             guard let self else { return }
-            _ = self.workspace.settings.beautifier.formatOnEnter
+            // Stan czytany w `refreshFormatButtons` przez `toggleState` (śledzony); skróty — tutaj.
             _ = self.workspace.keymap
             self.refreshFormatButtons()
         }

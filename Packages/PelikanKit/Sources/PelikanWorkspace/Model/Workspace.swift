@@ -830,11 +830,6 @@ public final class Workspace {
         registry.command(id)?.state?(self)
     }
 
-    /// Czy komenda ma stan przełącznika (bez jego wyliczania).
-    public func hasToggleState(_ id: CommandID) -> Bool {
-        registry.command(id)?.state != nil
-    }
-
     /// Jedyny punkt wywołania komendy — menu, skróty, paleta, linia poleceń i agent.
     @discardableResult
     public func invoke(_ id: CommandID, _ arguments: CommandArguments = .empty, invoker: Invoker = .user) async throws -> CommandResult {

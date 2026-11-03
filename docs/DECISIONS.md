@@ -3120,6 +3120,10 @@ wydanie). Poprawione:
   reguła nieedytowanej linii ma dwa źródła z konieczności (`insertNewline` ustala ją przed wyrównaniem Smart, inne drogi
   nowej linii pytają w `insertText`); pamięć podziału zakłada `invalidate` przy każdej zmianie tekstu — sprawdzenie
   `stale` jest tylko zabezpieczeniem.
+- **Dziesiąte przejście:** pusty zakres usunięcia na końcu linii zostaje przy niej po Enterze bez wcięcia; jedna kopia
+  tekstu na Enter i najpierw tanie warunki przed pytaniem o edytowaną linię; koniec treści linii dla każdego separatora
+  (`getLineStart`); jedno wyszukiwanie binarne (`partition`) dla punktów, początków poleceń i unieważniania; krok 0
+  w jednym bloku `if lineEdited`; stan przycisku wstążki bez osobnej flagi.
 - **AutoReplace i wielkość liter przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** przy włączonym
   formatowaniu przy Enter obie zmiany słowa przed kursorem działają tylko w linii edytowanej — także w zwykłym Enterze,
   gdy plan nie powstał (jedno miejsce reguły: `insertText` dla znaku nowej linii pyta `lineEdited`). Skrót albo słowo

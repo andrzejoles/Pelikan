@@ -287,7 +287,8 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         let title = label ?? d.title.replacingOccurrences(of: "…", with: "")
         let b = RibbonButton(style: style, title: title, symbol: CommandSymbols.symbol(for: id) ?? "circle.dashed", dropdown: false)
         b.commandID = d.id
-        b.isToggle = workspace.hasToggleState(d.id)
+        // Komenda-przełącznik: stan od razu (nil — bez stanu; odświeżane potem tylko przyciski ze stanem).
+        b.toggleState = workspace.toggleState(d.id)
         b.toolTip = tooltip(for: d)
         b.onPress = { [weak self] _ in self?.run(d.id) }
         b.contextMenuProvider = { [weak self] in self?.contextMenu(for: d.id) }
@@ -312,7 +313,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             if b.isEnabled != on { b.isEnabled = on }
             // Stan tylko dla komend-przełączników (ustalone przy budowie przycisku) — bez zbędnych wywołań przy każdym
             // odświeżeniu (każde zdarzenie okna).
-            guard b.isToggle else { continue }
+            guard b.toggleState != nil else { continue }
             let state = workspace.toggleState(id)
             if b.toggleState != state { b.toggleState = state }
         }
@@ -522,8 +523,6 @@ final class RibbonButton: NSControl {
     private let label: NSTextField
     private var hovering = false { didSet { updateBackground() } }
     private var pressed = false { didSet { updateBackground() } }
-    /// Komenda ma stan przełącznika (`Command.state`).
-    var isToggle = false
     /// Stan komendy-przełącznika (włączona — wyróżnione tło); nil — komenda bez stanu.
     var toggleState: Bool? {
         didSet {

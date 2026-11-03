@@ -72,11 +72,13 @@ public enum FormatOnEnter {
         var left = original
         // Wielkość liter słowa przed kursorem tylko w linii edytowanej (słowo właśnie wpisane) — nieedytowany kod
         // zostaje bez zmian i nie trafia do zmienionych zakresów (D205).
-        if lineEdited, let cased = keywordCaseLine(left, keywordCase) { left = cased }
         // Skrót AutoReplace — też tylko w linii edytowanej (wpisany przed chwilą); nieedytowany kod zostaje bez zmian.
-        if lineEdited, let r = autoReplaceLine(left, rules: autoReplace, text: ns, lineStart: lineStart, caret: caret) {
-            guard let replaced = r else { return nil }   // zamiana z miejscem kursora zużywa Enter
-            left = replaced
+        if lineEdited {
+            if let cased = keywordCaseLine(left, keywordCase) { left = cased }
+            if let r = autoReplaceLine(left, rules: autoReplace, text: ns, lineStart: lineStart, caret: caret) {
+                guard let replaced = r else { return nil }   // zamiana z miejscem kursora zużywa Enter
+                left = replaced
+            }
         }
         var working = text
         var at = caret
@@ -198,6 +200,8 @@ public struct EditedRanges: Sendable, Equatable {
         // tylko przesunięcie zakresów za miejscem wstawienia, bez pustego zakresu na początku przeniesionej linii.
         if newlineFirst, edited.isEmpty {
             ranges = ranges.map { r in
+                // Pusty zakres w miejscu wstawienia (usunięcie na końcu linii) zostaje przy swojej linii.
+                if r.isEmpty, r.lowerBound == input.lowerBound { return r }
                 if r.lowerBound >= input.lowerBound { return (r.lowerBound + delta)..<(r.upperBound + delta) }
                 if r.upperBound > input.lowerBound { return r.lowerBound..<(r.upperBound + delta) }
                 return r

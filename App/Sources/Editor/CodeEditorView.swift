@@ -956,11 +956,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let tabWidth = max(1, ws.settings.tabSize)
         textView.lineEdited = { [weak self] text, caret in
             guard let self else { return true }
-            let ns = text as NSString
-            let line = ns.lineRange(for: NSRange(location: caret, length: 0))
-            var end = line.location + line.length
-            while end > line.location, [0x0A, 0x0D].contains(ns.character(at: end - 1)) { end -= 1 }
-            return self.editedRanges.touches(line: line.location..<end)
+            // Koniec treści linii bez separatora — każdego (LF, CR, U+2028, U+2029, NEL).
+            var start = 0, end = 0, contentsEnd = 0
+            (text as NSString).getLineStart(&start, end: &end, contentsEnd: &contentsEnd, for: NSRange(location: caret, length: 0))
+            return self.editedRanges.touches(line: start..<contentsEnd)
         }
         textView.enterPlan = { [weak self] text, caret in
             guard let self, self.document.additionalSelections.isEmpty else { return nil }
@@ -1251,8 +1250,10 @@ final class CodeTextView: NSTextView {
         }
         // Nowa linia z `insertNewline` na końcu nieedytowanej linii (ustalone tam, przed wyrównaniem Smart, które samo
         // oznaczyłoby linię jako edytowaną): bez wielkości liter i skrótu — istniejący kod zostaje bez zmian (D205, D208).
+        let rules = (NSApp.delegate as? AppDelegate)?.workspace.settings.autoReplace ?? []
         let untouched: Bool = {
-            guard !formattingEnter, text.first?.isNewline == true, let lineEdited else { return false }
+            // Tanie warunki najpierw: bez wielkości liter i skrótów wynik i tak nic nie zmienia (bez kopii dokumentu).
+            guard !formattingEnter, text.first?.isNewline == true, keywordCase != .unchanged || !rules.isEmpty, let lineEdited else { return false }
             if let decided = untouchedNewline { return decided }
             // Inne drogi nowej linii (⌥↩, podział linii U+2028, wstawienie z zakresem) — linia miejsca wstawienia.
             let at = replacementRange.location != NSNotFound ? replacementRange.location : selectedRange().location
@@ -1588,12 +1589,12 @@ final class CodeTextView: NSTextView {
 
     override func insertNewline(_ sender: Any?) {
         // Kompozycja znaków (metoda wprowadzania) — Enter należy do niej.
-        if !hasMarkedText(), selectedRanges.count == 1, selectedRange().length == 0, let plan = enterPlan?(string, selectedRange().location),
+        // Jedna kopia tekstu na Enter (każdy odczyt `string` kopiuje cały dokument).
+        let current = string
+        if !hasMarkedText(), selectedRanges.count == 1, selectedRange().length == 0, let plan = enterPlan?(current, selectedRange().location),
            insertFormattedNewline(plan, sender) {
             return
         }
-        // Jedna kopia tekstu (każdy odczyt `string` kopiuje cały dokument).
-        let current = string
         untouchedNewline = selectedRange().length == 0 && !(lineEdited?(current, selectedRange().location) ?? true)
         defer { untouchedNewline = nil }
         // Wcięcie nowej linii wg trybu (UG 23.12 None / Automatic / Smart, PD-EDIT-004).

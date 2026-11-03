@@ -69,11 +69,14 @@ public struct StatementStartMemory: Sendable, Equatable {
 
     /// Zmiana tekstu od `location`: początki i punkty kontrolne od tego miejsca przestają obowiązywać.
     public mutating func invalidate(from location: Int) {
-        if let k = starts.firstIndex(where: { $0 >= location }) {
+        // Wyszukiwanie binarne (wywoływane przy każdej zmianie tekstu).
+        let k = Self.partition(starts) { $0 < location }
+        if k < starts.count {
             for s in starts[k...] { regions[s] = nil }
             starts.removeSubrange(k...)
         }
-        if let k = checkpoints.firstIndex(where: { $0.position >= location }) { checkpoints.removeSubrange(k...) }
+        let c = Self.partition(checkpoints) { $0.position < location }
+        if c < checkpoints.count { checkpoints.removeSubrange(c...) }
     }
 
     /// Początek polecenia, w którym leży linia zaczynająca się w `lineStart` (albo sam `lineStart`, gdy poprzednie
@@ -167,15 +170,8 @@ public struct StatementStartMemory: Sendable, Equatable {
     }
 
     private mutating func insertOrMerge(_ c: Checkpoint) {
-        var lo = 0, hi = checkpoints.count
-        if let last = checkpoints.last, last.position < c.position {
-            lo = hi
-        } else {
-            while lo < hi {
-                let mid = (lo + hi) / 2
-                if checkpoints[mid].position < c.position { lo = mid + 1 } else { hi = mid }
-            }
-        }
+        let lo = checkpoints.last.map { $0.position < c.position } ?? true
+            ? checkpoints.count : Self.partition(checkpoints) { $0.position < c.position }
         if lo < checkpoints.count, checkpoints[lo].position == c.position {
             if c.subprogram, !checkpoints[lo].subprogram { checkpoints[lo] = c }
             return
@@ -183,24 +179,27 @@ public struct StatementStartMemory: Sendable, Equatable {
         checkpoints.insert(c, at: lo)
     }
 
-    /// Indeks ostatniego punktu w `position` nie dalej niż `p` (wyszukiwanie binarne — punkty rosnąco).
-    func lastCheckpoint(atOrBefore p: Int) -> Int? {
-        var lo = 0, hi = checkpoints.count
+    /// Pierwszy indeks, dla którego `before` jest fałszywe (tablica uporządkowana: `before` prawdziwe na początku) —
+    /// jedno wyszukiwanie binarne dla punktów i początków poleceń.
+    static func partition<C: RandomAccessCollection>(_ c: C, _ before: (C.Element) -> Bool) -> Int where C.Index == Int {
+        var lo = c.startIndex, hi = c.endIndex
         while lo < hi {
             let mid = (lo + hi) / 2
-            if checkpoints[mid].position <= p { lo = mid + 1 } else { hi = mid }
+            if before(c[mid]) { lo = mid + 1 } else { hi = mid }
         }
-        return lo > 0 ? lo - 1 : nil
+        return lo
     }
 
-    /// Indeks ostatniego znanego początku polecenia nie dalej niż `p` (wyszukiwanie binarne).
+    /// Indeks ostatniego punktu w `position` nie dalej niż `p`.
+    func lastCheckpoint(atOrBefore p: Int) -> Int? {
+        let i = Self.partition(checkpoints) { $0.position <= p }
+        return i > 0 ? i - 1 : nil
+    }
+
+    /// Indeks ostatniego znanego początku polecenia nie dalej niż `p`.
     func lastStartIndex(atOrBefore p: Int) -> Int? {
-        var lo = 0, hi = starts.count
-        while lo < hi {
-            let mid = (lo + hi) / 2
-            if starts[mid] <= p { lo = mid + 1 } else { hi = mid }
-        }
-        return lo > 0 ? lo - 1 : nil
+        let i = Self.partition(starts) { $0 <= p }
+        return i > 0 ? i - 1 : nil
     }
 
     func lastStart(atOrBefore p: Int) -> Int? { lastStartIndex(atOrBefore: p).map { starts[$0] } }

@@ -168,6 +168,11 @@ struct FormatOnEnterTests {
         s.record(edited: 10..<12, delta: 2)
         s.record(edited: 2..<3, delta: 1, newlineFirst: true)
         #expect(!s.touches(line: 3..<9) && s.ranges == [11..<13])
+        // Usunięcie na końcu linii (pusty zakres), potem Enter tam bez wcięcia — linia zostaje edytowana.
+        var d = EditedRanges()
+        d.record(edited: 5..<5, delta: -1)
+        d.record(edited: 5..<6, delta: 1, newlineFirst: true)
+        #expect(d.touches(line: 0..<5) && d.ranges == [5..<5])
         // Nowa sesja w zakresie (plik wczytany w oknie pary) — zmiany w nim zapomniane, poza nim zostają.
         var c = EditedRanges()
         c.record(edited: 2..<4, delta: 2)
