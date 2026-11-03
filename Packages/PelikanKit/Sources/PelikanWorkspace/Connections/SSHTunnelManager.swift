@@ -90,12 +90,29 @@ public final class SSHTunnelManager {
         return d
     }()
 
+    /// Skrypt askpass (bez sekretu — czyta hasło z kolejki FIFO ze zmiennej środowiska): zapisany tylko, gdy go brak albo
+    /// ma inną treść, przez plik tymczasowy z prawami 0700 zamieniony nazwą — równoległe logowanie nigdy nie wykona
+    /// skryptu w trakcie zapisu ani bez prawa wykonania. Ten sam kod w `SSHSession` (PelikanRemote, macOS) i
+    /// `SSHTunnelManager` (PelikanWorkspace, także Linux) — moduły nie mają wspólnej zależności (D209).
+    nonisolated static func installAskpassScript(at path: String) throws {
+        let script = Data("#!/bin/sh\nexec /bin/cat -- \"$PELIKAN_ASKPASS_FIFO\"\n".utf8)
+        if FileManager.default.contents(atPath: path) == script, FileManager.default.isExecutableFile(atPath: path) { return }
+        let temp = path + ".\(UUID().uuidString.prefix(8)).tmp"
+        guard FileManager.default.createFile(atPath: temp, contents: script, attributes: [.posixPermissions: 0o700]) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        chmod(temp, 0o700)
+        guard rename(temp, path) == 0 else {
+            unlink(temp)
+            throw CocoaError(.fileWriteUnknown)
+        }
+    }
+
     /// Przygotowuje askpass: skrypt bez sekretu, kolejka FIFO 0600 i wątek, który zapisze hasło raz (albo zakończy się,
     /// gdy `done` zostanie ustawione). Zwraca zmienne środowiska dla `ssh` i funkcję sprzątającą.
     nonisolated static func askpass(secret: String) throws -> (environment: [String: String], cleanup: @Sendable () -> Void) {
         let askpass = runDirectory.appendingPathComponent("askpass.sh").path
-        try Data("#!/bin/sh\nexec /bin/cat -- \"$PELIKAN_ASKPASS_FIFO\"\n".utf8).write(to: URL(fileURLWithPath: askpass), options: .atomic)
-        chmod(askpass, 0o700)
+        try installAskpassScript(at: askpass)
         let fifo = runDirectory.appendingPathComponent("askpass-\(UUID().uuidString.prefix(8))").path
         guard mkfifo(fifo, 0o600) == 0 else { throw DatabaseError.driverUnavailable(L10n.tr("Nie można utworzyć kolejki dla hasła SSH")) }
         let done = Flag()

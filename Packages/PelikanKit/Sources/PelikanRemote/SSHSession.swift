@@ -127,11 +127,12 @@ public final class SSHSession: Sendable {
         return (try? Spawn.run(Self.ssh, args, environment: environment, timeout: 10).status) == 0
     }
 
-    /// Nawiązuje połączenie główne (pierwsze logowanie, także po wygaśnięciu ControlPersist).
-    public func connect() throws {
+    /// Nawiązuje połączenie główne (pierwsze logowanie, także po wygaśnięciu ControlPersist). `reuseRecentCheck` —
+    /// świeże potwierdzenie (≤ 5 s) zwalnia z `ssh -O check`: tylko dla poleceń idempotentnych (odpytywanie Stop, stan
+    /// serwera), które po 255 i tak są ponawiane; pozostałe sprawdzają połączenie zawsze — nie mogą trafić na martwe.
+    public func connect(reuseRecentCheck: Bool = false) throws {
         try startLock.withLock { _ in
-            // Świeżo potwierdzone — bez kolejnego procesu `ssh -O check` (polecenia jedno po drugim, odpytywanie Stop).
-            if let v = verified.withLock({ $0 }), ContinuousClock.now - v < Self.checkValidity { return }
+            if reuseRecentCheck, let v = verified.withLock({ $0 }), ContinuousClock.now - v < Self.checkValidity { return }
             if isConnected {
                 verified.withLock { $0 = .now }
                 return
@@ -154,6 +155,24 @@ public final class SSHSession: Sendable {
         }
     }
 
+    /// Skrypt askpass (bez sekretu — czyta hasło z kolejki FIFO ze zmiennej środowiska): zapisany tylko, gdy go brak albo
+    /// ma inną treść, przez plik tymczasowy z prawami 0700 zamieniony nazwą — równoległe logowanie nigdy nie wykona
+    /// skryptu w trakcie zapisu ani bez prawa wykonania. Ten sam kod w `SSHSession` (PelikanRemote, macOS) i
+    /// `SSHTunnelManager` (PelikanWorkspace, także Linux) — moduły nie mają wspólnej zależności (D209).
+    static func installAskpassScript(at path: String) throws {
+        let script = Data("#!/bin/sh\nexec /bin/cat -- \"$PELIKAN_ASKPASS_FIFO\"\n".utf8)
+        if FileManager.default.contents(atPath: path) == script, FileManager.default.isExecutableFile(atPath: path) { return }
+        let temp = path + ".\(UUID().uuidString.prefix(8)).tmp"
+        guard FileManager.default.createFile(atPath: temp, contents: script, attributes: [.posixPermissions: 0o700]) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        chmod(temp, 0o700)
+        guard rename(temp, path) == 0 else {
+            unlink(temp)
+            throw CocoaError(.fileWriteUnknown)
+        }
+    }
+
     private func startMaster() throws {
         try? FileManager.default.removeItem(atPath: controlPath)
         var env = environment
@@ -162,9 +181,7 @@ public final class SSHSession: Sendable {
         let secret = secret()
         let writer = Mutex<Bool>(false)
         if let secret, !secret.isEmpty {
-            // Atomowo (zamiana nazwy): równoległe logowanie innej sesji nie wykona skryptu w trakcie zapisu.
-            try Data("#!/bin/sh\nexec /bin/cat -- \"$PELIKAN_ASKPASS_FIFO\"\n".utf8).write(to: URL(fileURLWithPath: askpass), options: .atomic)
-            chmod(askpass, 0o700)
+            try Self.installAskpassScript(at: askpass)
             guard mkfifo(fifo, 0o600) == 0 else { throw SSHError.io(code: errno, detail: fifo) }
             env["SSH_ASKPASS"] = askpass
             env["SSH_ASKPASS_REQUIRE"] = "force"
@@ -379,14 +396,19 @@ public final class SSHSession: Sendable {
     /// (kod 255 i połączenie główne nie żyje) ponawia tylko polecenie `idempotent` — inne mogło się już wykonać na
     /// serwerze w całości albo w części (wdrożenie, `mv`, DML), więc wynik 255 wraca do wywołującego.
     public func run(_ command: String, stdin: SpawnInput = .null, timeout: TimeInterval? = 120, idempotent: Bool = false) throws -> Spawn.Result {
-        try connect()
+        try connect(reuseRecentCheck: idempotent)
         let args = try commandArguments(command, tty: false)
         let r = try Spawn.run(Self.ssh, args, environment: environment, stdin: stdin, timeout: timeout)
         guard r.status == 255 else { return r }
         forgetVerification()
         // Ponowienie tylko przy martwym połączeniu głównym (jedno sprawdzenie); żywe — 255 zwróciło samo polecenie.
         if idempotent, !isConnected {
-            try startLock.withLock { _ in try startVerified() }
+            // Pod blokadą ponownie: równoległe ponowienie mogło już nawiązać połączenie (drugie `startMaster` usunęłoby
+            // jego gniazdo i zostawiło osierocony proces `ssh -M`).
+            try startLock.withLock { _ in
+                if let v = verified.withLock({ $0 }), ContinuousClock.now - v < Self.checkValidity { return }
+                try startVerified()
+            }
             return try Spawn.run(Self.ssh, args, environment: environment, stdin: stdin, timeout: timeout)
         }
         return r

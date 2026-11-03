@@ -167,10 +167,14 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             info.currentSchema = r[1].displayText ?? ""
         }
         // Opis wersji osobno: BANNER_FULL od 18c, wcześniej (12.1/12.2) BANNER — kolumna według wersji z uzgadniania;
-        // brak uprawnień do V$VERSION (baza utwardzona) nie przerywa połączenia, zostaje pusty opis.
+        // brak uprawnień do V$VERSION albo kolumny (baza utwardzona) nie przerywa połączenia, zostaje pusty opis; inny
+        // błąd (zerwane połączenie) — tak.
         let banner = info.server.major >= 18 ? "banner_full" : "banner"
-        if let (_, rows) = try? await queryAll("select \(banner) from v$version where rownum = 1") {
+        do {
+            let (_, rows) = try await queryAll("select \(banner) from v$version where rownum = 1")
             info.server.banner = rows.first?[0].displayText ?? ""
+        } catch let e as OracleError where [942, 904, 1031].contains(e.code) {
+            info.server.banner = ""
         }
     }
 

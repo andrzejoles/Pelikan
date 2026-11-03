@@ -5,6 +5,21 @@ import Foundation
 /// Most MCP: stdio (wiadomości JSON rozdzielone znakiem nowej linii) ⇄ gniazdo Unix aplikacji.
 /// Most nie interpretuje wiadomości — cała logika i polityka uprawnień są w aplikacji.
 public enum Bridge {
+    /// Tryb startu powłoki agenta (`pelikan-mcp --exec program …`): zamknięcie odziedziczonych deskryptorów i `execv`.
+    public static let execFlag = "--exec"
+
+    /// Zamyka deskryptory powyżej 2 (w świeżym procesie przed `execv` — nic tu ich nie używa).
+    public static func closeInheritedDescriptors() {
+        let limit = Int32(min(getdtablesize(), 1 << 16))
+        guard limit > 3 else { return }
+        for fd in 3..<limit { close(fd) }
+    }
+
+    /// Argumenty terminala: powłoka przez `pelikan-mcp --exec`.
+    public static func execArguments(shell: String, arguments: [String]) -> [String] {
+        [execFlag, shell] + arguments
+    }
+
     public static let tokenVariable = "PELIKAN_AGENT_TOKEN"
     public static let socketVariable = "PELIKAN_AGENT_SOCKET"
 

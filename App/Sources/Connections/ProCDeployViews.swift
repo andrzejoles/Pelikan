@@ -35,6 +35,9 @@ final class ProCDeployModel {
     /// Sesja SSH celu (ControlMaster; sekret tylko w pamięci domknięcia — z Pęku kluczy, z Touch ID przy D56).
     func session(for t: PelikanSSHTarget) async throws -> SSHSession {
         if let s = sessions[t.id], s.config == SSHTargetTester.sessionConfig(t) { return s }
+        // Konfiguracja celu zmieniona — stara sesja ma własne połączenie główne (osobne gniazdo): zamknięte, nie zostaje
+        // zalogowane na serwerze do wygaśnięcia ControlPersist.
+        if let old = sessions.removeValue(forKey: t.id) { Task.detached { old.disconnect() } }
         let secret: String? = t.auth == .agent ? nil : try await store.secret(for: t.id, in: workspace)
         let s = try SSHSession(config: SSHTargetTester.sessionConfig(t), runDirectory: runDirectory, secret: { secret })
         sessions[t.id] = s

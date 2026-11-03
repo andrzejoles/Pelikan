@@ -134,23 +134,21 @@ public final class SQLPlusEngine {
 
     /// Tekst polecenia do echa, SPOOL i konsoli bez hasła: `CONNECT u/hasło@baza`, `IDENTIFIED BY hasło`.
     nonisolated public static func maskPassword(_ text: String) -> String {
-        var t = text
         let star = "********"
-        // Każde CONNECT w tekście (skrypt z kilkoma połączeniami), nie tylko pierwsze.
-        var from = t.startIndex
-        while let r = t.range(of: #"(?im)^(\s*conn(ect)?\s+[^\s/]*/)"#, options: .regularExpression, range: from..<t.endIndex) {
-            // Hasło: od `/` do ostatniego `@` w słowie (albo do końca słowa), jak w CONNECT.
-            let wordEnd = t[r.upperBound...].firstIndex(where: \.isWhitespace) ?? t.endIndex
-            let end = t[r.upperBound..<wordEnd].lastIndex(of: "@") ?? wordEnd
-            if end > r.upperBound {
-                let offset = t.distance(from: t.startIndex, to: r.upperBound)
-                t.replaceSubrange(r.upperBound..<end, with: star)
-                from = t.index(t.startIndex, offsetBy: offset + star.count)
-            } else {
-                from = r.upperBound
-            }
-            if from >= t.endIndex { break }
+        // Każde CONNECT (skrypt z kilkoma połączeniami), także po znaku nowej linii zapisanym jako `\n` (tekst JSON
+        // w wyniku narzędzia agenta) — jedno przejście, wynik budowany po kolei.
+        var t = ""
+        var rest = text[...]
+        while let r = rest.range(of: #"(?im)(^|\\n|\\r)(\s*conn(ect)?\s+[^\s/\\]*/)"#, options: .regularExpression) {
+            // Hasło: od `/` do ostatniego `@` w słowie (albo do końca słowa albo zapisanego `\n`), jak w CONNECT.
+            let tail = rest[r.upperBound...]
+            let wordEnd = tail.firstIndex(where: { $0.isWhitespace || $0 == "\\" }) ?? rest.endIndex
+            let end = rest[r.upperBound..<wordEnd].lastIndex(of: "@") ?? wordEnd
+            t += rest[..<r.upperBound]
+            if end > r.upperBound { t += star }
+            rest = rest[end...]
         }
+        t += rest
         // IDENTIFIED BY hasło / "hasło" / VALUES 'skrót' (eksport DDL użytkownika).
         return t.replacingOccurrences(of: #"(?i)(identified\s+by\s+)(values\s+'[^']*'|"[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)
     }

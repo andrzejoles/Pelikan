@@ -104,7 +104,9 @@ public actor SocketTransport: Transport {
 
     static func trace(_ direction: String, _ data: Data) {
         guard let path = traceFile else { return }
-        writeTrace(path, Data("\(direction) \(String(masked(data).prefix(4000)))\n".utf8))
+        // Duża wiadomość (wynik zapytania) — maskowany sam początek, który i tak trafia do śladu.
+        let text = data.count > 64 * 1024 ? SQLPlusEngine.maskPassword(String(decoding: data.prefix(8000), as: UTF8.self)) : masked(data)
+        writeTrace(path, Data("\(direction) \(String(text.prefix(4000)))\n".utf8))
     }
 
     /// Wiadomość do śladu z hasłami zamaskowanymi w rozkodowanych napisach JSON (skrypt `connect u/hasło` po
@@ -120,11 +122,13 @@ public actor SocketTransport: Transport {
     /// Dopisuje do pliku śladu tylko, gdy to zwykły plik właściciela bez dostępu dla innych (ślad zawiera wyniki
     /// zapytań): bez podążania za dowiązaniem, nowy plik z prawami 0600.
     static func writeTrace(_ path: String, _ line: Data) {
-        let fd = open(path, O_WRONLY | O_APPEND | O_CREAT | O_NOFOLLOW | O_CLOEXEC, 0o600)
+        // O_NONBLOCK: kolejka FIFO pod tą ścieżką nie zablokuje otwarcia (odrzucana zaraz po fstat).
+        let fd = open(path, O_WRONLY | O_APPEND | O_CREAT | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK, 0o600)
         guard fd >= 0 else { return }
         defer { close(fd) }
         var st = stat()
         guard fstat(fd, &st) == 0, PrivateOwnership.isPrivate(st, type: S_IFREG) else { return }
+        _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK)
         try? Wire.writeAll(line, to: fd)
     }
 

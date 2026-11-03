@@ -3121,6 +3121,18 @@ idempotentny; nieotwarty REF CURSOR w zmiennej OUT (ORA-24338) — wartość NUL
 `describeChild` i `withCallTimeout` jako jedno miejsce; `markAllCloseOnExec` tylko po otwartych deskryptorach
 (`proc_pidinfo`); wspólne `PrivateOwnership`.
 
+Piąte przejście (zastępuje `DescriptorLock` z przejść 2–4): powłoka agenta startuje przez `pelikan-mcp --exec`, który
+w świeżym procesie zamyka wszystkie deskryptory powyżej 2 i dopiero wykonuje `execv` powłoki (ten sam PID) — przyczyna
+usunięta u źródła, bez blokady i przeglądu deskryptorów w aplikacji (deskryptory tworzone przez Foundation, OCI czy inne
+wątki też nie przechodzą); pętla `accept` znów prosta (jak przed przeglądem). Potwierdzenie połączenia SSH z ostatnich
+5 s tylko dla poleceń idempotentnych (reszta zawsze sprawdza — nie trafi na martwe połączenie), ponowienie pod blokadą
+sprawdza je jeszcze raz (bez drugiego `startMaster`); zastąpiona sesja celu wdrożenia rozłączana; skrypt askpass
+instalowany tylko, gdy go brak albo jest inny, z prawami 0700 przed zamianą nazwy (ten sam kod w `SSHSession`
+i `SSHTunnelManager` — PelikanRemote działa tylko na macOS, PelikanWorkspace także na Linuksie, bez wspólnej
+zależności); maskowanie haseł w jednym przejściu, także `CONNECT` po zapisanym `\n` (tekst JSON w wyniku narzędzia);
+ślad MCP: duże wiadomości maskowane od początku (do śladu i tak trafia 4000 znaków), plik otwierany bez blokowania na
+FIFO; opis wersji thin pomija tylko ORA-00942/00904/01031.
+
 Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
 testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
 `RETURNING … BULK COLLECT INTO` w bloku PL/SQL.

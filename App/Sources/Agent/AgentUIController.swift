@@ -2,7 +2,6 @@ import AppKit
 import PelikanAgent
 import PelikanBridgeKit
 import PelikanLog
-import PelikanRemote
 import PelikanWorkspace
 import SwiftTerm
 import SwiftUI
@@ -133,13 +132,11 @@ final class AgentUIController: ApprovalPresenter {
             try? FileManager.default.removeItem(at: sessionDir)
         }
         showPane()
-        // forkpty+execve bez zamykania deskryptorów: wszystkie deskryptory aplikacji z FD_CLOEXEC i start pod
-        // `DescriptorLock` (bez okna z miejscami tworzącymi deskryptory) — CLI agenta nie dziedziczy żadnego.
-        DescriptorLock.withLock {
-            DescriptorLock.markAllCloseOnExec()
-            terminal.startProcess(executable: spec.shell, args: spec.shellArguments, environment: env.map { "\($0.key)=\($0.value)" },
-                                  execName: nil, currentDirectory: directory)
-        }
+        // forkpty+execve terminala nie zamyka deskryptorów aplikacji (połączenia z bazą, potoki `ssh`, gniazdo agentów):
+        // powłoka startuje przez `pelikan-mcp --exec`, który zamyka je wszystkie i dopiero uruchamia powłokę (ten sam
+        // proces — PID dla kontroli pochodzenia mostu bez zmian).
+        terminal.startProcess(executable: bridgePath, args: Bridge.execArguments(shell: spec.shell, arguments: spec.shellArguments),
+                              environment: env.map { "\($0.key)=\($0.value)" }, execName: nil, currentDirectory: directory)
         session.cliPID = terminal.process.shellPid
         terminal.window?.makeFirstResponder(terminal)
     }

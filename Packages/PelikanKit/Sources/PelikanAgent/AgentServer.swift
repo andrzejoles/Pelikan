@@ -1,9 +1,8 @@
 #if canImport(Darwin)
 import PelikanBridgeKit
+import PelikanRemote
 import Darwin
 import Foundation
-import PelikanLog
-import PelikanRemote
 import Synchronization
 
 /// Wynik próby połączenia (do dziennika i testów).
@@ -21,8 +20,6 @@ public final class AgentServer: @unchecked Sendable {
     let onAccept: @Sendable (Int32, AgentSession) -> Void
     let onEvent: @Sendable (ConnectionEvent) -> Void
     private let state = Mutex<(fd: Int32, running: Bool)>((-1, false))
-    /// Potok budzenia pętli `accept` przy `stop` (czekanie bez limitu czasu, bez budzenia co sekundę).
-    private let wake = Mutex<(read: Int32, write: Int32)>((-1, -1))
     /// Limit czasu na ramkę hello (s).
     static let helloTimeout: Double = 5
 
@@ -49,18 +46,10 @@ public final class AgentServer: @unchecked Sendable {
         let path = socketURL.path(percentEncoded: false)
         unlink(path)
 
-        // Terminal agenta startuje przez forkpty+execve bez zamykania deskryptorów — gniazda nie mogą przejść do CLI
-        // (utworzenie z FD_CLOEXEC pod `DescriptorLock`, jak start terminala).
-        let fd = DescriptorLock.withLock {
-            let fd = socket(AF_UNIX, SOCK_STREAM, 0)
-            if fd >= 0 {
-                _ = fcntl(fd, F_SETFD, FD_CLOEXEC)
-                // Nieblokujące: `accept` pod blokadą nigdy nie czeka (połączenie zerwane między `poll` a `accept`).
-                _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
-            }
-            return fd
-        }
+        let fd = socket(AF_UNIX, SOCK_STREAM, 0)
         guard fd >= 0 else { throw StartError.socket(errno) }
+        // Terminal agenta startuje przez forkpty+execve bez zamykania deskryptorów — gniazda nie mogą przejść do CLI.
+        _ = fcntl(fd, F_SETFD, FD_CLOEXEC)
         var addr = sockaddr_un()
         addr.sun_family = sa_family_t(AF_UNIX)
         let bytes = Array(path.utf8)
@@ -86,19 +75,8 @@ public final class AgentServer: @unchecked Sendable {
             close(fd)
             throw StartError.socket(e)
         }
-        var pipeFDs: [Int32] = [-1, -1]
-        DescriptorLock.withLock {
-            if pipe(&pipeFDs) == 0 {
-                for p in pipeFDs { _ = fcntl(p, F_SETFD, FD_CLOEXEC) }
-                // Pętla mogła się skończyć sama i zamknąć koniec odczytu — zapis w `stop` bez SIGPIPE (aplikacja go nie
-                // ignoruje), tylko EPIPE.
-                _ = fcntl(pipeFDs[1], F_SETNOSIGPIPE, 1)
-            }
-        }
-        wake.withLock { $0 = (pipeFDs[0], pipeFDs[1]) }
         state.withLock { $0 = (fd, true) }
-        let wakeRead = pipeFDs[0]
-        let thread = Thread { [self] in acceptLoop(fd, wake: wakeRead) }
+        let thread = Thread { [self] in acceptLoop(fd) }
         thread.name = "pelikan.agent.accept"
         thread.start()
     }
@@ -108,17 +86,6 @@ public final class AgentServer: @unchecked Sendable {
             let fd = s.fd
             s = (-1, false)
             return fd
-        }
-        // Najpierw obudzenie pętli (kończy się i zamyka potok), potem zamknięcie gniazda.
-        let w = wake.withLock { w -> Int32 in
-            let fd = w.write
-            w = (-1, -1)
-            return fd
-        }
-        if w >= 0 {
-            var b: UInt8 = 1
-            _ = Darwin.write(w, &b, 1)
-            close(w)
         }
         if fd >= 0 {
             shutdown(fd, SHUT_RDWR)
@@ -138,43 +105,14 @@ public final class AgentServer: @unchecked Sendable {
         if st.st_mode & 0o777 != 0o700 { chmod(dir, 0o700) }
     }
 
-    private func acceptLoop(_ listenFD: Int32, wake wakeRead: Int32) {
-        defer {
-            if wakeRead >= 0 { close(wakeRead) }
-            // Koniec bez `stop` — agenci nie mogą się połączyć do ponownego uruchomienia serwera.
-            if state.withLock({ $0.running }) { Log.agent.error("Serwer gniazda agentów zakończył przyjmowanie połączeń (errno \(errno, privacy: .public))") }
-        }
+    private func acceptLoop(_ listenFD: Int32) {
         while state.withLock({ $0.running }) {
-            // Czekanie bez blokady i bez limitu czasu (budzi `stop` przez potok); samo `accept` (gniazdo gotowe,
-            // nieblokujące) i FD_CLOEXEC pod `DescriptorLock`.
-            var fds = [pollfd(fd: listenFD, events: Int16(POLLIN), revents: 0), pollfd(fd: wakeRead, events: Int16(POLLIN), revents: 0)]
-            let ready = poll(&fds, wakeRead >= 0 ? 2 : 1, wakeRead >= 0 ? -1 : 1000)
-            if ready < 0 {
+            let client = accept(listenFD, nil, nil)
+            if client < 0 {
                 if errno == EINTR { continue }
                 break
             }
-            if ready == 0 { continue }
-            if wakeRead >= 0, fds[1].revents != 0 { break }
-            if fds[0].revents & Int16(POLLNVAL | POLLHUP | POLLERR) != 0 { break }
-            let (client, error) = DescriptorLock.withLock { () -> (Int32, Int32) in
-                let c = accept(listenFD, nil, nil)
-                let e = errno   // przed zwolnieniem blokady
-                if c >= 0 {
-                    _ = fcntl(c, F_SETFD, FD_CLOEXEC)
-                    // Połączenie dziedziczy O_NONBLOCK gniazda nasłuchu — uzgadnianie czyta z limitem czasu, blokująco.
-                    _ = fcntl(c, F_SETFL, fcntl(c, F_GETFL) & ~O_NONBLOCK)
-                }
-                return (c, e)
-            }
-            if client < 0 {
-                if error == EINTR || error == EAGAIN || error == ECONNABORTED { continue }
-                // Brak deskryptorów (EMFILE/ENFILE) — przejściowe: chwila przerwy zamiast trwałego końca serwera.
-                if error == EMFILE || error == ENFILE {
-                    usleep(200_000)
-                    continue
-                }
-                break
-            }
+            _ = fcntl(client, F_SETFD, FD_CLOEXEC)
             var on: Int32 = 1
             setsockopt(client, SOL_SOCKET, SO_NOSIGPIPE, &on, socklen_t(MemoryLayout<Int32>.size))
             let t = Thread { [self] in handshake(client) }

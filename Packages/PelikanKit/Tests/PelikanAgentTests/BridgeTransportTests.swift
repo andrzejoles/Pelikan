@@ -218,6 +218,10 @@ struct BridgeTransportTests {
         // Kilka CONNECT w jednym skrypcie — każde hasło zamaskowane.
         let two = SQLPlusEngine.maskPassword("connect a/Pass1@db1\nselect 1 from dual;\nconnect b/Pass2@db2")
         #expect(!two.contains("Pass1") && !two.contains("Pass2") && two.contains("@db2"))
+        // Wynik narzędzia: tekst JSON z nową linią zapisaną jako `\n` (drugi poziom kodowania).
+        let inner = SQLPlusEngine.maskPassword(#"{"text":"select 1 from dual;\nconnect scott/Tiger123@prod"}"#)
+        #expect(!inner.contains("Tiger123") && inner.contains("@prod"))
+        #expect(SQLPlusEngine.maskPassword("connect u/p") == "connect u/********")
         let open = dir.appendingPathComponent("open.log").path
         FileManager.default.createFile(atPath: open, contents: Data(), attributes: [.posixPermissions: 0o644])
         SocketTransport.writeTrace(open, Data("b\n".utf8))
@@ -228,15 +232,9 @@ struct BridgeTransportTests {
         #expect(try String(contentsOfFile: path, encoding: .utf8) == "a\n")
     }
 
-    @Test("deskryptory przed startem terminala agenta: otwarte wyliczone, wszystkie z FD_CLOEXEC")
-    func closeOnExecSweep() {
-        var p: [Int32] = [-1, -1]
-        #expect(pipe(&p) == 0)
-        defer { close(p[0]); close(p[1]) }
-        #expect(fcntl(p[0], F_GETFD) & FD_CLOEXEC == 0)
-        #expect(Set(DescriptorLock.openDescriptors()).isSuperset(of: p))
-        DescriptorLock.withLock { DescriptorLock.markAllCloseOnExec() }
-        #expect(fcntl(p[0], F_GETFD) & FD_CLOEXEC != 0 && fcntl(p[1], F_GETFD) & FD_CLOEXEC != 0)
+    @Test("start powłoki agenta przez most: --exec, program i jego argumenty")
+    func execArguments() {
+        #expect(Bridge.execArguments(shell: "/bin/zsh", arguments: ["-l", "-c", "claude"]) == ["--exec", "/bin/zsh", "-l", "-c", "claude"])
     }
 
     @Test("limiter wywołań: historia zamkniętej sesji usuwana")
