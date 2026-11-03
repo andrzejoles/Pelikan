@@ -80,18 +80,37 @@ public enum CodeHTML {
         if data.starts(with: [0xFF, 0xFE]) { return String(data: data.dropFirst(2), encoding: .utf16LittleEndian) ?? "" }
         if data.starts(with: [0xFE, 0xFF]) { return String(data: data.dropFirst(2), encoding: .utf16BigEndian) ?? "" }
         if let s = String(data: data, encoding: .utf8) { return s }
-        return String(data: data, encoding: singleByteGuess(data)) ?? String(decoding: data, as: UTF8.self)
+        return decodeSingleByte(data, singleByteGuess(data)) ?? String(decoding: data, as: UTF8.self)
     }
 
-    /// Kodowanie jednobajtowe pliku bez BOM i spoza UTF-8: bajty 0x80–0x9F to znaki Windows-1250 (w ISO-8859-2 są
-    /// tam znaki sterujące); polskie litery na pozycjach ISO-8859-2 (ą ś ź Ą Ś Ź = B1 B6 BC A1 A6 AC) bez 0x80–0x9F →
-    /// ISO-8859-2 (pliki z AIX/Unix); w innym razie Windows-1250 (pliki z PL/SQL Developer).
+    /// Kodowanie jednobajtowe pliku bez BOM i spoza UTF-8 — to, w którym polskie litery wychodzą poprawnie.
+    /// Oba kodowania mają ć ę ł ń ó ż Ć Ę Ł Ń Ó Ż na tych samych pozycjach; różnią się ą ś ź Ą Ś Ź: Windows-1250 —
+    /// B9 9C 9F A5 8C 8F, ISO-8859-2 — B1 B6 BC A1 A6 AC. Bajty 0x80–0x9F to w ISO-8859-2 znaki sterujące, a w
+    /// Windows-1250 litery i interpunkcja („ ” – …), więc liczą się dla Windows-1250. Przewaga ISO-8859-2 → ISO-8859-2
+    /// (pliki z AIX/Unix), inaczej Windows-1250 (pliki z PL/SQL Developer na Windows).
     public static func singleByteGuess(_ data: Data) -> String.Encoding {
-        var latin2 = false
+        var cp1250 = 0, latin2 = 0
         for b in data {
-            if (0x80...0x9F).contains(b) { return .windowsCP1250 }
-            if [0xB1, 0xB6, 0xBC, 0xA1, 0xA6, 0xAC].contains(b) { latin2 = true }
+            switch b {
+            case 0x80...0x9F, 0xB9, 0xA5: cp1250 += 1
+            case 0xB1, 0xB6, 0xBC, 0xA1, 0xA6, 0xAC: latin2 += 1
+            default: break
+            }
         }
-        return latin2 ? .isoLatin2 : .windowsCP1250
+        return latin2 > cp1250 ? .isoLatin2 : .windowsCP1250
+    }
+
+    /// Tekst w kodowaniu jednobajtowym. Bajty, których Windows-1250 nie definiuje (81 83 88 90 98), dostają znak
+    /// o tym samym numerze (jak w Windows) — reszta pliku czyta się poprawnie, zamiast całego pliku w złym kodowaniu.
+    public static func decodeSingleByte(_ data: Data, _ encoding: String.Encoding) -> String? {
+        if let s = String(data: data, encoding: encoding) { return s }
+        guard encoding == .windowsCP1250 else { return nil }
+        let table: [Character] = (0...255).map { b in
+            String(data: Data([UInt8(b)]), encoding: .windowsCP1250)?.first ?? Character(Unicode.Scalar(UInt8(b)))
+        }
+        var out = ""
+        out.reserveCapacity(data.count)
+        for b in data { out.append(table[Int(b)]) }
+        return out
     }
 }

@@ -3086,8 +3086,8 @@ w środku. Jeżeli przy otwarciu wykryje coś innego — pytanie o konwersję.�
   potrzebny (D192: „/” w pliku z kodem psuje wdrożenie, w skrypcie — nie). Opcja Oracle „Kończ jednostki okna programu
   znakiem „/”” jest wyłączona, gdy standard zabrania „/”; ustawienia sprzed tej zmiany z włączonym „/” zachowują wybór
   (standard dostaje „/” dozwolony).
-- **Kodowanie projektu ma pierwszeństwo:** plik w katalogu projektu z ustawionym kodowaniem (np. ISO-8859-2 dla źródeł
-  Pro*C, D55) nie jest odstępstwem i konwersja nie zmienia jego kodowania (BOM i „/” — tak).
+- ~~**Kodowanie projektu ma pierwszeństwo**~~ — zmienione w D213: pliki projektu (także Pro*C) też konwertuje się
+  do UTF-8.
 - Zakończenia linii (LF/CRLF) poza standardem — prośba ich nie obejmuje; zapis zachowuje zakończenia pliku jak dotąd.
 
 ### D211 · 2026-11-03 — Pola ustawień z listą wyboru i wpisem ręcznym
@@ -3129,3 +3129,28 @@ dowolnej kolumnie.”
 - **Tabele AppKit** (`HeaderSort`): komunikaty kompilacji, aktywność i dziennik agenta (pliki i wpisy), informacje
   o obiekcie, widok rekordu. Siatka wyników ma własne sortowanie (PD-GRID-009). Drzewa (przeglądarka obiektów,
   połączenia, zawartość kodu, lista okien) i listy podpowiedzi bez nagłówków nie są tabelami — bez zmian.
+
+### D213 · 2026-11-03 — UTF-8 także dla Pro*C; wykrywanie kodowania z poprawnych polskich liter
+
+**Prośba właściciela:** „W Pelikanie domyślne kodowanie powinno być UTF-8. Dla Pro*C jeżeli jest wykryte inne — również
+konwersja na UTF-8. Konwersja ma się wykonać tak, aby po konwersji znaki poprawnie się wyświetlały.”
+
+**Stan wyjściowy** (repozytorium źródeł Pro*C właściciela, 269 plików `.pc/.c/.h`): 253 ASCII, 8 UTF-8, 8 Windows-1250
+(ą ś ź na pozycjach B9 9C 9F), 2 z literami wspólnymi Windows-1250 i ISO-8859-2; bez BOM, końce LF. Kodowanie projektu
+ISO-8859-2 (przykład z D55) czytało pliki UTF-8 i Windows-1250 z przekłamaniami („istniejš”) — bez ostrzeżenia, a zapis
+utrwalał błąd.
+
+- **Standard plików obejmuje pliki projektu:** plik spoza UTF-8 (Pro*C i każdy inny tekst otwierany w oknie SQL albo
+  programu) dostaje pytanie o konwersję; konwersja zapisuje UTF-8 bez BOM. Wyjątek D210 dla projektów z kodowaniem
+  usunięty.
+- **Kodowanie projektu to wskazówka odczytu, nie przymus:** BOM i poprawny UTF-8 zawsze wygrywają; plik jednobajtowy
+  czyta się w kodowaniu, w którym polskie litery są poprawne — ustawienie projektu rozstrzyga tylko pliki, które oba
+  kodowania czytają tak samo (same ó ł ę ń ć ż).
+- **Wykrywanie** (`CodeHTML.singleByteGuess`): liczy bajty liter, którymi Windows-1250 i ISO-8859-2 się różnią
+  (ą ś ź Ą Ś Ź) i bajty 0x80–0x9F (w ISO-8859-2 znaki sterujące) — przewaga ISO-8859-2 → ISO-8859-2, inaczej
+  Windows-1250. Bajty niezdefiniowane w Windows-1250 (81 83 88 90 98) nie przełączają już całego pliku na Latin-1.
+- **Poprawność konwersji:** tekst w oknie jest odczytany w wykrytym kodowaniu, więc zapis w UTF-8 zachowuje każdą
+  literę; sprawdzone na wszystkich 18 plikach z polskimi literami w źródłach właściciela (bez i z kodowaniem projektu
+  ISO-8859-2 — zero znaków sterujących i przekłamań), w testach — próbki Windows-1250 i ISO-8859-2.
+- Wdrożenie Pro*C (SSH) wysyła pliki bajt w bajt — po konwersji na serwer trafia UTF-8 (polskie litery są tylko
+  w komentarzach; kompilator Pro*C ich nie interpretuje).
