@@ -314,6 +314,28 @@ struct BeautifierEnterTests {
         #expect(memory.checkpoints.filter { $0.position == q }.count == 1 && memory.checkpoints.first { $0.position == q }?.subprogram == true)
     }
 
+    @Test("pamięć: CRLF — granica za „/” na początku następnej linii; nieaktualny punkt — próba od poprzedniego")
+    func crlfAndStaleCheckpoint() {
+        var s = "create or replace package body a is\r\n"
+        for n in 0..<6 { s += "  procedure a\(n) is\r\n  begin\r\n    null;\r\n  end;\r\n" }
+        s += "end;\r\n/\r\nselect 1 from dual;\r\n"
+        let text = s as NSString
+        var memory = StatementStartMemory()
+        _ = memory.context(forLineAt: text.range(of: "procedure a5").location - 2, in: text, lineLimit: 10)
+        let sel = text.range(of: "select 1").location
+        _ = memory.context(forLineAt: sel, in: text)
+        #expect(memory.starts.contains(sel) && !memory.starts.contains(sel - 1))
+        // Nagłówek podprogramu a4 zmieniony (punkt nieaktualny): kontekst od wcześniejszego punktu, nie od początku pakietu.
+        var m2 = StatementStartMemory()
+        let a4 = text.range(of: "  procedure a4").location
+        let inA4 = text.range(of: "    null;", options: [], range: NSRange(location: a4, length: text.length - a4)).location
+        _ = m2.context(forLineAt: inA4, in: text, lineLimit: 10)
+        let changed = text.replacingCharacters(in: NSRange(location: a4 + 2, length: 9), with: "xxxxxxxxx") as NSString
+        let before = m2.scannedLength
+        _ = m2.context(forLineAt: inA4, in: changed, lineLimit: 10)
+        #expect(m2.scannedLength - before < inA4 - text.range(of: "  procedure a3").location + 10)
+    }
+
     @Test("pamięć: punkty z przejścia nie po kolei (ORDER/MAP dopisany przy MEMBER) — scalane rosnąco")
     func mergeUnsorted() {
         typealias C = StatementStartMemory.Checkpoint

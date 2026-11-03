@@ -1251,7 +1251,13 @@ final class CodeTextView: NSTextView {
         }
         // Nowa linia z `insertNewline` na końcu nieedytowanej linii (ustalone tam, przed wyrównaniem Smart, które samo
         // oznaczyłoby linię jako edytowaną): bez wielkości liter i skrótu — istniejący kod zostaje bez zmian (D205, D208).
-        let untouched = untouchedNewline && text.first?.isNewline == true
+        let untouched: Bool = {
+            guard !formattingEnter, text.first?.isNewline == true, let lineEdited else { return false }
+            if let decided = untouchedNewline { return decided }
+            // Inne drogi nowej linii (⌥↩, podział linii U+2028, wstawienie z zakresem) — linia miejsca wstawienia.
+            let at = replacementRange.location != NSNotFound ? replacementRange.location : selectedRange().location
+            return !lineEdited(self.string, at)
+        }()
         if !formattingEnter, !untouched, keywordCase != .unchanged, let ch = text.unicodeScalars.first, !CharacterSet.alphanumerics.contains(ch), ch != "_", ch != "$", ch != "#" {
             applyKeywordCase()
         }
@@ -1576,8 +1582,9 @@ final class CodeTextView: NSTextView {
     /// powtarza.
     private var formattingEnter = false
     /// Zwykły Enter (plan nie powstał — długie polecenie, region bez formatowania) na nieedytowanej linii przy włączonym
-    /// formatowaniu przy Enter — ustalane raz w `insertNewline`, przed jakąkolwiek zmianą linii.
-    private var untouchedNewline = false
+    /// formatowaniu przy Enter — ustalane raz w `insertNewline`, przed wyrównaniem Smart (które samo oznacza linię);
+    /// nil — poza `insertNewline` (`insertText` pyta wtedy sam).
+    private var untouchedNewline: Bool?
 
     override func insertNewline(_ sender: Any?) {
         // Kompozycja znaków (metoda wprowadzania) — Enter należy do niej.
@@ -1586,7 +1593,7 @@ final class CodeTextView: NSTextView {
             return
         }
         untouchedNewline = selectedRange().length == 0 && !(lineEdited?(string, selectedRange().location) ?? true)
-        defer { untouchedNewline = false }
+        defer { untouchedNewline = nil }
         // Wcięcie nowej linii wg trybu (UG 23.12 None / Automatic / Smart, PD-EDIT-004).
         var ns = string as NSString
         let caret = selectedRange().location
@@ -1602,10 +1609,12 @@ final class CodeTextView: NSTextView {
                 if !s.trimmingCharacters(in: .whitespaces).isEmpty { previous = s; break }
                 p = r.location
             }
-            if let fixed = SmartIndent.reindentClosingLine(line, previous: previous, unit: indentUnit) {
-                let r = NSRange(location: lineRange.location, length: caret - lineRange.location)
-                if shouldChangeText(in: r, replacementString: fixed) {
-                    replaceCharacters(in: r, with: fixed)
+            if let fixed = SmartIndent.reindentClosingLine(line, previous: previous, unit: indentUnit),
+               let edit = FormatOnEnter.Edit.minimal(at: lineRange.location, old: line, new: fixed) {
+                // Tylko wcięcie (najmniejsza zmiana) — cofanie, kolorowanie i zmienione zakresy bez reszty linii.
+                let r = NSRange(location: edit.range.lowerBound, length: edit.range.count)
+                if shouldChangeText(in: r, replacementString: edit.text) {
+                    replaceCharacters(in: r, with: edit.text)
                     didChangeText()
                     setSelectedRange(NSRange(location: lineRange.location + (fixed as NSString).length, length: 0))
                 }

@@ -3109,6 +3109,10 @@ wydanie). Poprawione:
   unieważniany jak inne; bez osobnej struktury); punkty kontrolne wstawiane wyszukiwaniem binarnym; nieedytowana linia
   ustalana raz w `insertNewline`, przed wyrównaniem Smart; jedna funkcja pozycji menu komendy
   (`MenuBuilder.commandItem`); jeden obserwator koloru akcentu na wstążce.
+- **Ósme przejście:** reguła nieedytowanej linii dla każdej drogi nowej linii (⌥↩, podział linii, wstawienie
+  z zakresem — `insertText` pyta sam, poza `insertNewline`); nieaktualny punkt kontrolny — próba od poprzedniego, nie
+  od początku polecenia; granica za `/` przy CRLF na początku następnej linii; wyszukiwanie binarne punktów i początków
+  poleceń; wyrównanie Smart w zwykłym Enterze najmniejszą zmianą; stan na wstążce liczony tylko dla przełączników.
 - **AutoReplace i wielkość liter przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** przy włączonym
   formatowaniu przy Enter obie zmiany słowa przed kursorem działają tylko w linii edytowanej — także w zwykłym Enterze,
   gdy plan nie powstał (jedno miejsce reguły: `insertText` dla znaku nowej linii pyta `lineEdited`). Skrót albo słowo

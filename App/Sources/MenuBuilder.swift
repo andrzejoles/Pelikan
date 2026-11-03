@@ -201,7 +201,6 @@ final class MenuBuilder: NSObject, NSMenuItemValidation, NSMenuDelegate {
         return KeyChord(key: key, modifiers: mods)
     }
 
-    /// KeyChord → keyEquivalent NSMenuItem (F-klawisze przez NSF1FunctionKey…).
     /// Pozycja menu komendy poza menu głównym (listy wstążki, menu paska wyniku): tytuł, opis, dostępność, stan
     /// przełącznika (`state`, domyślnie z rejestru), symbol i skrót. `representedObject` — identyfikator komendy.
     static func commandItem(_ raw: String, workspace: Workspace, target: AnyObject, action: Selector, state: Bool? = nil) -> NSMenuItem? {
@@ -221,6 +220,7 @@ final class MenuBuilder: NSObject, NSMenuItemValidation, NSMenuDelegate {
         return item
     }
 
+    /// KeyChord → keyEquivalent NSMenuItem (F-klawisze przez NSF1FunctionKey…).
     static func keyEquivalent(for chord: KeyChord) -> (String, NSEvent.ModifierFlags)? {
         var mask: NSEvent.ModifierFlags = []
         if chord.modifiers.contains(.command) { mask.insert(.command) }

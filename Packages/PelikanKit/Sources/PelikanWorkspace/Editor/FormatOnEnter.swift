@@ -167,7 +167,6 @@ public enum FormatOnEnter {
         return .some(newLeft)
     }
 
-
     /// Poprzednia niepusta linia przed `lineStart` (wcięcie Smart).
     static func previousLine(_ ns: NSString, before lineStart: Int) -> String? {
         var p = lineStart

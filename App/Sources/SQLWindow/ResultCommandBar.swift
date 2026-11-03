@@ -284,7 +284,8 @@ final class ResultCommandBar: NSView {
 
     private func commandItem(_ raw: String) -> NSMenuItem? {
         MenuBuilder.commandItem(raw, workspace: workspace, target: self, action: #selector(menuCommand(_:)),
-                                state: localState[raw]?() ?? workspace.toggleState(CommandID(rawValue: raw)) ?? viewState(raw))
+                                // Rejestr — domyślnie w `MenuBuilder.commandItem`; tu tylko stan siatki i widoku.
+                                state: localState[raw]?() ?? viewState(raw))
     }
 
     @objc private func menuCommand(_ sender: NSMenuItem) {

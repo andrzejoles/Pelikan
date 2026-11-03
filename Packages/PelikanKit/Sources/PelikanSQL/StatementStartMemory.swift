@@ -87,7 +87,9 @@ public struct StatementStartMemory: Sendable, Equatable {
         let s = statement(forLineAt: lineStart, in: text)
         if !s.normal || s.region.open || Self.isRawUnit(at: s.statement, in: text) { return EnterContext(start: lineStart, mode: .none) }
         if Self.lines(from: s.statement, to: lineStart, in: text, limit: lineLimit) <= lineLimit { return EnterContext(start: s.statement) }
-        if let cp = checkpoints.last(where: { $0.subprogram && $0.statement == s.statement && $0.position <= lineStart }),
+        if let cp = lastCheckpoint(atOrBefore: lineStart).flatMap({ k in
+               checkpoints[...k].last { $0.subprogram || $0.statement != s.statement }
+           }).flatMap({ $0.subprogram && $0.statement == s.statement ? $0 : nil }),
            let unit = cp.unit, unit.body, Self.lines(from: cp.position, to: lineStart, in: text, limit: lineLimit) <= lineLimit {
             return EnterContext(start: cp.position, header: "CREATE OR REPLACE \(unit.typeBody ? "TYPE" : "PACKAGE") BODY pelikan_context IS\n")
         }
@@ -97,9 +99,11 @@ public struct StatementStartMemory: Sendable, Equatable {
     /// Polecenie linii, stan regionów i leksera na jej początku: od ostatniego ważnego punktu kontrolnego (blok PL/SQL
     /// kończy tylko `/` sam w linii) albo podziałem od ostatniego znanego początku polecenia.
     mutating func statement(forLineAt lineStart: Int, in text: NSString) -> (statement: Int, region: Region, normal: Bool) {
-        // Znany początek polecenia między punktem a linią (np. granica za `/`) — blok punktu się skończył: od razu podział.
-        if let k = checkpoints.lastIndex(where: { $0.position <= lineStart }),
-           starts.last(where: { $0 <= lineStart }).map({ $0 <= checkpoints[k].position }) ?? true {
+        // Ostatni punkt przed linią; znany początek polecenia między nim a linią (np. granica za `/`) — blok punktu się
+        // skończył: od razu podział. Punkt nieaktualny (linia nie zaczyna już podprogramu) — usunięty i próba od
+        // poprzedniego, nie od początku polecenia.
+        while let k = lastCheckpoint(atOrBefore: lineStart),
+              lastStart(atOrBefore: lineStart).map({ $0 <= checkpoints[k].position }) ?? true {
             let cp = checkpoints[k]
             var scan = Scan(statement: cp.statement, region: cp.region, unit: cp.unit, checkpointsFrom: cp.position + 1, plsql: true)
             scan.run(text, from: cp.position, to: lineStart, expectSubprogram: cp.subprogram)
@@ -109,21 +113,23 @@ public struct StatementStartMemory: Sendable, Equatable {
                 return (cp.statement, scan.region, scan.normal)
             }
             scannedLength += (scan.endPosition ?? scan.stopPosition ?? lineStart) - cp.position
-            // Nieaktualny jest tylko ten punkt (linia nie zaczyna już podprogramu). `/` po drodze — linia leży za
-            // blokiem punktu: punkty (także późniejszych jednostek) zostają, polecenie wyznacza podział.
-            if scan.stale { checkpoints.remove(at: k) }
-            if scan.ended, let end = scan.endLineEnd {
-                // Granica podziału za linią z `/` (początek polecenia w `starts`, unieważniany jak inne): linie za
-                // blokiem — także same odstępy, z których podział nie tworzy polecenia — od niej, a punkty bloku
-                // pomijane (warunek wyżej).
+            if scan.stale {
+                checkpoints.remove(at: k)
+                continue
+            }
+            // `/` po drodze — linia leży za blokiem punktu: punkty (także późniejszych jednostek) zostają, granica
+            // podziału za linią z `/` (początek polecenia w `starts`, unieważniany jak inne) — linie za blokiem, także
+            // same odstępy, z których podział nie tworzy polecenia, dzielone od niej, a punkty bloku pomijane.
+            if let end = scan.endLineEnd {
                 let next = end + 1
-                if next <= text.length, !starts.contains(next) {
-                    starts.insert(next, at: starts.firstIndex { $0 > next } ?? starts.count)
+                if next <= text.length, lastStart(atOrBefore: next) != next {
+                    starts.insert(next, at: (lastStartIndex(atOrBefore: next) ?? -1) + 1)
                     regions[next] = scan.region
                 }
             }
+            break
         }
-        let base = starts.last { $0 <= lineStart } ?? 0
+        let base = lastStart(atOrBefore: lineStart) ?? 0
         guard base < lineStart else { return (base, regions[base] ?? Region(), true) }
         let chunk = text.substring(with: NSRange(location: base, length: lineStart - base))
         let parts = ScriptSplitter.split(chunk, mode: .commandWindow)
@@ -171,6 +177,28 @@ public struct StatementStartMemory: Sendable, Equatable {
         }
         checkpoints.insert(c, at: lo)
     }
+
+    /// Indeks ostatniego punktu w `position` nie dalej niż `p` (wyszukiwanie binarne — punkty rosnąco).
+    func lastCheckpoint(atOrBefore p: Int) -> Int? {
+        var lo = 0, hi = checkpoints.count
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            if checkpoints[mid].position <= p { lo = mid + 1 } else { hi = mid }
+        }
+        return lo > 0 ? lo - 1 : nil
+    }
+
+    /// Indeks ostatniego znanego początku polecenia nie dalej niż `p` (wyszukiwanie binarne).
+    func lastStartIndex(atOrBefore p: Int) -> Int? {
+        var lo = 0, hi = starts.count
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            if starts[mid] <= p { lo = mid + 1 } else { hi = mid }
+        }
+        return lo > 0 ? lo - 1 : nil
+    }
+
+    func lastStart(atOrBefore p: Int) -> Int? { lastStartIndex(atOrBefore: p).map { starts[$0] } }
 
     /// Liczba linii między pozycjami (najwyżej `limit + 1` — liczenie od końca).
     static func lines(from a: Int, to b: Int, in text: NSString, limit: Int) -> Int {
@@ -279,7 +307,8 @@ public struct StatementStartMemory: Sendable, Equatable {
                     if plsql, pos > statement, p >= utf.count || utf[p] == 0x0A || utf[p] == 0x0D {
                         ended = true
                         endPosition = pos
-                        endLineEnd = from + p
+                        // CRLF — koniec linii za LF (granica podziału na początku następnej linii).
+                        endLineEnd = from + (p + 1 < utf.count && utf[p] == 0x0D && utf[p + 1] == 0x0A ? p + 1 : p)
                         return
                     }
                 default:
