@@ -17,7 +17,8 @@ struct AgentsPane: View {
                 ForEach(workspace.settings.agent.profiles) { p in
                     HStack {
                         TextField(L10n.tr("Nazwa"), text: field(p, \.name)).frame(width: 150)
-                        TextField(L10n.tr("Polecenie"), text: field(p, \.executable)).font(.code).frame(width: 130)
+                        ChoiceField(L10n.tr("Polecenie"), text: field(p, \.executable), choices: PreferenceChoices.agentExecutables, code: true, hideLabel: true)
+                            .frame(width: 150)
                         Picker(L10n.tr("Konfiguracja MCP jak"), selection: field(p, \.flavor)) {
                             ForEach(AgentFlavor.allCases, id: \.self) { Text(flavorName($0)).tag($0) }
                         }

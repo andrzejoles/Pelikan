@@ -172,6 +172,9 @@ public struct Settings: Sendable, Codable, Hashable {
     public var detectExternalFileChanges = true
     /// Plik zmieniony na zewnątrz wczytywany bez pytania, gdy okno nie ma niezapisanych zmian (D197).
     public var reloadExternalChangesSilently = false
+    /// Standard plików z kodem (D210): kodowanie i BOM nowych plików, pliki programów bez „/”, pytanie o konwersję
+    /// przy otwarciu pliku w innym formacie.
+    public var fileStandard = FileStandard()
     public var tabSize = 2
     /// Wielkość liter słów kluczowych przy pisaniu (UG 23.12 Keyword case).
     public var keywordCase: KeywordCase = .unchanged
@@ -429,6 +432,9 @@ public struct Settings: Sendable, Codable, Hashable {
         specBodyExtensions = v(.specBodyExtensions, specBodyExtensions)
         openSpecBodyPair = v(.openSpecBodyPair, openSpecBodyPair)
         detectExternalFileChanges = v(.detectExternalFileChanges, detectExternalFileChanges)
+        fileStandard = v(.fileStandard, fileStandard)
+        // Ustawienia sprzed standardu plików (D210) z włączonym „/” w oknie programu — wybór użytkownika zostaje.
+        if (try? c.decodeIfPresent(FileStandard.self, forKey: .fileStandard)) == nil, programUnitSlash { fileStandard.slashFreePrograms = false }
         reloadExternalChangesSilently = v(.reloadExternalChangesSilently, reloadExternalChangesSilently)
         tabSize = v(.tabSize, tabSize)
         useTabCharacter = v(.useTabCharacter, useTabCharacter)

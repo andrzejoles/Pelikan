@@ -57,6 +57,62 @@
         }
       }
     },
+    " bez BOM" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " without BOM"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " ohne BOM"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " sin BOM"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " без BOM"
+          }
+        }
+      }
+    },
+    " z BOM" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " with BOM"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " mit BOM"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " con BOM"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " з BOM"
+          }
+        }
+      }
+    },
     " · ostrzeżeń: %@" : {
       "localizations" : {
         "en" : {
@@ -1761,6 +1817,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "(текст скорочено — повний текст у буфері обміну)"
+          }
+        }
+      }
+    },
+    ", bez linii „/”" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", without “/” lines"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", ohne „/“-Zeilen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", sin líneas «/»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", без рядків «/»"
           }
         }
       }
@@ -33573,6 +33657,62 @@
         }
       }
     },
+    "Konwersja otwieranego pliku do standardu plików" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Converting an opened file to the file standard"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konvertierung einer geöffneten Datei in den Dateistandard"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conversión de un archivo abierto al estándar de archivos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перетворення відкритого файлу до стандарту файлів"
+          }
+        }
+      }
+    },
+    "Konwertuj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Convert"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konvertieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Convertir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перетворити"
+          }
+        }
+      }
+    },
     "Kopia poprzedniej wersji przy zapisie (plik.~ext)" : {
       "localizations" : {
         "en" : {
@@ -46173,6 +46313,34 @@
         }
       }
     },
+    "Nowe okna zapisują się w tym formacie. Konwersja zmienia okno (kodowanie zapisu, BOM, usunięcie linii „/” z pliku programu) — plik zmienia się dopiero przy zapisie. Skrypty SQL zachowują „/”, bo wykonuje je okno poleceń; kodowanie plików projektu z ustawionym kodowaniem zostaje." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New windows are saved in this format. Conversion changes the window (save encoding, BOM, removal of “/” lines from a program file) — the file changes only when saved. SQL scripts keep “/” because the Command Window runs them; the encoding of files in a project with a set encoding is kept."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Fenster werden in diesem Format gespeichert. Die Konvertierung ändert das Fenster (Speicherkodierung, BOM, Entfernen von „/“-Zeilen aus einer Programmdatei) — die Datei ändert sich erst beim Speichern. SQL-Skripte behalten „/“, weil das Befehlsfenster sie ausführt; die Kodierung von Dateien eines Projekts mit festgelegter Kodierung bleibt erhalten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las ventanas nuevas se guardan en este formato. La conversión cambia la ventana (codificación al guardar, BOM, eliminación de líneas «/» de un archivo de programa); el archivo cambia solo al guardar. Los scripts SQL conservan «/» porque los ejecuta la ventana de comandos; se mantiene la codificación de los archivos de un proyecto con codificación definida."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нові вікна зберігаються в цьому форматі. Перетворення змінює вікно (кодування збереження, BOM, видалення рядків «/» з файлу програми) — файл змінюється лише під час збереження. SQL-скрипти зберігають «/», бо їх виконує вікно команд; кодування файлів проєкту з установленим кодуванням залишається."
+          }
+        }
+      }
+    },
     "Nowe okno" : {
       "localizations" : {
         "en" : {
@@ -49389,6 +49557,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ab %@"
+          }
+        }
+      }
+    },
+    "Odbiega od standardu plików: %@. Po konwersji okno zostanie zapisane jako %@ przy następnym zapisie (Ustawienia › Ogólne › Standard plików)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Differs from the file standard: %@. After conversion the window will be saved as %@ on the next save (Settings › General › File standard)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weicht vom Dateistandard ab: %@. Nach der Konvertierung wird das Fenster beim nächsten Speichern als %@ gespeichert (Einstellungen › Allgemein › Dateistandard)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Difiere del estándar de archivos: %@. Tras la conversión, la ventana se guardará como %@ en el próximo guardado (Ajustes › General › Estándar de archivos)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відрізняється від стандарту файлів: %@. Після перетворення вікно буде збережено як %@ під час наступного збереження (Налаштування › Загальні › Стандарт файлів)."
           }
         }
       }
@@ -59105,6 +59301,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Файли вже існують: %@. Замінити їх?"
+          }
+        }
+      }
+    },
+    "Pliki programów bez linii „/” (na końcu ani w środku)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Program files without “/” lines (neither at the end nor in the middle)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Programmdateien ohne „/“-Zeilen (weder am Ende noch in der Mitte)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivos de programa sin líneas «/» (ni al final ni en medio)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файли програм без рядків «/» (ні в кінці, ні всередині)"
           }
         }
       }
@@ -69637,6 +69861,34 @@
         }
       }
     },
+    "Przekonwertować „%@” do standardu plików?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Convert “%@” to the file standard?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ in den Dateistandard konvertieren?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Convertir «%@» al estándar de archivos?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перетворити «%@» до стандарту файлів?"
+          }
+        }
+      }
+    },
     "Przekroczony limit czasu" : {
       "localizations" : {
         "en" : {
@@ -72437,6 +72689,34 @@
         }
       }
     },
+    "Przywróć domyślne (UTF-8, bez BOM, bez „/”)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore defaults (UTF-8, no BOM, no “/”)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard wiederherstellen (UTF-8, ohne BOM, ohne „/“)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar valores predeterminados (UTF-8, sin BOM, sin «/»)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити типові (UTF-8, без BOM, без «/»)"
+          }
+        }
+      }
+    },
     "Przywróć domyślne, zachowaj pisownię specjalną" : {
       "localizations" : {
         "en" : {
@@ -73161,6 +73441,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Питати (меню)"
+          }
+        }
+      }
+    },
+    "Pytaj o konwersję przy otwarciu pliku w innym formacie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask about conversion when opening a file in a different format"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim Öffnen einer Datei in anderem Format nach Konvertierung fragen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preguntar por la conversión al abrir un archivo en otro formato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Питати про перетворення під час відкриття файлу в іншому форматі"
           }
         }
       }
@@ -80585,6 +80893,34 @@
         }
       }
     },
+    "Standard plików" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File standard"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateistandard"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estándar de archivos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стандарт файлів"
+          }
+        }
+      }
+    },
     "Standardowy" : {
       "localizations" : {
         "en" : {
@@ -83045,34 +83381,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "TIMESTAMP"
-          }
-        }
-      }
-    },
-    "TNS" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "TNS"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "TNS"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "TNS"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "TNS"
           }
         }
       }
@@ -99737,6 +100045,34 @@
         }
       }
     },
+    "Wybierz aplikację…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose application…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anwendung wählen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir aplicación…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вибрати програму…"
+          }
+        }
+      }
+    },
     "Wybierz cel albo dodaj nowy" : {
       "localizations" : {
         "en" : {
@@ -99873,6 +100209,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verzeichnis mit der Bibliothek libclntsh.dylib auswählen"
+          }
+        }
+      }
+    },
+    "Wybierz katalog…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose folder…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner wählen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir carpeta…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вибрати папку…"
           }
         }
       }
@@ -100321,6 +100685,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Виберіть пошук."
+          }
+        }
+      }
+    },
+    "Wybierz z listy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose from list"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus Liste wählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir de la lista"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вибрати зі списку"
           }
         }
       }
@@ -105109,6 +105501,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deaktiviert"
+          }
+        }
+      }
+    },
+    "Wyłączone przez standard plików (Ogólne › Standard plików)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disabled by the file standard (General › File standard)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durch den Dateistandard deaktiviert (Allgemein › Dateistandard)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivado por el estándar de archivos (General › Estándar de archivos)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вимкнено стандартом файлів (Загальні › Стандарт файлів)"
           }
         }
       }
@@ -118749,6 +119169,34 @@
         }
       }
     },
+    "Znacznik BOM na początku pliku (UTF-8)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byte order mark (BOM) at the start of the file (UTF-8)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bytereihenfolge-Markierung (BOM) am Dateianfang (UTF-8)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marca de orden de bytes (BOM) al inicio del archivo (UTF-8)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мітка порядку байтів (BOM) на початку файлу (UTF-8)"
+          }
+        }
+      }
+    },
     "Znacznik czasu UTC" : {
       "localizations" : {
         "en" : {
@@ -119221,6 +119669,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Залишити"
+          }
+        }
+      }
+    },
+    "Zostaw bez zmian" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave unchanged"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unverändert lassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dejar sin cambios"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Залишити без змін"
           }
         }
       }
@@ -120009,6 +120485,34 @@
         }
       }
     },
+    "bez ostrzeżeń" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no warnings"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keine Warnungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sin advertencias"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "без попереджень"
+          }
+        }
+      }
+    },
     "bez sortowania" : {
       "localizations" : {
         "en" : {
@@ -120425,6 +120929,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "kein Eintrag"
+          }
+        }
+      }
+    },
+    "brak znacznika BOM" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no BOM"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keine BOM"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sin BOM"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "немає мітки BOM"
           }
         }
       }
@@ -121045,6 +121577,34 @@
         }
       }
     },
+    "domyślny Oracle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle default"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle-Standard"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "predeterminado de Oracle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "типовий Oracle"
+          }
+        }
+      }
+    },
     "dopisz" : {
       "localizations" : {
         "en" : {
@@ -121661,6 +122221,34 @@
         }
       }
     },
+    "kodowanie %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "encoding %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kodierung %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "codificación %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "кодування %@"
+          }
+        }
+      }
+    },
     "kodzie" : {
       "localizations" : {
         "en" : {
@@ -121941,6 +122529,34 @@
         }
       }
     },
+    "kropka dziesiętna, przecinek tysięcy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "decimal point, comma for thousands"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dezimalpunkt, Komma als Tausendertrennzeichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "punto decimal, coma de miles"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "десяткова крапка, кома для тисяч"
+          }
+        }
+      }
+    },
     "kursor" : {
       "localizations" : {
         "en" : {
@@ -122105,6 +122721,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeile %@"
+          }
+        }
+      }
+    },
+    "linie z samym „/”: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "lines with only “/”: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilen nur mit „/“: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "líneas solo con «/»: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "рядки лише з «/»: %@"
           }
         }
       }
@@ -124125,6 +124769,34 @@
         }
       }
     },
+    "polski" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polish"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polnisch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "polaco"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "польський"
+          }
+        }
+      }
+    },
     "pominięto (istnieje): %@" : {
       "localizations" : {
         "en" : {
@@ -124261,6 +124933,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "попередній індекс"
+          }
+        }
+      }
+    },
+    "poważne jako błędy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "severe as errors"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "schwerwiegende als Fehler"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "graves como errores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "серйозні як помилки"
           }
         }
       }
@@ -124457,6 +125157,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "приватний"
+          }
+        }
+      }
+    },
+    "przecinek dziesiętny, kropka tysięcy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "decimal comma, point for thousands"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dezimalkomma, Punkt als Tausendertrennzeichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "coma decimal, punto de miles"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "десяткова кома, крапка для тисяч"
+          }
+        }
+      }
+    },
+    "przecinek dziesiętny, spacja tysięcy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "decimal comma, space for thousands"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dezimalkomma, Leerzeichen als Tausendertrennzeichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "coma decimal, espacio de miles"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "десяткова кома, пробіл для тисяч"
           }
         }
       }
@@ -127205,6 +127961,34 @@
         }
       }
     },
+    "wszystkie ostrzeżenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "all warnings"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "alle Warnungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "todas las advertencias"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "усі попередження"
+          }
+        }
+      }
+    },
     "wycofanie" : {
       "localizations" : {
         "en" : {
@@ -127985,6 +128769,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Variable %@\n Typ: %@"
+          }
+        }
+      }
+    },
+    "znacznik BOM na początku pliku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "byte order mark (BOM) at the start of the file"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bytereihenfolge-Markierung (BOM) am Dateianfang"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "marca de orden de bytes (BOM) al inicio del archivo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "мітка порядку байтів (BOM) на початку файлу"
           }
         }
       }

@@ -45,6 +45,8 @@ final class ExplainPlanViewController: NSViewController, DocumentContentControll
 }
 
 struct PlanPanel: View {
+    /// Sortowanie planu po kolumnie (D212).
+    @State private var sortPlan: [ColumnSort<PlanLine>] = []
     @Bindable var document: PelikanWorkspace.Document
     let workspace: Workspace
     @State private var selection: PlanLine.ID?
@@ -111,19 +113,19 @@ struct PlanPanel: View {
             } else {
                 // Rozwinięcie gałęzi w modelu okna (`planExpanded`) — komendy Rozwiń/Zwiń wszystko (PD-OPT-001).
                 ScrollViewReader { proxy in
-                    Table(of: PlanLine.self, selection: $selection) {
-                        TableColumn(L10n.tr("Opis")) { l in
+                    Table(of: PlanLine.self, selection: $selection, sortOrder: $sortPlan) {
+                        TableColumn(L10n.tr("Opis"), sortKey: { l in l.title }) { l in
                             Text(l.title).fontWeight(l.id == selection ? .semibold : .regular)
                         }
                         .width(min: 200, ideal: 280)
-                        TableColumn(L10n.tr("Obiekt")) { l in Text(l.object) }.width(min: 80, ideal: 160)
-                        TableColumn(L10n.tr("Koszt")) { l in Text(l.cost.map(String.init) ?? "").monospacedDigit() }.width(60)
-                        TableColumn(L10n.tr("Wiersze")) { l in Text(l.cardinality.map(String.init) ?? "").monospacedDigit() }.width(70)
-                        TableColumn(L10n.tr("Bajty")) { l in Text(l.bytes.map(String.init) ?? "").monospacedDigit() }.width(70)
-                        TableColumn(L10n.tr("Czas")) { l in Text(l.time.map(String.init) ?? "").monospacedDigit() }.width(50)
-                        TableColumn(L10n.tr("Kolejność")) { l in Text("\(l.executionOrder)").monospacedDigit() }.width(60)
+                        TableColumn(L10n.tr("Obiekt"), sortKey: { l in l.object }) { l in Text(l.object) }.width(min: 80, ideal: 160)
+                        TableColumn(L10n.tr("Koszt"), sortKey: { l in l.cost.map(String.init) ?? "" }) { l in Text(l.cost.map(String.init) ?? "").monospacedDigit() }.width(60)
+                        TableColumn(L10n.tr("Wiersze"), sortKey: { l in l.cardinality.map(String.init) ?? "" }) { l in Text(l.cardinality.map(String.init) ?? "").monospacedDigit() }.width(70)
+                        TableColumn(L10n.tr("Bajty"), sortKey: { l in l.bytes.map(String.init) ?? "" }) { l in Text(l.bytes.map(String.init) ?? "").monospacedDigit() }.width(70)
+                        TableColumn(L10n.tr("Czas"), sortKey: { l in l.time.map(String.init) ?? "" }) { l in Text(l.time.map(String.init) ?? "").monospacedDigit() }.width(50)
+                        TableColumn(L10n.tr("Kolejność"), sortKey: { l in l.executionOrder }) { l in Text("\(l.executionOrder)").monospacedDigit() }.width(60)
                     } rows: {
-                        ForEach(document.plan?.roots ?? []) { PlanTreeRows(line: $0, expanded: $document.planExpanded) }
+                        ForEach((document.plan?.roots ?? []).sorted(by: sortPlan)) { PlanTreeRows(line: $0, expanded: $document.planExpanded, sort: sortPlan) }
                     }
                     // Krok zaznaczony nawigacją albo w Diagramie/Flame graph: rozwinięte gałęzie nad nim i przewinięcie do niego.
                     .onChange(of: selection, initial: true) { _, id in
@@ -157,13 +159,15 @@ struct PlanPanel: View {
 struct PlanTreeRows: TableRowContent {
     let line: PlanLine
     @Binding var expanded: Set<Int>
+    /// Sortowanie po kolumnie (D212): gałęzie planu zostają, kolejność zmienia się wśród rodzeństwa.
+    var sort: [ColumnSort<PlanLine>] = []
 
     @TableRowBuilder<PlanLine> var tableRowBody: some TableRowContent<PlanLine> {
         if let children = line.children {
             DisclosureTableRow(line, isExpanded: Binding(get: { expanded.contains(line.id) }, set: { open in
                 if open { expanded.insert(line.id) } else { expanded.remove(line.id) }
             })) {
-                ForEach(children) { PlanTreeRows(line: $0, expanded: $expanded) }
+                ForEach(children.sorted(by: sort)) { PlanTreeRows(line: $0, expanded: $expanded, sort: sort) }
             }
         } else {
             TableRow(line)

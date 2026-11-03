@@ -39,7 +39,8 @@ public struct ProjectOptions: Sendable, Codable, Hashable {
     public var connection: String?
     public var haltOnFirstError = true
     public var beautifyOnBuild = false
-    /// Kodowanie plików projektu bez BOM (np. „ISO-8859-2” dla źródeł Pro*C); nil — wykrywanie przy otwarciu.
+    /// Kodowanie odczytu plików projektu spoza UTF-8, gdy z bajtów nie da się go rozstrzygnąć (D213); poprawny UTF-8
+    /// i wyraźnie inne kodowanie wygrywają. nil — samo wykrywanie. Zapis — wg standardu plików (domyślnie UTF-8).
     public var encoding: String?
     public init() {}
 
@@ -246,7 +247,7 @@ public enum ProjectEngine {
         for w in project.desktop {
             let url = w.path.hasPrefix("/") ? URL(fileURLWithPath: w.path) : projectURL.deletingLastPathComponent().appendingPathComponent(w.path)
             if ws.documents.contains(where: { $0.fileURLs.contains(url.standardizedFileURL) }) { continue }
-            if (try? ws.openFile(url, as: w.kind)) != nil { n += 1 }
+            if (try? ws.withoutFileStandardChecks({ try ws.openFile(url, as: w.kind) })) != nil { n += 1 }
         }
         return n
     }

@@ -806,7 +806,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
 
 /// Informacje o obiekcie (Opis, Właściwości): tabela, kopiowanie zaznaczenia; narzędzie w panelu albo oknie (D183).
 final class ObjectInfoViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
-    private let rows: [[String]]
+    private var rows: [[String]]
     private let table = NSTableView()
 
     static func show(title: String, columns: [String], rows: [[String]]) {
@@ -825,6 +825,7 @@ final class ObjectInfoViewController: NSViewController, NSTableViewDataSource, N
             c.width = i == 0 ? 200 : 320
             table.addTableColumn(c)
         }
+        HeaderSort.enable(table)
         table.usesAlternatingRowBackgroundColors = true
         table.allowsMultipleSelection = true
         // Wysokość wiersza z czcionki interfejsu i kodu (D178).
@@ -842,6 +843,14 @@ final class ObjectInfoViewController: NSViewController, NSTableViewDataSource, N
     required init?(coder: NSCoder) { fatalError() }
 
     func numberOfRows(in tableView: NSTableView) -> Int { rows.count }
+
+    func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
+        rows = HeaderSort.sort(rows, by: tableView.sortDescriptors) { r, key in
+            let i = Int(key.dropFirst()) ?? 0
+            return (i < r.count ? r[i] : "").sortKey
+        }
+        tableView.reloadData()
+    }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         guard let id = tableColumn?.identifier.rawValue, let i = Int(id.dropFirst()) else { return nil }

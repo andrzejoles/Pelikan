@@ -90,6 +90,16 @@ final class TestWindowViewController: NSViewController, DocumentContentControlle
 
 /// Karty pod blokiem testu.
 struct TestPanel: View {
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortStatistics: [ColumnSort<Profiler.StatisticRow>] = []
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortTrace: [ColumnSort<PLSQLTrace.Event>] = []
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortProfilerFunctions: [ColumnSort<ProfilerFunction>] = []
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortProfilerLines: [ColumnSort<ProfilerLine>] = []
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortVariables: [ColumnSort<Binding<TestVariable>>] = []
     @Bindable var document: PelikanWorkspace.Document
     let workspace: Workspace
     @State private var tab = 0
@@ -126,14 +136,14 @@ struct TestPanel: View {
     }
 
     private var variables: some View {
-        Table($document.testVariables) {
-            TableColumn(L10n.tr("Zmienna")) { $v in Text(v.name).font(.code) }.width(min: 90, ideal: 140)
-            TableColumn(L10n.tr("Typ")) { $v in
+        Table(Binding.sorted($document.testVariables, by: sortVariables), sortOrder: $sortVariables) {
+            TableColumn(L10n.tr("Zmienna"), sortKey: { v in v.name }) { $v in Text(v.name).font(.code) }.width(min: 90, ideal: 140)
+            TableColumn(L10n.tr("Typ"), sortKey: { v in v.wrappedValue.type.displayName }) { $v in
                 Picker("", selection: $v.type) {
                     ForEach(TestVariableType.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }.labelsHidden()
             }.width(min: 110, ideal: 140)
-            TableColumn(L10n.tr("Wartość")) { $v in
+            TableColumn(L10n.tr("Wartość"), sortKey: { v in v.value }) { $v in
                 HStack {
                     if v.type == .cursor {
                         Text(v.value).foregroundStyle(.secondary)
@@ -240,13 +250,13 @@ struct TestPanel: View {
                 if r.kind == .lines {
                     let total = max(r.lines.reduce(0) { $0 + $1.totalTime }, 1)
                     let unit = workspace.settings.profilerTimeUnit
-                    Table(Profiler.lines(r, minShare: workspace.settings.profilerMinShare)) {
-                        TableColumn(L10n.tr("Jednostka")) { (l: ProfilerLine) in Text(l.unitName.isEmpty ? L10n.tr("blok") : l.unitName) }.width(min: 90, ideal: 140)
-                        TableColumn(L10n.tr("Linia")) { (l: ProfilerLine) in Text(String(l.line)) }.width(44)
-                        TableColumn(L10n.tr("Wykonań")) { (l: ProfilerLine) in Text(String(l.occurrences)) }.width(64)
-                        TableColumn(L10n.tr("Czas [\(unit.symbol)]")) { (l: ProfilerLine) in Text(unit.format(nanoseconds: l.totalTime)) }.width(84)
-                        TableColumn("%") { (l: ProfilerLine) in bar(l.totalTime / total) }.width(90)
-                        TableColumn(L10n.tr("Tekst")) { (l: ProfilerLine) in Text(l.text).font(.code).lineLimit(1) }
+                    Table((Profiler.lines(r, minShare: workspace.settings.profilerMinShare)).sorted(by: sortProfilerLines), sortOrder: $sortProfilerLines) {
+                        TableColumn(L10n.tr("Jednostka"), sortKey: { (l: ProfilerLine) in l.unitName.isEmpty ? L10n.tr("blok") : l.unitName }) { (l: ProfilerLine) in Text(l.unitName.isEmpty ? L10n.tr("blok") : l.unitName) }.width(min: 90, ideal: 140)
+                        TableColumn(L10n.tr("Linia"), sortKey: { (l: ProfilerLine) in String(l.line) }) { (l: ProfilerLine) in Text(String(l.line)) }.width(44)
+                        TableColumn(L10n.tr("Wykonań"), sortKey: { (l: ProfilerLine) in String(l.occurrences) }) { (l: ProfilerLine) in Text(String(l.occurrences)) }.width(64)
+                        TableColumn(L10n.tr("Czas [\(unit.symbol)]"), sortKey: { (l: ProfilerLine) in unit.format(nanoseconds: l.totalTime) }) { (l: ProfilerLine) in Text(unit.format(nanoseconds: l.totalTime)) }.width(84)
+                        TableColumn("%", sortKey: { (l: ProfilerLine) in l.totalTime }) { (l: ProfilerLine) in bar(l.totalTime / total) }.width(90)
+                        TableColumn(L10n.tr("Tekst"), sortKey: { (l: ProfilerLine) in l.text }) { (l: ProfilerLine) in Text(l.text).font(.code).lineLimit(1) }
                     }
                 } else if showCallTree {
                     let total = max(r.functions.map(\.subtreeTime).max() ?? 1, 1)
@@ -261,12 +271,12 @@ struct TestPanel: View {
                     }
                 } else {
                     let total = max(r.functions.map(\.subtreeTime).max() ?? 1, 1)
-                    Table(r.functions) {
-                        TableColumn(L10n.tr("Funkcja")) { (f: ProfilerFunction) in Text(f.displayName).font(.code) }.width(min: 160, ideal: 240)
-                        TableColumn(L10n.tr("Wywołań")) { (f: ProfilerFunction) in Text(String(f.calls)) }.width(64)
-                        TableColumn(L10n.tr("Własny [µs]")) { (f: ProfilerFunction) in Text(String(format: "%.0f", f.functionTime)) }.width(84)
-                        TableColumn(L10n.tr("Z wywołaniami [µs]")) { (f: ProfilerFunction) in Text(String(format: "%.0f", f.subtreeTime)) }.width(120)
-                        TableColumn("%") { (f: ProfilerFunction) in bar(f.subtreeTime / total) }.width(90)
+                    Table(r.functions.sorted(by: sortProfilerFunctions), sortOrder: $sortProfilerFunctions) {
+                        TableColumn(L10n.tr("Funkcja"), sortKey: { (f: ProfilerFunction) in f.displayName }) { (f: ProfilerFunction) in Text(f.displayName).font(.code) }.width(min: 160, ideal: 240)
+                        TableColumn(L10n.tr("Wywołań"), sortKey: { (f: ProfilerFunction) in String(f.calls) }) { (f: ProfilerFunction) in Text(String(f.calls)) }.width(64)
+                        TableColumn(L10n.tr("Własny [µs]"), sortKey: { (f: ProfilerFunction) in f.functionTime }) { (f: ProfilerFunction) in Text(String(format: "%.0f", f.functionTime)) }.width(84)
+                        TableColumn(L10n.tr("Z wywołaniami [µs]"), sortKey: { (f: ProfilerFunction) in f.subtreeTime }) { (f: ProfilerFunction) in Text(String(format: "%.0f", f.subtreeTime)) }.width(120)
+                        TableColumn("%", sortKey: { (f: ProfilerFunction) in f.subtreeTime }) { (f: ProfilerFunction) in bar(f.subtreeTime / total) }.width(90)
                     }
                 }
             } else {
@@ -319,12 +329,12 @@ struct TestPanel: View {
                 }
                 Button(L10n.tr("Historia…")) { workspace.perform("test.traceRuns") }
             }
-            Table(document.traceEvents) {
-                TableColumn("#") { (e: PLSQLTrace.Event) in Text("\(e.seq)").monospacedDigit() }.width(50)
-                TableColumn(L10n.tr("Zdarzenie")) { (e: PLSQLTrace.Event) in Text(e.kind) }.width(min: 60, ideal: 80)
-                TableColumn(L10n.tr("Jednostka")) { (e: PLSQLTrace.Event) in Text(e.unit) }.width(min: 120, ideal: 180)
-                TableColumn(L10n.tr("Linia")) { (e: PLSQLTrace.Event) in Text(e.line > 0 ? "\(e.line)" : "") }.width(50)
-                TableColumn(L10n.tr("Opis")) { (e: PLSQLTrace.Event) in Text(e.comment) }
+            Table(document.traceEvents.sorted(by: sortTrace), sortOrder: $sortTrace) {
+                TableColumn("#", sortKey: { (e: PLSQLTrace.Event) in e.seq }) { (e: PLSQLTrace.Event) in Text("\(e.seq)").monospacedDigit() }.width(50)
+                TableColumn(L10n.tr("Zdarzenie"), sortKey: { (e: PLSQLTrace.Event) in e.kind }) { (e: PLSQLTrace.Event) in Text(e.kind) }.width(min: 60, ideal: 80)
+                TableColumn(L10n.tr("Jednostka"), sortKey: { (e: PLSQLTrace.Event) in e.unit }) { (e: PLSQLTrace.Event) in Text(e.unit) }.width(min: 120, ideal: 180)
+                TableColumn(L10n.tr("Linia"), sortKey: { (e: PLSQLTrace.Event) in e.line > 0 ? "\(e.line)" : "" }) { (e: PLSQLTrace.Event) in Text(e.line > 0 ? "\(e.line)" : "") }.width(50)
+                TableColumn(L10n.tr("Opis"), sortKey: { (e: PLSQLTrace.Event) in e.comment }) { (e: PLSQLTrace.Event) in Text(e.comment) }
             }
         }
         .padding(6)
@@ -340,10 +350,10 @@ struct TestPanel: View {
             }
             .padding(.horizontal, 6)
             // Ostatnie wykonanie i suma okna; wybór statystyk w Ustawieniach › Okno SQL (PD-OPT-004).
-            Table(Profiler.rows(last: document.statistics, totals: document.statisticTotals, selected: workspace.settings.selectedStatistics, filter: statFilter)) {
-                TableColumn(L10n.tr("Statystyka")) { (s: Profiler.StatisticRow) in Text(s.name) }
-                TableColumn(L10n.tr("Ostatnie")) { (s: Profiler.StatisticRow) in Text(Self.number(s.last)).monospacedDigit() }.width(110)
-                TableColumn(L10n.tr("Suma")) { (s: Profiler.StatisticRow) in Text(Self.number(s.total)).monospacedDigit() }.width(110)
+            Table((Profiler.rows(last: document.statistics, totals: document.statisticTotals, selected: workspace.settings.selectedStatistics, filter: statFilter)).sorted(by: sortStatistics), sortOrder: $sortStatistics) {
+                TableColumn(L10n.tr("Statystyka"), sortKey: { (s: Profiler.StatisticRow) in s.name }) { (s: Profiler.StatisticRow) in Text(s.name) }
+                TableColumn(L10n.tr("Ostatnie"), sortKey: { (s: Profiler.StatisticRow) in Self.number(s.last) }) { (s: Profiler.StatisticRow) in Text(Self.number(s.last)).monospacedDigit() }.width(110)
+                TableColumn(L10n.tr("Suma"), sortKey: { (s: Profiler.StatisticRow) in Self.number(s.total) }) { (s: Profiler.StatisticRow) in Text(Self.number(s.total)).monospacedDigit() }.width(110)
             }
         }
     }

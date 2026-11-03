@@ -96,6 +96,10 @@ struct FlameGraphView: View {
 
 /// Wynik Autotrace (SD-PLAN-002): plan rzeczywisty i statystyki sesji.
 struct AutotraceView: View {
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortStatistics: [ColumnSort<SessionStatistic>] = []
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortLines: [ColumnSort<ActualPlanLine>] = []
     let result: AutotraceResult
     let sql: String
     @State private var tab = 0
@@ -112,24 +116,24 @@ struct AutotraceView: View {
             .pickerStyle(.segmented).labelsHidden()
             switch tab {
             case 0:
-                Table(result.lines) {
-                    TableColumn(L10n.tr("Operacja")) { l in Text(String(repeating: "  ", count: l.depth) + l.title).font(.code) }
+                Table(result.lines.sorted(by: sortLines), sortOrder: $sortLines) {
+                    TableColumn(L10n.tr("Operacja"), sortKey: { l in String(repeating: "  ", count: l.depth) + l.title }) { l in Text(String(repeating: "  ", count: l.depth) + l.title).font(.code) }
                         .width(min: 220, ideal: 300)
-                    TableColumn(L10n.tr("Obiekt")) { l in Text(l.object) }
-                    TableColumn("Starts") { l in Text(l.starts.map(String.init) ?? "").monospacedDigit() }.width(55)
-                    TableColumn("E-Rows") { l in Text(l.estimatedRows.map(String.init) ?? "").monospacedDigit() }.width(65)
-                    TableColumn("A-Rows") { l in
+                    TableColumn(L10n.tr("Obiekt"), sortKey: { l in l.object }) { l in Text(l.object) }
+                    TableColumn("Starts", sortKey: { l in l.starts.map(String.init) ?? "" }) { l in Text(l.starts.map(String.init) ?? "").monospacedDigit() }.width(55)
+                    TableColumn("E-Rows", sortKey: { l in l.estimatedRows.map(String.init) ?? "" }) { l in Text(l.estimatedRows.map(String.init) ?? "").monospacedDigit() }.width(65)
+                    TableColumn("A-Rows", sortKey: { l in l.actualRows.map(String.init) ?? "" }) { l in
                         Text(l.actualRows.map(String.init) ?? "").monospacedDigit().foregroundStyle(l.misestimated ? .orange : .primary)
                             .help(l.misestimated ? L10n.tr("Szacunek optymalizatora różni się ponad 10 razy — sprawdź statystyki") : "")
                     }.width(65)
-                    TableColumn("ms") { l in Text(l.elapsedMs.map { String(format: "%.2f", $0) } ?? "").monospacedDigit() }.width(60)
-                    TableColumn(L10n.tr("Bufory")) { l in Text(l.buffers.map(String.init) ?? "").monospacedDigit() }.width(60)
-                    TableColumn(L10n.tr("Odczyty")) { l in Text(l.diskReads.map(String.init) ?? "").monospacedDigit() }.width(60)
+                    TableColumn("ms", sortKey: { l in l.elapsedMs.map { String(format: "%.2f", $0) } ?? "" }) { l in Text(l.elapsedMs.map { String(format: "%.2f", $0) } ?? "").monospacedDigit() }.width(60)
+                    TableColumn(L10n.tr("Bufory"), sortKey: { l in l.buffers.map(String.init) ?? "" }) { l in Text(l.buffers.map(String.init) ?? "").monospacedDigit() }.width(60)
+                    TableColumn(L10n.tr("Odczyty"), sortKey: { l in l.diskReads.map(String.init) ?? "" }) { l in Text(l.diskReads.map(String.init) ?? "").monospacedDigit() }.width(60)
                 }
             case 1:
-                Table(result.statistics) {
-                    TableColumn(L10n.tr("Statystyka")) { s in Text(s.name) }
-                    TableColumn(L10n.tr("Wartość")) { s in Text(String(format: "%.0f", s.value)).monospacedDigit() }.width(120)
+                Table(result.statistics.sorted(by: sortStatistics), sortOrder: $sortStatistics) {
+                    TableColumn(L10n.tr("Statystyka"), sortKey: { s in s.name }) { s in Text(s.name) }
+                    TableColumn(L10n.tr("Wartość"), sortKey: { s in s.value }) { s in Text(String(format: "%.0f", s.value)).monospacedDigit() }.width(120)
                 }
             default:
                 ScrollView([.horizontal, .vertical]) {
@@ -144,6 +148,8 @@ struct AutotraceView: View {
 
 /// Porównanie dwóch planów (SD-PLAN-003).
 struct PlanComparisonView: View {
+    /// Sortowanie tabeli po kolumnie (D212).
+    @State private var sortRows: [ColumnSort<PlanComparisonRow>] = []
     let comparison: PlanComparison
     let leftTitle: String
     let rightTitle: String
@@ -156,11 +162,11 @@ struct PlanComparisonView: View {
                 Spacer()
                 Toggle(L10n.tr("Tylko różnice"), isOn: $onlyDifferent).toggleStyle(.checkbox)
             }
-            Table(comparison.rows.filter { !onlyDifferent || $0.status != .same }) {
-                TableColumn("") { r in Image(systemName: icon(r.status)).foregroundStyle(color(r.status)) }.width(24)
-                TableColumn(leftTitle) { r in Text(r.left.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.code) }
-                TableColumn(rightTitle) { r in Text(r.right.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.code) }
-                TableColumn(L10n.tr("Różnice")) { r in Text(r.differences.joined(separator: ", ")).font(.uiSecondary) }
+            Table((comparison.rows.filter { !onlyDifferent || $0.status != .same }).sorted(by: sortRows), sortOrder: $sortRows) {
+                TableColumn("", sortKey: { r in icon(r.status) }) { r in Image(systemName: icon(r.status)).foregroundStyle(color(r.status)) }.width(24)
+                TableColumn(leftTitle, sortKey: { r in r.left.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "" }) { r in Text(r.left.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.code) }
+                TableColumn(rightTitle, sortKey: { r in r.right.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "" }) { r in Text(r.right.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.code) }
+                TableColumn(L10n.tr("Różnice"), sortKey: { r in r.differences.joined(separator: ", ") }) { r in Text(r.differences.joined(separator: ", ")).font(.uiSecondary) }
             }
         }
         .padding(10)

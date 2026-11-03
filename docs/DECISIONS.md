@@ -3195,3 +3195,93 @@ zawsze (także 0); serializacja wyniku narzędzia poza głównym wątkiem; stan 
 Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
 testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
 `RETURNING … BULK COLLECT INTO` w bloku PL/SQL.
+
+### D210 · 2026-11-03 — Standard plików: UTF-8 bez BOM, pliki programów bez „/”
+
+**Prośba właściciela:** „w ustawieniach (i zaznaczone jako domyślne) pliki w UTF-8, bez BOM, bez znaków / na końcu czy
+w środku. Jeżeli przy otwarciu wykryje coś innego — pytanie o konwersję.”
+
+- **Ustawienia › Ogólne › Standard plików** (`Settings.fileStandard`): kodowanie (UTF-8, ISO-8859-2, Windows-1250),
+  znacznik BOM (tylko UTF-8), pliki programów bez linii „/”, pytanie przy otwarciu. Domyślnie: UTF-8, bez BOM, bez „/”,
+  pytanie włączone; przycisk przywraca te wartości.
+- **Nowe okna** zapisują się w standardzie (dotąd zawsze UTF-8 bez BOM — przy domyślnych ustawieniach bez zmiany).
+- **Otwarcie pliku** okna SQL albo programu (także pary specyfikacja/ciało, D194) w innym kodowaniu, z BOM albo — w pliku
+  programu — z liniami „/” kończy się pytaniem „Konwertuj / Zostaw bez zmian” z listą odstępstw i polem „Nie pytaj
+  więcej” (zapamiętana odpowiedź, przywracana w Ustawieniach › Narzędzia, PD-PREF-008). Kilka plików naraz — pytania po
+  kolei. Bez pytań przy przywracaniu workseta, odzyskiwaniu okien i pulpitu projektu (użytkownik już na nich pracował),
+  bez interfejsu (testy, agent bez okna) i w przebiegu zrzutów.
+- **Konwersja zmienia okno, nie plik:** kodowanie i BOM zapisu, usunięcie linii z samym „/” (lekser — „/” w tekście,
+  komentarzu i dzieleniu zostaje); okno oznaczone jako zmienione, plik zmienia się przy zapisie (⌘S, cofnięcie zmian
+  przez zamknięcie bez zapisu). Znak spoza docelowego kodowania jednobajtowego zatrzyma zapis jak dotąd (D55).
+- **„/” tylko w plikach programów:** skrypty `.sql` wykonuje okno poleceń, gdzie „/” uruchamia blok PL/SQL — tam jest
+  potrzebny (D192: „/” w pliku z kodem psuje wdrożenie, w skrypcie — nie). Opcja Oracle „Kończ jednostki okna programu
+  znakiem „/”” jest wyłączona, gdy standard zabrania „/”; ustawienia sprzed tej zmiany z włączonym „/” zachowują wybór
+  (standard dostaje „/” dozwolony).
+- ~~**Kodowanie projektu ma pierwszeństwo**~~ — zmienione w D213: pliki projektu (także Pro*C) też konwertuje się
+  do UTF-8.
+- Zakończenia linii (LF/CRLF) poza standardem — prośba ich nie obejmuje; zapis zachowuje zakończenia pliku jak dotąd.
+
+### D211 · 2026-11-03 — Pola ustawień z listą wyboru i wpisem ręcznym
+
+**Prośba właściciela:** „wszelkie ustawienia, gdzie obecnie trzeba podać wartość z palca — jeżeli jest możliwość, zrobić
+listę wyboru z opcją wpisania ręcznie.”
+
+- Wspólne pole `ChoiceField`: pole tekstowe i przycisk ▾ z listą (bieżąca wartość z ✓, „Wyczyść”, opcjonalnie „Wybierz
+  katalog…/plik…/aplikację…” z okna macOS). Pola z wartościami po przecinku (rozszerzenia, statystyki, PLSQL_CCFLAGS,
+  pisownia specjalna, listy debugowania) — wybór dopisuje pozycję albo ją usuwa.
+- **Listy** (`PreferenceChoices`, `ConnectionFieldChoices`): formaty DATE/TIMESTAMP i NLS_DATE/TIMESTAMP_FORMAT, pozostałe
+  parametry NLS sesji, PLSQL_WARNINGS, PLSCOPE_SETTINGS, PLSQL_CCFLAGS, prefiksy konwencji nazw, rozszerzenia programów,
+  testów i par specyfikacja/ciało, statystyki sesji, pisownia specjalna formatera, wzorce `user@baza` z listy połączeń
+  (wskaźniki połączeń, zestawy preferencji, foldery i filtry przeglądarki, debugowanie), użytkownicy baz, klauzule
+  WHERE/ORDER BY filtrów przeglądarki, katalogi startowe (projekt, katalogi ostatnich plików), wyszukiwania w sieci,
+  edytor zewnętrzny, program i argumenty porównywania plików, dokumenty Oracle, polecenia agentów CLI.
+- **Okno połączenia i cele SSH Pro*C:** użytkownik, baza (aliasy TNS — dawny przycisk „TNS” zastąpiony listą — i connect
+  stringi innych połączeń), katalog konfiguracji, portfel, edycja, schemat, host/użytkownik/klucz/ProxyJump tunelu SSH
+  (hosty z linii `Host` w `~/.ssh/config`, klucze prywatne z `~/.ssh` z parą `.pub` — czytane tylko nazwy, bez treści
+  kluczy), gałąź, remote, komenda builda, ksh, ORACLE_HOME, LIBPATH, PATH (wartości innych celów).
+- Bez listy zostają pola, dla których nie ma sensownych podpowiedzi: nazwy nadawane przez użytkownika, pola wyszukiwania,
+  własne zapytania SQL, skróty i treść AutoReplace, liczby (pola liczbowe mają już krokomierze albo wybór).
+
+### D212 · 2026-11-03 — Każda tabela sortowana po dowolnej kolumnie
+
+**Prośba właściciela:** „wszystkie tabelki, jakie się wyświetlają (np. tabelka sesji), aby mogły być sortowane po
+dowolnej kolumnie.”
+
+- **Klik nagłówka** sortuje rosnąco, drugi — malejąco; kolejność pierwotna do pierwszego kliknięcia. Wspólne
+  porównanie (`SortKey`, `CellOrder`): wartości z bazy pokazywane jako tekst (SID, SERIAL#, rozmiary) porównywane
+  liczbowo, gdy obie są liczbami (kropka albo przecinek dziesiętny, spacje tysięcy), inny tekst — bez wielkości liter,
+  liczby w tekście wg wartości (jak Finder); daty i liczby wg wartości; puste wartości na końcu.
+- **Tabele SwiftUI** (≈45: sesje, szczegóły sesji, DBA, Scheduler, SQL Monitor, porównania, plan i Autotrace, profiler,
+  śledzenie, statystyki, zmienne testu, punkty przerwania, użycia, historia lokalna, problemy, makra, TODO, wdrożenia
+  Pro*C, klawiatura, edytor tabeli…) — `ColumnSort` przez `TableColumn(…, sortKey:)`; tabele edytowalne
+  (`Table($wiersze)`: kolumny, klucze, indeksy, uprawnienia tabeli, zmienne testu, koszyk, punkty przerwania) sortują
+  widok, a dane zachowują swoją kolejność (kolejność kolumn w CREATE TABLE się nie zmienia). Plan wykonania sortuje
+  rodzeństwo w gałęziach — drzewo zostaje.
+- **Tabele AppKit** (`HeaderSort`): komunikaty kompilacji, aktywność i dziennik agenta (pliki i wpisy), informacje
+  o obiekcie, widok rekordu. Siatka wyników ma własne sortowanie (PD-GRID-009). Drzewa (przeglądarka obiektów,
+  połączenia, zawartość kodu, lista okien) i listy podpowiedzi bez nagłówków nie są tabelami — bez zmian.
+
+### D213 · 2026-11-03 — UTF-8 także dla Pro*C; wykrywanie kodowania z poprawnych polskich liter
+
+**Prośba właściciela:** „W Pelikanie domyślne kodowanie powinno być UTF-8. Dla Pro*C jeżeli jest wykryte inne — również
+konwersja na UTF-8. Konwersja ma się wykonać tak, aby po konwersji znaki poprawnie się wyświetlały.”
+
+**Stan wyjściowy** (repozytorium źródeł Pro*C właściciela, 269 plików `.pc/.c/.h`): 253 ASCII, 8 UTF-8, 8 Windows-1250
+(ą ś ź na pozycjach B9 9C 9F), 2 z literami wspólnymi Windows-1250 i ISO-8859-2; bez BOM, końce LF. Kodowanie projektu
+ISO-8859-2 (przykład z D55) czytało pliki UTF-8 i Windows-1250 z przekłamaniami („istniejš”) — bez ostrzeżenia, a zapis
+utrwalał błąd.
+
+- **Standard plików obejmuje pliki projektu:** plik spoza UTF-8 (Pro*C i każdy inny tekst otwierany w oknie SQL albo
+  programu) dostaje pytanie o konwersję; konwersja zapisuje UTF-8 bez BOM. Wyjątek D210 dla projektów z kodowaniem
+  usunięty.
+- **Kodowanie projektu to wskazówka odczytu, nie przymus:** BOM i poprawny UTF-8 zawsze wygrywają; plik jednobajtowy
+  czyta się w kodowaniu, w którym polskie litery są poprawne — ustawienie projektu rozstrzyga tylko pliki, które oba
+  kodowania czytają tak samo (same ó ł ę ń ć ż).
+- **Wykrywanie** (`CodeHTML.singleByteGuess`): liczy bajty liter, którymi Windows-1250 i ISO-8859-2 się różnią
+  (ą ś ź Ą Ś Ź) i bajty 0x80–0x9F (w ISO-8859-2 znaki sterujące) — przewaga ISO-8859-2 → ISO-8859-2, inaczej
+  Windows-1250. Bajty niezdefiniowane w Windows-1250 (81 83 88 90 98) nie przełączają już całego pliku na Latin-1.
+- **Poprawność konwersji:** tekst w oknie jest odczytany w wykrytym kodowaniu, więc zapis w UTF-8 zachowuje każdą
+  literę; sprawdzone na wszystkich 18 plikach z polskimi literami w źródłach właściciela (bez i z kodowaniem projektu
+  ISO-8859-2 — zero znaków sterujących i przekłamań), w testach — próbki Windows-1250 i ISO-8859-2.
+- Wdrożenie Pro*C (SSH) wysyła pliki bajt w bajt — po konwersji na serwer trafia UTF-8 (polskie litery są tylko
+  w komentarzach; kompilator Pro*C ich nie interpretuje).
