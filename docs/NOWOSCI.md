@@ -2,7 +2,9 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## Następna wersja
+## 1.18.1 — kopiowanie, eksport i filtr w każdej tabeli, konwencje nazw RMS, dokumentacja Oracle z lokalnego MCP
+
+Zmiany z wersji 1.16.0–1.18.1 (bez osobnych wydań), wydane razem.
 
 - **Kopiowanie, eksport i filtr w każdej tabeli:** nad tabelami (sesje, DBA, Scheduler, porównania, plan, profiler,
   komunikaty kompilacji, aktywność agenta…) jest pasek z filtrem, menu Kopiuj i Eksportuj. Można skopiować komórkę,
