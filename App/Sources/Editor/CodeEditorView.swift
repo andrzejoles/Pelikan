@@ -1250,10 +1250,11 @@ final class CodeTextView: NSTextView {
         }
         // Nowa linia z `insertNewline` na końcu nieedytowanej linii (ustalone tam, przed wyrównaniem Smart, które samo
         // oznaczyłoby linię jako edytowaną): bez wielkości liter i skrótu — istniejący kod zostaje bez zmian (D205, D208).
-        let rules = (NSApp.delegate as? AppDelegate)?.workspace.settings.autoReplace ?? []
         let untouched: Bool = {
             // Tanie warunki najpierw: bez wielkości liter i skrótów wynik i tak nic nie zmienia (bez kopii dokumentu).
-            guard !formattingEnter, text.first?.isNewline == true, keywordCase != .unchanged || !rules.isEmpty, let lineEdited else { return false }
+            guard !formattingEnter, text.first?.isNewline == true, let lineEdited else { return false }
+            let rules = (NSApp.delegate as? AppDelegate)?.workspace.settings.autoReplace ?? []
+            guard keywordCase != .unchanged || !rules.isEmpty else { return false }
             if let decided = untouchedNewline { return decided }
             // Inne drogi nowej linii (⌥↩, podział linii U+2028, wstawienie z zakresem) — linia miejsca wstawienia.
             let at = replacementRange.location != NSNotFound ? replacementRange.location : selectedRange().location
@@ -1288,11 +1289,14 @@ final class CodeTextView: NSTextView {
     private func applyMulti(_ edit: (String, [Range<Int>]) -> (text: String, ranges: [Range<Int>])) {
         let ranges = selectedRanges.map(\.rangeValue).map { $0.location..<($0.location + $0.length) }
         let result = edit(string, ranges)
-        let change = EditorShift.Change(old: string, new: result.text)
-        let range = NSRange(location: change.prefix, length: change.oldEnd - change.prefix)
-        let replacement = (result.text as NSString).substring(with: NSRange(location: change.prefix, length: change.oldEnd - change.prefix + change.delta))
-        guard shouldChangeText(in: range, replacementString: replacement) else { return }
-        replaceCharacters(in: range, with: replacement)
+        // Najmniejsza zmiana (ta sama funkcja co przy Enterze — jednostki UTF-16, bez dzielenia par zastępczych).
+        guard let change = FormatOnEnter.Edit.minimal(at: 0, old: string, new: result.text) else {
+            selectedRanges = result.ranges.map { NSValue(range: NSRange(location: $0.lowerBound, length: $0.count)) }
+            return
+        }
+        let range = NSRange(location: change.range.lowerBound, length: change.range.count)
+        guard shouldChangeText(in: range, replacementString: change.text) else { return }
+        replaceCharacters(in: range, with: change.text)
         didChangeText()
         selectedRanges = result.ranges.map { NSValue(range: NSRange(location: $0.lowerBound, length: $0.count)) }
     }
@@ -1590,10 +1594,11 @@ final class CodeTextView: NSTextView {
     override func insertNewline(_ sender: Any?) {
         // Kompozycja znaków (metoda wprowadzania) — Enter należy do niej.
         // Jedna kopia tekstu na Enter (każdy odczyt `string` kopiuje cały dokument).
-        let current = string
-        if !hasMarkedText(), selectedRanges.count == 1, selectedRange().length == 0, let plan = enterPlan?(current, selectedRange().location),
-           insertFormattedNewline(plan, sender) {
-            return
+        var current = string
+        if !hasMarkedText(), selectedRanges.count == 1, selectedRange().length == 0, let plan = enterPlan?(current, selectedRange().location) {
+            if insertFormattedNewline(plan, sender) { return }
+            // Plan nie przeszedł (krok 0 mógł już zmienić tekst) — świeży odczyt.
+            current = string
         }
         untouchedNewline = selectedRange().length == 0 && !(lineEdited?(current, selectedRange().location) ?? true)
         defer { untouchedNewline = nil }
@@ -1604,14 +1609,8 @@ final class CodeTextView: NSTextView {
         if indentMode == .smart, selectedRange().length == 0 {
             // Smart: END/ELSE/ELSIF/EXCEPTION wyrównane do poziomu struktury przed przejściem do nowej linii.
             let line = ns.substring(with: NSRange(location: lineRange.location, length: caret - lineRange.location))
-            var previous: String?
-            var p = lineRange.location
-            while p > 0 {
-                let r = ns.lineRange(for: NSRange(location: p - 1, length: 0))
-                let s = ns.substring(with: r).trimmingCharacters(in: .newlines)
-                if !s.trimmingCharacters(in: .whitespaces).isEmpty { previous = s; break }
-                p = r.location
-            }
+            // Ta sama reguła poprzedniej linii co w Enterze z formatowaniem.
+            let previous = FormatOnEnter.previousLine(ns, before: lineRange.location)
             if let fixed = SmartIndent.reindentClosingLine(line, previous: previous, unit: indentUnit),
                let edit = FormatOnEnter.Edit.minimal(at: lineRange.location, old: line, new: fixed) {
                 // Tylko wcięcie (najmniejsza zmiana) — cofanie, kolorowanie i zmienione zakresy bez reszty linii.
@@ -1620,8 +1619,9 @@ final class CodeTextView: NSTextView {
                     replaceCharacters(in: r, with: edit.text)
                     didChangeText()
                     setSelectedRange(NSRange(location: lineRange.location + (fixed as NSString).length, length: 0))
+                    // Zmiana nałożona na kopię — bez ponownego kopiowania dokumentu.
+                    ns = ns.replacingCharacters(in: r, with: edit.text) as NSString
                 }
-                ns = string as NSString
                 lineRange = ns.lineRange(for: NSRange(location: selectedRange().location, length: 0))
             }
         }

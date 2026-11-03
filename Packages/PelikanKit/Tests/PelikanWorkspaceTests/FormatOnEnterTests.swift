@@ -172,7 +172,12 @@ struct FormatOnEnterTests {
         var d = EditedRanges()
         d.record(edited: 5..<5, delta: -1)
         d.record(edited: 5..<6, delta: 1, newlineFirst: true)
-        #expect(d.touches(line: 0..<5) && d.ranges == [5..<5])
+        #expect(d.touches(line: 0..<5) && d.ranges == [5..<5, 6..<6])
+        // Usunięcie na początku linii (wcięcie), potem Enter tam — przeniesiona treść zostaje edytowana.
+        var b = EditedRanges()
+        b.record(edited: 6..<6, delta: -4)
+        b.record(edited: 6..<7, delta: 1, newlineFirst: true)
+        #expect(b.touches(line: 7..<10))
         // Nowa sesja w zakresie (plik wczytany w oknie pary) — zmiany w nim zapomniane, poza nim zostają.
         var c = EditedRanges()
         c.record(edited: 2..<4, delta: 2)

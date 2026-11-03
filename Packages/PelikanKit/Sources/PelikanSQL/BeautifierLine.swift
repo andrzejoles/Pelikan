@@ -117,28 +117,14 @@ extension Beautifier {
         if tr.raw.contains(where: { $0.lowerBound < max(restTo, leftTo + 1) && $0.upperBound > leftFrom }) { return nil }
         let placed = tr.placed
 
-        /// Kolumna w znakach (jak kolumny formatera — `Character`, nie jednostki UTF-16: emoji, znaki złożone).
-        /// Szybko jednostka po jednostce, dopóki znak jest na pewno samodzielny (ASCII i Latin poniżej U+0300, litery
-        /// greckie i cyrylicy); dalej — znaki od poprzedniej jednostki (mogła się łączyć z następną). Wyniki zapamiętane.
+        /// Kolumna w znakach (jak kolumny formatera — `Character`, nie jednostki UTF-16: emoji, znaki złożone); wyniki
+        /// zapamiętane (kilka wywołań na pozycję w pętlach kotwic).
         var columnCache: [Int: Int] = [:]
         func column(_ pos: Int) -> Int {
             if let c = columnCache[pos] { return c }
             var p = pos
             while p > 0, ctx.character(at: p - 1) != 0x0A { p -= 1 }
-            var c = 0, before = 0
-            var q = p
-            while q < pos {
-                let u = ctx.character(at: q)
-                guard u < 0x300 || (0x370...0x482).contains(u) || (0x48A...0x52F).contains(u) else { break }
-                before = c
-                c = u == 0x09 ? (c / width + 1) * width : c + 1
-                q += 1
-            }
-            if q < pos {
-                let from = max(p, q - 1)
-                c = Beautifier.columns(ctx.substring(with: NSRange(location: from, length: pos - from)), tabWidth: width,
-                                       from: from == q ? c : before)
-            }
+            let c = Beautifier.columns(ctx.substring(with: NSRange(location: p, length: pos - p)), tabWidth: width)
             columnCache[pos] = c
             return c
         }

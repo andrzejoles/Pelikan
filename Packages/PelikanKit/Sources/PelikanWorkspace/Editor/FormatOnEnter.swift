@@ -170,7 +170,7 @@ public enum FormatOnEnter {
     }
 
     /// Poprzednia niepusta linia przed `lineStart` (wcięcie Smart).
-    static func previousLine(_ ns: NSString, before lineStart: Int) -> String? {
+    public static func previousLine(_ ns: NSString, before lineStart: Int) -> String? {
         var p = lineStart
         while p > 0 {
             let r = ns.lineRange(for: NSRange(location: p - 1, length: 0))
@@ -200,11 +200,16 @@ public struct EditedRanges: Sendable, Equatable {
         // tylko przesunięcie zakresów za miejscem wstawienia, bez pustego zakresu na początku przeniesionej linii.
         if newlineFirst, edited.isEmpty {
             ranges = ranges.map { r in
-                // Pusty zakres w miejscu wstawienia (usunięcie na końcu linii) zostaje przy swojej linii.
+                // Pusty zakres w miejscu wstawienia (usunięcie) — nie wiadomo, czy dotyczy końca linii przed nim, czy
+                // początku treści za nim: obie strony zostają oznaczone (`extra`).
                 if r.isEmpty, r.lowerBound == input.lowerBound { return r }
                 if r.lowerBound >= input.lowerBound { return (r.lowerBound + delta)..<(r.upperBound + delta) }
                 if r.upperBound > input.lowerBound { return r.lowerBound..<(r.upperBound + delta) }
                 return r
+            }
+            if ranges.contains(where: { $0.isEmpty && $0.lowerBound == input.lowerBound }) {
+                let moved = (input.lowerBound + delta)..<(input.lowerBound + delta)
+                ranges.insert(moved, at: ranges.firstIndex { $0.lowerBound > moved.lowerBound } ?? ranges.count)
             }
             return
         }

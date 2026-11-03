@@ -3124,6 +3124,11 @@ wydanie). Poprawione:
   tekstu na Enter i najpierw tanie warunki przed pytaniem o edytowaną linię; koniec treści linii dla każdego separatora
   (`getLineStart`); jedno wyszukiwanie binarne (`partition`) dla punktów, początków poleceń i unieważniania; krok 0
   w jednym bloku `if lineEdited`; stan przycisku wstążki bez osobnej flagi.
+- **Jedenaste przejście:** pusty zakres usunięcia w miejscu Entera oznacza obie strony (nie wiadomo, czy dotyczył końca
+  linii przed nim, czy początku treści za nim); świeży odczyt tekstu, gdy plan Entera nie przeszedł po kroku 0;
+  początki poleceń wstawiane w kolejności także między znanymi (bez osieroconych regionów); jedna reguła poprzedniej
+  linii i jedna najmniejsza zmiana (`applyMulti`); kolumny bez ręcznych zakresów Unicode (`Beautifier.columns`
+  z pamięcią wyników); stan widoku rekordu w menu tylko dla komend bez stanu w rejestrze.
 - **AutoReplace i wielkość liter przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** przy włączonym
   formatowaniu przy Enter obie zmiany słowa przed kursorem działają tylko w linii edytowanej — także w zwykłym Enterze,
   gdy plan nie powstał (jedno miejsce reguły: `insertText` dla znaku nowej linii pyta `lineEdited`). Skrót albo słowo

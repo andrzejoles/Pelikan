@@ -141,7 +141,11 @@ public struct StatementStartMemory: Sendable, Equatable {
         guard base < lineStart else { return (base, regions[base] ?? Region(), true) }
         let chunk = text.substring(with: NSRange(location: base, length: lineStart - base))
         let parts = ScriptSplitter.split(chunk, mode: .commandWindow)
-        for p in parts where base + p.start > (starts.last ?? -1) { starts.append(base + p.start) }
+        // Początki w kolejności (także między znanymi, np. za granicą `/`), bez powtórzeń.
+        for p in parts {
+            let s = base + p.start
+            if lastStart(atOrBefore: s) != s { starts.insert(s, at: Self.partition(starts) { $0 < s }) }
+        }
         // Polecenie niezakończone przed linią (blok PL/SQL, SQL bez średnika) — linia jest jego dalszym ciągiem.
         let open = parts.last.map { $0.terminator == .endOfText } ?? false
         let statement = open ? base + parts.last!.start : lineStart
@@ -170,8 +174,7 @@ public struct StatementStartMemory: Sendable, Equatable {
     }
 
     private mutating func insertOrMerge(_ c: Checkpoint) {
-        let lo = checkpoints.last.map { $0.position < c.position } ?? true
-            ? checkpoints.count : Self.partition(checkpoints) { $0.position < c.position }
+        let lo = Self.partition(checkpoints) { $0.position < c.position }
         if lo < checkpoints.count, checkpoints[lo].position == c.position {
             if c.subprogram, !checkpoints[lo].subprogram { checkpoints[lo] = c }
             return
