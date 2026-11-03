@@ -527,7 +527,7 @@ struct GitDeployStatusView: View {
         for t in model.store.targets {
             guard let s = try? await model.session(for: t) else { continue }
             let head: String? = await Task.detached {
-                guard let r = try? s.run(DeployScripts.serverHeadCommand(t), timeout: 60), r.status == 0 else { return nil }
+                guard let r = try? s.run(DeployScripts.serverHeadCommand(t), timeout: 60, idempotent: true), r.status == 0 else { return nil }
                 return String(decoding: r.output, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
             }.value
             serverHeads[t.id] = head

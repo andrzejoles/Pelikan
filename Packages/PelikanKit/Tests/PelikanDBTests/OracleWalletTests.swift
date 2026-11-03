@@ -39,6 +39,18 @@ struct OracleNetTests {
         #expect(TNSNames.resolveForConnection(d, configDirectory: "/cfg", walletDirectory: "/w").contains("(SECURITY=(MY_WALLET_DIRECTORY=/w))"))
         #expect(TNSNames.resolveForConnection(d, configDirectory: "/cfg").contains("MY_WALLET_DIRECTORY=/cfg"))
         #expect(TNSNames.resolveForConnection("h:1521/s", configDirectory: nil, walletDirectory: nil) == "h:1521/s")
+        // Ścieżki ze spacjami — w cudzysłowie (deskryptor, EZConnect Plus, token z pliku).
+        #expect(TNSNames.resolveForConnection("tcps://h:1522/s", configDirectory: nil, walletDirectory: "/Oracle Wallets/a") == "tcps://h:1522/s?wallet_location=\"/Oracle Wallets/a\"")
+        #expect(TNSNames.resolveForConnection(d, configDirectory: nil, walletDirectory: "/W w").contains("(MY_WALLET_DIRECTORY=\"/W w\")"))
+        // Istniejąca sekcja SECURITY — portfel dopisany do niej, bez drugiej sekcji.
+        let adb = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=h)(PORT=1522))(CONNECT_DATA=(SERVICE_NAME=s))(security=(ssl_server_dn_match=yes)))"
+        let merged = TNSNames.resolveForConnection(adb, configDirectory: nil, walletDirectory: "/w")
+        let spaced = TNSNames.resolveForConnection("(DESCRIPTION = (ADDRESS = (PROTOCOL = TCPS)(HOST = h))\n (SECURITY = (SSL_SERVER_DN_MATCH = YES)))", configDirectory: nil, walletDirectory: "/w")
+        #expect(spaced.components(separatedBy: "(SECURITY=").count == 2)
+        #expect(TNSNames.applyTokenAuth("(DESCRIPTION = (ADDRESS = (HOST = h)) (SECURITY = (X = 1)))", parameters: [("TOKEN_AUTH", "OAUTH")])?.components(separatedBy: "(SECURITY=").count == 2)
+        #expect(merged.components(separatedBy: "(security=").count == 2 && !merged.contains("(SECURITY=") && merged.contains("(MY_WALLET_DIRECTORY=/w)"))
+        #expect(TNSNames.applyTokenAuth("h:1521/s", parameters: [("TOKEN_LOCATION", "/a b/t")]) == "h:1521/s?token_location=\"/a b/t\"")
+        #expect(TNSNames.applyTokenAuth("(DESCRIPTION=(ADDRESS=(HOST=h)))", parameters: [("TOKEN_LOCATION", "/a b")])?.contains("(TOKEN_LOCATION=\"/a b\")") == true)
         #expect(TNSNames.resolveForConnection("MOJ_ALIAS", configDirectory: "/nie/ma", keepAlias: true) == "MOJ_ALIAS")
         var t = ConnectionTarget(user: "", connectString: "a")
         #expect(!t.usesExternalCredentials)

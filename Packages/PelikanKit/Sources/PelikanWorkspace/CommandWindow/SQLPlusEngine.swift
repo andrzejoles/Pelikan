@@ -134,17 +134,42 @@ public final class SQLPlusEngine {
 
     /// Tekst polecenia do echa, SPOOL i konsoli bez hasła: `CONNECT u/hasło@baza`, `IDENTIFIED BY hasło`.
     nonisolated public static func maskPassword(_ text: String) -> String {
-        var t = text
         let star = "********"
-        if let r = t.range(of: #"(?im)^(\s*conn(ect)?\s+[^\s/]*/)"#, options: .regularExpression) {
-            // Hasło: od `/` do ostatniego `@` w słowie (albo do końca słowa), jak w CONNECT.
-            let wordEnd = t[r.upperBound...].firstIndex(where: \.isWhitespace) ?? t.endIndex
-            let end = t[r.upperBound..<wordEnd].lastIndex(of: "@") ?? wordEnd
-            if end > r.upperBound { t.replaceSubrange(r.upperBound..<end, with: star) }
+        // Każde CONNECT w tekście (skrypt z kilkoma połączeniami) — jedno przejście wyrażenia, wynik budowany po kolei.
+        // Tylko zwykły tekst: wartości JSON (wyniki narzędzi agenta) maskuje się po rozkodowaniu (`AgentController.redacted`).
+        let ns = text as NSString
+        var out = ""
+        var last = 0
+        for m in Self.connectPattern.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
+            let start = m.range.location + m.range.length   // za `/`
+            guard start >= last else { continue }
+            func isSpace(_ i: Int) -> Bool { [0x20, 0x09, 0x0A, 0x0D].contains(ns.character(at: i)) }
+            var lineEnd = start
+            while lineEnd < ns.length, ![0x0A, 0x0D].contains(ns.character(at: lineEnd)) { lineEnd += 1 }
+            // Hasło: w cudzysłowie — do cudzysłowu zamykającego w tej linii (z `@` w środku), niezamknięty — do końca
+            // linii (może mieć spacje); bez cudzysłowu — do ostatniego `@` w słowie albo do końca słowa.
+            let end: Int
+            if start < lineEnd, ns.character(at: start) == 0x22 {
+                let close = ns.range(of: "\"", range: NSRange(location: start + 1, length: lineEnd - start - 1))
+                end = close.location != NSNotFound ? close.location + 1 : lineEnd
+            } else {
+                var wordEnd = start
+                while wordEnd < ns.length, !isSpace(wordEnd) { wordEnd += 1 }
+                let at = ns.range(of: "@", options: .backwards, range: NSRange(location: start, length: wordEnd - start))
+                end = at.location != NSNotFound ? at.location : wordEnd
+            }
+            out += ns.substring(with: NSRange(location: last, length: start - last))
+            if end > start { out += star }
+            last = max(start, end)
         }
-        // IDENTIFIED BY hasło / "hasło" / VALUES 'skrót' (eksport DDL użytkownika).
-        return t.replacingOccurrences(of: #"(?i)(identified\s+by\s+)(values\s+'[^']*'|"[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)
+        out += ns.substring(from: last)
+        // IDENTIFIED BY hasło / "hasło" / VALUES 'skrót' (eksport DDL użytkownika) i stare hasło w ALTER USER … REPLACE.
+        return out.replacingOccurrences(of: #"(?i)(identified\s+by\s+)(values\s+'[^']*'|"[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)(identified\s+by\s+\*{8}\s+replace\s+)("[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)
     }
+
+    /// CONN, CONNE, CONNEC, CONNECT — każdy skrót, który przyjmuje okno poleceń (co najmniej 4 litery).
+    nonisolated static let connectPattern = try! NSRegularExpression(pattern: #"(?im)^\s*conn(e(c(t)?)?)?\s+[^\s/]*/"#)
 
     /// Czy tekst z linii poleceń (karta Dialog) to całe polecenie: SQL*Plus — od razu, SQL — po „;”,
     /// PL/SQL — po linii „/” (albo „.” kończącej bez wykonania), jak w SQL*Plus.

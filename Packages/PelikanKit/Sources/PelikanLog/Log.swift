@@ -51,6 +51,7 @@ public protocol LogSink: Sendable {
     func write(_ entry: LogEntry)
     /// Ujście diagnostyczne (testy): dostaje wpisy wszystkich poziomów z jawnymi wartościami prywatnymi — niezależnie
     /// od ustawień, więc testy nie zmieniają globalnej konfiguracji i mogą działać równolegle.
+    /// Stałe przez całe życie ujścia (odczytywane przy dodaniu ujścia, nie przy każdym wpisie).
     var receivesEverything: Bool { get }
 }
 
@@ -92,8 +93,13 @@ public enum Log {
         var level: LogLevel = .info
         var revealNames = false
         var hashKey: [UInt8] = []
-        var sinks: [any LogSink] = []
-        var extraSinks: [UUID: any LogSink] = [:]
+        var sinks: [any LogSink] = [] { didSet { updateDiagnostic() } }
+        var extraSinks: [UUID: any LogSink] = [:] { didSet { updateDiagnostic() } }
+        /// Czy któreś ujście przyjmuje wszystkie wpisy (diagnostyka, testy) — liczone przy zmianie ujść (`receivesEverything`
+        /// jest stałe przez życie ujścia — wymóg protokołu), w `emit` jedno porównanie.
+        private(set) var hasDiagnosticSink = false
+
+        private mutating func updateDiagnostic() { hasDiagnosticSink = all.contains { $0.receivesEverything } }
 
         var all: [any LogSink] { sinks + extraSinks.values }
     }
@@ -130,12 +136,10 @@ public enum Log {
 
     public static var level: LogLevel { configuration.withLock { $0.level } }
 
-    static func isEnabled(_ level: LogLevel) -> Bool {
-        configuration.withLock { c in c.all.contains { $0.receivesEverything || level >= c.level } }
-    }
-
     static func emit(_ level: LogLevel, _ category: LogCategory, _ message: () -> LogMessage) {
-        emit(level, category, message, configuration.withLock { $0 })
+        // Poziom wyłączony i bez ujścia diagnostycznego — bez kopii konfiguracji (ujścia, klucz) pod blokadą.
+        guard let c = configuration.withLock({ c in level >= c.level || c.hasDiagnosticSink ? c : nil }) else { return }
+        emit(level, category, message, c)
     }
 
     static func emit(_ level: LogLevel, _ category: LogCategory, _ message: () -> LogMessage, _ c: Configuration) {

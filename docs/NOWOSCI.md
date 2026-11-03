@@ -2,7 +2,9 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## 1.14.0 — standard plików, listy wyboru w ustawieniach, sortowanie tabel
+## 1.15.2 — standard plików i UTF-8 dla Pro*C, listy wyboru w ustawieniach, sortowanie tabel
+
+Zmiany z wersji 1.14.0–1.15.2 (bez osobnych wydań), wydane razem.
 
 - **Standard plików (Ustawienia › Ogólne):** domyślnie UTF-8 bez BOM, pliki programów bez linii „/”. Nowe okna zapisują
   się w standardzie, a otwarcie pliku w innym kodowaniu, z BOM albo z „/” w pliku programu pyta o konwersję
@@ -32,6 +34,20 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
 - **Pasek wyniku:** „Kopiuj jako” ma także TSV i listę wyrażeń (IN); ukryte karty wyników nie spowalniają pracy.
 - **Stan przełączników na wstążce:** włączone „Formatuj przy Enter”, „Edytuj dane” i „Panel wartości” mają wyróżnione
   tło (także w menu i na pasku wyniku).
+
+### Poprawki z przeglądu połączeń i agentów
+
+- **Sterownik thin z Oracle 12.1/12.2:** połączenie działa (wcześniej kończyło się błędem ORA-00904 przy odczycie opisu
+  wersji).
+- **Portfel i token w katalogu ze spacją** (np. `~/Oracle Wallets/ADB`): ścieżka trafia do Oracle Net w cudzysłowie.
+- **Sesja agenta „Wszystko tylko do odczytu”** nie zmienia już tekstu edytora komendami aplikacji (np. formatowanie),
+  także po zgodzie.
+- **SSH:** polecenie przerwane zerwaniem połączenia nie jest powtarzane (mogło się już wykonać na serwerze) — ponawiane
+  są tylko bezpieczne odczyty i sprzątanie.
+- **Terminal agenta** nie dziedziczy połączeń z bazą ani potoków aplikacji; hasła w wynikach narzędzi i w śladzie MCP
+  są maskowane (każde `CONNECT`, także hasło w cudzysłowie).
+- **Zamknięcie zerwanej sesji** nie blokuje interfejsu; limit czasu zapytania agenta obejmuje pobieranie wierszy, a nie
+  zostaje na połączeniu dla późniejszych poleceń.
 
 ## 1.13.0 — formatowanie podczas pisania, pasek czynności nad wynikiem
 

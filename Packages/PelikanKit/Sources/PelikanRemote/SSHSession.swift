@@ -141,28 +141,14 @@ public final class SSHSession: Sendable {
         let secret = secret()
         let writer = Mutex<Bool>(false)
         if let secret, !secret.isEmpty {
-            try Data("#!/bin/sh\nexec /bin/cat -- \"$PELIKAN_ASKPASS_FIFO\"\n".utf8).write(to: URL(fileURLWithPath: askpass))
-            chmod(askpass, 0o700)
+            try Askpass.installScript(at: askpass)
             guard mkfifo(fifo, 0o600) == 0 else { throw SSHError.io(code: errno, detail: fifo) }
             env["SSH_ASKPASS"] = askpass
             env["SSH_ASKPASS_REQUIRE"] = "force"
             env["DISPLAY"] = ":0"
             // W środowisku tylko ścieżka kolejki — sekret idzie przez kolejkę, jednorazowo.
             env["PELIKAN_ASKPASS_FIFO"] = fifo
-            let bytes = Array((secret + "\n").utf8)
-            Thread.detachNewThread {
-                while !writer.withLock({ $0 }) {
-                    let fd = open(fifo, O_WRONLY | O_NONBLOCK)
-                    if fd >= 0 {
-                        _ = fcntl(fd, F_SETFL, 0)
-                        bytes.withUnsafeBytes { _ = write(fd, $0.baseAddress, $0.count) }
-                        close(fd)
-                        unlink(fifo)
-                        return
-                    }
-                    usleep(20_000)
-                }
-            }
+            Askpass.startWriter(fifo: fifo, secret: secret) { writer.withLock { $0 } }
         }
         defer {
             writer.withLock { $0 = true }
@@ -348,13 +334,14 @@ public final class SSHSession: Sendable {
         return args
     }
 
-    /// Polecenie powłoki na serwerze (tekst w kodowaniu serwera). Ponawia raz po zerwaniu połączenia.
-    /// `timeout: nil` — bez limitu.
-    public func run(_ command: String, stdin: SpawnInput = .null, timeout: TimeInterval? = 120) throws -> Spawn.Result {
+    /// Polecenie powłoki na serwerze (tekst w kodowaniu serwera). `timeout: nil` — bez limitu. Po zerwaniu połączenia
+    /// (kod 255 i połączenie główne nie żyje) ponawia tylko polecenie `idempotent` — inne mogło się już wykonać na
+    /// serwerze w całości albo w części (wdrożenie, `mv`, DML), więc wynik 255 wraca do wywołującego.
+    public func run(_ command: String, stdin: SpawnInput = .null, timeout: TimeInterval? = 120, idempotent: Bool = false) throws -> Spawn.Result {
         try connect()
         let args = try commandArguments(command, tty: false)
         let r = try Spawn.run(Self.ssh, args, environment: environment, stdin: stdin, timeout: timeout)
-        if r.status == 255, !isConnected {
+        if r.status == 255, idempotent, !isConnected {
             try connect()
             return try Spawn.run(Self.ssh, args, environment: environment, stdin: stdin, timeout: timeout)
         }
@@ -508,10 +495,11 @@ public final class RemoteProcess: Sendable {
         process.cancel()
         guard let pid = remoteProcessID else { return }
         let group = "-\(pid)"
+        // Sygnały nie są ponawiane po zerwaniu (PID mógł już należeć do innego procesu); ponawiane tylko odpytywanie.
         _ = try? session.run("kill -TERM \(group) 2>/dev/null; kill -TERM \(pid) 2>/dev/null; exit 0", timeout: 20)
         let deadline = Date().addingTimeInterval(grace)
         while Date() < deadline {
-            let r = try? session.run("kill -0 \(group) 2>/dev/null && echo alive", timeout: 20)
+            let r = try? session.run("kill -0 \(group) 2>/dev/null && echo alive", timeout: 20, idempotent: true)
             if r.map({ !String(decoding: $0.output, as: UTF8.self).contains("alive") }) ?? true { return }
             usleep(200_000)
         }

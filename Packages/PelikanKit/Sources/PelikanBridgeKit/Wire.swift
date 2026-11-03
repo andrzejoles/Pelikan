@@ -66,10 +66,11 @@ public enum Wire {
     }
 
     /// Odczyt ramki (blokujący). `Error.closed` przy końcu strumienia.
-    public static func readFrame(from fd: Int32) throws -> Data {
+    /// `limit` — największa przyjmowana ramka (np. hello przed uwierzytelnieniem — kilka KB, nie 4 MB).
+    public static func readFrame(from fd: Int32, limit: Int = maxFrame) throws -> Data {
         let header = try readExactly(4, from: fd)
         let length = Int(header.withUnsafeBytes { UInt32(bigEndian: $0.loadUnaligned(as: UInt32.self)) })
-        guard length <= maxFrame else { throw Error.frameTooLarge(length) }
+        guard length <= min(limit, maxFrame) else { throw Error.frameTooLarge(length) }
         return try readExactly(length, from: fd)
     }
 

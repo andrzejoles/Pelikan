@@ -4,6 +4,8 @@ import Darwin
 import Foundation
 import Logging
 import MCP
+import PelikanLog
+import PelikanWorkspace
 import Synchronization
 
 /// Deskryptor gniazda wspólny dla aktora, wątku odczytu i kolejki zapisu. Zamyka go tylko kolejka zapisu, po zapisach
@@ -96,21 +98,43 @@ public actor SocketTransport: Transport {
     /// Najdłuższe czekanie na odpowiedzi w toku po EOF od mostu.
     private let drainTimeout: TimeInterval
 
-    /// Diagnostyka: PELIKAN_MCP_TRACE=<plik> zapisuje wiadomości MCP (bez tokenu — token idzie tylko w hello).
+    /// Diagnostyka: PELIKAN_MCP_TRACE=<plik> zapisuje wiadomości MCP (bez tokenu — token idzie tylko w hello; hasła
+    /// w treści maskowane jak w panelu aktywności).
     static let traceFile: String? = ProcessInfo.processInfo.environment["PELIKAN_MCP_TRACE"]
 
     static func trace(_ direction: String, _ data: Data) {
         guard let path = traceFile else { return }
-        let line = Data("\(direction) \(String(decoding: data.prefix(4000), as: UTF8.self))\n".utf8)
-        if let h = FileHandle(forWritingAtPath: path) {
-            // Nowe API zgłasza błąd zapisu (pełny dysk) jako błąd Swift — stare `write(_:)` rzucało wyjątek ObjC (awaria).
-            defer { try? h.close() }
-            _ = try? h.seekToEnd()
-            try? h.write(contentsOf: line)
-        } else {
-            // Ślad zawiera wyniki zapytań — tylko dla właściciela.
-            FileManager.default.createFile(atPath: path, contents: line, attributes: [.posixPermissions: 0o600])
+        // Duża wiadomość (wynik zapytania) — w śladzie tylko jej rozmiar (początek wycięty z JSON nie da się bezpiecznie
+        // rozkodować i zamaskować).
+        let text = data.count > 256 * 1024 ? "<wiadomość \(data.count) bajtów — treść pominięta w śladzie>" : masked(data)
+        writeTrace(path, Data("\(direction) \(String(text.prefix(4000)))\n".utf8))
+    }
+
+    /// Wiadomość do śladu z hasłami zamaskowanymi w rozkodowanych napisach JSON (skrypt `connect u/hasło` po
+    /// rozkodowaniu ma znaki nowej linii, a `^` wzorca trafia na początek linii — w surowej ramce nie).
+    /// Maskowanie wspólne z panelem aktywności i dziennikiem (`AgentController.redacted`).
+    static func masked(_ data: Data) -> String {
+        guard let value = try? JSONDecoder().decode(JSONValue.self, from: data) else {
+            return SQLPlusEngine.maskPassword(String(decoding: data, as: UTF8.self))
         }
+        return AgentController.redacted(value).description
+    }
+
+    /// Dopisuje do pliku śladu tylko, gdy to zwykły plik właściciela bez dostępu dla innych (ślad zawiera wyniki
+    /// zapytań): bez podążania za dowiązaniem, nowy plik z prawami 0600.
+    static func writeTrace(_ path: String, _ line: Data) {
+        // O_NONBLOCK: kolejka FIFO pod tą ścieżką nie zablokuje otwarcia (odrzucana zaraz po fstat).
+        let fd = open(path, O_WRONLY | O_APPEND | O_CREAT | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK, 0o600)
+        guard fd >= 0 else { return }
+        defer { close(fd) }
+        var st = stat()
+        // Własny zwykły plik z prawami dla innych (np. utworzony `touch` przy umask 022) — prawa poprawione na 0600;
+        // cudzy albo inny niż zwykły plik — bez zapisu.
+        // Jedno dowiązanie (nie twarde dowiązanie do innego pliku użytkownika, np. ~/.zshrc).
+        guard fstat(fd, &st) == 0, PrivateOwnership.ownedByUser(st, type: mode_t(S_IFREG)), st.st_nlink == 1 else { return }
+        if st.st_mode & 0o077 != 0, fchmod(fd, 0o600) != 0 { return }
+        _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK)
+        try? Wire.writeAll(line, to: fd)
     }
 
     /// Klienci MCP deklarują możliwości z nowszych wersji specyfikacji (np. Codex:

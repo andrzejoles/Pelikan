@@ -4,6 +4,7 @@ import Foundation
 import MCP
 @testable import PelikanAgent
 @testable import PelikanBridgeKit
+import PelikanWorkspace
 import Testing
 
 @Suite("Most i transport gniazda: zamykanie bez wyścigów")
@@ -89,6 +90,11 @@ struct BridgeTransportTests {
         #expect(notice.hasPrefix("result_truncated") && notice.contains("\(text.utf8.count)") && notice.contains("nie polecenia"))
         // Po podwójnym kodowaniu JSON (najgorszy przypadek: każdy bajt dwa razy) mieści się w ramce mostu.
         #expect(2 * AgentController.maxResultBytes + 4096 < Wire.maxFrame)
+        // Znaki sterujące (`\uXXXX` w JSON — 6 bajtów): przycięte tak, by tekst po kodowaniu zmieścił się w ramce.
+        let control = String(repeating: "\u{01}", count: AgentController.maxResultBytes / 2)
+        let cparts = AgentController.limitedContent(control, untrusted: false)
+        let encoded = try JSONEncoder().encode(cparts[0])
+        #expect(cparts.count == 2 && encoded.count + 4096 < Wire.maxFrame)
 
         #expect(SocketTransport.fittingFrame(Data("{}".utf8)) == Data("{}".utf8))
         let big = Data(#"{"id":"a\/1","jsonrpc":"2.0","result":{"text":""#.utf8) + Data(repeating: 0x61, count: Wire.maxFrame) + Data(#""}}"#.utf8)
@@ -193,6 +199,75 @@ struct BridgeTransportTests {
         close(input[0])
         close(output[0])
         #expect(received == "odpowiedz:{\"id\":1}\n")
+    }
+
+    @Test("ślad MCP: hasła maskowane, plik 0600; istniejący plik dostępny dla innych albo dowiązanie — bez zapisu")
+    func traceFile() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("plk-trace-\(UUID().uuidString.prefix(6))")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let path = dir.appendingPathComponent("t.log").path
+        SocketTransport.writeTrace(path, Data("a\n".utf8))
+        let attrs = try FileManager.default.attributesOfItem(atPath: path)
+        #expect((attrs[.posixPermissions] as? Int) == 0o600)
+        // Hasło w napisie JSON (skrypt z nową linią przed CONNECT) — zamaskowane po rozkodowaniu.
+        let frame = Data(#"{"params":{"arguments":{"sql":"select 1 from dual;\nconnect scott/Tiger123@prod\ncreate user x identified by tajne1"}}}"#.utf8)
+        let m = SocketTransport.masked(frame)
+        #expect(!m.contains("Tiger123") && !m.contains("tajne1") && m.contains("select 1 from dual"))
+        // Kilka CONNECT w jednym skrypcie — każde hasło zamaskowane.
+        let two = SQLPlusEngine.maskPassword("connect a/Pass1@db1\nselect 1 from dual;\nconnect b/Pass2@db2")
+        #expect(!two.contains("Pass1") && !two.contains("Pass2") && two.contains("@db2"))
+        // Zwykły tekst: hasło w cudzysłowie (także z `@`), niezamknięty cudzysłów, ukośnik wsteczny w haśle.
+        #expect(SQLPlusEngine.maskPassword("connect u/p") == "connect u/********")
+        #expect(!SQLPlusEngine.maskPassword("connec scott/Tiger123@prod").contains("Tiger123"))
+        #expect(!SQLPlusEngine.maskPassword("conne scott/Tiger123").contains("Tiger123"))
+        #expect(SQLPlusEngine.maskPassword(#"connect u/"tajne hasło"@db"#) == "connect u/********@db")
+        #expect(SQLPlusEngine.maskPassword(#"connect u/"p@ss""#) == "connect u/********")
+        #expect(SQLPlusEngine.maskPassword(#"connect u/"secret pw"#) == "connect u/********")
+        #expect(SQLPlusEngine.maskPassword("alter user scott identified by NewPw1 replace OldPw0") == "alter user scott identified by ******** replace ********")
+        // Niezamknięty cudzysłów nie pochłania następnej linii.
+        #expect(SQLPlusEngine.maskPassword("connect u/\"pw\nselect \"X\" from t;") == "connect u/********\nselect \"X\" from t;")
+        #expect(SQLPlusEngine.maskPassword(#"connect u/ab\ncd@db"#) == "connect u/********@db")
+        // Wynik narzędzia (JSON): maskowanie po rozkodowaniu — także zagnieżdżony tekst JSON.
+        let result: JSONValue = .object(["output": .string("x;\n\tconnect u/Secret1@db"), "nested": .string(#"{"s":"connect a/Pass9"}"#)])
+        let shown = AgentController.redacted(result).description
+        #expect(!shown.contains("Secret1") && !shown.contains("Pass9"))
+        let open = dir.appendingPathComponent("open.log").path
+        FileManager.default.createFile(atPath: open, contents: Data(), attributes: [.posixPermissions: 0o644])
+        SocketTransport.writeTrace(open, Data("b\n".utf8))
+        // Własny plik 0644 — prawa poprawione na 0600 i zapis.
+        #expect(try String(contentsOfFile: open, encoding: .utf8) == "b\n")
+        #expect((try FileManager.default.attributesOfItem(atPath: open)[.posixPermissions] as? Int) == 0o600)
+        let link = dir.appendingPathComponent("link.log").path
+        try FileManager.default.createSymbolicLink(atPath: link, withDestinationPath: path)
+        SocketTransport.writeTrace(link, Data("c\n".utf8))
+        // Dowiązanie twarde do innego pliku — bez zapisu.
+        let hard = dir.appendingPathComponent("hard.log").path
+        try FileManager.default.linkItem(atPath: path, toPath: hard)
+        SocketTransport.writeTrace(hard, Data("d\n".utf8))
+        #expect(try String(contentsOfFile: path, encoding: .utf8) == "a\n")
+    }
+
+    @Test("start powłoki agenta przez most: --exec, program i jego argumenty")
+    func execArguments() {
+        #expect(Bridge.execArguments(shell: "/bin/zsh", arguments: ["-l", "-c", "claude"]) == ["--exec", "/bin/zsh", "-l", "-c", "claude"])
+    }
+
+    @Test("limiter wywołań: historia zamkniętej sesji usuwana")
+    func rateLimiterForget() {
+        let l = RateLimiter()
+        #expect(l.allow(session: "s", limit: 1) && !l.allow(session: "s", limit: 1))
+        l.forget(session: "s")
+        #expect(l.allow(session: "s", limit: 1))
+    }
+
+    @Test("ramka hello: limit rozmiaru przed odczytem treści")
+    func helloLimit() throws {
+        var fds: [Int32] = [0, 0]
+        #expect(socketpair(AF_UNIX, SOCK_STREAM, 0, &fds) == 0)
+        defer { close(fds[0]); close(fds[1]) }
+        try Wire.writeFrame(Data(repeating: 0x61, count: 8000), to: fds[0])
+        #expect(throws: Wire.Error.frameTooLarge(8000)) { try Wire.readFrame(from: fds[1], limit: 4096) }
     }
 }
 

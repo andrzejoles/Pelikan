@@ -1,5 +1,6 @@
 #if canImport(Darwin)
 import PelikanBridgeKit
+import PelikanLog
 import Darwin
 import Foundation
 import Synchronization
@@ -40,7 +41,9 @@ public final class AgentServer: @unchecked Sendable {
     }
 
     public func start() throws {
-        let dir = socketURL.deletingLastPathComponent().path(percentEncoded: false)
+        // Bez końcowego ukośnika — z nim `lstat` podąża za dowiązaniem i kontrola „nie dowiązanie” by nie zadziałała.
+        var dir = socketURL.deletingLastPathComponent().path(percentEncoded: false)
+        while dir.count > 1, dir.hasSuffix("/") { dir.removeLast() }
         try Self.prepareDirectory(dir)
         let path = socketURL.path(percentEncoded: false)
         unlink(path)
@@ -95,13 +98,10 @@ public final class AgentServer: @unchecked Sendable {
 
     /// Katalog gniazda: tworzony z 0700, musi należeć do bieżącego użytkownika i nie być dowiązaniem.
     static func prepareDirectory(_ dir: String) throws {
-        var st = stat()
-        if lstat(dir, &st) != 0 {
-            try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-            guard lstat(dir, &st) == 0 else { throw StartError.insecureDirectory(dir) }
-        }
-        guard st.st_mode & S_IFMT == S_IFDIR, st.st_uid == getuid() else { throw StartError.insecureDirectory(dir) }
-        if st.st_mode & 0o777 != 0o700 { chmod(dir, 0o700) }
+        // Katalog nadrzędny (Application Support) tworzony zwykle; sam katalog — wspólną regułą katalogu prywatnego.
+        let parent = (dir as NSString).deletingLastPathComponent
+        try FileManager.default.createDirectory(atPath: parent, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        guard PrivateOwnership.ensurePrivateDirectory(dir) else { throw StartError.insecureDirectory(dir) }
     }
 
     private func acceptLoop(_ listenFD: Int32) {
@@ -138,10 +138,16 @@ public final class AgentServer: @unchecked Sendable {
         }
         // 2. Ramka hello z tokenem w ograniczonym czasie.
         Wire.setReadTimeout(fd, seconds: Self.helloTimeout)
-        guard let data = try? Wire.readFrame(from: fd), data.count < 4096,
+        // Rozmiar sprawdzany przed odczytem treści — proces bez tokenu nie zajmie 4 MB na połączenie.
+        guard let data = try? Wire.readFrame(from: fd, limit: 4096),
               let hello = try? JSONDecoder().decode(Wire.Hello.self, from: data), hello.type == "hello"
         else {
             reject(fd, "no_hello", pid: peer.pid)
+            return
+        }
+        // Most z innej wersji protokołu — jasny błąd od razu, nie później w trakcie pracy.
+        guard hello.version == Wire.protocolVersion else {
+            reject(fd, "protocol_version", pid: peer.pid)
             return
         }
         // 3. Token (stały czas).

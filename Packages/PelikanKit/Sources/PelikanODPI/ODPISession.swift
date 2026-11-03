@@ -19,16 +19,25 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     private var resultSets: [UInt64: OpenResultSet] = [:]
     /// Rozmiar pobierania bieżącego polecenia (ExecuteOptions albo opcje połączenia) — także dla kursorów potomnych.
     private var currentFetchArraySize: UInt32 = 500
+    /// Limit czasu wywołania w toku (wykonanie albo pobieranie) — dziedziczą go kursory otwarte w jego trakcie
+    /// (REF CURSOR w zmiennej OUT, `CURSOR(…)` w wierszu, wyniki niejawne).
+    private var activeCallTimeoutMs: UInt32 = 0
     private var nextResultSetID: UInt64 = 1
     /// Zamknięte (true) — chronione blokadą, bo `breakExecution` działa poza kolejką i nie może trafić w zwolniony
     /// uchwyt połączenia w trakcie `close()`.
-    private let closedState = Mutex<Bool>(false)
-    private var closed: Bool { closedState.withLock { $0 } }
+    /// Otwarta; zamykana: ROLLBACK (Break go przerywa), wylogowanie (Break nic nie robi — uchwyty OCI są zwalniane);
+    /// zamknięta.
+    private enum State { case open, rollingBack, ending, closed }
+    private let lifecycle = Mutex<State>(.open)
+    /// Sesja nie przyjmuje już wywołań (zamykana albo zamknięta).
+    private var closed: Bool { lifecycle.withLock { $0 != .open } }
 
     private struct OpenResultSet {
         let stmt: OpaquePointer
         let columns: [ColumnInfo]
         let lobLimit: Int
+        /// Limit czasu wywołania z wykonania (np. zapytanie agenta) — obowiązuje też każde pobranie z tego wyniku.
+        var callTimeoutMs: UInt32 = 0
         /// Kursor zagnieżdżony (`CURSOR(…)` w wierszu): wynik nadrzędny, dopóki nikt nie pobrał z niego wierszy.
         var parent: UInt64?
     }
@@ -71,7 +80,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     }
 
     deinit {
-        if !closed {
+        if lifecycle.withLock({ $0 == .open }) {
             for (_, rs) in resultSets { dpiStmt_release(rs.stmt) }
             dpiConn_release(conn)
         }
@@ -80,8 +89,23 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     /// Łączy się z bazą. `libraryDirectory` — katalog Instant Client z ustawień (nil = wykrywanie).
     public static func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions = ConnectOptions(),
                                libraryDirectory: String? = nil, configDirectory: String? = nil) async throws -> ODPISession {
-        let env = try ODPIEnvironment.get(libraryDirectory: libraryDirectory, configDirectory: configDirectory)
         let queue = DispatchQueue(label: "pelikan.odpi.session", qos: .userInitiated)
+        // Przygotowanie (biblioteka klienta, Kerberos, wyszukiwanie LDAP z limitami czasu — sieć) i logowanie na kolejce
+        // sesji, nie na wątku puli współbieżności (kilka połączeń naraz z nieosiągalnym LDAP zablokowałoby pulę).
+        return try await withCheckedThrowingContinuation { cont in
+            queue.async {
+                cont.resume(with: Result {
+                    let (env, finalTarget) = try prepare(target: target, libraryDirectory: libraryDirectory, configDirectory: configDirectory)
+                    return try connectSync(env: env, queue: queue, target: finalTarget, credentials: credentials, options: options)
+                })
+            }
+        }
+    }
+
+    /// Środowisko klienta i ostateczny cel połączenia (alias, portfel, katalog LDAP, token) — operacje blokujące.
+    private static func prepare(target: ConnectionTarget, libraryDirectory: String?, configDirectory: String?) throws
+        -> (ODPIEnvironment, ConnectionTarget) {
+        let env = try ODPIEnvironment.get(libraryDirectory: libraryDirectory, configDirectory: configDirectory)
         var resolved = target
         // Magazyn haseł (portfel z poświadczeniami) szuka wpisu po dokładnym tekście aliasu — bez rozwijania (D53).
         if target.walletAuth == true { resolved.externalAuth = true }
@@ -109,12 +133,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             resolved.externalAuth = true
             resolved.user = ""
         }
-        let finalTarget = resolved
-        return try await withCheckedThrowingContinuation { cont in
-            queue.async {
-                cont.resume(with: Result { try connectSync(env: env, queue: queue, target: finalTarget, credentials: credentials, options: options) })
-            }
-        }
+        return (env, resolved)
     }
 
     private static func connectSync(env: ODPIEnvironment, queue: DispatchQueue, target: ConnectionTarget,
@@ -229,8 +248,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
 
     public func breakExecution() {
         // Celowo poza kolejką: kolejka jest zajęta przez przerywane wywołanie. Blokada wyklucza wyścig z close().
-        closedState.withLock { isClosed in
-            if !isClosed { dpiConn_breakExecution(conn) }
+        // Także w trakcie ROLLBACK przy zamykaniu (na zerwanym połączeniu czeka na limit TCP); w trakcie wylogowania — nic
+        // (uchwyty OCI zwalniane). Blokada trzymana tylko na czas samego przerwania — szybkie, wątek interfejsu nie czeka.
+        lifecycle.withLock { state in
+            if state == .open || state == .rollingBack { dpiConn_breakExecution(conn) }
         }
     }
 
@@ -245,16 +266,24 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     public func close() async {
         await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
             queue.async { [self] in
-                closedState.withLock { isClosed in
-                    guard !isClosed else { return }
+                // Stan pod blokadą, wywołania sieciowe poza nią (ROLLBACK i wylogowanie na zerwanym połączeniu czekają na
+                // limit TCP — wątek interfejsu w `breakExecution` nie może na to czekać). Przejście do wylogowania pod
+                // blokadą czeka na ewentualny Break w toku, potem Break już nie sięga do uchwytów.
+                let proceed = lifecycle.withLock { state -> Bool in
+                    guard state == .open else { return false }
+                    state = .rollingBack
+                    return true
+                }
+                if proceed {
                     for (_, rs) in resultSets { dpiStmt_release(rs.stmt) }
                     resultSets.removeAll()
                     // Sterownik nigdy nie zatwierdza po cichu: decyzję COMMIT/ROLLBACK podejmuje wcześniej interfejs
                     // (D10); tu zostaje bezpieczne ROLLBACK przed zamknięciem.
                     dpiConn_rollback(conn)
+                    lifecycle.withLock { $0 = .ending }
                     dpiConn_close(conn, dpiConnCloseMode(DPI_MODE_CONN_CLOSE_DEFAULT), nil, 0)
                     dpiConn_release(conn)
-                    isClosed = true
+                    lifecycle.withLock { $0 = .closed }
                 }
                 cont.resume()
             }
@@ -274,7 +303,12 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         }
     }
 
+    /// Wykonanie z limitem czasu wywołania (dotyczy wykonania i pobierania jego wyników — zapamiętany przy wyniku).
     func executeSync(_ sql: String, binds: [BindVariable], options: ExecuteOptions) throws -> ExecutionResult {
+        try withCallTimeout(options.callTimeoutMs) { try executeBody(sql, binds: binds, options: options) }
+    }
+
+    private func executeBody(_ sql: String, binds: [BindVariable], options: ExecuteOptions) throws -> ExecutionResult {
         let start = ContinuousClock.now
         var stmtOpt: OpaquePointer?
         try sql.withCString { try check(dpiConn_prepareStmt(conn, 0, $0, UInt32(sql.utf8.count), nil, 0, &stmtOpt)) }
@@ -286,7 +320,15 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         try check(dpiStmt_getInfo(stmt, &stmtInfo))
         let kind = Self.kind(stmtInfo)
 
-        try check(dpiConn_setCallTimeout(conn, options.callTimeoutMs))
+        // Błąd po zarejestrowaniu wyników (np. drugi wynik niejawny bez opisu) — wywołujący nie dostanie ich
+        // identyfikatorów: zamknięte, zamiast zostać otwarte na serwerze do końca sesji.
+        let firstResultSet = nextResultSetID
+        var completed = false
+        defer {
+            if !completed {
+                for id in firstResultSet..<nextResultSetID where resultSets[id] != nil { closeSync(ResultSetID(id)) }
+            }
+        }
         let vars = try bindVariables(binds, to: stmt)
         defer { for v in vars { dpiVar_release(v.handle) } }
 
@@ -330,6 +372,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                     result.outBinds[v.bind.name] = .null
                     continue
                 }
+                // Zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna testu) przechowuje jedną wartość — z pierwszego
+                // zmienionego wiersza; wiele wartości daje RETURNING … BULK COLLECT INTO w PL/SQL (D209).
                 data = returned
             }
             result.outBinds[v.bind.name] = try value(native: v.nativeType, oracle: v.oracleType, data: data, typeName: v.bind.type.rawValue, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
@@ -338,6 +382,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             result.implicitResults = try implicitResults(stmt, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
         }
         result.elapsed = ContinuousClock.now - start
+        completed = true
         return result
     }
 
@@ -353,10 +398,12 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         }
     }
 
+    /// Wynik dziedziczy limit czasu wywołania w toku (`activeCallTimeoutMs` z `withCallTimeout`).
     private func register(stmt: OpaquePointer, columns: [ColumnInfo], lobLimit: Int, parent: UInt64? = nil) -> ResultSetDescriptor {
+        let callTimeoutMs = activeCallTimeoutMs
         let id = nextResultSetID
         nextResultSetID += 1
-        resultSets[id] = OpenResultSet(stmt: stmt, columns: columns, lobLimit: lobLimit, parent: parent)
+        resultSets[id] = OpenResultSet(stmt: stmt, columns: columns, lobLimit: lobLimit, callTimeoutMs: callTimeoutMs, parent: parent)
         if parent != nil {
             pendingNested.append(id)
             if pendingNested.count > Self.maxPendingNestedCursors { closeSync(ResultSetID(pendingNested[0])) }
@@ -377,14 +424,38 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             // Referencja należy już do nas (ODPI-C tworzy instrukcję z licznikiem 1 i sama trzyma rodzica) —
             // bez dpiStmt_addRef, inaczej struktura wyniku i połączenia nie byłyby nigdy zwolnione.
             guard dpiStmt_getImplicitResult(stmt, &child) == DPI_SUCCESS, let child else { break }
+            out.append(register(stmt: child, columns: try describeChild(child), lobLimit: lobLimit))
+        }
+        return out
+    }
+
+    /// Opis kursora potomnego (wynik niejawny, REF CURSOR, `CURSOR(…)`); błąd — instrukcja zwolniona (inaczej kursor
+    /// zostaje otwarty na serwerze do końca sesji) i błąd dalej.
+    private func describeChild(_ child: OpaquePointer) throws -> [ColumnInfo] {
+        do {
             var n: UInt32 = 0
             try check(dpiStmt_getNumQueryColumns(child, &n))
             try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
             let columns = try describeColumns(child, count: n)
             try limitFetchForNestedCursors(child, columns: columns)
-            out.append(register(stmt: child, columns: columns, lobLimit: lobLimit))
+            return columns
+        } catch {
+            dpiStmt_release(child)
+            throw error
         }
-        return out
+    }
+
+    /// Limit czasu wywołania na czas `body` (0 — bez limitu): ustawiany na połączeniu, dziedziczony przez kursory
+    /// otwarte w tym czasie (`activeCallTimeoutMs`), potem zdejmowany — COMMIT, ROLLBACK i ping go nie mają.
+    private func withCallTimeout<T>(_ ms: UInt32, _ body: () throws -> T) throws -> T {
+        // Zawsze ustawiany (także 0): limit z poprzedniego wywołania nie zostaje, gdy jego zdjęcie się nie udało.
+        try check(dpiConn_setCallTimeout(conn, ms))
+        activeCallTimeoutMs = ms
+        defer {
+            if ms != 0 { dpiConn_setCallTimeout(conn, 0) }
+            activeCallTimeoutMs = 0
+        }
+        return try body()
     }
 
     private func describeColumns(_ stmt: OpaquePointer, count: UInt32) throws -> [ColumnInfo] {
@@ -470,6 +541,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
 
     func fetchSync(_ id: ResultSetID, maxRows: Int) throws -> RowBatch {
         guard let rs = resultSets[id.raw] else { throw DatabaseError.unknownResultSet }
+        return try withCallTimeout(rs.callTimeoutMs) { try fetchBody(id, rs: rs, maxRows: maxRows) }
+    }
+
+    private func fetchBody(_ id: ResultSetID, rs: OpenResultSet, maxRows: Int) throws -> RowBatch {
         if rs.parent != nil {
             // Otwarty przez użytkownika — już nie podlega zamykaniu najstarszych.
             resultSets[id.raw]?.parent = nil
@@ -570,12 +645,14 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         case DPI_NATIVE_TYPE_STMT:
             guard let child = v.asStmt else { return .null }
             dpiStmt_addRef(child)
-            var n: UInt32 = 0
-            try check(dpiStmt_getNumQueryColumns(child, &n))
-            try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
-            let columns = try describeColumns(child, count: n)
-            try limitFetchForNestedCursors(child, columns: columns)
-            return .cursor(register(stmt: child, columns: columns, lobLimit: lobLimit, parent: parent).id)
+            // Kursor nieotwarty (ORA-24338, np. procedura warunkowo nie wykonała OPEN) — wartość NULL, reszta zmiennych
+            // OUT i wynik wykonania (DML już się wykonał) zostają; inny błąd opisu — błąd.
+            do {
+                let columns = try describeChild(child)
+                return .cursor(register(stmt: child, columns: columns, lobLimit: lobLimit, parent: parent).id)
+            } catch let e as OracleError where e.code == 24338 {
+                return .null
+            }
         case DPI_NATIVE_TYPE_OBJECT:
             return .object(typeName: typeName, description: "")
         default:

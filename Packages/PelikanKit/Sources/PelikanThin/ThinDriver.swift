@@ -161,7 +161,17 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     }
 
     func loadInfo() async throws {
-        let (_, rows) = try await queryAll("select sys_context('USERENV', 'SESSION_USER'), sys_context('USERENV', 'CURRENT_SCHEMA'), (select banner_full from v$version where rownum = 1) from dual")
+        // Jedno zapytanie z opisem wersji: BANNER_FULL od 18c, wcześniej (12.1/12.2) BANNER — kolumna według wersji
+        // z uzgadniania. Brak uprawnień do V$VERSION albo kolumny (baza utwardzona) — drugie zapytanie bez opisu (pusty
+        // opis nie przerywa połączenia); inny błąd (zerwane połączenie) — tak.
+        let banner = info.server.major >= 18 ? "banner_full" : "banner"
+        let context = "sys_context('USERENV', 'SESSION_USER'), sys_context('USERENV', 'CURRENT_SCHEMA')"
+        let rows: [[OracleValue]]
+        do {
+            rows = try await queryAll("select \(context), (select \(banner) from v$version where rownum = 1) from dual").rows
+        } catch let e as OracleError where [942, 904, 1031].contains(e.code) {
+            rows = try await queryAll("select \(context), null from dual").rows
+        }
         if let r = rows.first {
             info.sessionUser = r[0].displayText ?? ""
             info.currentSchema = r[1].displayText ?? ""

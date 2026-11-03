@@ -3175,6 +3175,137 @@ Uwagi rozstrzygnięte bez zmiany kodu:
 - **Słowo po kropce:** reguła identyfikatora obejmowała słowa kluczowe po kropce już przed 1.11.0 (`keywordAsIdentifier`);
   zmiana dotyczy tylko typów danych (`j.doc.date`) — bez regresji `s.NEXTVAL` czy `v.COUNT`.
 
+### D209 · 2026-11-03 — Przegląd kodu warstw bazy, agentów, SSH i dziennika
+
+Przegląd pełnego kodu pakietów PelikanDB, PelikanODPI, PelikanThin, PelikanRemote, PelikanAgent, PelikanBridgeKit,
+PelikanLog i pelikan-mcp (na polecenie właściciela). Poprawione:
+- **Bezpieczeństwo:** ślad `PELIKAN_MCP_TRACE` z maskowaniem haseł (jak panel aktywności) i zapisem tylko do zwykłego pliku
+  właściciela 0600, bez podążania za dowiązaniem; „Wszystko tylko do odczytu” obniża też komendy aplikacji dostępne przez
+  `run_command` (np. `edit.beautify` nie zmieni tekstu nawet po zgodzie); deskryptory potoków `ssh` z FD_CLOEXEC
+  (równoległy terminal agenta ich nie dziedziczy); ramka hello najwyżej 4 KB przed odczytem treści i zgodna wersja
+  protokołu mostu (`protocol_version`).
+- **SSH:** polecenie po kodzie 255 ponawiane tylko, gdy jest idempotentne (odpytywanie i zatrzymanie procesu) — wdrożenie,
+  `mv` czy DML mogły się już wykonać; potwierdzenie połączenia głównego ważne 5 s (bez `ssh -O check` przed każdym
+  poleceniem); stały prywatny katalog gniazd w `/tmp` zamiast nowego przy każdym uruchomieniu.
+- **Oracle Net:** ścieżki portfela i pliku tokenu w cudzysłowie, gdy mają spacje albo znaki składni (deskryptor i EZConnect
+  Plus — Net Services Administrator's Guide, „About Easy Connect Plus”); sterownik thin łączy się z 12.1/12.2 (opis wersji
+  z `BANNER`, gdy brak `BANNER_FULL`; brak opisu nie przerywa połączenia).
+- **ODPI:** przygotowanie połączenia (LDAP, Kerberos, biblioteka) na kolejce sesji, nie w puli współbieżności; limit czasu
+  wywołania tylko dla wykonania (pobieranie, COMMIT i ping bez niego); referencja kursora zwalniana przy błędzie opisu
+  (kursor nieotwarty, ORA-24338) — także dla wyników niejawnych; limit czasu zapytania (agent) zapamiętany przy wyniku
+  i ustawiany na czas każdego pobrania; zamknięcie
+  sesji bez trzymania blokady na czas ROLLBACK (Break z wątku interfejsu nie czeka na limit TCP).
+- **Agenci:** serwer MCP nie powstaje dla sesji zamkniętej w trakcie uzgadniania; wywołanie po zamknięciu sesji bez wpisu
+  „w toku”; obcinanie wyniku według długości po kodowaniu JSON (znaki sterujące `\uXXXX`); limiter zapomina zamknięte
+  sesje; dziennik bez tworzenia formaterów dat przy każdym wpisie.
+- **Most MCP:** komunikat na zamknięty stderr bez awarii; za długa linia wykrywana także, gdy kończy się w tym samym
+  kawałku danych.
+- **Dziennik aplikacji:** wpis na wyłączonym poziomie bez kopii konfiguracji pod blokadą; martwa `isEnabled` usunięta.
+
+Drugie przejście: ślad MCP maskuje hasła w rozkodowanych napisach JSON (wzorzec CONNECT działa od początku linii);
+`DescriptorLock` (PelikanLog) — tworzenie deskryptorów z FD_CLOEXEC (potoki `ssh`, gniazdo agentów; `accept` na
+gnieździe nieblokującym po `poll`) i start terminala agenta (forkpty) wzajemnie się wykluczają; gniazdo połączenia
+głównego SSH z numerem procesu w nazwie (kilka instancji Pelikana we wspólnym katalogu w /tmp); polecenia tylko do
+odczytu i sprzątające (stan serwera, kopie, historia, test celu, zwolnienie blokady) oznaczone jako idempotentne —
+ponawiane po zerwaniu; potwierdzenie połączenia zapominane po nieudanym `scp` i kodzie 255 w strumieniu; „tylko do
+odczytu” jako jawny wybór w macierzy (`readOnlySession`), nie wniosek z poziomów wierszy; opis wersji thin jednym
+zapytaniem według wersji serwera.
+
+Trzecie przejście: `DescriptorLock` w PelikanRemote (nie w dzienniku); przed startem terminala agenta wszystkie
+deskryptory aplikacji dostają FD_CLOEXEC (`markAllCloseOnExec` — także tworzone przez Foundation, OCI, pliki), więc
+CLI agenta nie dziedziczy żadnego; każda sesja SSH ma własne gniazdo połączenia głównego (`disconnect` tymczasowej
+sesji testu celu nie zrywa wdrożenia); wymuszone zwolnienie blokady wdrożenia nie jest ponawiane (mogłoby usunąć
+blokadę innego wdrożenia); ponowienie polecenia idempotentnego — jedno sprawdzenie połączenia; opis wersji thin
+osobnym zapytaniem z pominięciem błędu (brak uprawnień do V$VERSION); kursory REF CURSOR, `CURSOR(…)` i wyniki
+niejawne dziedziczą limit czasu wywołania; wyniki zarejestrowane przed błędem tego samego wykonania są zamykane;
+serwer MCP zatrzymywany, gdy sesję zamknięto w trakcie jego startu; pętla `accept` bez budzenia co sekundę (potok
+budzenia przy `stop`), `errno` odczytywany pod blokadą, brak deskryptorów (EMFILE) — przerwa zamiast końca serwera;
+ślad MCP maskowany tą samą funkcją co panel aktywności. Zwolnienie własnej blokady wdrożenia zostaje ponawiane
+(idempotentne); po ponowieniu komunikat „Zdjęto blokadę” może się nie pokazać — blokady i tak już nie ma.
+
+Czwarte przejście: maskowanie każdego `CONNECT` w skrypcie (nie tylko pierwszego); potok budzenia pętli `accept`
+bez SIGPIPE i wpis w dzienniku, gdy pętla skończy się bez `stop`; kanał hasła askpass otwierany z O_CLOEXEC, skrypt
+askpass zapisywany atomowo; potwierdzenie połączenia SSH pod osobną blokadą (`disconnect` nie czeka na logowanie);
+ponowienie polecenia idempotentnego tylko przy martwym połączeniu głównym; `mkdir -p` przygotowania wdrożenia
+idempotentny; nieotwarty REF CURSOR w zmiennej OUT (ORA-24338) — wartość NULL zamiast błędu całego wykonania;
+`describeChild` i `withCallTimeout` jako jedno miejsce; `markAllCloseOnExec` tylko po otwartych deskryptorach
+(`proc_pidinfo`); wspólne `PrivateOwnership`.
+
+Piąte przejście (zastępuje `DescriptorLock` z przejść 2–4): powłoka agenta startuje przez `pelikan-mcp --exec`, który
+w świeżym procesie zamyka wszystkie deskryptory powyżej 2 i dopiero wykonuje `execv` powłoki (ten sam PID) — przyczyna
+usunięta u źródła, bez blokady i przeglądu deskryptorów w aplikacji (deskryptory tworzone przez Foundation, OCI czy inne
+wątki też nie przechodzą); pętla `accept` znów prosta (jak przed przeglądem). Potwierdzenie połączenia SSH z ostatnich
+5 s tylko dla poleceń idempotentnych (reszta zawsze sprawdza — nie trafi na martwe połączenie), ponowienie pod blokadą
+sprawdza je jeszcze raz (bez drugiego `startMaster`); zastąpiona sesja celu wdrożenia rozłączana; skrypt askpass
+instalowany tylko, gdy go brak albo jest inny, z prawami 0700 przed zamianą nazwy (ten sam kod w `SSHSession`
+i `SSHTunnelManager` — PelikanRemote działa tylko na macOS, PelikanWorkspace także na Linuksie, bez wspólnej
+zależności); maskowanie haseł w jednym przejściu, także `CONNECT` po zapisanym `\n` (tekst JSON w wyniku narzędzia);
+ślad MCP: duże wiadomości maskowane od początku (do śladu i tak trafia 4000 znaków), plik otwierany bez blokowania na
+FIFO; opis wersji thin pomija tylko ORA-00942/00904/01031.
+
+Szóste przejście: sesja celu wdrożenia zastąpiona po zmianie konfiguracji nie jest rozłączana od razu (mogła obsługiwać
+trwające wdrożenie) — przy zamknięciu aplikacji; po czekaniu na Pęk kluczy ponowne sprawdzenie pamięci sesji (bez dwóch
+połączeń głównych); potwierdzenie połączenia z pokoleniem (sprawdzenie rozpoczęte przed zerwaniem nie zapisze
+nieaktualnego); maskowanie `CONNECT` także na początku napisu JSON, hasło w cudzysłowie (także `\"…\"`) w całości,
+`\` w haśle nie kończy słowa; `pelikan-mcp --exec` zamyka deskryptory według listy otwartych; dziennik liczy ujście
+diagnostyczne przy każdym wpisie (bez kopii tablic); opis wersji thin w tym samym zapytaniu co kontekst sesji, drugie
+zapytanie tylko przy braku uprawnień.
+
+Siódme przejście: `maskPassword` znowu tylko dla zwykłego tekstu (próba rozpoznawania zapisu JSON w tej funkcji dawała
+wycieki) — każde `CONNECT` jednym przejściem wyrażenia, hasło w cudzysłowie w całości (także z `@`), niezamknięty
+cudzysłów do końca słowa; wyniki narzędzi agenta maskowane na rozkodowanych wartościach (`redacted`, także zagnieżdżony
+tekst JSON), ślad MCP dla wiadomości ponad 256 KB zapisuje tylko rozmiar; `PrivateOwnership` w PelikanLog (agent nie
+zależy od warstwy SSH); `pelikan-mcp --exec` ustawia FD_CLOEXEC zamiast zamykać (deskryptory chronione bibliotek
+systemowych); połączenie nawiązane w trakcie `disconnect` (inne pokolenie) nie jest potwierdzane i zostaje zamknięte;
+obcinanie wyniku narzędzia w jednym przejściu, `/` liczony z zapasem jak `\/`.
+
+Ósme przejście — **SSH wycofane do pierwotnego układu** (zastępuje zmiany SSH z przejść 1–7): każda kolejna zmiana
+(pamięć sprawdzenia przez 5 s, osobne gniazdo każdej sesji, stały katalog w /tmp, pokolenia potwierdzeń, sesje
+zastąpione) otwierała nowe przypadki brzegowe. Zostaje tylko istota pierwszej uwagi — polecenie po kodzie 255 ponawiane
+wyłącznie, gdy jest idempotentne (odpytywanie i zatrzymanie procesu, stan serwera, kopie, historia, test celu,
+`mkdir -p`, sprzątanie, zwolnienie własnej blokady) — oraz kanał hasła z O_CLOEXEC i skrypt askpass instalowany z prawami
+0700 przed zamianą nazwy. Rozstrzygnięte bez zmiany: `ssh -O check` przed każdym poleceniem (pewność, że połączenie
+żyje, jest ważniejsza niż jeden proces mniej); nowy katalog gniazd w /tmp przy długiej ścieżce preferowanej (system
+czyści /tmp przy restarcie; katalogi są puste po zamknięciu połączeń). Katalog tunelu SSH (PelikanWorkspace, także
+Linux z wspólnym /tmp) sprawdzany jako własny i prywatny (`PrivateOwnership`, PelikanLog — wspólny dla macOS i Linuksa);
+plik śladu MCP z prawami dla innych, ale własny — prawa poprawiane na 0600; panel i dziennik agenta maskują ograniczony
+podgląd wyniku; hasło w niezamkniętym cudzysłowie maskowane tylko do końca linii.
+
+Dziewiąte przejście: kanał hasła askpass (skrypt i wątek zapisu kolejki) w jednym miejscu — `Askpass` w PelikanLog,
+wspólnym dla PelikanRemote i PelikanWorkspace (zastępuje dwie kopie); katalog tunelu sprawdzany przed przekazaniem
+hasła (także zapasowy), inaczej jasny błąd; plik śladu MCP tylko z jednym dowiązaniem (nie twarde dowiązanie do innego
+pliku); podgląd wyniku i argumentów agenta przed maskowaniem (długi zagnieżdżony JSON zastąpiony opisem, nie
+przycinany; JSON rozpoznawany także po odstępach); sesja ODPI w stanie „zamykana” — Break nadal przerywa ROLLBACK na
+zerwanym połączeniu, uchwyt zwalniany pod blokadą; limit czasu wyniku zawsze z `withCallTimeout` (bez osobnych
+parametrów).
+
+Dziesiąte przejście: zakończenie sesji ODPI (zwalnianie uchwytów OCI) pod blokadą — Break przerywa tylko ROLLBACK, nie
+trafia w zwalniane uchwyty; hasło w niezamkniętym cudzysłowie maskowane do końca linii, stare hasło w `ALTER USER …
+REPLACE` też; ścieżka z cudzysłowem przekazywana do Oracle Net bez zmian (błąd zamiast cichej innej ścieżki); katalog
+tunelu sprawdzany i odtwarzany przy każdym logowaniu (`PrivateOwnership.ensurePrivateDirectory`, wspólne z katalogiem
+gniazda agentów); `markInheritedCloseOnExec` (nazwa i opisy zgodne z działaniem); podgląd i obcinanie wyniku po bajtach
+UTF-8; opis zastępczy przez `L10n`.
+
+Jedenaste przejście: zamykanie sesji ODPI w stanach — ROLLBACK (Break go przerywa), wylogowanie (Break nic nie robi
+i od razu wraca; uchwyty OCI zwalniane bez blokady, wątek interfejsu nigdy nie czeka na limit TCP); portfel dopisywany
+do istniejącej sekcji SECURITY deskryptora; zapasowy katalog tunelu jeden na uruchomienie; dziennik — flaga ujścia
+diagnostycznego liczona przy zmianie ujść (`receivesEverything` stałe — wymóg protokołu); obcinanie wyniku narzędzia
+poza głównym wątkiem. Rozstrzygnięte: błąd opisu wyniku niejawnego (DBMS_SQL.RETURN_RESULT) to błąd wykonania (np.
+nieobsługiwany typ kolumny) — inaczej niż nieotwarty REF CURSOR w zmiennej OUT, który jest zwykłym przebiegiem programu;
+tabela kosztów JSON (`jsonCost`) zostaje — koder SDK nie zamienia znaków spoza ASCII ani U+2028 na `\uXXXX`, a `/`
+liczony z zapasem; nadmiarową ramkę i tak zastępuje `SocketTransport.fittingFrame`.
+
+Dwunaste przejście: maskowanie każdego skrótu CONNECT, który przyjmuje okno poleceń (CONN, CONNE, CONNEC); sekcja
+SECURITY szukana w deskryptorze bez odstępów (wklejony wieloliniowy deskryptor); sygnały `kill` przy zatrzymaniu nie
+są ponawiane po zerwaniu (PID mógł już należeć do innego procesu) — ponawiane tylko odpytywanie; katalog gniazda
+agentów bez końcowego ukośnika (kontrola dowiązania), katalogi nadrzędne z 0700; limit czasu wywołania ustawiany
+zawsze (także 0); serializacja wyniku narzędzia poza głównym wątkiem; stan sesji ODPI jako `lifecycle`. Rozstrzygnięte:
+ślad MCP tylko do zwykłego pliku (nie `/dev/stderr` ani FIFO) — świadomie, ślad zawiera dane z bazy.
+
+Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
+testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
+`RETURNING … BULK COLLECT INTO` w bloku PL/SQL.
+
 ### D210 · 2026-11-03 — Standard plików: UTF-8 bez BOM, pliki programów bez „/”
 
 **Prośba właściciela:** „w ustawieniach (i zaznaczone jako domyślne) pliki w UTF-8, bez BOM, bez znaków / na końcu czy

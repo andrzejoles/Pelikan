@@ -132,8 +132,11 @@ final class AgentUIController: ApprovalPresenter {
             try? FileManager.default.removeItem(at: sessionDir)
         }
         showPane()
-        terminal.startProcess(executable: spec.shell, args: spec.shellArguments, environment: env.map { "\($0.key)=\($0.value)" },
-                              execName: nil, currentDirectory: directory)
+        // forkpty+execve terminala nie zamyka deskryptorów aplikacji (połączenia z bazą, potoki `ssh`, gniazdo agentów):
+        // powłoka startuje przez `pelikan-mcp --exec`, który oznacza je FD_CLOEXEC i wykonuje powłokę — przy `execv` znikają
+        // (ten sam proces — PID dla kontroli pochodzenia mostu bez zmian).
+        terminal.startProcess(executable: bridgePath, args: Bridge.execArguments(shell: spec.shell, arguments: spec.shellArguments),
+                              environment: env.map { "\($0.key)=\($0.value)" }, execName: nil, currentDirectory: directory)
         session.cliPID = terminal.process.shellPid
         terminal.window?.makeFirstResponder(terminal)
     }

@@ -5,6 +5,37 @@ import Foundation
 /// Most MCP: stdio (wiadomości JSON rozdzielone znakiem nowej linii) ⇄ gniazdo Unix aplikacji.
 /// Most nie interpretuje wiadomości — cała logika i polityka uprawnień są w aplikacji.
 public enum Bridge {
+    /// Tryb startu powłoki agenta (`pelikan-mcp --exec program …`): zamknięcie odziedziczonych deskryptorów i `execv`.
+    public static let execFlag = "--exec"
+
+    /// Deskryptory powyżej 2 nie przechodzą przez `execv`: FD_CLOEXEC na każdym z listy otwartych (`proc_pidinfo`
+    /// PROC_PIDLISTFDS — bez górnej granicy numerów), który go nie ma — bez `close` (deskryptory chronione bibliotek
+    /// systemowych mają już FD_CLOEXEC, a ich zamknięcie kończyłoby proces); lista niedostępna — wszystkie do limitu.
+    public static func markInheritedCloseOnExec() {
+        func mark(_ fd: Int32) {
+            let flags = fcntl(fd, F_GETFD)
+            if flags >= 0, flags & FD_CLOEXEC == 0 { _ = fcntl(fd, F_SETFD, flags | FD_CLOEXEC) }
+        }
+        let stride = MemoryLayout<proc_fdinfo>.stride
+        let needed = proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, nil, 0)
+        if needed > 0 {
+            var infos = [proc_fdinfo](repeating: proc_fdinfo(), count: Int(needed) / stride + 16)
+            let got = infos.withUnsafeMutableBytes { proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, $0.baseAddress, Int32($0.count)) }
+            if got > 0 {
+                for info in infos.prefix(Int(got) / stride) where info.proc_fd > 2 { mark(info.proc_fd) }
+                return
+            }
+        }
+        // Zapas (lista praktycznie zawsze dostępna): do 65 536 — bez milionów wywołań przy podniesionym limicie plików.
+        let limit = min(getdtablesize(), 65_536)
+        if limit > 3 { for fd in 3..<limit { mark(fd) } }
+    }
+
+    /// Argumenty terminala: powłoka przez `pelikan-mcp --exec`.
+    public static func execArguments(shell: String, arguments: [String]) -> [String] {
+        [execFlag, shell] + arguments
+    }
+
     public static let tokenVariable = "PELIKAN_AGENT_TOKEN"
     public static let socketVariable = "PELIKAN_AGENT_SOCKET"
 
@@ -106,7 +137,8 @@ public enum Bridge {
                 line.append(0x0A)
                 if (try? Wire.writeAll(line, to: output)) == nil { break }
             }
-            if let failure { FileHandle.standardError.write(Data("pelikan-mcp: \(failure)\n".utf8)) }
+            // `write(contentsOf:)` zgłasza błąd Swift przy zamkniętym stderr (stare `write(_:)` rzucało wyjątek ObjC — awaria).
+            if let failure { try? FileHandle.standardError.write(contentsOf: Data("pelikan-mcp: \(failure)\n".utf8)) }
             drained.signal()
             // Aplikacja zamknęła sesję — kończymy proces mostu.
             if exitWhenClosed { exit(failure == nil ? 0 : 1) }
@@ -126,6 +158,8 @@ public enum Bridge {
                 buffer.removeSubrange(buffer.startIndex...newline)
                 let trimmed = line.filter { $0 != 0x0D }
                 if trimmed.isEmpty { continue }
+                // Każda linia (także zakończona w tym samym kawałku) — za długiej aplikacja nie przyjmie.
+                if trimmed.count > Wire.maxFrame { throw Failure.connection("za długa wiadomość") }
                 try Wire.writeFrame(Data(trimmed), to: fd)
             }
             if buffer.count > Wire.maxFrame { throw Failure.connection("za długa wiadomość") }

@@ -83,40 +83,33 @@ public final class SSHTunnelManager {
     }
 
     /// Katalog prywatny (0700) na skrypt askpass i kolejki FIFO.
-    nonisolated static let runDirectory: URL = {
+    /// Sprawdzany (i odtwarzany, gdy system go usunął) przy każdym logowaniu — na Linuksie /tmp jest wspólny: cudzy
+    /// katalog pozwoliłby podmienić skrypt askpass albo kolejkę z hasłem; wtedy katalog z losową nazwą.
+    nonisolated static var runDirectory: URL {
         let d = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-tunnel-\(getuid())", isDirectory: true)
-        try? FileManager.default.createDirectory(at: d, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        chmod(d.path, 0o700)
-        return d
-    }()
+        if PrivateOwnership.ensurePrivateDirectory(d.path) { return d }
+        _ = PrivateOwnership.ensurePrivateDirectory(fallbackDirectory.path)
+        return fallbackDirectory
+    }
+
+    /// Zapasowy katalog z losową nazwą — jeden na uruchomienie (nie nowy przy każdym logowaniu).
+    nonisolated static let fallbackDirectory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("pelikan-tunnel-\(getuid())-\(UUID().uuidString.prefix(8))", isDirectory: true)
 
     /// Przygotowuje askpass: skrypt bez sekretu, kolejka FIFO 0600 i wątek, który zapisze hasło raz (albo zakończy się,
     /// gdy `done` zostanie ustawione). Zwraca zmienne środowiska dla `ssh` i funkcję sprzątającą.
     nonisolated static func askpass(secret: String) throws -> (environment: [String: String], cleanup: @Sendable () -> Void) {
+        // Katalog skryptu i kolejki musi być prywatny (także zapasowy z losową nazwą) — inaczej jasny błąd, bez hasła.
+        let runDirectory = Self.runDirectory
+        guard PrivateOwnership.isPrivateDirectory(runDirectory.path) else {
+            throw DatabaseError.driverUnavailable(L10n.tr("Katalog tymczasowy tunelu SSH nie jest prywatny — hasło nie zostanie przekazane"))
+        }
         let askpass = runDirectory.appendingPathComponent("askpass.sh").path
-        try Data("#!/bin/sh\nexec /bin/cat -- \"$PELIKAN_ASKPASS_FIFO\"\n".utf8).write(to: URL(fileURLWithPath: askpass))
-        chmod(askpass, 0o700)
+        try Askpass.installScript(at: askpass)
         let fifo = runDirectory.appendingPathComponent("askpass-\(UUID().uuidString.prefix(8))").path
         guard mkfifo(fifo, 0o600) == 0 else { throw DatabaseError.driverUnavailable(L10n.tr("Nie można utworzyć kolejki dla hasła SSH")) }
         let done = Flag()
-        let bytes = Array((secret + "\n").utf8)
-        Thread.detachNewThread {
-            while !done.isSet {
-                #if canImport(Darwin)
-                let fd = Darwin.open(fifo, O_WRONLY | O_NONBLOCK)
-                #else
-                let fd = Glibc.open(fifo, O_WRONLY | O_NONBLOCK)
-                #endif
-                if fd >= 0 {
-                    _ = fcntl(fd, F_SETFL, 0)
-                    bytes.withUnsafeBytes { _ = write(fd, $0.baseAddress, $0.count) }
-                    close(fd)
-                    unlink(fifo)
-                    return
-                }
-                usleep(20_000)
-            }
-        }
+        Askpass.startWriter(fifo: fifo, secret: secret) { done.isSet }
         let env = ["SSH_ASKPASS": askpass, "SSH_ASKPASS_REQUIRE": "force", "DISPLAY": ":0", "PELIKAN_ASKPASS_FIFO": fifo]
         return (env, { done.set(); unlink(fifo) })
     }

@@ -5,6 +5,19 @@ import PelikanBridgeKit
 
 // pelikan-mcp — serwer MCP (stdio) uruchamiany przez CLI agenta; przekazuje wiadomości
 // do Pelikana przez gniazdo Unix. Użycie: pelikan-mcp --socket <ścieżka>
+//
+// `pelikan-mcp --exec <program> [argumenty…]` — start powłoki agenta w terminalu: deskryptory powyżej 2 odziedziczone
+// po aplikacji (forkpty+execve terminala ich nie zamyka — połączenia z bazą, potoki `ssh`, gniazdo agentów) dostają
+// FD_CLOEXEC i znikają przy `execv` programu (ten sam proces — PID dla kontroli pochodzenia mostu się nie zmienia).
+// Między oznaczeniem a `execv` nic tu nie działa.
+if CommandLine.arguments.count >= 3, CommandLine.arguments[1] == Bridge.execFlag {
+    Bridge.markInheritedCloseOnExec()
+    let program = CommandLine.arguments[2]
+    let argv = CommandLine.arguments[2...].map { strdup($0) } + [nil]
+    execv(program, argv)
+    try? FileHandle.standardError.write(contentsOf: Data("pelikan-mcp: nie można uruchomić \(program): \(String(cString: strerror(errno)))\n".utf8))
+    exit(127)
+}
 signal(SIGPIPE, SIG_IGN)
 do {
     let options = try Bridge.options(arguments: CommandLine.arguments, environment: ProcessInfo.processInfo.environment)
