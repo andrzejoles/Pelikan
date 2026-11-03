@@ -3141,6 +3141,10 @@ wydanie). Poprawione:
   śledzeniem także przy zmianie rodzaju okna, bez drugiej przebudowy przy otwarciu; pasek wyniku odświeża stan tylko
   przycisków-przełączników. Rozstrzygnięte: koniec bloku `/` rozpoznawany tylko przed LF/CR — jak w SQL*Plus (U+2028
   nie kończy tam linii polecenia); separatory U+2028/U+2029/NEL dotyczą linii edytora.
+- **Czternaste przejście:** `trackChanges(of:apply:)` — śledzone tylko dane wejściowe (rodzaj okna, czcionka),
+  przebudowa wstążki poza śledzeniem (zamiast obejść przez `async`); słowo podprogramu z leksera, ta sama reguła co
+  w przejściu (`procedure_cnt` to identyfikator); odczyty z magazynu tekstu bez kopii dokumentu; jedno wstawianie
+  początków poleceń (`insertStart`); pozycja menu komendy ze stanem z rejestru, pasek wyniku nadpisuje własnym.
 - **AutoReplace i wielkość liter przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** przy włączonym
   formatowaniu przy Enter obie zmiany słowa przed kursorem działają tylko w linii edytowanej — także w zwykłym Enterze,
   gdy plan nie powstał (jedno miejsce reguły: `insertText` dla znaku nowej linii pyta `lineEdited`). Skrót albo słowo

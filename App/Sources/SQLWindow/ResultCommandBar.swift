@@ -31,7 +31,7 @@ final class ResultCommandBar: NSView {
     private var visibleCount = 0
     /// Stan przełącznika z modelu siatki tego paska (pierwszeństwo przed `toggleState`, który dotyczy aktywnej siatki);
     /// odczyt śledzony jak dostępność.
-    var localState: [String: () -> Bool] = [:]
+    var localState: [String: () -> Bool] = [:] { didSet { statefulCache = nil } }
     /// Przyciski-przełączniki (typ przycisku ustawiony przy pierwszym stanie).
     private var toggles: Set<String> = []
     /// Czynności z zachowaniem widoku siatki (np. wstawienie rekordu z edycją pierwszej komórki) zamiast samej komendy.
@@ -152,11 +152,17 @@ final class ResultCommandBar: NSView {
         }
     }
 
-    /// Komendy paska ze stanem przełącznika (model siatki albo rejestr) — ustalane raz.
-    private lazy var statefulIDs: Set<String> = Set(elements.compactMap { e -> String? in
-        guard case .command(let id, _) = e else { return nil }
-        return localState[id] != nil || workspace.toggleState(CommandID(rawValue: id)) != nil ? id : nil
-    })
+    /// Komendy paska ze stanem przełącznika (model siatki albo rejestr) — liczone raz, od nowa po zmianie `localState`.
+    private var statefulCache: Set<String>?
+    private var statefulIDs: Set<String> {
+        if let s = statefulCache { return s }
+        let s = Set(elements.compactMap { e -> String? in
+            guard case .command(let id, _) = e else { return nil }
+            return localState[id] != nil || workspace.toggleState(CommandID(rawValue: id)) != nil ? id : nil
+        })
+        statefulCache = s
+        return s
+    }
 
     /// Przełącznik włączony albo wyłączony (przycisk wyróżniony, symbol stanu włączonego) — stan samego widoku siatki
     /// (widok rekordu) ustawia widok.
@@ -286,17 +292,18 @@ final class ResultCommandBar: NSView {
 
     /// Stan przełącznika ustawiony przez widok siatki (`setState`, np. widok rekordu) — z przycisku.
     private func viewState(_ id: String) -> Bool? {
-        guard toggles.contains(id) else { return nil }
+        // Tylko stan ustawiany przez widok (komendy bez stanu w modelu siatki i rejestrze) — przycisk komendy z rejestru
+        // mógłby jeszcze nie być odświeżony.
+        guard toggles.contains(id), !statefulIDs.contains(id) else { return nil }
         for case .command(id, let b) in elements { return b.state == .on }
         return nil
     }
 
     private func commandItem(_ raw: String) -> NSMenuItem? {
-        MenuBuilder.commandItem(raw, workspace: workspace, target: self, action: #selector(menuCommand(_:)),
-                                // Rejestr — domyślnie w `MenuBuilder.commandItem`; tu tylko stan siatki i widoku.
-                                // Kolejność jawnie tutaj: model siatki paska, rejestr, stan samego widoku (widok rekordu);
-                                // nil — komenda bez stanu.
-                                state: .some(localState[raw]?() ?? workspace.toggleState(CommandID(rawValue: raw)) ?? viewState(raw)))
+        let item = MenuBuilder.commandItem(raw, workspace: workspace, target: self, action: #selector(menuCommand(_:)))
+        // Stan z modelu siatki paska albo samego widoku (widok rekordu) — pierwszeństwo przed rejestrem.
+        if let item, let on = localState[raw]?() ?? viewState(raw) { item.state = on ? .on : .off }
+        return item
     }
 
     @objc private func menuCommand(_ sender: NSMenuItem) {

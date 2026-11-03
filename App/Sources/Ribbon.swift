@@ -115,13 +115,13 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         ])
         view = root
 
-        tokens.append(trackChanges { [weak self] in
-            guard let self else { return }
-            let kind = self.workspace.activeDocument?.kind
-            guard kind != self.activeKind || self.visibleTabs.isEmpty else { return }
-            // Pierwsze pokazanie od razu (wstążka nie jest pusta przy otwarciu okna); kolejne zmiany rodzaju okna — poza
-            // śledzeniem, żeby to zamknięcie zależało tylko od rodzaju okna, nie od stanu przycisków.
-            if self.visibleTabs.isEmpty { self.show(kind: kind) } else { DispatchQueue.main.async { [weak self] in self?.show(kind: kind) } }
+        // Śledzony tylko rodzaj aktywnego okna; przebudowa (odczyt stanu wszystkich przycisków) — poza śledzeniem.
+        tokens.append(trackChanges(of: { [weak self] () -> DocumentKind?? in
+            guard let self else { return nil }
+            return .some(self.workspace.activeDocument?.kind)
+        }) { [weak self] kind in
+            guard let self, kind != self.activeKind || self.visibleTabs.isEmpty else { return }
+            self.show(kind: kind)
         })
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
@@ -132,24 +132,22 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         NotificationCenter.default.addObserver(self, selector: #selector(systemColorsChanged),
                                                name: NSColor.systemColorsDidChangeNotification, object: nil)
         // Czcionka interfejsu z Preferencji (D178): wysokości pasów (R3-13), przebudowa kart i grup.
-        tokens.append(trackChanges { [weak self] in
+        // Śledzona tylko czcionka; przebudowa poza śledzeniem. Pierwsze wywołanie (rejestracja) i ta sama czcionka — bez
+        // przebudowy (wstążkę zbudował już `show`).
+        tokens.append(trackChanges(of: { [weak self] () -> String? in
+            guard self != nil else { return nil }
             let f = InterfaceFonts.shared
-            let font = "\(f.family)|\(f.size)|\(f.weight)"
-            guard let self else { return }
-            // Pierwsze wywołanie (rejestracja) i ta sama czcionka — bez przebudowy (wstążkę zbudował już `show`).
-            guard font != self.appliedFont else { return }
+            return "\(f.family)|\(f.size)|\(f.weight)"
+        }) { [weak self] font in
+            guard let self, font != self.appliedFont else { return }
             let first = self.appliedFont == nil
             self.appliedFont = font
             if first { return }
             for (c, value) in self.heightConstraints where c.constant != value() { c.constant = value() }
             self.updateFrameHeight()
             guard !self.visibleTabs.isEmpty else { return }
-            // Przebudowa poza śledzeniem — inaczej zamknięcie śledziłoby też stan przycisków (przełączniki, dostępność)
-            // i każda zmiana stanu przebudowywałaby całą wstążkę.
-            DispatchQueue.main.async { [weak self] in
-                self?.rebuildTabs()
-                self?.rebuildGroups()
-            }
+            self.rebuildTabs()
+            self.rebuildGroups()
         })
     }
 

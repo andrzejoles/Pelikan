@@ -30,3 +30,26 @@ private func track(_ token: ObservationToken, _ apply: @escaping @MainActor () -
         Task { @MainActor in track(token, apply) }
     }
 }
+
+/// Jak `trackChanges`, ale śledzi tylko `read` (dane wejściowe), a `apply` wykonuje poza śledzeniem — odczyty w `apply`
+/// (np. stan wszystkich przycisków przy przebudowie) nie wywołują ponownego `apply`. `read` zwraca nil, gdy właściciel
+/// zniknął — łańcuch się kończy.
+@MainActor
+@discardableResult
+func trackChanges<Input: Sendable>(of read: @escaping @MainActor () -> Input?, apply: @escaping @MainActor (Input) -> Void) -> ObservationToken {
+    let token = ObservationToken()
+    trackInput(token, read, apply)
+    return token
+}
+
+@MainActor
+private func trackInput<Input: Sendable>(_ token: ObservationToken, _ read: @escaping @MainActor () -> Input?,
+                               _ apply: @escaping @MainActor (Input) -> Void) {
+    guard token.active else { return }
+    let input = withObservationTracking {
+        MainActor.assumeIsolated { read() }
+    } onChange: {
+        Task { @MainActor in trackInput(token, read, apply) }
+    }
+    if let input { apply(input) }
+}

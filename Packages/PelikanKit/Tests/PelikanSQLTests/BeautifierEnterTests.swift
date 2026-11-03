@@ -350,6 +350,9 @@ struct BeautifierEnterTests {
         let c = memory.context(forLineAt: a5, in: changed, lineLimit: 10)
         #expect(c.start != a5 || c.header.isEmpty)
         #expect(!memory.checkpoints.contains { $0.position == a5 && $0.subprogram })
+        // Identyfikator zaczynający się od słowa podprogramu (`procedure_cnt`) to nie podprogram.
+        #expect(!StatementStartMemory.startsSubprogram("  procedure_cnt := 0;" as NSString, at: 0))
+        #expect(StatementStartMemory.startsSubprogram("  procedure p is" as NSString, at: 0))
     }
 
     @Test("pamięć: punkty z przejścia nie po kolei (ORDER/MAP dopisany przy MEMBER) — scalane rosnąco")

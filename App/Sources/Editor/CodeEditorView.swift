@@ -956,12 +956,12 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let tabWidth = max(1, ws.settings.tabSize)
         textView.lineEdited = { [weak self] text, caret in
             guard let self else { return true }
-            return self.editedRanges.touches(lineAt: caret, in: text as NSString)
+            return self.editedRanges.touches(lineAt: caret, in: text)
         }
         textView.enterPlan = { [weak self] text, caret in
             guard let self, self.document.additionalSelections.isEmpty else { return nil }
             // Opuszczana linia formatowana tylko, gdy była zmieniona w tej sesji edycji (istniejący kod — na żądanie).
-            let edited = self.textView.lineEdited?(text, caret) ?? true
+            let edited = self.textView.lineEdited?(text as NSString, caret) ?? true
             let rules = (NSApp.delegate as? AppDelegate)?.workspace.settings.autoReplace ?? []
             return FormatOnEnter.plan(text: text, caret: caret, kind: kind, options: options, indentMode: self.textView.indentMode,
                                       unit: self.textView.indentUnit, tabWidth: tabWidth, keywordCase: self.textView.keywordCase,
@@ -1255,7 +1255,8 @@ final class CodeTextView: NSTextView {
             if let decided = untouchedNewline { return decided }
             // Inne drogi nowej linii (⌥↩, podział linii U+2028, wstawienie z zakresem) — linia miejsca wstawienia.
             let at = replacementRange.location != NSNotFound ? replacementRange.location : selectedRange().location
-            return !lineEdited(self.string, at)
+            // Magazyn tekstu bez kopii dokumentu.
+            return !lineEdited(self.textStorage?.mutableString ?? (self.string as NSString), at)
         }()
         if !formattingEnter, !untouched, keywordCase != .unchanged, let ch = text.unicodeScalars.first, !CharacterSet.alphanumerics.contains(ch), ch != "_", ch != "$", ch != "#" {
             applyKeywordCase()
@@ -1579,7 +1580,7 @@ final class CodeTextView: NSTextView {
     /// linia w literale…) — wtedy zwykły Enter z wcięciem wg trybu. Ustawia edytor kodu.
     var enterPlan: ((String, Int) -> FormatOnEnter.Plan?)?
     /// Czy linia z kursorem była edytowana w tej sesji (przy włączonym formatowaniu przy Enter; nil — wyłączone).
-    var lineEdited: ((String, Int) -> Bool)?
+    var lineEdited: ((NSString, Int) -> Bool)?
 
     /// Enter z formatowaniem w toku: wielkość liter słowa i AutoReplace są już w planie (krok 0) — `insertText` ich nie
     /// powtarza.
@@ -1598,7 +1599,7 @@ final class CodeTextView: NSTextView {
             // Plan nie przeszedł (krok 0 mógł już zmienić tekst) — świeży odczyt.
             current = string
         }
-        untouchedNewline = selectedRange().length == 0 && !(lineEdited?(current, selectedRange().location) ?? true)
+        untouchedNewline = selectedRange().length == 0 && !(lineEdited?(current as NSString, selectedRange().location) ?? true)
         defer { untouchedNewline = nil }
         // Wcięcie nowej linii wg trybu (UG 23.12 None / Automatic / Smart, PD-EDIT-004).
         var ns = current as NSString
@@ -1627,7 +1628,7 @@ final class CodeTextView: NSTextView {
         let indent = SmartIndent.newlineIndent(lineBeforeCaret: before, mode: indentMode, unit: indentUnit)
         super.insertNewline(sender)
         // AutoReplace z miejscem kursora (`dbo`) zużywa Enter — bez znaku nowej linii nie ma czego wcinać.
-        if !indent.isEmpty, SmartIndent.followsNewline(string as NSString, caret: selectedRange().location) {
+        if !indent.isEmpty, SmartIndent.followsNewline(textStorage?.mutableString ?? (string as NSString), caret: selectedRange().location) {
             insertText(indent, replacementRange: selectedRange())
         }
     }
@@ -1653,7 +1654,7 @@ final class CodeTextView: NSTextView {
         // Krok 2 tylko na oczekiwanym tekście (inaczej coś zmieniło go po drodze — formatowanie pominięte).
         guard plan.expectedRange.upperBound <= textLength,
               // Jednostki UTF-16 (`==` na String uznaje „é” i „e\u{301}” za równe — zakres kroku 2 byłby przesunięty).
-              (string as NSString).substring(with: NSRange(location: plan.expectedRange.lowerBound, length: plan.expectedRange.count))
+              (textStorage?.mutableString ?? (string as NSString)).substring(with: NSRange(location: plan.expectedRange.lowerBound, length: plan.expectedRange.count))
                 .utf16.elementsEqual(plan.expected.utf16)
         else { return true }
         // Krok 2 niczego nie zmienia — kursor za wcięciem (także za odstępami reszty linii).

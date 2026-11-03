@@ -113,7 +113,7 @@ public struct StatementStartMemory: Sendable, Equatable {
             let cp = checkpoints[k]
             // Punkt podprogramu dokładnie na początku linii — przejście jest puste, więc słowo linii sprawdzane osobno
             // (linia zmieniona za wcięciem nie unieważnia punktu, a mogła przestać zaczynać podprogram).
-            if cp.subprogram, cp.position == lineStart, !Self.startsSubprogram(text, at: lineStart, unit: cp.unit) {
+            if cp.subprogram, cp.position == lineStart, !Self.startsSubprogram(text, at: lineStart) {
                 checkpoints.remove(at: k)
                 continue
             }
@@ -136,10 +136,7 @@ public struct StatementStartMemory: Sendable, Equatable {
             // same odstępy, z których podział nie tworzy polecenia, dzielone od niej, a punkty bloku pomijane.
             if let end = scan.endLineEnd {
                 let next = end + 1
-                if next <= text.length, lastStart(atOrBefore: next) != next {
-                    starts.insert(next, at: (lastStartIndex(atOrBefore: next) ?? -1) + 1)
-                    regions[next] = scan.region
-                }
+                if next <= text.length { insertStart(next, region: scan.region) }
             }
             break
         }
@@ -148,10 +145,7 @@ public struct StatementStartMemory: Sendable, Equatable {
         let chunk = text.substring(with: NSRange(location: base, length: lineStart - base))
         let parts = ScriptSplitter.split(chunk, mode: .commandWindow)
         // Początki w kolejności (także między znanymi, np. za granicą `/`), bez powtórzeń.
-        for p in parts {
-            let s = base + p.start
-            if lastStart(atOrBefore: s) != s { starts.insert(s, at: Self.partition(starts) { $0 < s }) }
-        }
+        for p in parts { insertStart(base + p.start) }
         // Polecenie niezakończone przed linią (blok PL/SQL, SQL bez średnika) — linia jest jego dalszym ciągiem.
         let open = parts.last.map { $0.terminator == .endOfText } ?? false
         let statement = open ? base + parts.last!.start : lineStart
@@ -213,14 +207,24 @@ public struct StatementStartMemory: Sendable, Equatable {
 
     func lastStart(atOrBefore p: Int) -> Int? { lastStartIndex(atOrBefore: p).map { starts[$0] } }
 
-    /// Czy linia od `position` zaczyna (po wcięciu) słowem podprogramu jednostki.
-    static func startsSubprogram(_ text: NSString, at position: Int, unit: Unit?) -> Bool {
-        var p = position
-        while p < text.length, [0x20, 0x09].contains(text.character(at: p)) { p += 1 }
-        var e = p
-        while e < text.length, let u = UnicodeScalar(text.character(at: e)), CharacterSet.letters.contains(u) { e += 1 }
-        let word = text.substring(with: NSRange(location: p, length: e - p)).uppercased()
-        return (unit?.typeBody == true ? Scan.typeStarters : Scan.packageStarters).contains(word)
+    /// Początek polecenia w kolejności, bez powtórzeń (`region` — stan regionów w tym miejscu, gdy znany).
+    mutating func insertStart(_ s: Int, region: Region? = nil) {
+        let i = Self.partition(starts) { $0 < s }
+        guard i == starts.count || starts[i] != s else { return }
+        starts.insert(s, at: i)
+        if let region { regions[s] = region }
+    }
+
+    /// Czy linia od `position` zaczyna się słowem podprogramu — ta sama reguła co sprawdzenie w przejściu (`Scan`):
+    /// pierwszy token leksera (`procedure_cnt` to identyfikator, nie PROCEDURE) w zbiorze słów obu rodzajów jednostek.
+    static func startsSubprogram(_ text: NSString, at position: Int) -> Bool {
+        var end = position
+        while end < text.length, ![0x0A, 0x0D].contains(text.character(at: end)) { end += 1 }
+        let line = text.substring(with: NSRange(location: position, length: end - position))
+        let lexer = Lexer(line)
+        guard let first = lexer.tokenize().first(where: { $0.kind != .whitespace }),
+              first.kind == .keyword || first.kind == .identifier else { return false }
+        return Scan.packageStarters.union(Scan.typeStarters).contains(lexer.string(first).uppercased())
     }
 
     /// Liczba linii między pozycjami (najwyżej `limit + 1` — liczenie od końca).
