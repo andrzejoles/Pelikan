@@ -90,6 +90,12 @@ struct PreferencesView: View {
     }
 }
 
+/// Pole konwencji nazw (D215).
+@MainActor
+func namingSetting(_ ws: Workspace, _ path: WritableKeyPath<NamingConventions, String>) -> Binding<String> {
+    setting(ws, (\PelikanWorkspace.Settings.namingConventions as WritableKeyPath<PelikanWorkspace.Settings, NamingConventions>).appending(path: path))
+}
+
 /// Wiązanie do pola ustawień (zapis przy każdej zmianie).
 @MainActor
 func setting<T>(_ ws: Workspace, _ key: WritableKeyPath<PelikanWorkspace.Settings, T>) -> Binding<T> {
@@ -625,24 +631,20 @@ struct OraclePane: View {
                 if workspace.settings.namingConventions.enabled {
                     // Konwencje nazw (D215): kilka przedrostków po przecinku; puste OUT / IN OUT — jak IN, puste
                     // zmienne specyfikacji — jak zmienne ciała pakietu.
-                    let field = { (title: String, path: WritableKeyPath<NamingConventions, String>, kind: String, prompt: String) in
-                        ChoiceField(title, text: setting(workspace, (\PelikanWorkspace.Settings.namingConventions as WritableKeyPath<PelikanWorkspace.Settings, NamingConventions>).appending(path: path)), prompt: prompt.isEmpty ? nil : prompt,
-                                    choices: PreferenceChoices.naming(kind), mode: .list)
+                    HStack {
+                        ChoiceField(L10n.tr("Parametry IN"), text: namingSetting(workspace, \.parameter), choices: PreferenceChoices.naming("parameter"), mode: .list)
+                        ChoiceField(L10n.tr("Parametry OUT"), text: namingSetting(workspace, \.parameterOut), prompt: L10n.tr("jak IN"), choices: PreferenceChoices.naming("parameterOut"), mode: .list)
+                        ChoiceField(L10n.tr("Parametry IN OUT"), text: namingSetting(workspace, \.parameterInOut), prompt: L10n.tr("jak IN"), choices: PreferenceChoices.naming("parameterInOut"), mode: .list)
                     }
                     HStack {
-                        field(L10n.tr("Parametry IN"), \.parameter, "parameter", "")
-                        field(L10n.tr("Parametry OUT"), \.parameterOut, "parameterOut", L10n.tr("jak IN"))
-                        field(L10n.tr("Parametry IN OUT"), \.parameterInOut, "parameterInOut", L10n.tr("jak IN"))
+                        ChoiceField(L10n.tr("Zmienne lokalne"), text: namingSetting(workspace, \.local), choices: PreferenceChoices.naming("local"), mode: .list)
+                        ChoiceField(L10n.tr("Zmienne pakietu (ciało)"), text: namingSetting(workspace, \.global), choices: PreferenceChoices.naming("global"), mode: .list)
+                        ChoiceField(L10n.tr("Zmienne pakietu (specyfikacja)"), text: namingSetting(workspace, \.publicGlobal), prompt: L10n.tr("jak w ciele"), choices: PreferenceChoices.naming("publicGlobal"), mode: .list)
                     }
                     HStack {
-                        field(L10n.tr("Zmienne lokalne"), \.local, "local", "")
-                        field(L10n.tr("Zmienne pakietu (ciało)"), \.global, "global", "")
-                        field(L10n.tr("Zmienne pakietu (specyfikacja)"), \.publicGlobal, "publicGlobal", L10n.tr("jak w ciele"))
-                    }
-                    HStack {
-                        field(L10n.tr("Stałe"), \.constant, "constant", L10n.tr("bez sprawdzania"))
-                        field(L10n.tr("Kursory"), \.cursor, "cursor", L10n.tr("bez sprawdzania"))
-                        field(L10n.tr("Typy"), \.type, "type", L10n.tr("bez sprawdzania"))
+                        ChoiceField(L10n.tr("Stałe"), text: namingSetting(workspace, \.constant), prompt: L10n.tr("bez sprawdzania"), choices: PreferenceChoices.naming("constant"), mode: .list)
+                        ChoiceField(L10n.tr("Kursory"), text: namingSetting(workspace, \.cursor), prompt: L10n.tr("bez sprawdzania"), choices: PreferenceChoices.naming("cursor"), mode: .list)
+                        ChoiceField(L10n.tr("Typy"), text: namingSetting(workspace, \.type), prompt: L10n.tr("bez sprawdzania"), choices: PreferenceChoices.naming("type"), mode: .list)
                     }
                     HStack {
                         Button(L10n.tr("Konwencja RMS")) { workspace.settings.namingConventions = .rms }
