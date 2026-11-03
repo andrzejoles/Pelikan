@@ -335,6 +335,12 @@ struct BeautifierEnterTests {
         var memory = StatementStartMemory()
         let inA = text.range(of: "procedure a250").location
         _ = memory.context(forLineAt: inA - 2, in: text)
+        // Pusta linia tuż za „/”: podział od granicy za blokiem, nie od początku pakietu (także przy kolejnym Enterze).
+        let afterSlash = text.range(of: "end;\n/\n").location + 7
+        _ = memory.context(forLineAt: afterSlash, in: text)
+        let mark = memory.scannedLength
+        _ = memory.context(forLineAt: afterSlash, in: text)
+        #expect(memory.scannedLength - mark < 200)
         let line = text.range(of: "select 40 from dual").location
         #expect(memory.context(forLineAt: line, in: text) == EnterContext(start: line))
         let before = memory.scannedLength

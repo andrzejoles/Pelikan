@@ -116,7 +116,16 @@ public struct StatementStartMemory: Sendable, Equatable {
             // blokiem punktu: punkty (także późniejszych jednostek) zostają, koniec bloku zapamiętany (kolejne linie za
             // nim — od razu podziałem), polecenie wyznacza podział.
             if scan.stale { checkpoints.remove(at: k) }
-            if scan.ended, let end = scan.endLineEnd { blockEnds[cp.statement] = end }
+            if scan.ended, let end = scan.endLineEnd {
+                blockEnds[cp.statement] = end
+                // Granica podziału za linią z `/` — linie za blokiem (także same odstępy, z których podział nie
+                // tworzy polecenia) dzielone od niej, nie od początku bloku.
+                let next = end + 1
+                if next <= text.length, !starts.contains(next) {
+                    starts.insert(next, at: starts.firstIndex { $0 > next } ?? starts.count)
+                    regions[next] = scan.region
+                }
+            }
         }
         let base = starts.last { $0 <= lineStart } ?? 0
         guard base < lineStart else { return (base, regions[base] ?? Region(), true) }

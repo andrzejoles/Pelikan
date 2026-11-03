@@ -17,13 +17,13 @@ public struct EnterFormatting: Sendable, Equatable {
 }
 
 extension Beautifier {
-    /// Szerokość tekstu w kolumnach: znaki (`Character` — emoji i znaki złożone to jedna kolumna), tabulator do
-    /// następnej wielokrotności `tabWidth` (wspólne dla formatera przy Enter i edytora).
     /// Szerokość tabulatora dokumentu w kolumnach formatera: jednostka wcięcia przy `useTabs`, inaczej `tabWidth`.
     public static func documentTabWidth(options: BeautifierOptions, tabWidth: Int) -> Int {
         options.useTabs ? max(1, options.indent) : max(1, tabWidth)
     }
 
+    /// Szerokość tekstu w kolumnach: znaki (`Character` — emoji i znaki złożone to jedna kolumna), tabulator do
+    /// następnej wielokrotności `tabWidth` (wspólne dla formatera przy Enter i edytora).
     public static func columns<S: StringProtocol>(_ s: S, tabWidth: Int, from start: Int = 0) -> Int {
         let width = max(1, tabWidth)
         return s.reduce(start) { c, ch in ch == "\t" ? (c / width + 1) * width : c + 1 }

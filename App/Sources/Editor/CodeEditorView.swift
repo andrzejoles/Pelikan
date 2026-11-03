@@ -1249,11 +1249,14 @@ final class CodeTextView: NSTextView {
             (NSApp.delegate as? AppDelegate)?.workspace.recordTyping(text)
             return
         }
-        if !formattingEnter, !suppressKeywordCase, keywordCase != .unchanged, let ch = text.unicodeScalars.first, !CharacterSet.alphanumerics.contains(ch), ch != "_", ch != "$", ch != "#" {
+        // Nowa linia na końcu nieedytowanej linii przy formatowaniu przy Enter (plan nie powstał — długie polecenie, region
+        // bez formatowania): bez wielkości liter i skrótu — istniejący kod zostaje bez zmian (D205, D208).
+        let untouched = text.first?.isNewline == true && selectedRange().length == 0 && !(lineEdited?(self.string, selectedRange().location) ?? true)
+        if !formattingEnter, !untouched, keywordCase != .unchanged, let ch = text.unicodeScalars.first, !CharacterSet.alphanumerics.contains(ch), ch != "_", ch != "$", ch != "#" {
             applyKeywordCase()
         }
         super.insertText(string, replacementRange: replacementRange)
-        if !formattingEnter { applyAutoReplace(after: text) }
+        if !formattingEnter, !untouched { applyAutoReplace(after: text) }
         (NSApp.delegate as? AppDelegate)?.workspace.recordTyping(text)
     }
 
@@ -1568,8 +1571,6 @@ final class CodeTextView: NSTextView {
     var enterPlan: ((String, Int) -> FormatOnEnter.Plan?)?
     /// Czy linia z kursorem była edytowana w tej sesji (przy włączonym formatowaniu przy Enter; nil — wyłączone).
     var lineEdited: ((String, Int) -> Bool)?
-    /// Zwykły Enter na końcu nieedytowanej linii przy formatowaniu przy Enter — bez zmiany wielkości liter słowa (D205).
-    private var suppressKeywordCase = false
 
     /// Enter z formatowaniem w toku: wielkość liter słowa i AutoReplace są już w planie (krok 0) — `insertText` ich nie
     /// powtarza.
@@ -1581,10 +1582,6 @@ final class CodeTextView: NSTextView {
            insertFormattedNewline(plan, sender) {
             return
         }
-        // Plan nie powstał (np. długie polecenie, region bez formatowania): nieedytowana linia zostaje bez zmian także
-        // w zwykłym Enterze — bez wielkości liter ostatniego słowa.
-        suppressKeywordCase = selectedRange().length == 0 && !(lineEdited?(string, selectedRange().location) ?? true)
-        defer { suppressKeywordCase = false }
         // Wcięcie nowej linii wg trybu (UG 23.12 None / Automatic / Smart, PD-EDIT-004).
         var ns = string as NSString
         let caret = selectedRange().location

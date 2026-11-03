@@ -73,7 +73,8 @@ public enum FormatOnEnter {
         // Wielkość liter słowa przed kursorem tylko w linii edytowanej (słowo właśnie wpisane) — nieedytowany kod
         // zostaje bez zmian i nie trafia do zmienionych zakresów (D205).
         if lineEdited, let cased = keywordCaseLine(left, keywordCase) { left = cased }
-        if let r = autoReplaceLine(left, rules: autoReplace, text: ns, lineStart: lineStart, caret: caret) {
+        // Skrót AutoReplace — też tylko w linii edytowanej (wpisany przed chwilą); nieedytowany kod zostaje bez zmian.
+        if lineEdited, let r = autoReplaceLine(left, rules: autoReplace, text: ns, lineStart: lineStart, caret: caret) {
             guard let replaced = r else { return nil }   // zamiana z miejscem kursora zużywa Enter
             left = replaced
         }
@@ -96,8 +97,7 @@ public enum FormatOnEnter {
         }
         let context = memory.context(forLineAt: lineStart, in: ns)
         guard let result = Beautifier.formatOnEnter(working, caret: at, context: context,
-                                                    // Tylko linia edytowana (D205). Skrót AutoReplace działa jak bez formatowania
-                                                    // (funkcja edytora), ale nie czyni nieedytowanej linii edytowaną (D208).
+                                                    // Tylko linia edytowana (D205).
                                                     formatLine: lineEdited,
                                                     options: options, tabWidth: tabWidth) else { return nil }
         let auto = SmartIndent.newlineIndent(lineBeforeCaret: left, mode: indentMode, unit: unit)

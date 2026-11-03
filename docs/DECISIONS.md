@@ -3105,9 +3105,13 @@ wydanie). Poprawione:
   stan widoku rekordu w menu „»” z przycisku; włączony przełącznik na wstążce wyróżniony także przy najechaniu;
   wspólna szerokość tabulatora dokumentu (`Beautifier.documentTabWidth`); bez powtórzonej listy wyrażeń w menu
   kontekstowym siatki.
-- **AutoReplace przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** skrót działa jak bez formatowania (funkcja
-  edytora), a formatowana jest tylko linia edytowana — rozwinięcie skrótu nie czyni nieedytowanej linii edytowaną.
-  Skrót wpisany przed chwilą leży w linii edytowanej, więc ta i tak jest formatowana.
+- **AutoReplace i wielkość liter przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** przy włączonym
+  formatowaniu przy Enter obie zmiany słowa przed kursorem działają tylko w linii edytowanej — także w zwykłym Enterze,
+  gdy plan nie powstał (jedno miejsce reguły: `insertText` dla znaku nowej linii pyta `lineEdited`). Skrót albo słowo
+  wpisane przed chwilą leżą w linii edytowanej, więc działają jak dotąd; nieedytowany kod zostaje bez zmian i nie
+  trafia do zmienionych zakresów (D205).
+- **Szóste przejście:** granica podziału za linią z `/` zapamiętana w `starts` (puste linie za dużym blokiem nie dzielą
+  go od nowa); osobny typ `StateHandler` dla stanu przełącznika.
 - **Stan „Panel wartości” (rozstrzygnięte):** to ustawienie widoku wszystkich siatek (panel obok każdej), więc stan
   przycisku i zaznaczenie w menu pokazują to ustawienie — to, co przełącza kliknięcie — także bez siatki na ekranie.
 - **Stan przełączników z trzech źródeł (rozstrzygnięte):** `Command.state` opisuje stan komendy dla aktywnego kontekstu
