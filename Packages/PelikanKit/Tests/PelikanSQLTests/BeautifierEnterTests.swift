@@ -264,6 +264,142 @@ struct BeautifierEnterTests {
         #expect(enter(text, lineLimit: 10) == EnterFormatting(line: "    IF a > 0 THEN", indent: "      "))
     }
 
+    @Test("kolumny w znakach: emoji i znak złożony przed słowem otwierającym nie przesuwają wyrównania")
+    func columnsInCharacters() {
+        let plain = enter("select 'x' a, (select b\nfrom t|")
+        #expect(plain == EnterFormatting(line: "                 FROM t", indent: "               "))
+        for lit in ["😀", "e\u{301}"] {
+            #expect(enter("select '\(lit)' a, (select b\nfrom t|") == plain, "\(lit)")
+        }
+    }
+
+    @Test("pamięć: punkty kontrolne wcześniejszego ciała dołączane po punktach późniejszego (dwa ciała rozdzielone „/”)")
+    func checkpointsOfEarlierUnit() {
+        func unit(_ name: String) -> String {
+            var s = "create or replace package body \(name) is\n"
+            for n in 0..<6 { s += "  procedure \(name)\(n) is\n  begin\n    null;\n  end;\n" }
+            return s + "end;\n/\n"
+        }
+        let text = (unit("a") + unit("b")) as NSString
+        var memory = StatementStartMemory()
+        let b4 = text.range(of: "procedure b4").location
+        let inB = text.range(of: "    null;", options: [], range: NSRange(location: b4, length: text.length - b4)).location
+        let cb = memory.context(forLineAt: inB, in: text, lineLimit: 10)
+        #expect(cb.mode == .format && cb.start == b4 - 2)
+        // Enter w ciele A po zapamiętaniu punktów B: kontekst od podprogramu A, nie tylko wielkość liter.
+        let a4 = text.range(of: "procedure a4").location
+        let inA = text.range(of: "    null;", options: [], range: NSRange(location: a4, length: text.length - a4)).location
+        let ca = memory.context(forLineAt: inA, in: text, lineLimit: 10)
+        #expect(ca.mode == .format && ca.start == a4 - 2)
+        // Kolejność położeń zachowana, punkty B zostają.
+        let positions = memory.checkpoints.map(\.position)
+        #expect(positions == positions.sorted() && Set(positions).count == positions.count)
+        #expect(memory.checkpoints.contains { $0.position == b4 - 2 })
+    }
+
+    @Test("pamięć: punkt co 200 linii i punkt podprogramu w tym samym miejscu — zostaje punkt podprogramu")
+    func checkpointSamePosition() {
+        var s = "create or replace package body p is\n  procedure a is\n  begin\n"
+        while s.split(separator: "\n", omittingEmptySubsequences: false).count - 1 < 199 { s += "    null;\n" }
+        s += "  end;\n"
+        let lines = s.split(separator: "\n", omittingEmptySubsequences: false).count - 1
+        #expect(lines == 200)
+        s += "  procedure q is\n  begin\n    null;\n    null;\n"
+        let text = s as NSString
+        let q = text.range(of: "  procedure q").location
+        let inQ = text.range(of: "    null;", options: .backwards).location
+        var memory = StatementStartMemory()
+        let c = memory.context(forLineAt: inQ, in: text, lineLimit: 10)
+        #expect(c.mode == .format && c.start == q)
+        #expect(memory.checkpoints.filter { $0.position == q }.count == 1 && memory.checkpoints.first { $0.position == q }?.subprogram == true)
+    }
+
+    @Test("pamięć: CRLF — granica za „/” na początku następnej linii; nieaktualny punkt — próba od poprzedniego")
+    func crlfAndStaleCheckpoint() {
+        var s = "create or replace package body a is\r\n"
+        for n in 0..<6 { s += "  procedure a\(n) is\r\n  begin\r\n    null;\r\n  end;\r\n" }
+        s += "end;\r\n/\r\nselect 1 from dual;\r\n"
+        let text = s as NSString
+        var memory = StatementStartMemory()
+        _ = memory.context(forLineAt: text.range(of: "procedure a5").location - 2, in: text, lineLimit: 10)
+        let sel = text.range(of: "select 1").location
+        _ = memory.context(forLineAt: sel, in: text)
+        #expect(memory.starts.contains(sel) && !memory.starts.contains(sel - 1))
+        // Nagłówek podprogramu a4 zmieniony (punkt nieaktualny): kontekst od wcześniejszego punktu, nie od początku pakietu.
+        var m2 = StatementStartMemory()
+        let a4 = text.range(of: "  procedure a4").location
+        let inA4 = text.range(of: "    null;", options: [], range: NSRange(location: a4, length: text.length - a4)).location
+        _ = m2.context(forLineAt: inA4, in: text, lineLimit: 10)
+        let changed = text.replacingCharacters(in: NSRange(location: a4 + 2, length: 9), with: "xxxxxxxxx") as NSString
+        let before = m2.scannedLength
+        _ = m2.context(forLineAt: inA4, in: changed, lineLimit: 10)
+        #expect(m2.scannedLength - before < inA4 - text.range(of: "  procedure a3").location + 10)
+    }
+
+    @Test("pamięć: punkt podprogramu na początku linii zmienionej za wcięciem — nieaktualny, kontekst od poprzedniego")
+    func staleCheckpointAtLineStart() {
+        var s = "create or replace package body a is\n"
+        for n in 0..<6 { s += "  procedure a\(n) is\n  begin\n    null;\n  end;\n" }
+        let text = s as NSString
+        var memory = StatementStartMemory()
+        let a5 = text.range(of: "  procedure a5").location
+        _ = memory.context(forLineAt: text.range(of: "    null;", options: .backwards).location, in: text, lineLimit: 10)
+        #expect(memory.checkpoints.contains { $0.position == a5 && $0.subprogram })
+        // Linia `  procedure a5 is` zamieniona na `  x := 1;` (zmiana za wcięciem — punkt nie jest unieważniany).
+        let changed = text.replacingCharacters(in: NSRange(location: a5 + 2, length: 15), with: "x := 1;") as NSString
+        let c = memory.context(forLineAt: a5, in: changed, lineLimit: 10)
+        #expect(c.start != a5 || c.header.isEmpty)
+        #expect(!memory.checkpoints.contains { $0.position == a5 && $0.subprogram })
+        // Identyfikator zaczynający się od słowa podprogramu (`procedure_cnt`) to nie podprogram.
+        #expect(!StatementStartMemory.startsSubprogram("  procedure_cnt := 0;" as NSString, at: 0))
+        #expect(StatementStartMemory.startsSubprogram("  procedure p is" as NSString, at: 0))
+        // MAP w ciele pakietu to identyfikator (w ciele typu — początek podprogramu).
+        #expect(!StatementStartMemory.startsSubprogram("  map := 1;" as NSString, at: 0))
+        #expect(StatementStartMemory.startsSubprogram("  map member function f return number is" as NSString, at: 0, typeBody: true))
+    }
+
+    @Test("pamięć: punkty z przejścia nie po kolei (ORDER/MAP dopisany przy MEMBER) — scalane rosnąco")
+    func mergeUnsorted() {
+        typealias C = StatementStartMemory.Checkpoint
+        let r = StatementStartMemory.Region()
+        var m = StatementStartMemory()
+        m.merge([C(position: 10, statement: 0, region: r, unit: nil, subprogram: false)])
+        m.merge([C(position: 400, statement: 0, region: r, unit: nil, subprogram: false),
+                 C(position: 300, statement: 0, region: r, unit: nil, subprogram: true)])
+        #expect(m.checkpoints.map(\.position) == [10, 300, 400])
+    }
+
+    @Test("pamięć: linia za „/” bloku z punktami kontrolnymi — koniec bloku zapamiętany, bez ponownego leksowania bloku")
+    func lineAfterBlockEnd() {
+        var s = "create or replace package body a is\n"
+        for n in 0..<300 { s += "  procedure a\(n) is\n  begin\n    null;\n  end;\n" }
+        s += "end;\n/\n"
+        for n in 0..<50 { s += "select \(n) from dual;\n" }
+        let text = s as NSString
+        var memory = StatementStartMemory()
+        let inA = text.range(of: "procedure a250").location
+        _ = memory.context(forLineAt: inA - 2, in: text)
+        // Pusta linia tuż za „/”: podział od granicy za blokiem, nie od początku pakietu (także przy kolejnym Enterze).
+        let afterSlash = text.range(of: "end;\n/\n").location + 7
+        _ = memory.context(forLineAt: afterSlash, in: text)
+        let mark = memory.scannedLength
+        _ = memory.context(forLineAt: afterSlash, in: text)
+        #expect(memory.scannedLength - mark < 200)
+        let line = text.range(of: "select 40 from dual").location
+        #expect(memory.context(forLineAt: line, in: text) == EnterContext(start: line))
+        let before = memory.scannedLength
+        let next = text.range(of: "select 41 from dual").location
+        #expect(memory.context(forLineAt: next, in: text) == EnterContext(start: next))
+        #expect(memory.scannedLength - before < 200)
+        // Dopisanie za „/” (już nie kończy bloku) albo na początku linii za nim unieważnia granicę za blokiem.
+        let slash = text.range(of: "end;\n/\n").location + 5
+        var edited = memory
+        edited.invalidate(from: slash + 1)
+        #expect(!edited.starts.contains(slash + 2))
+        memory.invalidate(from: slash + 2)
+        #expect(!memory.starts.contains(slash + 2))
+    }
+
     @Test("wydajność: pakiet ~20 tys. linii i para — Enter bez leksowania całego pliku")
     func performance() {
         func body(_ n: Int) -> String {

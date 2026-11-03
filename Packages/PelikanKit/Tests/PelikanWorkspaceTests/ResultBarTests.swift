@@ -1,4 +1,5 @@
 import Foundation
+import PelikanSQL
 @testable import PelikanWorkspace
 import Testing
 
@@ -19,6 +20,31 @@ struct ResultBarTests {
         #expect(onBar.isDisjoint(with: ResultBarModel.excluded))
         for id in onBar { #expect(ws.registry.command(CommandID(rawValue: id)) != nil, "\(id)") }
         #expect(Set(onBar).count == RibbonModel.expand(ResultBarModel.commands, in: ws.registry).count, "powtórzenia")
+    }
+
+    @Test("menu formatów paska: wszystkie formaty z parametru komendy (Kopiuj jako — także TSV i lista IN)")
+    func formats() {
+        for id in ["grid.copyAs", "grid.export"] {
+            let allowed = ws.registry.command(CommandID(rawValue: id))?.descriptor.parameters.first { $0.name == "format" }?.allowedValues ?? []
+            #expect(!allowed.isEmpty && allowed.allSatisfy { ExportFormat(rawValue: $0) != nil }, "\(id)")
+        }
+        #expect(GridCommands.copyAsFormats.contains(.tsv) && GridCommands.copyAsFormats.contains(.expressionList))
+    }
+
+    @Test("stan przełączników z rejestru komend: edycja danych, panel wartości, formatowanie przy Enter")
+    func toggleStates() {
+        #expect(ws.toggleState("grid.edit") == false)
+        // Panel wartości — ustawienie widoku dla wszystkich siatek: stan = to, co przełącza komenda.
+        ws.valuePanelVisible = true
+        #expect(ws.toggleState("grid.valuePanel") == true)
+        // Stan idzie za ustawieniem w obie strony (nie stała).
+        ws.settings.beautifier.formatOnEnter = false
+        #expect(ws.toggleState("edit.formatOnEnter") == false)
+        ws.settings.beautifier.formatOnEnter = true
+        #expect(ws.toggleState("edit.formatOnEnter") == true)
+        ws.valuePanelVisible = false
+        #expect(ws.toggleState("grid.valuePanel") == false)
+        #expect(ws.toggleState("grid.export") == nil)
     }
 
     @Test("same ikony: każdy przycisk paska ma symbol, grupy jak na karcie Wynik")

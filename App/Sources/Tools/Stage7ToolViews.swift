@@ -781,7 +781,7 @@ struct LocalTasksView: View {
             TextField(L10n.tr("Katalog"), text: Binding(get: { directory }, set: { draft.action = .export(query: query, directory: $0, fileName: fileName, format: format) }))
             TextField(L10n.tr("Plik ({date}, {time})"), text: Binding(get: { fileName }, set: { draft.action = .export(query: query, directory: directory, fileName: $0, format: format) }))
             Picker(L10n.tr("Format"), selection: Binding(get: { format }, set: { draft.action = .export(query: query, directory: directory, fileName: fileName, format: $0) })) {
-                ForEach([ExportFormat.csv, .tsv, .html, .xml, .sql, .xlsx], id: \.self) { Text($0.rawValue.uppercased()).tag($0) }
+                ForEach(GridCommands.exportFormats, id: \.self) { Text($0.rawValue.uppercased()).tag($0) }
             }
         case .transfer(let name):
             Picker(L10n.tr("Definicja"), selection: Binding(get: { name }, set: { draft.action = .transfer(name: $0) })) {

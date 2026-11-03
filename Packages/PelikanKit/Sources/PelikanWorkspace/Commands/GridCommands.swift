@@ -3,6 +3,11 @@ import PelikanDB
 
 /// Komendy siatki wyników (UG 7.1, 7.2): strony, eksport, kopiowanie.
 public enum GridCommands {
+    /// Formaty „Kopiuj jako” (parametr komendy, wybór ze wstążki, menu paska wyniku).
+    public static let copyAsFormats: [ExportFormat] = [.csv, .tsv, .html, .xml, .sql, .expressionList]
+    /// Formaty „Eksportuj wynik” (parametr komendy, menu paska wyniku).
+    public static let exportFormats: [ExportFormat] = [.csv, .tsv, .html, .xml, .sql, .xlsx]
+
     @MainActor
     static func activeTab(_ ws: Workspace) -> ResultTab? {
         guard let doc = SQLCommands.sqlDocument(ws) else { return nil }
@@ -124,7 +129,7 @@ public enum GridCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "grid.copyAs", title: L10n.tr("Kopiuj jako…"), category: .edit, submenu: L10n.tr("Wynik"),
-                                      parameters: [CommandParameter("format", .string, L10n.tr("Format (bez argumentu — wybór z listy)"), allowed: ["csv", "tsv", "html", "xml", "sql", "expressionList"])],
+                                      parameters: [CommandParameter("format", .string, L10n.tr("Format (bez argumentu — wybór z listy)"), allowed: copyAsFormats.map(\.rawValue))],
                                       agent: .none, effect: .none,
                                       summary: L10n.tr("Kopiuje zaznaczenie do schowka w wybranym formacie."), inMenu: false, feature: "PD-GRID-013"),
                     validate: hasGrid) { ctx in
@@ -132,14 +137,14 @@ public enum GridCommands {
                 if ctx.arguments.string("format") == nil, ctx.askingUI != nil {
                     _ = try requireSelection(ctx)
                     if let f = try await ctx.choose(L10n.tr("Kopiuj jako"),
-                                                    [ExportFormat.csv, .tsv, .html, .xml, .sql, .expressionList].map { (label: $0.displayName, value: $0) }) {
+                                                    copyAsFormats.map { (label: $0.displayName, value: $0) }) {
                         return try copy(ctx, f, header: true)
                     }
                 }
                 return try copy(ctx, try formatArgument(ctx), header: true)
             },
             Command(CommandDescriptor(id: "grid.export", title: L10n.tr("Eksportuj wynik…"), category: .file,
-                                      parameters: [CommandParameter("format", .string, L10n.tr("Format"), allowed: ["csv", "tsv", "html", "xml", "sql", "xlsx"])],
+                                      parameters: [CommandParameter("format", .string, L10n.tr("Format"), allowed: exportFormats.map(\.rawValue))],
                                       agent: .none, effect: .external,
                                       summary: L10n.tr("Zapisuje zaznaczenie (albo cały pobrany wynik) do pliku."), feature: "PD-GRID-013"),
                     validate: hasGrid) { ctx in
@@ -179,7 +184,8 @@ public enum GridCommands {
             Command(CommandDescriptor(id: "grid.edit", title: L10n.tr("Edytuj dane"), category: .session, submenu: L10n.tr("Wynik"),
                                       mac: ["cmd+alt+e"], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Włącza albo wyłącza edycję wyniku (wymaga ROWID w zapytaniu)."), feature: "PD-GRID-017"),
-                    validate: { ws in activeGrid(ws).map { $0.1.rowidColumn != nil } ?? false }) { ctx in
+                    validate: { ws in activeGrid(ws).map { $0.1.rowidColumn != nil } ?? false },
+                    state: { ws in activeGrid(ws)?.1.edit.isEditing ?? false }) { ctx in
                 guard let (_, grid) = activeGrid(ctx.workspace) else { return .ok }
                 if grid.edit.isEditing {
                     grid.endEditing()

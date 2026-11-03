@@ -283,6 +283,8 @@ public struct CommandContext {
 public typealias CommandHandler = @MainActor @Sendable (CommandContext) async throws -> CommandResult
 public typealias PreviewHandler = @MainActor @Sendable (CommandContext) async throws -> EffectPreview
 public typealias ValidationHandler = @MainActor @Sendable (Workspace) -> Bool
+/// Stan komendy-przełącznika (włączona/wyłączona) — inne znaczenie niż dostępność (`ValidationHandler`).
+public typealias StateHandler = @MainActor @Sendable (Workspace) -> Bool
 
 public struct Command: Sendable {
     public let descriptor: CommandDescriptor
@@ -290,13 +292,17 @@ public struct Command: Sendable {
     let preview: PreviewHandler?
     /// Czy komenda jest teraz dostępna (stan menu); nil = zawsze.
     let validate: ValidationHandler?
+    /// Stan komendy-przełącznika (zaznaczenie w menu, wyróżnienie na wstążce, pasku wyniku i pasku narzędzi); nil —
+    /// komenda bez stanu.
+    let state: StateHandler?
 
-    public init(_ descriptor: CommandDescriptor, validate: ValidationHandler? = nil, preview: PreviewHandler? = nil,
-                run: @escaping CommandHandler) {
+    public init(_ descriptor: CommandDescriptor, validate: ValidationHandler? = nil, state: StateHandler? = nil,
+                preview: PreviewHandler? = nil, run: @escaping CommandHandler) {
         self.descriptor = descriptor
         self.run = run
         self.preview = preview
         self.validate = validate
+        self.state = state
     }
 
     public var id: CommandID { descriptor.id }

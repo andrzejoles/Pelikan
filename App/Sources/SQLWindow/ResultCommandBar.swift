@@ -4,8 +4,9 @@ import PelikanWorkspace
 /// Pasek ikon bezpośrednio nad wynikiem zapytania (D207): wszystkie czynności dotyczące wyniku z rejestru komend,
 /// w grupach karty „Wynik” wstążki (`ResultBarModel`) rozdzielonych kreską. Same ikony — opis, podsumowanie i skrót
 /// w podpowiedzi; listy rozwijane (▾) jak na wstążce. Gdy pasek się nie mieści, końcowe elementy trafiają do menu „»”
-/// (z podziałem na grupy). Dostępność przycisków — jak w menu (`Workspace.isEnabled`); stan przełączników (edycja,
-/// widok rekordu, panel wartości) ustawia widok siatki. Po prawej — licznik wierszy.
+/// (z podziałem na grupy). Dostępność przycisków — jak w menu (`Workspace.isEnabled`); stan przełączników — z rejestru
+/// komend (`Workspace.toggleState`, np. panel wartości), z modelu siatki paska (`localState`, edycja danych) albo od
+/// widoku siatki (`setState`, widok rekordu). Po prawej — licznik wierszy.
 final class ResultCommandBar: NSView {
     private enum Element {
         case command(String, NSButton)
@@ -24,9 +25,14 @@ final class ResultCommandBar: NSView {
     private let trailing: NSView
     private var elements: [Element] = []
     private let overflowButton = NSButton(title: "", target: nil, action: nil)
-    private var tokens: [ObservationToken] = []
+    /// Śledzenie dostępności komend — tylko gdy pasek jest w oknie (siatki kart wyników w pamięci podręcznej okna
+    /// SQL poza oknem nie przeliczają komend przy każdej zmianie).
+    private var tracking: ObservationToken?
     private var visibleCount = 0
-    /// Przyciski-przełączniki (stan z modelu siatki).
+    /// Stan przełącznika z modelu siatki tego paska (pierwszeństwo przed `toggleState`, który dotyczy aktywnej siatki);
+    /// odczyt śledzony jak dostępność.
+    var localState: [String: () -> Bool] = [:] { didSet { statefulCache = nil } }
+    /// Przyciski-przełączniki (typ przycisku ustawiony przy pierwszym stanie).
     private var toggles: Set<String> = []
     /// Czynności z zachowaniem widoku siatki (np. wstawienie rekordu z edycją pierwszej komórki) zamiast samej komendy.
     var actions: [String: () -> Void] = [:]
@@ -48,7 +54,16 @@ final class ResultCommandBar: NSView {
         setAccessibilityRole(.toolbar)
         setAccessibilityLabel(L10n.tr("Czynności wyniku"))
         build()
-        tokens.append(trackChanges { [weak self] in self?.refreshEnabled() })
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil {
+            tracking?.cancel()
+            tracking = nil
+        } else if tracking == nil {
+            tracking = trackChanges { [weak self] in self?.refreshEnabled() }
+        }
     }
 
     @available(*, unavailable)
@@ -131,18 +146,36 @@ final class ResultCommandBar: NSView {
         for case .command(let id, let b) in elements {
             let on = workspace.isEnabled(CommandID(rawValue: id))
             if b.isEnabled != on { b.isEnabled = on }
+            // Stan komendy-przełącznika (model siatki paska albo rejestr) — tylko dla przycisków ze stanem.
+            guard statefulIDs.contains(id), let state = localState[id]?() ?? workspace.toggleState(CommandID(rawValue: id)) else { continue }
+            apply(state, to: b, id: id)
         }
     }
 
-    /// Przełącznik włączony albo wyłączony (stan z modelu siatki — przycisk wyróżniony, symbol stanu włączonego).
+    /// Komendy paska ze stanem przełącznika (model siatki albo rejestr) — liczone raz, od nowa po zmianie `localState`.
+    private var statefulCache: Set<String>?
+    private var statefulIDs: Set<String> {
+        if let s = statefulCache { return s }
+        let s = Set(elements.compactMap { e -> String? in
+            guard case .command(let id, _) = e else { return nil }
+            return localState[id] != nil || workspace.toggleState(CommandID(rawValue: id)) != nil ? id : nil
+        })
+        statefulCache = s
+        return s
+    }
+
+    /// Przełącznik włączony albo wyłączony (przycisk wyróżniony, symbol stanu włączonego) — stan samego widoku siatki
+    /// (widok rekordu) ustawia widok.
     func setState(_ id: String, on: Bool) {
-        for case .command(id, let b) in elements {
-            if toggles.insert(id).inserted { b.setButtonType(.pushOnPushOff) }
-            b.state = on ? .on : .off
-            guard let d = workspace.registry.command(CommandID(rawValue: id))?.descriptor else { continue }
-            let symbol = on ? onSymbols[id] ?? CommandSymbols.symbol(for: id) : CommandSymbols.symbol(for: id)
-            b.image = NSImage(systemSymbolName: symbol ?? "circle.dashed", accessibilityDescription: d.title)
-        }
+        for case .command(id, let b) in elements { apply(on, to: b, id: id) }
+    }
+
+    private func apply(_ on: Bool, to b: NSButton, id: String) {
+        if toggles.insert(id).inserted { b.setButtonType(.pushOnPushOff) } else if (b.state == .on) == on { return }
+        b.state = on ? .on : .off
+        guard let d = workspace.registry.command(CommandID(rawValue: id))?.descriptor else { return }
+        let symbol = on ? onSymbols[id] ?? CommandSymbols.symbol(for: id) : CommandSymbols.symbol(for: id)
+        b.image = NSImage(systemSymbolName: symbol ?? "circle.dashed", accessibilityDescription: d.title)
     }
 
     // MARK: Układ i przepełnienie
@@ -226,17 +259,13 @@ final class ResultCommandBar: NSView {
     private func menu(for id: String) -> NSMenu? {
         if let make = menus[id] { return make() }
         let format: (ExportFormat) -> String
-        let formats: [ExportFormat]
         switch id {
-        case "grid.export":
-            formats = ExportFormat.allCases.filter { $0 != .expressionList }
-            format = { L10n.tr("Eksportuj jako \($0.displayName)…") }
-        case "grid.copyAs":
-            formats = [.csv, .html, .xml, .sql]
-            format = { $0.displayName }
-        default:
-            return nil
+        case "grid.export": format = { L10n.tr("Eksportuj jako \($0.displayName)…") }
+        case "grid.copyAs": format = { $0.displayName }
+        default: return nil
         }
+        // Te same listy, z których powstaje parametr komendy (wybór ze wstążki, agent).
+        let formats = id == "grid.export" ? GridCommands.exportFormats : GridCommands.copyAsFormats
         let menu = NSMenu()
         for f in formats {
             let item = menu.addItem(withTitle: format(f), action: #selector(formatChosen(_:)), keyEquivalent: "")
@@ -261,19 +290,19 @@ final class ResultCommandBar: NSView {
         return menu
     }
 
+    /// Stan przełącznika ustawiony przez widok siatki (`setState`, np. widok rekordu) — z przycisku.
+    private func viewState(_ id: String) -> Bool? {
+        // Tylko stan ustawiany przez widok (komendy bez stanu w modelu siatki i rejestrze) — przycisk komendy z rejestru
+        // mógłby jeszcze nie być odświeżony.
+        guard toggles.contains(id), !statefulIDs.contains(id) else { return nil }
+        for case .command(id, let b) in elements { return b.state == .on }
+        return nil
+    }
+
     private func commandItem(_ raw: String) -> NSMenuItem? {
-        guard let d = workspace.registry.command(CommandID(rawValue: raw))?.descriptor else { return nil }
-        let item = NSMenuItem(title: d.title, action: #selector(menuCommand(_:)), keyEquivalent: "")
-        item.target = self
-        item.representedObject = raw
-        item.toolTip = d.summary
-        item.isEnabled = workspace.isEnabled(d.id)
-        if let symbol = CommandSymbols.symbol(for: raw) { item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil) }
-        if let chord = workspace.keymap.chords(for: d.id).first(where: { MenuBuilder.keyEquivalent(for: $0) != nil }),
-           let (key, mask) = MenuBuilder.keyEquivalent(for: chord) {
-            item.keyEquivalent = key
-            item.keyEquivalentModifierMask = mask
-        }
+        let item = MenuBuilder.commandItem(raw, workspace: workspace, target: self, action: #selector(menuCommand(_:)))
+        // Stan z modelu siatki paska albo samego widoku (widok rekordu) — pierwszeństwo przed rejestrem.
+        if let item, let on = localState[raw]?() ?? viewState(raw) { item.state = on ? .on : .off }
         return item
     }
 

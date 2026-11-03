@@ -29,6 +29,8 @@ public struct EnterContext: Sendable, Equatable {
 /// ze stanem regionów bez formatowania i kompilacji warunkowej oraz jednostki CREATE … BODY, w której leżą) zostają
 /// ważne, dopóki tekst przed nimi się nie zmienia — podział i leksowanie idą od początku tekstu, więc zmiana dalej nie
 /// zmienia niczego przed nią. Enter leksuje tylko od ostatniego ważnego punktu do linii kursora, a nie cały plik.
+/// Każdą zmianę tekstu zgłasza `invalidate(from:)` (edytor przy każdej edycji magazynu tekstu); sprawdzenie punktu
+/// podprogramu (`stale`) to tylko zabezpieczenie, nie zastępuje unieważniania.
 public struct StatementStartMemory: Sendable, Equatable {
     /// Region bez formatowania (`-- NoFormat Start`, `-- @formatter:off`) i głębokość `$IF … $END` w danym miejscu.
     struct Region: Sendable, Equatable {
@@ -67,11 +69,14 @@ public struct StatementStartMemory: Sendable, Equatable {
 
     /// Zmiana tekstu od `location`: początki i punkty kontrolne od tego miejsca przestają obowiązywać.
     public mutating func invalidate(from location: Int) {
-        if let k = starts.firstIndex(where: { $0 >= location }) {
+        // Wyszukiwanie binarne (wywoływane przy każdej zmianie tekstu).
+        let k = Self.partition(starts) { $0 < location }
+        if k < starts.count {
             for s in starts[k...] { regions[s] = nil }
             starts.removeSubrange(k...)
         }
-        if let k = checkpoints.firstIndex(where: { $0.position >= location }) { checkpoints.removeSubrange(k...) }
+        let c = Self.partition(checkpoints) { $0.position < location }
+        if c < checkpoints.count { checkpoints.removeSubrange(c...) }
     }
 
     /// Początek polecenia, w którym leży linia zaczynająca się w `lineStart` (albo sam `lineStart`, gdy poprzednie
@@ -87,8 +92,11 @@ public struct StatementStartMemory: Sendable, Equatable {
         let s = statement(forLineAt: lineStart, in: text)
         if !s.normal || s.region.open || Self.isRawUnit(at: s.statement, in: text) { return EnterContext(start: lineStart, mode: .none) }
         if Self.lines(from: s.statement, to: lineStart, in: text, limit: lineLimit) <= lineLimit { return EnterContext(start: s.statement) }
-        if let cp = checkpoints.last(where: { $0.subprogram && $0.statement == s.statement && $0.position <= lineStart }),
-           let unit = cp.unit, unit.body, Self.lines(from: cp.position, to: lineStart, in: text, limit: lineLimit) <= lineLimit {
+        // Najbliższy punkt podprogramu tego polecenia: ostatni punkt, który jest podprogramem albo należy do innego
+        // polecenia (punkty jednego polecenia leżą obok siebie) — przyjęty, gdy to podprogram tego polecenia.
+        if let k = lastCheckpoint(atOrBefore: lineStart),
+           let cp = checkpoints[...k].last(where: { $0.subprogram || $0.statement != s.statement }),
+           cp.subprogram, cp.statement == s.statement, let unit = cp.unit, unit.body, Self.lines(from: cp.position, to: lineStart, in: text, limit: lineLimit) <= lineLimit {
             return EnterContext(start: cp.position, header: "CREATE OR REPLACE \(unit.typeBody ? "TYPE" : "PACKAGE") BODY pelikan_context IS\n")
         }
         return EnterContext(start: lineStart, mode: .caseOnly)
@@ -97,22 +105,47 @@ public struct StatementStartMemory: Sendable, Equatable {
     /// Polecenie linii, stan regionów i leksera na jej początku: od ostatniego ważnego punktu kontrolnego (blok PL/SQL
     /// kończy tylko `/` sam w linii) albo podziałem od ostatniego znanego początku polecenia.
     mutating func statement(forLineAt lineStart: Int, in text: NSString) -> (statement: Int, region: Region, normal: Bool) {
-        if let k = checkpoints.lastIndex(where: { $0.position <= lineStart }) {
+        // Ostatni punkt przed linią; znany początek polecenia między nim a linią (np. granica za `/`) — blok punktu się
+        // skończył: od razu podział. Punkt nieaktualny (linia nie zaczyna już podprogramu) — usunięty i próba od
+        // poprzedniego, nie od początku polecenia.
+        while let k = lastCheckpoint(atOrBefore: lineStart),
+              lastStart(atOrBefore: lineStart).map({ $0 <= checkpoints[k].position }) ?? true {
             let cp = checkpoints[k]
+            // Punkt podprogramu dokładnie na początku linii — przejście jest puste, więc słowo linii sprawdzane osobno
+            // (linia zmieniona za wcięciem nie unieważnia punktu, a mogła przestać zaczynać podprogram).
+            if cp.subprogram, cp.position == lineStart, !Self.startsSubprogram(text, at: lineStart, typeBody: cp.unit?.typeBody == true) {
+                checkpoints.remove(at: k)
+                continue
+            }
             var scan = Scan(statement: cp.statement, region: cp.region, unit: cp.unit, checkpointsFrom: cp.position + 1, plsql: true)
             scan.run(text, from: cp.position, to: lineStart, expectSubprogram: cp.subprogram)
-            scannedLength += lineStart - cp.position
             if !scan.ended, !scan.stale {
+                scannedLength += lineStart - cp.position
                 merge(scan.checkpoints)
                 return (cp.statement, scan.region, scan.normal)
             }
-            checkpoints.removeSubrange(k...)
+            scannedLength += (scan.endPosition ?? scan.stopPosition ?? lineStart) - cp.position
+            if scan.stale {
+                checkpoints.remove(at: k)
+                continue
+            }
+            // Punkty zebrane przed `/` są ważne (tekst bloku do `/`).
+            merge(scan.checkpoints)
+            // `/` po drodze — linia leży za blokiem punktu: punkty (także późniejszych jednostek) zostają, granica
+            // podziału za linią z `/` (początek polecenia w `starts`, unieważniany jak inne) — linie za blokiem, także
+            // same odstępy, z których podział nie tworzy polecenia, dzielone od niej, a punkty bloku pomijane.
+            if let end = scan.endLineEnd {
+                let next = end + 1
+                if next <= text.length { insertStart(next, region: scan.region) }
+            }
+            break
         }
-        let base = starts.last { $0 <= lineStart } ?? 0
+        let base = lastStart(atOrBefore: lineStart) ?? 0
         guard base < lineStart else { return (base, regions[base] ?? Region(), true) }
         let chunk = text.substring(with: NSRange(location: base, length: lineStart - base))
         let parts = ScriptSplitter.split(chunk, mode: .commandWindow)
-        for p in parts where base + p.start > (starts.last ?? -1) { starts.append(base + p.start) }
+        // Początki w kolejności (także między znanymi, np. za granicą `/`), bez powtórzeń.
+        for p in parts { insertStart(base + p.start) }
         // Polecenie niezakończone przed linią (blok PL/SQL, SQL bez średnika) — linia jest jego dalszym ciągiem.
         let open = parts.last.map { $0.terminator == .endOfText } ?? false
         let statement = open ? base + parts.last!.start : lineStart
@@ -126,8 +159,70 @@ public struct StatementStartMemory: Sendable, Equatable {
         return (statement, scan.region, scan.normal)
     }
 
-    mutating func merge(_ new: [Checkpoint]) {
-        for c in new where c.position > (checkpoints.last?.position ?? -1) { checkpoints.append(c) }
+    /// Dołącza punkty kontrolne w kolejności położeń (także wcześniejsze niż znane — np. wcześniejszej jednostki, gdy
+    /// pamięć ma już punkty późniejszej); punkt w znanym już miejscu zostaje bez zmian.
+    /// W jednym miejscu punkt podprogramu ma pierwszeństwo przed punktem co 200 linii (ten sam stan, ale tylko on
+    /// wyznacza kontekst od podprogramu).
+    mutating func merge(_ unsorted: [Checkpoint]) {
+        guard !unsorted.isEmpty else { return }
+        // Przejście dopisuje punkt ORDER/MAP dopiero przy słowie MEMBER — może trafić za późniejszy punkt co 200 linii;
+        // kolejność położeń (w jednym miejscu punkt podprogramu po zwykłym, żeby go zastąpił).
+        let new = unsorted.sorted { $0.position < $1.position || $0.position == $1.position && !$0.subprogram && $1.subprogram }
+        // Zwykle nowe punkty leżą za wszystkimi znanymi (dopisanie); wcześniejsze (inna jednostka) — wstawienie
+        // w miejscu z wyszukiwania binarnego, bez przebudowy całej tablicy.
+        for c in new { insertOrMerge(c) }
+    }
+
+    private mutating func insertOrMerge(_ c: Checkpoint) {
+        let lo = Self.partition(checkpoints) { $0.position < c.position }
+        if lo < checkpoints.count, checkpoints[lo].position == c.position {
+            if c.subprogram, !checkpoints[lo].subprogram { checkpoints[lo] = c }
+            return
+        }
+        checkpoints.insert(c, at: lo)
+    }
+
+    /// Pierwszy indeks, dla którego `before` jest fałszywe (tablica uporządkowana: `before` prawdziwe na początku) —
+    /// jedno wyszukiwanie binarne dla punktów i początków poleceń.
+    static func partition<C: RandomAccessCollection>(_ c: C, _ before: (C.Element) -> Bool) -> Int where C.Index == Int {
+        var lo = c.startIndex, hi = c.endIndex
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            if before(c[mid]) { lo = mid + 1 } else { hi = mid }
+        }
+        return lo
+    }
+
+    /// Indeks ostatniego punktu w `position` nie dalej niż `p`.
+    func lastCheckpoint(atOrBefore p: Int) -> Int? {
+        let i = Self.partition(checkpoints) { $0.position <= p }
+        return i > 0 ? i - 1 : nil
+    }
+
+    /// Ostatni znany początek polecenia nie dalej niż `p`.
+    func lastStart(atOrBefore p: Int) -> Int? {
+        let i = Self.partition(starts) { $0 <= p }
+        return i > 0 ? starts[i - 1] : nil
+    }
+
+    /// Początek polecenia w kolejności, bez powtórzeń (`region` — stan regionów w tym miejscu, gdy znany).
+    mutating func insertStart(_ s: Int, region: Region? = nil) {
+        let i = Self.partition(starts) { $0 < s }
+        guard i == starts.count || starts[i] != s else { return }
+        starts.insert(s, at: i)
+        if let region { regions[s] = region }
+    }
+
+    /// Czy linia od `position` zaczyna się słowem podprogramu — ta sama reguła co sprawdzenie w przejściu (`Scan`):
+    /// pierwszy token leksera (`procedure_cnt` to identyfikator, nie PROCEDURE) w zbiorze słów obu rodzajów jednostek.
+    static func startsSubprogram(_ text: NSString, at position: Int, typeBody: Bool = false) -> Bool {
+        var end = position
+        while end < text.length, ![0x0A, 0x0D].contains(text.character(at: end)) { end += 1 }
+        let line = text.substring(with: NSRange(location: position, length: end - position))
+        let lexer = Lexer(line)
+        guard let first = lexer.tokenize().first(where: { $0.kind != .whitespace }),
+              first.kind == .keyword || first.kind == .identifier else { return false }
+        return Scan.starters(typeBody: typeBody).contains(lexer.string(first).uppercased())
     }
 
     /// Liczba linii między pozycjami (najwyżej `limit + 1` — liczenie od końca).
@@ -160,11 +255,19 @@ public struct StatementStartMemory: Sendable, Equatable {
         var regionsAt: [Int: Region] = [:]
         var checkpoints: [Checkpoint] = []
         var ended = false
+        /// Położenie `/` kończącego blok i koniec jego linii (w dokumencie), gdy `ended`.
+        var endPosition: Int?
+        var endLineEnd: Int?
+        /// Miejsce, w którym przejście uznało punkt za nieaktualny (`stale`) — licznik leksowania.
+        var stopPosition: Int?
         var stale = false
         var normal = true
 
         static let packageStarters: Set<String> = ["PROCEDURE", "FUNCTION"]
         static let typeStarters: Set<String> = ["PROCEDURE", "FUNCTION", "MEMBER", "STATIC", "CONSTRUCTOR", "MAP", "ORDER", "OVERRIDING", "FINAL"]
+        /// Słowa zaczynające podprogram jednostki: w ciele pakietu tylko PROCEDURE/FUNCTION (MAP, MEMBER… to tam zwykłe
+        /// identyfikatory).
+        static func starters(typeBody: Bool) -> Set<String> { typeBody ? typeStarters : packageStarters }
         static let createModifiers: Set<String> = ["OR", "REPLACE", "EDITIONABLE", "NONEDITIONABLE", "FORCE", "NOFORCE"]
 
         mutating func run(_ text: NSString, from: Int, to: Int, expectSubprogram: Bool) {
@@ -207,7 +310,11 @@ public struct StatementStartMemory: Sendable, Equatable {
                 let word = t.kind == .keyword || t.kind == .identifier ? lexer.string(t).uppercased() : ""
                 if !checkedFirst {
                     checkedFirst = true
-                    if !(Self.packageStarters.union(Self.typeStarters)).contains(word) { stale = true; return }
+                    if !Self.starters(typeBody: unit?.typeBody == true).contains(word) {
+                        stale = true
+                        stopPosition = pos
+                        return
+                    }
                 }
                 switch t.kind {
                 case .lineComment:
@@ -225,7 +332,13 @@ public struct StatementStartMemory: Sendable, Equatable {
                     // `/` sam w linii kończy blok PL/SQL.
                     var p = t.end
                     while p < utf.count, utf[p] == 0x20 || utf[p] == 0x09 { p += 1 }
-                    if plsql, pos > statement, p >= utf.count || utf[p] == 0x0A || utf[p] == 0x0D { ended = true; return }
+                    if plsql, pos > statement, p >= utf.count || utf[p] == 0x0A || utf[p] == 0x0D {
+                        ended = true
+                        endPosition = pos
+                        // CRLF — koniec linii za LF (granica podziału na początku następnej linii).
+                        endLineEnd = from + (p + 1 < utf.count && utf[p] == 0x0D && utf[p + 1] == 0x0A ? p + 1 : p)
+                        return
+                    }
                 default:
                     break
                 }

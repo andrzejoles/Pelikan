@@ -11,13 +11,18 @@ public enum EditorShift {
         public let oldEnd: Int
         public let delta: Int
 
-        public init(old: String, new: String) {
+        /// Wspólny początek i (gdy `suffix`) wspólny koniec w jednostkach UTF-16, bez dzielenia pary zastępczej.
+        public init(old: String, new: String, suffix: Bool = true) {
             let a = old as NSString, b = new as NSString
             let minLen = min(a.length, b.length)
             var p = 0
             while p < minLen, a.character(at: p) == b.character(at: p) { p += 1 }
+            if p > 0, UTF16.isLeadSurrogate(a.character(at: p - 1)) { p -= 1 }
             var s = 0
-            while s < minLen - p, a.character(at: a.length - 1 - s) == b.character(at: b.length - 1 - s) { s += 1 }
+            if suffix {
+                while s < minLen - p, a.character(at: a.length - 1 - s) == b.character(at: b.length - 1 - s) { s += 1 }
+                if s > 0, UTF16.isTrailSurrogate(a.character(at: a.length - s)) { s -= 1 }
+            }
             prefix = p
             oldEnd = a.length - s
             delta = b.length - a.length
@@ -218,7 +223,16 @@ public struct AutoReplaceRule: Sendable, Hashable, Codable, Identifiable {
 public enum AutoReplace {
     /// Po wpisaniu znaku kończącego (już w tekście przed `caret`): skrót bezpośrednio przed nim → zamiana.
     /// Skrót z liter musi stać na granicy słowa; skrót zaczynający się symbolem może następować po identyfikatorze.
-    public static func apply(_ rules: [AutoReplaceRule], text: String, caret: Int) -> (range: Range<Int>, replacement: String, caret: Int)? {
+    /// Zamiana: zakres w tekście, nowy tekst, kursor po zamianie i czy reguła ustawia kursor (`|` w zamianie — znak
+    /// kończący zużyty, także gdy `|` stoi na końcu zamiany; nie da się tego wywnioskować z położenia kursora).
+    public struct Match: Sendable, Equatable {
+        public var range: Range<Int>
+        public var replacement: String
+        public var caret: Int
+        public var setsCursor: Bool
+    }
+
+    public static func apply(_ rules: [AutoReplaceRule], text: String, caret: Int) -> Match? {
         let ns = text as NSString
         guard caret > 0, caret <= ns.length, !rules.isEmpty else { return nil }
         let end = caret - 1                    // pozycja znaku kończącego
@@ -238,10 +252,10 @@ public enum AutoReplace {
             // Zastępujemy skrót; znak kończący zostaje tylko wtedy, gdy zamiana nie ustawia kursora.
             if let marker = cursorMarker {
                 let pos = start + (String(rule.replacement[..<marker.lowerBound]) as NSString).length
-                return (start..<caret, clean, pos)
+                return Match(range: start..<caret, replacement: clean, caret: pos, setsCursor: true)
             }
             let repl = clean + ns.substring(with: NSRange(location: end, length: 1))
-            return (start..<caret, repl, start + (repl as NSString).length)
+            return Match(range: start..<caret, replacement: repl, caret: start + (repl as NSString).length, setsCursor: false)
         }
         return nil
     }
