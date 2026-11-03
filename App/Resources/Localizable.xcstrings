@@ -23409,34 +23409,6 @@
         }
       }
     },
-    "Globalne" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Globals"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Globale"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Globales"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Глобальні"
-          }
-        }
-      }
-    },
     "Globalne prywatne" : {
       "localizations" : {
         "en" : {
@@ -25673,6 +25645,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ISO-8859-2 (Latin-2, Центральна Європа)"
+          }
+        }
+      }
+    },
+    "I_ (IN), O_ (OUT), O_ albo IO_ (IN OUT), L_ (lokalne), LP_ / GP_ (pakietu), C_ (kursory) — jak w pakietach RMS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I_ (IN), O_ (OUT), O_ or IO_ (IN OUT), L_ (local), LP_ / GP_ (package), C_ (cursors) — as in RMS packages"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I_ (IN), O_ (OUT), O_ oder IO_ (IN OUT), L_ (lokal), LP_ / GP_ (Paket), C_ (Cursor) — wie in RMS-Paketen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I_ (IN), O_ (OUT), O_ o IO_ (IN OUT), L_ (locales), LP_ / GP_ (paquete), C_ (cursores) — como en los paquetes RMS"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I_ (IN), O_ (OUT), O_ або IO_ (IN OUT), L_ (локальні), LP_ / GP_ (пакета), C_ (курсори) — як у пакетах RMS"
           }
         }
       }
@@ -30045,6 +30045,34 @@
         }
       }
     },
+    "Kilka przedrostków po przecinku; puste pole — bez sprawdzania." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Several prefixes separated by commas; empty field — not checked."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehrere Präfixe durch Kommas getrennt; leeres Feld — keine Prüfung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varios prefijos separados por comas; campo vacío — sin comprobación."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кілька префіксів через кому; порожнє поле — без перевірки."
+          }
+        }
+      }
+    },
     "Klasa" : {
       "localizations" : {
         "en" : {
@@ -33905,6 +33933,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nach Zeilenfehler fortfahren"
+          }
+        }
+      }
+    },
+    "Konwencja RMS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RMS convention"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RMS-Konvention"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Convención RMS"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конвенція RMS"
           }
         }
       }
@@ -38665,34 +38721,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Розташування «%@» зникне з Переглядача файлів; файли залишаться."
-          }
-        }
-      }
-    },
-    "Lokalne" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Locals"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lokale"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Locales"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Локальні"
           }
         }
       }
@@ -57709,6 +57737,90 @@
         }
       }
     },
+    "Parametr IN" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IN parameter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IN-Parameter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parámetro IN"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметр IN"
+          }
+        }
+      }
+    },
+    "Parametr IN OUT" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IN OUT parameter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IN-OUT-Parameter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parámetro IN OUT"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметр IN OUT"
+          }
+        }
+      }
+    },
+    "Parametr OUT" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OUT parameter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OUT-Parameter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parámetro OUT"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметр OUT"
+          }
+        }
+      }
+    },
     "Parametr linku „%@” jest ignorowany" : {
       "localizations" : {
         "en" : {
@@ -57793,6 +57905,62 @@
         }
       }
     },
+    "Parametry IN" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IN parameters"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IN-Parameter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parámetros IN"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметри IN"
+          }
+        }
+      }
+    },
+    "Parametry IN OUT" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IN OUT parameters"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IN-OUT-Parameter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parámetros IN OUT"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметри IN OUT"
+          }
+        }
+      }
+    },
     "Parametry NLS (sesja i baza)" : {
       "localizations" : {
         "en" : {
@@ -57817,6 +57985,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "NLS-Parameter (Sitzung und Datenbank)"
+          }
+        }
+      }
+    },
+    "Parametry OUT" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OUT parameters"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OUT-Parameter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parámetros OUT"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметри OUT"
           }
         }
       }
@@ -74561,6 +74757,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "REST (ORDS)"
+          }
+        }
+      }
+    },
+    "RMS, np. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RMS, e.g. %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RMS, z. B. %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RMS, p. ej. %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RMS, напр. %@"
           }
         }
       }
@@ -119029,34 +119253,6 @@
         }
       }
     },
-    "Zmienna globalna" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Global variable"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Globale Variable"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Variable global"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Глобальна змінна"
-          }
-        }
-      }
-    },
     "Zmienna lokalna" : {
       "localizations" : {
         "en" : {
@@ -119109,6 +119305,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Змінна вже має початкове значення"
+          }
+        }
+      }
+    },
+    "Zmienna pakietu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Package variable"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paketvariable"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Variable de paquete"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінна пакета"
+          }
+        }
+      }
+    },
+    "Zmienna pakietu (specyfikacja)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Package variable (specification)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paketvariable (Spezifikation)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Variable de paquete (especificación)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінна пакета (специфікація)"
           }
         }
       }
@@ -119193,6 +119445,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Globale Variablen (NAME=wert, durch Komma getrennt; in der Eingabe: &NAME)"
+          }
+        }
+      }
+    },
+    "Zmienne lokalne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local variables"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokale Variablen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Variables locales"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Локальні змінні"
+          }
+        }
+      }
+    },
+    "Zmienne pakietu (ciało)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Package variables (body)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paketvariablen (Body)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Variables de paquete (cuerpo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінні пакета (тіло)"
+          }
+        }
+      }
+    },
+    "Zmienne pakietu (specyfikacja)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Package variables (specification)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paketvariablen (Spezifikation)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Variables de paquete (especificación)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінні пакета (специфікація)"
           }
         }
       }
@@ -121269,6 +121605,34 @@
         }
       }
     },
+    "bez sprawdzania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "not checked"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keine Prüfung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sin comprobación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "без перевірки"
+          }
+        }
+      }
+    },
     "bez zmian" : {
       "localizations" : {
         "en" : {
@@ -122777,6 +123141,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ignoriert"
+          }
+        }
+      }
+    },
+    "jak IN" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "same as IN"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wie IN"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "igual que IN"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "як IN"
+          }
+        }
+      }
+    },
+    "jak w ciele" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "same as in body"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wie im Body"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "igual que en el cuerpo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "як у тілі"
           }
         }
       }
