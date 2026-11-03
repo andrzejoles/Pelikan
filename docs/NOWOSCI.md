@@ -2,6 +2,13 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## Następna wersja
+
+- **Konwencje nazw (Ustawienia › Oracle):** osobne przedrostki dla parametrów IN, OUT i IN OUT oraz dla zmiennych
+  lokalnych i zmiennych pakietu (w ciele i w specyfikacji); w polu można podać kilka przedrostków po przecinku. Listy
+  wyboru podpowiadają konwencję pakietów RMS (`I_item`, `O_error_message`, `L_program`, `LP_vdate`, `GP_…`, `C_…`),
+  a przycisk „Konwencja RMS” ustawia ją jednym kliknięciem.
+
 ## 1.15.2 — standard plików i UTF-8 dla Pro*C, listy wyboru w ustawieniach, sortowanie tabel
 
 Zmiany z wersji 1.14.0–1.15.2 (bez osobnych wydań), wydane razem.

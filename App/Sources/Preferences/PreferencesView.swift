@@ -623,15 +623,32 @@ struct OraclePane: View {
                 Toggle(L10n.tr("Podpowiedzi kompilatora (inspekcje kodu po kompilacji; „-- Ignore” wycisza linię)"), isOn: setting(workspace, \.compilerHints))
                 Toggle(L10n.tr("Sprawdzaj konwencje nazw"), isOn: setting(workspace, \.namingConventions.enabled))
                 if workspace.settings.namingConventions.enabled {
-                    HStack {
-                        ChoiceField(L10n.tr("Parametry"), text: setting(workspace, \.namingConventions.parameter), choices: PreferenceChoices.naming("parameter"))
-                        ChoiceField(L10n.tr("Lokalne"), text: setting(workspace, \.namingConventions.local), choices: PreferenceChoices.naming("local"))
-                        ChoiceField(L10n.tr("Globalne"), text: setting(workspace, \.namingConventions.global), choices: PreferenceChoices.naming("global"))
+                    // Konwencje nazw (D215): kilka przedrostków po przecinku; puste OUT / IN OUT — jak IN, puste
+                    // zmienne specyfikacji — jak zmienne ciała pakietu.
+                    let field = { (title: String, path: WritableKeyPath<NamingConventions, String>, kind: String, prompt: String) in
+                        ChoiceField(title, text: setting(workspace, (\PelikanWorkspace.Settings.namingConventions as WritableKeyPath<PelikanWorkspace.Settings, NamingConventions>).appending(path: path)), prompt: prompt.isEmpty ? nil : prompt,
+                                    choices: PreferenceChoices.naming(kind), mode: .list)
                     }
                     HStack {
-                        ChoiceField(L10n.tr("Stałe"), text: setting(workspace, \.namingConventions.constant), choices: PreferenceChoices.naming("constant"))
-                        ChoiceField(L10n.tr("Kursory"), text: setting(workspace, \.namingConventions.cursor), choices: PreferenceChoices.naming("cursor"))
-                        ChoiceField(L10n.tr("Typy"), text: setting(workspace, \.namingConventions.type), choices: PreferenceChoices.naming("type"))
+                        field(L10n.tr("Parametry IN"), \.parameter, "parameter", "")
+                        field(L10n.tr("Parametry OUT"), \.parameterOut, "parameterOut", L10n.tr("jak IN"))
+                        field(L10n.tr("Parametry IN OUT"), \.parameterInOut, "parameterInOut", L10n.tr("jak IN"))
+                    }
+                    HStack {
+                        field(L10n.tr("Zmienne lokalne"), \.local, "local", "")
+                        field(L10n.tr("Zmienne pakietu (ciało)"), \.global, "global", "")
+                        field(L10n.tr("Zmienne pakietu (specyfikacja)"), \.publicGlobal, "publicGlobal", L10n.tr("jak w ciele"))
+                    }
+                    HStack {
+                        field(L10n.tr("Stałe"), \.constant, "constant", L10n.tr("bez sprawdzania"))
+                        field(L10n.tr("Kursory"), \.cursor, "cursor", L10n.tr("bez sprawdzania"))
+                        field(L10n.tr("Typy"), \.type, "type", L10n.tr("bez sprawdzania"))
+                    }
+                    HStack {
+                        Button(L10n.tr("Konwencja RMS")) { workspace.settings.namingConventions = .rms }
+                            .help(L10n.tr("I_ (IN), O_ (OUT), O_ albo IO_ (IN OUT), L_ (lokalne), LP_ / GP_ (pakietu), C_ (kursory) — jak w pakietach RMS"))
+                        Text(L10n.tr("Kilka przedrostków po przecinku; puste pole — bez sprawdzania."))
+                            .font(.uiSecondary).foregroundStyle(.secondary)
                     }
                 }
                 Toggle(L10n.tr("Pomijaj inicjalizację pakietów przy krokowaniu"), isOn: setting(workspace, \.debuggerSkipPackageInit))

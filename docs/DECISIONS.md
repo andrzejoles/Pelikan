@@ -3395,3 +3395,23 @@ utrwalał błąd.
   ISO-8859-2 — zero znaków sterujących i przekłamań), w testach — próbki Windows-1250 i ISO-8859-2.
 - Wdrożenie Pro*C (SSH) wysyła pliki bajt w bajt — po konwersji na serwer trafia UTF-8 (polskie litery są tylko
   w komentarzach; kompilator Pro*C ich nie interpretuje).
+
+### D215 · 2026-11-03 — Konwencje nazw: parametry IN, OUT i IN OUT osobno, zmienne pakietu, przykłady z RMS
+
+**Prośba właściciela:** „W ustawieniach, przy definicji konwencji nazw dla parametrów (osobno typu IN a osobno OUT
+i IN OUT), stałych i zmiennych (zmiennych brakuje — dodaj) oprzyj się w przykładach o konwencję z repo RMSPROD, głównie
+folder packages.”
+
+**Konwencja w repozytorium** (1445 plików pakietów, deklaracje policzone skryptem, repozytorium tylko czytane):
+parametry IN — `I_` (96%), OUT — `O_` (93%), IN OUT — `O_` (89%, `O_error_message IN OUT`) albo `IO_` (7%); zmienne
+lokalne — `L_` (88%), zmienne pakietu w ciele — `LP_`, w specyfikacji — `GP_`; kursory — `C_` (99%); stałe i typy bez
+jednego przedrostka (najczęstsze `K_`, `GP_`, `CON_`; `TYP_`, `T_`).
+
+- **Pola:** parametry IN, OUT, IN OUT; zmienne lokalne, zmienne pakietu w ciele i w specyfikacji; stałe, kursory, typy.
+  Tryb parametru z deklaracji (bez trybu — IN). Puste OUT / IN OUT — jak IN, puste zmienne specyfikacji — jak w ciele
+  (dotychczasowe ustawienia działają bez zmian); inne puste pole — bez sprawdzania.
+- **Kilka przedrostków po przecinku** (`O_, IO_`); wielkość liter bez znaczenia (`I_item` spełnia `i_`).
+- **Listy wyboru** (D211) zaczynają się od przedrostków RMS z przykładem deklaracji z repozytorium („RMS, np. I_item IN
+  ITEM_MASTER.ITEM%TYPE”), dalej inne spotykane; przycisk **Konwencja RMS** ustawia cały zestaw (stałe i typy — bez
+  sprawdzania). Domyślne wartości (`p_`, `l_`, `g_`…) bez zmian — sprawdzanie jest domyślnie wyłączone.
+- Komunikat podpowiedzi nazywa kategorię („Parametr OUT „x_flag” nie zaczyna się od „O_””).
