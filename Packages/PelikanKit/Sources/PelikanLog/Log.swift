@@ -92,12 +92,11 @@ public enum Log {
         var level: LogLevel = .info
         var revealNames = false
         var hashKey: [UInt8] = []
-        var sinks: [any LogSink] = [] { didSet { updateDiagnostic() } }
-        var extraSinks: [UUID: any LogSink] = [:] { didSet { updateDiagnostic() } }
-        /// Czy któreś ujście przyjmuje wszystkie wpisy (diagnostyka, testy) — szybka decyzja w `emit` bez kopii.
-        private(set) var hasDiagnosticSink = false
-
-        private mutating func updateDiagnostic() { hasDiagnosticSink = all.contains { $0.receivesEverything } }
+        var sinks: [any LogSink] = []
+        var extraSinks: [UUID: any LogSink] = [:]
+        /// Czy któreś ujście przyjmuje wszystkie wpisy (diagnostyka, testy) — liczone przy każdym wpisie (właściwość
+        /// ujścia może się zmieniać), bez kopiowania tablic.
+        var hasDiagnosticSink: Bool { sinks.contains { $0.receivesEverything } || extraSinks.values.contains { $0.receivesEverything } }
 
         var all: [any LogSink] { sinks + extraSinks.values }
     }

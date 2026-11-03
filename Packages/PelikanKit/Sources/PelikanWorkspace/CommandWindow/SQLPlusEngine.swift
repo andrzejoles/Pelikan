@@ -139,10 +139,24 @@ public final class SQLPlusEngine {
         // w wyniku narzędzia agenta) — jedno przejście, wynik budowany po kolei.
         var t = ""
         var rest = text[...]
-        while let r = rest.range(of: #"(?im)(^|\\n|\\r)(\s*conn(ect)?\s+[^\s/\\]*/)"#, options: .regularExpression) {
-            // Hasło: od `/` do ostatniego `@` w słowie (albo do końca słowa albo zapisanego `\n`), jak w CONNECT.
+        while let r = rest.range(of: #"(?im)(^|\\n|\\r|")(\s*conn(ect)?\s+[^\s/\\"]*/)"#, options: .regularExpression) {
+            // Hasło: od `/` do ostatniego `@` w słowie, jak w CONNECT.
             let tail = rest[r.upperBound...]
-            let wordEnd = tail.firstIndex(where: { $0.isWhitespace || $0 == "\\" }) ?? rest.endIndex
+            // Koniec słowa: odstęp, cudzysłów kończący napis JSON albo zapisane `\n`/`\r`/`\t` (sam `\` może być
+            // częścią hasła).
+            var wordEnd = rest.endIndex
+            var q = tail.startIndex
+            // Hasło w cudzysłowie (`u/"tajne hasło"@db`, w JSON `u/\"…\"`) — do cudzysłowu zamykającego.
+            let quote = tail.hasPrefix("\\\"") ? "\\\"" : tail.hasPrefix("\"") ? "\"" : nil
+            if let quote, let close = tail.dropFirst(quote.count).range(of: quote) {
+                q = close.upperBound
+            }
+            while q < tail.endIndex {
+                let ch = tail[q]
+                if ch.isWhitespace || ch == "\"" { wordEnd = q; break }
+                if ch == "\\", let n = tail.index(q, offsetBy: 1, limitedBy: tail.endIndex), n < tail.endIndex, "nrt".contains(tail[n]) { wordEnd = q; break }
+                q = tail.index(after: q)
+            }
             let end = rest[r.upperBound..<wordEnd].lastIndex(of: "@") ?? wordEnd
             t += rest[..<r.upperBound]
             if end > r.upperBound { t += star }

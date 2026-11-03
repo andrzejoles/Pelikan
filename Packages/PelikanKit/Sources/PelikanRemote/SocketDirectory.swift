@@ -27,7 +27,7 @@ public enum SocketDirectory {
 
     /// Katalog (nie dowiązanie) należący do użytkownika, bez praw dla innych.
     static func isPrivateDirectory(_ path: String) -> Bool {
-        PrivateOwnership.ownedDirectory(path).map { $0.st_mode & 0o077 == 0 } ?? false
+        PrivateOwnership.isPrivateDirectory(path)
     }
 }
 #endif

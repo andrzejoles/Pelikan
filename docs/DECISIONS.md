@@ -3133,6 +3133,14 @@ zależności); maskowanie haseł w jednym przejściu, także `CONNECT` po zapisa
 ślad MCP: duże wiadomości maskowane od początku (do śladu i tak trafia 4000 znaków), plik otwierany bez blokowania na
 FIFO; opis wersji thin pomija tylko ORA-00942/00904/01031.
 
+Szóste przejście: sesja celu wdrożenia zastąpiona po zmianie konfiguracji nie jest rozłączana od razu (mogła obsługiwać
+trwające wdrożenie) — przy zamknięciu aplikacji; po czekaniu na Pęk kluczy ponowne sprawdzenie pamięci sesji (bez dwóch
+połączeń głównych); potwierdzenie połączenia z pokoleniem (sprawdzenie rozpoczęte przed zerwaniem nie zapisze
+nieaktualnego); maskowanie `CONNECT` także na początku napisu JSON, hasło w cudzysłowie (także `\"…\"`) w całości,
+`\` w haśle nie kończy słowa; `pelikan-mcp --exec` zamyka deskryptory według listy otwartych; dziennik liczy ujście
+diagnostyczne przy każdym wpisie (bez kopii tablic); opis wersji thin w tym samym zapytaniu co kontekst sesji, drugie
+zapytanie tylko przy braku uprawnień.
+
 Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
 testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
 `RETURNING … BULK COLLECT INTO` w bloku PL/SQL.

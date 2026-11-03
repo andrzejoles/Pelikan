@@ -35,10 +35,12 @@ final class ProCDeployModel {
     /// Sesja SSH celu (ControlMaster; sekret tylko w pamięci domknięcia — z Pęku kluczy, z Touch ID przy D56).
     func session(for t: PelikanSSHTarget) async throws -> SSHSession {
         if let s = sessions[t.id], s.config == SSHTargetTester.sessionConfig(t) { return s }
-        // Konfiguracja celu zmieniona — stara sesja ma własne połączenie główne (osobne gniazdo): zamknięte, nie zostaje
-        // zalogowane na serwerze do wygaśnięcia ControlPersist.
-        if let old = sessions.removeValue(forKey: t.id) { Task.detached { old.disconnect() } }
         let secret: String? = t.auth == .agent ? nil : try await store.secret(for: t.id, in: workspace)
+        // Po czekaniu na Pęk kluczy: równoległe wywołanie mogło już utworzyć sesję — ta sama (jedno połączenie główne).
+        if let s = sessions[t.id], s.config == SSHTargetTester.sessionConfig(t) { return s }
+        // Konfiguracja celu zmieniona — stara sesja (własne gniazdo) mogła być w użyciu przez trwające wdrożenie: nie
+        // rozłączana teraz, tylko przy zamknięciu aplikacji (`disconnectAll`), żeby nie została zalogowana na serwerze.
+        if let old = sessions.removeValue(forKey: t.id) { retired.append(old) }
         let s = try SSHSession(config: SSHTargetTester.sessionConfig(t), runDirectory: runDirectory, secret: { secret })
         sessions[t.id] = s
         return s
@@ -46,9 +48,13 @@ final class ProCDeployModel {
 
     /// Zamknięcie aplikacji: połączenia główne SSH (ControlPersist) nie zostają po niej na serwerach celów.
     func disconnectAll() {
-        for s in sessions.values { s.disconnect() }
+        for s in Array(sessions.values) + retired { s.disconnect() }
         sessions = [:]
+        retired = []
     }
+
+    /// Sesje zastąpione po zmianie konfiguracji celu (mogą obsługiwać trwające wdrożenie) — rozłączane przy zamknięciu.
+    private var retired: [SSHSession] = []
 
     /// Cele UAT w tym samym folderze co cel PROD (sprawdzenie, czy commit był już na UAT).
     func uatSiblings(of t: PelikanSSHTarget) -> [UUID] {

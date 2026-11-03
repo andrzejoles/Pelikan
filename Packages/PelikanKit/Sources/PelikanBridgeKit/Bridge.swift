@@ -8,11 +8,21 @@ public enum Bridge {
     /// Tryb startu powłoki agenta (`pelikan-mcp --exec program …`): zamknięcie odziedziczonych deskryptorów i `execv`.
     public static let execFlag = "--exec"
 
-    /// Zamyka deskryptory powyżej 2 (w świeżym procesie przed `execv` — nic tu ich nie używa).
+    /// Zamyka deskryptory powyżej 2 (w świeżym procesie przed `execv` — nic tu ich nie używa): według listy otwartych
+    /// (`proc_pidinfo` PROC_PIDLISTFDS — bez górnej granicy numerów), a gdy lista niedostępna — wszystkie do limitu.
     public static func closeInheritedDescriptors() {
-        let limit = Int32(min(getdtablesize(), 1 << 16))
-        guard limit > 3 else { return }
-        for fd in 3..<limit { close(fd) }
+        let stride = MemoryLayout<proc_fdinfo>.stride
+        let needed = proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, nil, 0)
+        if needed > 0 {
+            var infos = [proc_fdinfo](repeating: proc_fdinfo(), count: Int(needed) / stride + 16)
+            let got = infos.withUnsafeMutableBytes { proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, $0.baseAddress, Int32($0.count)) }
+            if got > 0 {
+                for info in infos.prefix(Int(got) / stride) where info.proc_fd > 2 { close(info.proc_fd) }
+                return
+            }
+        }
+        let limit = getdtablesize()
+        if limit > 3 { for fd in 3..<limit { close(fd) } }
     }
 
     /// Argumenty terminala: powłoka przez `pelikan-mcp --exec`.

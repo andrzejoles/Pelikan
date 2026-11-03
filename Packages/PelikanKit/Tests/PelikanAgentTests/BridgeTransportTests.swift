@@ -222,6 +222,11 @@ struct BridgeTransportTests {
         let inner = SQLPlusEngine.maskPassword(#"{"text":"select 1 from dual;\nconnect scott/Tiger123@prod"}"#)
         #expect(!inner.contains("Tiger123") && inner.contains("@prod"))
         #expect(SQLPlusEngine.maskPassword("connect u/p") == "connect u/********")
+        // Na początku napisu JSON, hasło w cudzysłowie (także w JSON) i z ukośnikiem wstecznym.
+        #expect(!SQLPlusEngine.maskPassword(#"{"output":"connect scott/Tiger123@prod\n"}"#).contains("Tiger123"))
+        #expect(SQLPlusEngine.maskPassword(#"connect u/"tajne hasło"@db"#) == "connect u/********@db")
+        #expect(!SQLPlusEngine.maskPassword(#"{"s":"connect u/\"tajne hasło\"@db"}"#).contains("tajne"))
+        #expect(SQLPlusEngine.maskPassword(#"connect u/ab\cd@db"#) == "connect u/********@db")
         let open = dir.appendingPathComponent("open.log").path
         FileManager.default.createFile(atPath: open, contents: Data(), attributes: [.posixPermissions: 0o644])
         SocketTransport.writeTrace(open, Data("b\n".utf8))

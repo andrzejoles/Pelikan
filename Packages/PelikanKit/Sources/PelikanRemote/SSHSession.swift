@@ -44,7 +44,14 @@ public final class SSHSession: Sendable {
     private let startLock = Mutex(())
     /// Chwila ostatniego potwierdzenia połączenia głównego (`ssh -O check` albo nawiązanie) — osobna blokada: zapomnienie
     /// (`disconnect`, błąd polecenia) nie czeka na trwające logowanie.
-    private let verified = Mutex<ContinuousClock.Instant?>(nil)
+    private let verified = Mutex<Verification>(Verification())
+    /// Potwierdzenie i jego pokolenie: zapomnienie podnosi pokolenie, więc sprawdzenie rozpoczęte wcześniej (gdy
+    /// połączenie jeszcze żyło) nie zapisze nieaktualnego potwierdzenia.
+    struct Verification {
+        var at: ContinuousClock.Instant?
+        var generation = 0
+        func fresh(_ validity: Duration) -> Bool { at.map { ContinuousClock.now - $0 < validity } ?? false }
+    }
     /// Jak długo potwierdzenie połączenia głównego zwalnia z ponownego `ssh -O check` przed poleceniem.
     static let checkValidity: Duration = .seconds(5)
     private let resolved = Mutex<ResolvedHost?>(nil)
@@ -132,9 +139,10 @@ public final class SSHSession: Sendable {
     /// serwera), które po 255 i tak są ponawiane; pozostałe sprawdzają połączenie zawsze — nie mogą trafić na martwe.
     public func connect(reuseRecentCheck: Bool = false) throws {
         try startLock.withLock { _ in
-            if reuseRecentCheck, let v = verified.withLock({ $0 }), ContinuousClock.now - v < Self.checkValidity { return }
+            if reuseRecentCheck, verified.withLock({ $0.fresh(Self.checkValidity) }) { return }
+            let generation = verified.withLock { $0.generation }
             if isConnected {
-                verified.withLock { $0 = .now }
+                verified.withLock { if $0.generation == generation { $0.at = .now } }
                 return
             }
             try startVerified()
@@ -143,11 +151,11 @@ public final class SSHSession: Sendable {
 
     /// Nawiązanie połączenia głównego (pod `startLock`) i zapisanie potwierdzenia.
     private func startVerified() throws {
-        verified.withLock { $0 = nil }
+        forgetVerification()
         let clock = ContinuousClock.now
         do {
             try startMaster()
-            verified.withLock { $0 = .now }
+            verified.withLock { $0.at = .now }
             Log.ssh.info("SSH: połączenie główne z \(config.host, privacy: .hash) w \(ms: clock)\(config.legacyAlgorithms ? " (starsze algorytmy)" : "", privacy: .public)")
         } catch {
             Log.ssh.notice("SSH: brak połączenia z \(config.host, privacy: .hash) po \(ms: clock): \(error)")
@@ -373,7 +381,7 @@ public final class SSHSession: Sendable {
     }
 
     /// Zapomina ostatnie potwierdzenie połączenia głównego (błąd `ssh` w strumieniu).
-    func forgetVerification() { verified.withLock { $0 = nil } }
+    func forgetVerification() { verified.withLock { $0.at = nil; $0.generation += 1 } }
 
     public func disconnect() {
         Log.ssh.debug("SSH: zamknięcie połączenia głównego z \(config.host, privacy: .hash)")
@@ -406,7 +414,7 @@ public final class SSHSession: Sendable {
             // Pod blokadą ponownie: równoległe ponowienie mogło już nawiązać połączenie (drugie `startMaster` usunęłoby
             // jego gniazdo i zostawiło osierocony proces `ssh -M`).
             try startLock.withLock { _ in
-                if let v = verified.withLock({ $0 }), ContinuousClock.now - v < Self.checkValidity { return }
+                if verified.withLock({ $0.fresh(Self.checkValidity) }) { return }
                 try startVerified()
             }
             return try Spawn.run(Self.ssh, args, environment: environment, stdin: stdin, timeout: timeout)

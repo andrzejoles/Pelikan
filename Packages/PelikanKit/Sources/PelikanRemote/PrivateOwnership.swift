@@ -14,6 +14,12 @@ public enum PrivateOwnership {
         ownedByUser(st, type: type) && st.st_mode & 0o077 == 0
     }
 
+    /// Katalog użytkownika (nie dowiązanie) bez praw dla innych.
+    public static func isPrivateDirectory(_ path: String) -> Bool {
+        var st = stat()
+        return lstat(path, &st) == 0 && isPrivate(st, type: S_IFDIR)
+    }
+
     /// Stan katalogu (bez podążania za dowiązaniem), gdy to katalog użytkownika; nil — brak, dowiązanie albo cudzy.
     public static func ownedDirectory(_ path: String) -> stat? {
         var st = stat()
