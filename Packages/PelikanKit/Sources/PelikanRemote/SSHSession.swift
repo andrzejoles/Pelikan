@@ -133,24 +133,6 @@ public final class SSHSession: Sendable {
         }
     }
 
-    /// Skrypt askpass (bez sekretu — czyta hasło z kolejki FIFO ze zmiennej środowiska): zapisany tylko, gdy go brak albo
-    /// ma inną treść, przez plik tymczasowy z prawami 0700 zamieniony nazwą — równoległe logowanie nigdy nie wykona
-    /// skryptu w trakcie zapisu ani bez prawa wykonania. Ten sam kod w `SSHSession` (PelikanRemote, macOS) i
-    /// `SSHTunnelManager` (PelikanWorkspace, także Linux) — moduły nie mają wspólnej zależności (D209).
-    static func installAskpassScript(at path: String) throws {
-        let script = Data("#!/bin/sh\nexec /bin/cat -- \"$PELIKAN_ASKPASS_FIFO\"\n".utf8)
-        if FileManager.default.contents(atPath: path) == script, FileManager.default.isExecutableFile(atPath: path) { return }
-        let temp = path + ".\(UUID().uuidString.prefix(8)).tmp"
-        guard FileManager.default.createFile(atPath: temp, contents: script, attributes: [.posixPermissions: 0o700]) else {
-            throw CocoaError(.fileWriteUnknown)
-        }
-        chmod(temp, 0o700)
-        guard rename(temp, path) == 0 else {
-            unlink(temp)
-            throw CocoaError(.fileWriteUnknown)
-        }
-    }
-
     private func startMaster() throws {
         try? FileManager.default.removeItem(atPath: controlPath)
         var env = environment
@@ -159,28 +141,14 @@ public final class SSHSession: Sendable {
         let secret = secret()
         let writer = Mutex<Bool>(false)
         if let secret, !secret.isEmpty {
-            try Self.installAskpassScript(at: askpass)
+            try Askpass.installScript(at: askpass)
             guard mkfifo(fifo, 0o600) == 0 else { throw SSHError.io(code: errno, detail: fifo) }
             env["SSH_ASKPASS"] = askpass
             env["SSH_ASKPASS_REQUIRE"] = "force"
             env["DISPLAY"] = ":0"
             // W środowisku tylko ścieżka kolejki — sekret idzie przez kolejkę, jednorazowo.
             env["PELIKAN_ASKPASS_FIFO"] = fifo
-            let bytes = Array((secret + "\n").utf8)
-            Thread.detachNewThread {
-                while !writer.withLock({ $0 }) {
-                    // O_CLOEXEC atomowo: proces potomny uruchomiony w tej chwili nie odziedziczy końca zapisu kanału hasła.
-                    let fd = open(fifo, O_WRONLY | O_NONBLOCK | O_CLOEXEC)
-                    if fd >= 0 {
-                        _ = fcntl(fd, F_SETFL, 0)
-                        bytes.withUnsafeBytes { _ = write(fd, $0.baseAddress, $0.count) }
-                        close(fd)
-                        unlink(fifo)
-                        return
-                    }
-                    usleep(20_000)
-                }
-            }
+            Askpass.startWriter(fifo: fifo, secret: secret) { writer.withLock { $0 } }
         }
         defer {
             writer.withLock { $0 = true }

@@ -98,50 +98,19 @@ public final class SSHTunnelManager {
         return fallback
     }()
 
-    /// Skrypt askpass (bez sekretu — czyta hasło z kolejki FIFO ze zmiennej środowiska): zapisany tylko, gdy go brak albo
-    /// ma inną treść, przez plik tymczasowy z prawami 0700 zamieniony nazwą — równoległe logowanie nigdy nie wykona
-    /// skryptu w trakcie zapisu ani bez prawa wykonania. Ten sam kod w `SSHSession` (PelikanRemote, macOS) i
-    /// `SSHTunnelManager` (PelikanWorkspace, także Linux) — moduły nie mają wspólnej zależności (D209).
-    nonisolated static func installAskpassScript(at path: String) throws {
-        let script = Data("#!/bin/sh\nexec /bin/cat -- \"$PELIKAN_ASKPASS_FIFO\"\n".utf8)
-        if FileManager.default.contents(atPath: path) == script, FileManager.default.isExecutableFile(atPath: path) { return }
-        let temp = path + ".\(UUID().uuidString.prefix(8)).tmp"
-        guard FileManager.default.createFile(atPath: temp, contents: script, attributes: [.posixPermissions: 0o700]) else {
-            throw CocoaError(.fileWriteUnknown)
-        }
-        chmod(temp, 0o700)
-        guard rename(temp, path) == 0 else {
-            unlink(temp)
-            throw CocoaError(.fileWriteUnknown)
-        }
-    }
-
     /// Przygotowuje askpass: skrypt bez sekretu, kolejka FIFO 0600 i wątek, który zapisze hasło raz (albo zakończy się,
     /// gdy `done` zostanie ustawione). Zwraca zmienne środowiska dla `ssh` i funkcję sprzątającą.
     nonisolated static func askpass(secret: String) throws -> (environment: [String: String], cleanup: @Sendable () -> Void) {
+        // Katalog skryptu i kolejki musi być prywatny (także zapasowy z losową nazwą) — inaczej jasny błąd, bez hasła.
+        guard PrivateOwnership.isPrivateDirectory(runDirectory.path) else {
+            throw DatabaseError.driverUnavailable(L10n.tr("Katalog tymczasowy tunelu SSH nie jest prywatny — hasło nie zostanie przekazane"))
+        }
         let askpass = runDirectory.appendingPathComponent("askpass.sh").path
-        try installAskpassScript(at: askpass)
+        try Askpass.installScript(at: askpass)
         let fifo = runDirectory.appendingPathComponent("askpass-\(UUID().uuidString.prefix(8))").path
         guard mkfifo(fifo, 0o600) == 0 else { throw DatabaseError.driverUnavailable(L10n.tr("Nie można utworzyć kolejki dla hasła SSH")) }
         let done = Flag()
-        let bytes = Array((secret + "\n").utf8)
-        Thread.detachNewThread {
-            while !done.isSet {
-                #if canImport(Darwin)
-                let fd = Darwin.open(fifo, O_WRONLY | O_NONBLOCK | O_CLOEXEC)
-                #else
-                let fd = Glibc.open(fifo, O_WRONLY | O_NONBLOCK | O_CLOEXEC)
-                #endif
-                if fd >= 0 {
-                    _ = fcntl(fd, F_SETFL, 0)
-                    bytes.withUnsafeBytes { _ = write(fd, $0.baseAddress, $0.count) }
-                    close(fd)
-                    unlink(fifo)
-                    return
-                }
-                usleep(20_000)
-            }
-        }
+        Askpass.startWriter(fifo: fifo, secret: secret) { done.isSet }
         let env = ["SSH_ASKPASS": askpass, "SSH_ASKPASS_REQUIRE": "force", "DISPLAY": ":0", "PELIKAN_ASKPASS_FIFO": fifo]
         return (env, { done.set(); unlink(fifo) })
     }

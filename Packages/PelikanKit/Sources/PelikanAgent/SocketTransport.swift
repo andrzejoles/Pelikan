@@ -130,7 +130,8 @@ public actor SocketTransport: Transport {
         var st = stat()
         // Własny zwykły plik z prawami dla innych (np. utworzony `touch` przy umask 022) — prawa poprawione na 0600;
         // cudzy albo inny niż zwykły plik — bez zapisu.
-        guard fstat(fd, &st) == 0, PrivateOwnership.ownedByUser(st, type: mode_t(S_IFREG)) else { return }
+        // Jedno dowiązanie (nie twarde dowiązanie do innego pliku użytkownika, np. ~/.zshrc).
+        guard fstat(fd, &st) == 0, PrivateOwnership.ownedByUser(st, type: mode_t(S_IFREG)), st.st_nlink == 1 else { return }
         if st.st_mode & 0o077 != 0, fchmod(fd, 0o600) != 0 { return }
         _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK)
         try? Wire.writeAll(line, to: fd)

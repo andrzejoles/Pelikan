@@ -4,7 +4,6 @@ import Foundation
 import MCP
 @testable import PelikanAgent
 @testable import PelikanBridgeKit
-import PelikanRemote
 import PelikanWorkspace
 import Testing
 
@@ -239,6 +238,10 @@ struct BridgeTransportTests {
         let link = dir.appendingPathComponent("link.log").path
         try FileManager.default.createSymbolicLink(atPath: link, withDestinationPath: path)
         SocketTransport.writeTrace(link, Data("c\n".utf8))
+        // Dowiązanie twarde do innego pliku — bez zapisu.
+        let hard = dir.appendingPathComponent("hard.log").path
+        try FileManager.default.linkItem(atPath: path, toPath: hard)
+        SocketTransport.writeTrace(hard, Data("d\n".utf8))
         #expect(try String(contentsOfFile: path, encoding: .utf8) == "a\n")
     }
 

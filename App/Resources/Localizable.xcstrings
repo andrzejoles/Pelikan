@@ -29373,6 +29373,34 @@
         }
       }
     },
+    "Katalog tymczasowy tunelu SSH nie jest prywatny — hasło nie zostanie przekazane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The SSH tunnel temporary directory is not private — the password will not be passed"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das temporäre Verzeichnis des SSH-Tunnels ist nicht privat — das Passwort wird nicht übergeben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El directorio temporal del túnel SSH no es privado: la contraseña no se transmitirá"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тимчасовий каталог тунелю SSH не є приватним — пароль не буде передано"
+          }
+        }
+      }
+    },
     "Katalogi" : {
       "localizations" : {
         "en" : {

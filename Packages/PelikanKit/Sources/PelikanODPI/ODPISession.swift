@@ -25,8 +25,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     private var nextResultSetID: UInt64 = 1
     /// Zamknięte (true) — chronione blokadą, bo `breakExecution` działa poza kolejką i nie może trafić w zwolniony
     /// uchwyt połączenia w trakcie `close()`.
-    private let closedState = Mutex<Bool>(false)
-    private var closed: Bool { closedState.withLock { $0 } }
+    /// Otwarta, zamykana (ROLLBACK i wylogowanie w toku — Break nadal działa) albo zamknięta (uchwyt zwolniony).
+    private enum State { case open, closing, closed }
+    private let closedState = Mutex<State>(.open)
+    private var closed: Bool { closedState.withLock { $0 != .open } }
 
     private struct OpenResultSet {
         let stmt: OpaquePointer
@@ -244,8 +246,9 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
 
     public func breakExecution() {
         // Celowo poza kolejką: kolejka jest zajęta przez przerywane wywołanie. Blokada wyklucza wyścig z close().
-        closedState.withLock { isClosed in
-            if !isClosed { dpiConn_breakExecution(conn) }
+        // Także w trakcie zamykania: ROLLBACK na zerwanym połączeniu da się przerwać (uchwyt zwalniany dopiero pod blokadą).
+        closedState.withLock { state in
+            if state != .closed { dpiConn_breakExecution(conn) }
         }
     }
 
@@ -260,21 +263,25 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     public func close() async {
         await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
             queue.async { [self] in
-                // Znacznik zamknięcia pod blokadą (Break z wątku interfejsu już nie sięgnie do połączenia; Break w toku
-                // kończy się przed nim), wywołania sieciowe — poza blokadą: ROLLBACK na zerwanym połączeniu czeka na
-                // limit TCP i nie może wstrzymać wątku interfejsu czekającego na blokadę w `breakExecution`.
-                let alreadyClosed = closedState.withLock { isClosed in
-                    defer { isClosed = true }
-                    return isClosed
+                // Stan „zamykana” pod blokadą (nowe wywołania odrzucane), wywołania sieciowe poza nią — ROLLBACK na zerwanym
+                // połączeniu czeka na limit TCP, a Break z wątku interfejsu nie może na to czekać i nadal działa; uchwyt
+                // zwalniany pod blokadą, więc Break w toku kończy się przed nim.
+                let proceed = closedState.withLock { state -> Bool in
+                    guard state == .open else { return false }
+                    state = .closing
+                    return true
                 }
-                if !alreadyClosed {
+                if proceed {
                     for (_, rs) in resultSets { dpiStmt_release(rs.stmt) }
                     resultSets.removeAll()
                     // Sterownik nigdy nie zatwierdza po cichu: decyzję COMMIT/ROLLBACK podejmuje wcześniej interfejs
                     // (D10); tu zostaje bezpieczne ROLLBACK przed zamknięciem.
                     dpiConn_rollback(conn)
                     dpiConn_close(conn, dpiConnCloseMode(DPI_MODE_CONN_CLOSE_DEFAULT), nil, 0)
-                    dpiConn_release(conn)
+                    closedState.withLock { state in
+                        dpiConn_release(conn)
+                        state = .closed
+                    }
                 }
                 cont.resume()
             }
@@ -346,8 +353,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             }
             let columns = try describeColumns(stmt, count: numCols)
             try limitFetchForNestedCursors(stmt, columns: columns)
-            result.resultSet = register(stmt: stmt, columns: columns, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit,
-                                        callTimeoutMs: options.callTimeoutMs)
+            result.resultSet = register(stmt: stmt, columns: columns, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
             keepStmt = true
         } else {
             var count: UInt64 = 0
@@ -371,8 +377,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             result.outBinds[v.bind.name] = try value(native: v.nativeType, oracle: v.oracleType, data: data, typeName: v.bind.type.rawValue, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
         }
         if stmtInfo.isPLSQL != 0 {
-            result.implicitResults = try implicitResults(stmt, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit,
-                                                         callTimeoutMs: options.callTimeoutMs)
+            result.implicitResults = try implicitResults(stmt, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
         }
         result.elapsed = ContinuousClock.now - start
         completed = true
@@ -391,9 +396,9 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         }
     }
 
-    private func register(stmt: OpaquePointer, columns: [ColumnInfo], lobLimit: Int, parent: UInt64? = nil,
-                          callTimeoutMs: UInt32? = nil) -> ResultSetDescriptor {
-        let callTimeoutMs = callTimeoutMs ?? activeCallTimeoutMs
+    /// Wynik dziedziczy limit czasu wywołania w toku (`activeCallTimeoutMs` z `withCallTimeout`).
+    private func register(stmt: OpaquePointer, columns: [ColumnInfo], lobLimit: Int, parent: UInt64? = nil) -> ResultSetDescriptor {
+        let callTimeoutMs = activeCallTimeoutMs
         let id = nextResultSetID
         nextResultSetID += 1
         resultSets[id] = OpenResultSet(stmt: stmt, columns: columns, lobLimit: lobLimit, callTimeoutMs: callTimeoutMs, parent: parent)
@@ -410,14 +415,14 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         try check(dpiStmt_setFetchArraySize(stmt, Self.nestedCursorFetchArraySize))
     }
 
-    private func implicitResults(_ stmt: OpaquePointer, lobLimit: Int, callTimeoutMs: UInt32) throws -> [ResultSetDescriptor] {
+    private func implicitResults(_ stmt: OpaquePointer, lobLimit: Int) throws -> [ResultSetDescriptor] {
         var out: [ResultSetDescriptor] = []
         while true {
             var child: OpaquePointer?
             // Referencja należy już do nas (ODPI-C tworzy instrukcję z licznikiem 1 i sama trzyma rodzica) —
             // bez dpiStmt_addRef, inaczej struktura wyniku i połączenia nie byłyby nigdy zwolnione.
             guard dpiStmt_getImplicitResult(stmt, &child) == DPI_SUCCESS, let child else { break }
-            out.append(register(stmt: child, columns: try describeChild(child), lobLimit: lobLimit, callTimeoutMs: callTimeoutMs))
+            out.append(register(stmt: child, columns: try describeChild(child), lobLimit: lobLimit))
         }
         return out
     }

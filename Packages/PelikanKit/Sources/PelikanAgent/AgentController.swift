@@ -330,25 +330,35 @@ public final class AgentController: AgentInvocationGate {
 
     /// Argumenty do panelu i dziennika: bez kluczy wewnętrznych, z hasłami zamaskowanymi (SECURITY A17), skrócone.
     static func summarize(_ args: CommandArguments) -> String {
-        let visible = args.values.filter { !$0.key.hasPrefix("__") }.mapValues(redacted)
+        // Podgląd przed maskowaniem — duże argumenty (skrypty) bez pełnego przejścia na głównym wątku.
+        let visible = args.values.filter { !$0.key.hasPrefix("__") }.mapValues { redacted(preview($0)) }
         return String(JSONValue.object(visible).description.prefix(500))
     }
 
     /// Fragment wartości do podglądu: napisy najwyżej 2000 znaków, tablice i obiekty najwyżej 20 elementów (głębiej też).
+    /// Długi zagnieżdżony tekst JSON nie jest przycinany (przycięty nie dałby się rozkodować i zamaskować) — w podglądzie
+    /// zastępuje go opis.
     nonisolated static func preview(_ value: JSONValue) -> JSONValue {
         switch value {
-        case .string(let s): s.count > 2000 ? .string(String(s.prefix(2000))) : value
+        case .string(let s) where s.count > 2000:
+            Self.looksLikeJSON(s) ? .string("<tekst JSON, \(s.count) znaków>") : .string(String(s.prefix(2000)))
         case .array(let a): .array(a.prefix(20).map(preview))
         case .object(let o): .object(Dictionary(uniqueKeysWithValues: o.sorted { $0.key < $1.key }.prefix(20).map { ($0.key, preview($0.value)) }))
         default: value
         }
     }
 
+    /// Napis z tekstem JSON (obiekt albo tablica, także po odstępach i znakach nowej linii).
+    nonisolated static func looksLikeJSON(_ s: String) -> Bool {
+        guard let first = s.first(where: { !$0.isWhitespace }) else { return false }
+        return first == "{" || first == "["
+    }
+
     nonisolated static func redacted(_ value: JSONValue) -> JSONValue {
         switch value {
         // Napis z zagnieżdżonym tekstem JSON (np. wynik polecenia jako JSON) — maskowany po rozkodowaniu.
         case .string(let s):
-            if s.first == "{" || s.first == "[", let inner = try? JSONDecoder().decode(JSONValue.self, from: Data(s.utf8)) {
+            if looksLikeJSON(s), let inner = try? JSONDecoder().decode(JSONValue.self, from: Data(s.utf8)) {
                 .string(redacted(inner).description)
             } else {
                 .string(SQLPlusEngine.maskPassword(s))

@@ -3161,6 +3161,14 @@ Linux z wspólnym /tmp) sprawdzany jako własny i prywatny (`PrivateOwnership`, 
 plik śladu MCP z prawami dla innych, ale własny — prawa poprawiane na 0600; panel i dziennik agenta maskują ograniczony
 podgląd wyniku; hasło w niezamkniętym cudzysłowie maskowane tylko do końca linii.
 
+Dziewiąte przejście: kanał hasła askpass (skrypt i wątek zapisu kolejki) w jednym miejscu — `Askpass` w PelikanLog,
+wspólnym dla PelikanRemote i PelikanWorkspace (zastępuje dwie kopie); katalog tunelu sprawdzany przed przekazaniem
+hasła (także zapasowy), inaczej jasny błąd; plik śladu MCP tylko z jednym dowiązaniem (nie twarde dowiązanie do innego
+pliku); podgląd wyniku i argumentów agenta przed maskowaniem (długi zagnieżdżony JSON zastąpiony opisem, nie
+przycinany; JSON rozpoznawany także po odstępach); sesja ODPI w stanie „zamykana” — Break nadal przerywa ROLLBACK na
+zerwanym połączeniu, uchwyt zwalniany pod blokadą; limit czasu wyniku zawsze z `withCallTimeout` (bez osobnych
+parametrów).
+
 Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
 testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
 `RETURNING … BULK COLLECT INTO` w bloku PL/SQL.
