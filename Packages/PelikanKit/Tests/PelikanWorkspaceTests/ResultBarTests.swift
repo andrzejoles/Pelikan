@@ -37,7 +37,13 @@ struct ResultBarTests {
         // Panel wartości — ustawienie widoku dla wszystkich siatek: stan = to, co przełącza komenda.
         ws.valuePanelVisible = true
         #expect(ws.toggleState("grid.valuePanel") == true)
-        #expect(ws.toggleState("edit.formatOnEnter") == ws.settings.beautifier.formatOnEnter)
+        // Stan idzie za ustawieniem w obie strony (nie stała).
+        ws.settings.beautifier.formatOnEnter = false
+        #expect(ws.toggleState("edit.formatOnEnter") == false)
+        ws.settings.beautifier.formatOnEnter = true
+        #expect(ws.toggleState("edit.formatOnEnter") == true)
+        ws.valuePanelVisible = false
+        #expect(ws.toggleState("grid.valuePanel") == false)
         #expect(ws.toggleState("grid.export") == nil)
     }
 

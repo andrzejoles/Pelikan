@@ -125,6 +125,9 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             self.applyVisibility(shown: self.workspace.settings.showRibbon, collapsed: self.workspace.settings.ribbonCollapsed)
         })
         tokens.append(trackChanges { [weak self] in self?.refreshEnabled() })
+        // Zmiana koloru akcentu — jeden obserwator, odświeżane tylko włączone przełączniki (tło w kolorze akcentu).
+        NotificationCenter.default.addObserver(self, selector: #selector(systemColorsChanged),
+                                               name: NSColor.systemColorsDidChangeNotification, object: nil)
         // Czcionka interfejsu z Preferencji (D178): wysokości pasów (R3-13), przebudowa kart i grup.
         tokens.append(trackChanges { [weak self] in
             let f = InterfaceFonts.shared
@@ -297,6 +300,10 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         return s
     }
 
+    @objc private func systemColorsChanged() {
+        for b in buttons where b.toggleState == true { b.systemColorsChanged() }
+    }
+
     private func refreshEnabled() {
         for b in buttons {
             guard let id = b.commandID else { continue }
@@ -314,22 +321,9 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         menu.autoenablesItems = false
         for raw in RibbonModel.expand(commands, in: workspace.registry) {
             if raw == RibbonModel.separator { menu.addItem(.separator()); continue }
-            guard let d = workspace.registry.command(CommandID(rawValue: raw))?.descriptor else { continue }
-            let item = NSMenuItem(title: d.title, action: #selector(menuCommand(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = raw
-            item.toolTip = d.summary
-            item.isEnabled = workspace.isEnabled(d.id)
-            if let on = workspace.toggleState(d.id) { item.state = on ? .on : .off }
-            if let symbol = CommandSymbols.symbol(for: raw) {
-                item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+            if let item = MenuBuilder.commandItem(raw, workspace: workspace, target: self, action: #selector(menuCommand(_:))) {
+                menu.addItem(item)
             }
-            if let chord = workspace.keymap.chords(for: d.id).first(where: { MenuBuilder.keyEquivalent(for: $0) != nil }),
-               let (key, mask) = MenuBuilder.keyEquivalent(for: chord) {
-                item.keyEquivalent = key
-                item.keyEquivalentModifierMask = mask
-            }
-            menu.addItem(item)
         }
         menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 2), in: button)
     }
@@ -539,9 +533,6 @@ final class RibbonButton: NSControl {
         super.init(frame: .zero)
         wantsLayer = true
         layer?.cornerRadius = 5
-        // Zmiana koloru akcentu w Ustawieniach systemowych — tło włączonego przełącznika w nowym kolorze.
-        NotificationCenter.default.addObserver(self, selector: #selector(systemColorsChanged),
-                                               name: NSColor.systemColorsDidChangeNotification, object: nil)
         let config = NSImage.SymbolConfiguration(pointSize: style == .large ? 22 : 13, weight: .regular)
         imageView.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.withSymbolConfiguration(config)
         imageView.contentTintColor = .labelColor
@@ -615,7 +606,8 @@ final class RibbonButton: NSControl {
         updateBackground()
     }
 
-    @objc private func systemColorsChanged() { updateBackground() }
+    /// Zmiana koloru akcentu (Ustawienia systemowe) — od kontrolera wstążki, tylko dla włączonych przełączników.
+    func systemColorsChanged() { updateBackground() }
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()

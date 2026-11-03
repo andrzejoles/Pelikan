@@ -60,9 +60,6 @@ public struct StatementStartMemory: Sendable, Equatable {
     public private(set) var starts: [Int] = []
     var regions: [Int: Region] = [:]
     var checkpoints: [Checkpoint] = []
-    /// Koniec linii z `/` kończącym blok PL/SQL, dla początku polecenia — linia za nim nie jest liczona od punktów bloku.
-    /// Unieważniany zmianą do końca tej linii włącznie (dopisanie czegoś za `/` sprawia, że już nie kończy bloku).
-    var blockEnds: [Int: Int] = [:]
     /// Łączna długość tekstu przeleksowanego przez pamięć (UTF-16) — test, że Enter nie leksuje całego pliku.
     public private(set) var scannedLength = 0
 
@@ -75,7 +72,6 @@ public struct StatementStartMemory: Sendable, Equatable {
             starts.removeSubrange(k...)
         }
         if let k = checkpoints.firstIndex(where: { $0.position >= location }) { checkpoints.removeSubrange(k...) }
-        if blockEnds.values.contains(where: { $0 >= location }) { blockEnds = blockEnds.filter { $0.value < location } }
     }
 
     /// Początek polecenia, w którym leży linia zaczynająca się w `lineStart` (albo sam `lineStart`, gdy poprzednie
@@ -101,8 +97,9 @@ public struct StatementStartMemory: Sendable, Equatable {
     /// Polecenie linii, stan regionów i leksera na jej początku: od ostatniego ważnego punktu kontrolnego (blok PL/SQL
     /// kończy tylko `/` sam w linii) albo podziałem od ostatniego znanego początku polecenia.
     mutating func statement(forLineAt lineStart: Int, in text: NSString) -> (statement: Int, region: Region, normal: Bool) {
+        // Znany początek polecenia między punktem a linią (np. granica za `/`) — blok punktu się skończył: od razu podział.
         if let k = checkpoints.lastIndex(where: { $0.position <= lineStart }),
-           blockEnds[checkpoints[k].statement].map({ $0 >= lineStart }) ?? true {
+           starts.last(where: { $0 <= lineStart }).map({ $0 <= checkpoints[k].position }) ?? true {
             let cp = checkpoints[k]
             var scan = Scan(statement: cp.statement, region: cp.region, unit: cp.unit, checkpointsFrom: cp.position + 1, plsql: true)
             scan.run(text, from: cp.position, to: lineStart, expectSubprogram: cp.subprogram)
@@ -113,13 +110,12 @@ public struct StatementStartMemory: Sendable, Equatable {
             }
             scannedLength += (scan.endPosition ?? scan.stopPosition ?? lineStart) - cp.position
             // Nieaktualny jest tylko ten punkt (linia nie zaczyna już podprogramu). `/` po drodze — linia leży za
-            // blokiem punktu: punkty (także późniejszych jednostek) zostają, koniec bloku zapamiętany (kolejne linie za
-            // nim — od razu podziałem), polecenie wyznacza podział.
+            // blokiem punktu: punkty (także późniejszych jednostek) zostają, polecenie wyznacza podział.
             if scan.stale { checkpoints.remove(at: k) }
             if scan.ended, let end = scan.endLineEnd {
-                blockEnds[cp.statement] = end
-                // Granica podziału za linią z `/` — linie za blokiem (także same odstępy, z których podział nie
-                // tworzy polecenia) dzielone od niej, nie od początku bloku.
+                // Granica podziału za linią z `/` (początek polecenia w `starts`, unieważniany jak inne): linie za
+                // blokiem — także same odstępy, z których podział nie tworzy polecenia — od niej, a punkty bloku
+                // pomijane (warunek wyżej).
                 let next = end + 1
                 if next <= text.length, !starts.contains(next) {
                     starts.insert(next, at: starts.firstIndex { $0 > next } ?? starts.count)
@@ -154,25 +150,26 @@ public struct StatementStartMemory: Sendable, Equatable {
         // Przejście dopisuje punkt ORDER/MAP dopiero przy słowie MEMBER — może trafić za późniejszy punkt co 200 linii;
         // kolejność położeń (w jednym miejscu punkt podprogramu po zwykłym, żeby go zastąpił).
         let new = unsorted.sorted { $0.position < $1.position || $0.position == $1.position && !$0.subprogram && $1.subprogram }
-        // Zwykle: nowe punkty za wszystkimi znanymi (także przy pustej pamięci) — dopisanie z łączeniem tego samego miejsca.
-        if checkpoints.last.map({ l in new[0].position > l.position }) ?? true {
-            for c in new { appendOrMerge(c) }
-            return
-        }
-        var byPosition: [Int: Checkpoint] = [:]
-        for c in checkpoints + new {
-            if let old = byPosition[c.position], old.subprogram || !c.subprogram { continue }
-            byPosition[c.position] = c
-        }
-        checkpoints = byPosition.values.sorted { $0.position < $1.position }
+        // Zwykle nowe punkty leżą za wszystkimi znanymi (dopisanie); wcześniejsze (inna jednostka) — wstawienie
+        // w miejscu z wyszukiwania binarnego, bez przebudowy całej tablicy.
+        for c in new { insertOrMerge(c) }
     }
 
-    private mutating func appendOrMerge(_ c: Checkpoint) {
-        if let last = checkpoints.last, last.position == c.position {
-            if c.subprogram, !last.subprogram { checkpoints[checkpoints.count - 1] = c }
+    private mutating func insertOrMerge(_ c: Checkpoint) {
+        var lo = 0, hi = checkpoints.count
+        if let last = checkpoints.last, last.position < c.position {
+            lo = hi
+        } else {
+            while lo < hi {
+                let mid = (lo + hi) / 2
+                if checkpoints[mid].position < c.position { lo = mid + 1 } else { hi = mid }
+            }
+        }
+        if lo < checkpoints.count, checkpoints[lo].position == c.position {
+            if c.subprogram, !checkpoints[lo].subprogram { checkpoints[lo] = c }
             return
         }
-        checkpoints.append(c)
+        checkpoints.insert(c, at: lo)
     }
 
     /// Liczba linii między pozycjami (najwyżej `limit + 1` — liczenie od końca).

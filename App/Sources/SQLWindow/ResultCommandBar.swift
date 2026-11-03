@@ -249,10 +249,8 @@ final class ResultCommandBar: NSView {
         case "grid.copyAs": format = { $0.displayName }
         default: return nil
         }
-        // Formaty z parametru komendy — te same co w wyborze ze wstążki i dla agenta.
-        let formats = workspace.registry.command(CommandID(rawValue: id))?.descriptor.parameters
-            .first { $0.name == "format" }?.allowedValues?.compactMap(ExportFormat.init(rawValue:)) ?? []
-        guard !formats.isEmpty else { return nil }
+        // Te same listy, z których powstaje parametr komendy (wybór ze wstążki, agent).
+        let formats = id == "grid.export" ? GridCommands.exportFormats : GridCommands.copyAsFormats
         let menu = NSMenu()
         for f in formats {
             let item = menu.addItem(withTitle: format(f), action: #selector(formatChosen(_:)), keyEquivalent: "")
@@ -285,21 +283,8 @@ final class ResultCommandBar: NSView {
     }
 
     private func commandItem(_ raw: String) -> NSMenuItem? {
-        guard let d = workspace.registry.command(CommandID(rawValue: raw))?.descriptor else { return nil }
-        let item = NSMenuItem(title: d.title, action: #selector(menuCommand(_:)), keyEquivalent: "")
-        item.target = self
-        item.representedObject = raw
-        item.toolTip = d.summary
-        item.isEnabled = workspace.isEnabled(d.id)
-        // Stan przełącznika także w menu „»” i listach (jak na przycisku).
-        if let on = localState[raw]?() ?? workspace.toggleState(d.id) ?? viewState(raw) { item.state = on ? .on : .off }
-        if let symbol = CommandSymbols.symbol(for: raw) { item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil) }
-        if let chord = workspace.keymap.chords(for: d.id).first(where: { MenuBuilder.keyEquivalent(for: $0) != nil }),
-           let (key, mask) = MenuBuilder.keyEquivalent(for: chord) {
-            item.keyEquivalent = key
-            item.keyEquivalentModifierMask = mask
-        }
-        return item
+        MenuBuilder.commandItem(raw, workspace: workspace, target: self, action: #selector(menuCommand(_:)),
+                                state: localState[raw]?() ?? workspace.toggleState(CommandID(rawValue: raw)) ?? viewState(raw))
     }
 
     @objc private func menuCommand(_ sender: NSMenuItem) {

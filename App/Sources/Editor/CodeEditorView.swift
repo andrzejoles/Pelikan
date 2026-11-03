@@ -1249,9 +1249,9 @@ final class CodeTextView: NSTextView {
             (NSApp.delegate as? AppDelegate)?.workspace.recordTyping(text)
             return
         }
-        // Nowa linia na końcu nieedytowanej linii przy formatowaniu przy Enter (plan nie powstał — długie polecenie, region
-        // bez formatowania): bez wielkości liter i skrótu — istniejący kod zostaje bez zmian (D205, D208).
-        let untouched = text.first?.isNewline == true && selectedRange().length == 0 && !(lineEdited?(self.string, selectedRange().location) ?? true)
+        // Nowa linia z `insertNewline` na końcu nieedytowanej linii (ustalone tam, przed wyrównaniem Smart, które samo
+        // oznaczyłoby linię jako edytowaną): bez wielkości liter i skrótu — istniejący kod zostaje bez zmian (D205, D208).
+        let untouched = untouchedNewline && text.first?.isNewline == true
         if !formattingEnter, !untouched, keywordCase != .unchanged, let ch = text.unicodeScalars.first, !CharacterSet.alphanumerics.contains(ch), ch != "_", ch != "$", ch != "#" {
             applyKeywordCase()
         }
@@ -1575,6 +1575,9 @@ final class CodeTextView: NSTextView {
     /// Enter z formatowaniem w toku: wielkość liter słowa i AutoReplace są już w planie (krok 0) — `insertText` ich nie
     /// powtarza.
     private var formattingEnter = false
+    /// Zwykły Enter (plan nie powstał — długie polecenie, region bez formatowania) na nieedytowanej linii przy włączonym
+    /// formatowaniu przy Enter — ustalane raz w `insertNewline`, przed jakąkolwiek zmianą linii.
+    private var untouchedNewline = false
 
     override func insertNewline(_ sender: Any?) {
         // Kompozycja znaków (metoda wprowadzania) — Enter należy do niej.
@@ -1582,6 +1585,8 @@ final class CodeTextView: NSTextView {
            insertFormattedNewline(plan, sender) {
             return
         }
+        untouchedNewline = selectedRange().length == 0 && !(lineEdited?(string, selectedRange().location) ?? true)
+        defer { untouchedNewline = false }
         // Wcięcie nowej linii wg trybu (UG 23.12 None / Automatic / Smart, PD-EDIT-004).
         var ns = string as NSString
         let caret = selectedRange().location

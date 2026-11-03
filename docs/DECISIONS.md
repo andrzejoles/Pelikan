@@ -3105,6 +3105,10 @@ wydanie). Poprawione:
   stan widoku rekordu w menu „»” z przycisku; włączony przełącznik na wstążce wyróżniony także przy najechaniu;
   wspólna szerokość tabulatora dokumentu (`Beautifier.documentTabWidth`); bez powtórzonej listy wyrażeń w menu
   kontekstowym siatki.
+- **Siódme przejście:** koniec bloku wyprowadzany z samego `starts` (granica za linią z `/` — początek polecenia
+  unieważniany jak inne; bez osobnej struktury); punkty kontrolne wstawiane wyszukiwaniem binarnym; nieedytowana linia
+  ustalana raz w `insertNewline`, przed wyrównaniem Smart; jedna funkcja pozycji menu komendy
+  (`MenuBuilder.commandItem`); jeden obserwator koloru akcentu na wstążce.
 - **AutoReplace i wielkość liter przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** przy włączonym
   formatowaniu przy Enter obie zmiany słowa przed kursorem działają tylko w linii edytowanej — także w zwykłym Enterze,
   gdy plan nie powstał (jedno miejsce reguły: `insertText` dla znaku nowej linii pyta `lineEdited`). Skrót albo słowo

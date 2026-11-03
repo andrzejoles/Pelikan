@@ -202,6 +202,25 @@ final class MenuBuilder: NSObject, NSMenuItemValidation, NSMenuDelegate {
     }
 
     /// KeyChord → keyEquivalent NSMenuItem (F-klawisze przez NSF1FunctionKey…).
+    /// Pozycja menu komendy poza menu głównym (listy wstążki, menu paska wyniku): tytuł, opis, dostępność, stan
+    /// przełącznika (`state`, domyślnie z rejestru), symbol i skrót. `representedObject` — identyfikator komendy.
+    static func commandItem(_ raw: String, workspace: Workspace, target: AnyObject, action: Selector, state: Bool? = nil) -> NSMenuItem? {
+        guard let d = workspace.registry.command(CommandID(rawValue: raw))?.descriptor else { return nil }
+        let item = NSMenuItem(title: d.title, action: action, keyEquivalent: "")
+        item.target = target
+        item.representedObject = raw
+        item.toolTip = d.summary
+        item.isEnabled = workspace.isEnabled(d.id)
+        if let on = state ?? workspace.toggleState(d.id) { item.state = on ? .on : .off }
+        if let symbol = CommandSymbols.symbol(for: raw) { item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil) }
+        if let chord = workspace.keymap.chords(for: d.id).first(where: { keyEquivalent(for: $0) != nil }),
+           let (key, mask) = keyEquivalent(for: chord) {
+            item.keyEquivalent = key
+            item.keyEquivalentModifierMask = mask
+        }
+        return item
+    }
+
     static func keyEquivalent(for chord: KeyChord) -> (String, NSEvent.ModifierFlags)? {
         var mask: NSEvent.ModifierFlags = []
         if chord.modifiers.contains(.command) { mask.insert(.command) }
