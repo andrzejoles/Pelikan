@@ -6,7 +6,7 @@ import FoundationNetworking
 import Testing
 
 /// Serwer MCP podstawiony w `URLProtocol`: odpowiada na initialize i tools/call strumieniem SSE, zapisuje żądania.
-final class FakeDocsServer: URLProtocol, @unchecked Sendable {
+final class FakeDocsServer: URLProtocol {
     nonisolated(unsafe) static var requests: [[String: Any]] = []
     nonisolated(unsafe) static var sessionHeaders: [String?] = []
     static let lock = NSLock()
