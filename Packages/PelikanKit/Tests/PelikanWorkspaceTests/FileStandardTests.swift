@@ -76,20 +76,33 @@ struct FileStandardTests {
         #expect(try Data(contentsOf: u) == Data("create package p is\nend;\ncreate package body p is\nend;\n".utf8))
     }
 
-    @Test("Kodowanie z projektu (D55) nie jest odstępstwem i zostaje po konwersji")
-    func projectEncoding() throws {
+    @Test("Pro*C w Windows-1250 i ISO-8859-2 (także w projekcie z kodowaniem): odstępstwo, konwersja zapisuje te same litery w UTF-8")
+    func convertsSingleByteToUTF8() throws {
         let d = try dir()
         defer { try? FileManager.default.removeItem(at: d) }
         let ws = Workspace()
         ws.project = Project(name: "pc")
         ws.project?.options.encoding = "ISO-8859-2"
         ws.projectURL = d.appendingPathComponent("pc.prj")
-        let u = d.appendingPathComponent("a.sql")
-        try Data([0x7A, 0xB1, 0x0A]).write(to: u)
-        let doc = try ws.openFile(u)
-        #expect(doc.fileFormat.encoding == .isoLatin2 && ws.fileStandardIssues(doc).isEmpty)
-        ws.conformToFileStandard(doc)
-        #expect(doc.fileFormat.encoding == .isoLatin2)
+        let expected = "/* Jędrzej Raczyński: porządki, ilości, źle — ĄŚŹ żółć */\nint x;\n"
+        let samples: [(String, String.Encoding)] = [("cp.pc", .windowsCP1250), ("l2.pc", .isoLatin2)]
+        for (name, enc) in samples {
+            let u = d.appendingPathComponent(name)
+            // „—” nie istnieje w ISO-8859-2 — próbka ISO-8859-2 ma zamiast niego „-”.
+            let text = enc == .isoLatin2 ? expected.replacingOccurrences(of: "—", with: "-") : expected
+            try #require(text.data(using: enc)).write(to: u)
+            let doc = try ws.openFile(u)
+            #expect(doc.text == text && doc.fileFormat.encoding == enc, "\(name)")
+            #expect(ws.fileStandardIssues(doc).contains { if case .encoding = $0 { true } else { false } }, "\(name)")
+            ws.conformToFileStandard(doc)
+            #expect(doc.fileFormat.encoding == .utf8 && !doc.fileFormat.hasBOM && ws.fileStandardIssues(doc).isEmpty)
+            try ws.save(doc, to: u)
+            #expect(try Data(contentsOf: u) == Data(text.utf8), "\(name)")
+        }
+        // Bajt niezdefiniowany w Windows-1250 (0x81) nie psuje odczytu reszty pliku.
+        let odd = d.appendingPathComponent("odd.pc")
+        try Data([0x9C, 0x81, 0x0A]).write(to: odd)
+        #expect(try ws.openFile(odd).text == "ś\u{81}\n")
     }
 
     @Test("Pytanie przy otwarciu: Konwertuj / Zostaw, po kolei; bez pytania przy przywracaniu i gdy wyłączone")

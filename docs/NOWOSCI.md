@@ -7,7 +7,10 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
 - **Standard plików (Ustawienia › Ogólne):** domyślnie UTF-8 bez BOM, pliki programów bez linii „/”. Nowe okna zapisują
   się w standardzie, a otwarcie pliku w innym kodowaniu, z BOM albo z „/” w pliku programu pyta o konwersję
   (Konwertuj / Zostaw bez zmian, „Nie pytaj więcej”). Konwersja zmienia okno — plik zmienia się przy zapisie. Skrypty
-  `.sql` zachowują „/”, a pliki projektu z ustawionym kodowaniem — swoje kodowanie.
+  `.sql` zachowują „/”.
+- **Pro*C w UTF-8:** pliki Pro*C i inne pliki projektu w Windows-1250 albo ISO-8859-2 też dostają pytanie o konwersję
+  do UTF-8, a polskie litery zostają poprawne. Kodowanie rozpoznaje się po literach ą ś ź, a kodowanie ustawione
+  w projekcie nie przekłamuje już plików UTF-8 ani Windows-1250.
 - **Listy wyboru zamiast wpisywania:** pola ustawień (formaty dat, NLS, ostrzeżenia kompilatora, PL/Scope, konwencje
   nazw, rozszerzenia, statystyki, wzorce połączeń, programy zewnętrzne…), okno połączenia (aliasy TNS, użytkownicy,
   hosty i klucze SSH z `~/.ssh`) i cele SSH Pro*C mają przycisk ▾ z podpowiedziami; wartość można nadal wpisać ręcznie.

@@ -100,17 +100,16 @@ public enum SlashLines {
 }
 
 extension Workspace {
-    /// Odstępstwa okna od standardu plików. Kodowanie pliku z projektu z ustawionym kodowaniem (D55) nie jest
-    /// sprawdzane — o kodowaniu takiego pliku rozstrzyga projekt.
+    /// Odstępstwa okna od standardu plików. Dotyczy też plików projektu z ustawionym kodowaniem (np. źródeł Pro*C,
+    /// D213) — kodowanie projektu mówi, jak plik czytać, a standard — jak go zapisać.
     public func fileStandardIssues(_ doc: Document) -> [FileStandardIssue] {
         guard [.sql, .program].contains(doc.kind) else { return [] }
         let std = settings.fileStandard
         let formats: [(format: TextFileFormat, url: URL?)] = doc.unitFiles.isEmpty
             ? [(doc.fileFormat, doc.fileURL)] : doc.unitFiles.map { ($0.format, $0.url) }
         var issues: [FileStandardIssue] = []
-        for (f, url) in formats {
-            let projectRules = url.map { projectEncoding(for: $0) != nil } ?? false
-            if !projectRules, f.encoding != std.textEncoding {
+        for (f, _) in formats {
+            if f.encoding != std.textEncoding {
                 let name = f.displayName.components(separatedBy: " · ").first.map { $0.replacingOccurrences(of: " BOM", with: "") } ?? ""
                 if !issues.contains(.encoding(name)) { issues.append(.encoding(name)) }
             } else if f.encoding == .utf8, f.hasBOM != std.usesBOM, !issues.contains(.byteOrderMark(f.hasBOM)) {
@@ -125,16 +124,17 @@ extension Workspace {
     }
 
     /// Konwersja okna do standardu: kodowanie i BOM zapisu (także obu plików okna pary) i usunięcie linii „/” z pliku
-    /// programu. Zmienia okno, nie plik — zapis jak po każdej edycji (⌘S).
+    /// programu. Zmienia okno, nie plik — zapis jak po każdej edycji (⌘S). Tekst okna jest już odczytany w kodowaniu
+    /// pliku (`TextFileCodec.decode`), więc zapis w UTF-8 zachowuje każdą literę.
     public func conformToFileStandard(_ doc: Document) {
         let std = settings.fileStandard
-        func apply(_ f: inout TextFileFormat, _ url: URL?) {
-            if !(url.map { projectEncoding(for: $0) != nil } ?? false) { f.encoding = std.textEncoding }
+        func apply(_ f: inout TextFileFormat) {
+            f.encoding = std.textEncoding
             f.hasBOM = f.encoding == .utf8 && std.usesBOM
         }
-        apply(&doc.fileFormat, doc.fileURL)
+        apply(&doc.fileFormat)
         for i in doc.unitFiles.indices {
-            apply(&doc.unitFiles[i].format, doc.unitFiles[i].url)
+            apply(&doc.unitFiles[i].format)
             doc.unitFiles[i].needsRewrite = true
         }
         if doc.kind == .program, std.slashFreePrograms {
