@@ -3145,6 +3145,11 @@ wydanie). Poprawione:
   przebudowa wstążki poza śledzeniem (zamiast obejść przez `async`); słowo podprogramu z leksera, ta sama reguła co
   w przejściu (`procedure_cnt` to identyfikator); odczyty z magazynu tekstu bez kopii dokumentu; jedno wstawianie
   początków poleceń (`insertStart`); pozycja menu komendy ze stanem z rejestru, pasek wyniku nadpisuje własnym.
+- **Piętnaste przejście:** pisanie wieloma kursorami — zmiana przy każdym kursorze osobno (zmienione zakresy tylko
+  w ich miejscach, nie na wszystkich liniach między nimi); słowa podprogramu według rodzaju jednostki (MAP w ciele
+  pakietu to identyfikator); śledzenie stanu przycisków wstążki od nowa po każdej przebudowie; nowa linia rozpoznawana
+  tym samym zbiorem separatorów co w `EditedRanges` (bez VT i FF); wielkość liter po wpisaniu znaku tą samą najmniejszą
+  zmianą co krok 0 Entera.
 - **AutoReplace i wielkość liter przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** przy włączonym
   formatowaniu przy Enter obie zmiany słowa przed kursorem działają tylko w linii edytowanej — także w zwykłym Enterze,
   gdy plan nie powstał (jedno miejsce reguły: `insertText` dla znaku nowej linii pyta `lineEdited`). Skrót albo słowo

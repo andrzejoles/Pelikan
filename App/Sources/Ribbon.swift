@@ -127,7 +127,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             guard let self else { return }
             self.applyVisibility(shown: self.workspace.settings.showRibbon, collapsed: self.workspace.settings.ribbonCollapsed)
         })
-        tokens.append(trackChanges { [weak self] in self?.refreshEnabled() })
+        rearmRefresh()
         // Zmiana koloru akcentu — jeden obserwator, odświeżane tylko włączone przełączniki (tło w kolorze akcentu).
         NotificationCenter.default.addObserver(self, selector: #selector(systemColorsChanged),
                                                name: NSColor.systemColorsDidChangeNotification, object: nil)
@@ -225,7 +225,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             }
             groupStack.addArrangedSubview(groupView(group))
         }
-        refreshEnabled()
+        rearmRefresh()
         // Nowa karta — od początku (D206).
         contentStrip.scrollToStart()
     }
@@ -314,6 +314,14 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
 
     @objc private func systemColorsChanged() {
         for b in buttons where b.toggleState == true { b.systemColorsChanged() }
+    }
+
+    /// Śledzenie dostępności i stanu przycisków — od nowa po każdej przebudowie (nowe przyciski mają inne zależności).
+    private var refreshToken: ObservationToken?
+
+    private func rearmRefresh() {
+        refreshToken?.cancel()
+        refreshToken = trackChanges { [weak self] in self?.refreshEnabled() }
     }
 
     /// Czcionka interfejsu, dla której zbudowano wstążkę.

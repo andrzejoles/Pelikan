@@ -353,6 +353,9 @@ struct BeautifierEnterTests {
         // Identyfikator zaczynający się od słowa podprogramu (`procedure_cnt`) to nie podprogram.
         #expect(!StatementStartMemory.startsSubprogram("  procedure_cnt := 0;" as NSString, at: 0))
         #expect(StatementStartMemory.startsSubprogram("  procedure p is" as NSString, at: 0))
+        // MAP w ciele pakietu to identyfikator (w ciele typu — początek podprogramu).
+        #expect(!StatementStartMemory.startsSubprogram("  map := 1;" as NSString, at: 0))
+        #expect(StatementStartMemory.startsSubprogram("  map member function f return number is" as NSString, at: 0, typeBody: true))
     }
 
     @Test("pamięć: punkty z przejścia nie po kolei (ORDER/MAP dopisany przy MEMBER) — scalane rosnąco")

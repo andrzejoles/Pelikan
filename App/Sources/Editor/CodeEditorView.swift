@@ -1249,7 +1249,9 @@ final class CodeTextView: NSTextView {
         // oznaczyłoby linię jako edytowaną): bez wielkości liter i skrótu — istniejący kod zostaje bez zmian (D205, D208).
         let untouched: Bool = {
             // Tanie warunki najpierw: bez wielkości liter i skrótów wynik i tak nic nie zmienia (bez kopii dokumentu).
-            guard !formattingEnter, text.first?.isNewline == true, let lineEdited else { return false }
+            // Separatory linii jak w `EditedRanges` i `NSString.lineRange` (nie VT ani FF).
+            guard !formattingEnter, let s = text.unicodeScalars.first, [0x0A, 0x0D, 0x2028, 0x2029, 0x85].contains(s.value),
+                  let lineEdited else { return false }
             let rules = (NSApp.delegate as? AppDelegate)?.workspace.settings.autoReplace ?? []
             guard keywordCase != .unchanged || !rules.isEmpty else { return false }
             if let decided = untouchedNewline { return decided }
@@ -1288,15 +1290,24 @@ final class CodeTextView: NSTextView {
         let ranges = selectedRanges.map(\.rangeValue).map { $0.location..<($0.location + $0.length) }
         let old = string   // jedna kopia dokumentu
         let result = edit(old, ranges)
-        // Najmniejsza zmiana (ta sama funkcja co przy Enterze — jednostki UTF-16, bez dzielenia par zastępczych).
-        guard let change = FormatOnEnter.Edit.minimal(at: 0, old: old, new: result.text) else {
-            selectedRanges = result.ranges.map { NSValue(range: NSRange(location: $0.lowerBound, length: $0.count)) }
-            return
+        // Zmiana przy każdym kursorze osobno (od ostatniego) — zmienione zakresy, cofanie i kolorowanie obejmują tylko
+        // miejsca kursorów, nie wszystkie linie między nimi; gdy złożenie się nie zgadza — jedna najmniejsza zmiana.
+        var current = old
+        var steps: [FormatOnEnter.Edit] = []
+        for r in ranges.sorted(by: { $0.lowerBound > $1.lowerBound }) {
+            let single = edit(current, [r]).text
+            if let step = FormatOnEnter.Edit.minimal(at: 0, old: current, new: single) { steps.append(step) }
+            current = single
         }
-        let range = NSRange(location: change.range.lowerBound, length: change.range.count)
-        guard shouldChangeText(in: range, replacementString: change.text) else { return }
-        replaceCharacters(in: range, with: change.text)
-        didChangeText()
+        if !current.utf16.elementsEqual(result.text.utf16) {
+            steps = FormatOnEnter.Edit.minimal(at: 0, old: old, new: result.text).map { [$0] } ?? []
+        }
+        for step in steps {
+            let range = NSRange(location: step.range.lowerBound, length: step.range.count)
+            guard shouldChangeText(in: range, replacementString: step.text) else { return }
+            replaceCharacters(in: range, with: step.text)
+            didChangeText()
+        }
         selectedRanges = result.ranges.map { NSValue(range: NSRange(location: $0.lowerBound, length: $0.count)) }
     }
 
@@ -1424,7 +1435,8 @@ final class CodeTextView: NSTextView {
         let line = ns.substring(with: NSRange(location: lineStart, length: caret - lineStart))
         // Ta sama reguła co w kroku 0 Entera z formatowaniem (D205).
         guard let cased = FormatOnEnter.keywordCaseLine(line, keywordCase),
-              let edit = FormatOnEnter.Edit.minimal(at: lineStart, old: line, new: cased) else { return }
+              // Ta sama najmniejsza zmiana co w kroku 0 Entera (bez wspólnego końca — całe słowo).
+              let edit = FormatOnEnter.Edit.minimal(at: lineStart, old: line, new: cased, suffix: false) else { return }
         // Tylko samo słowo — nie cały początek linii (cofanie, kolorowanie i znaczniki od słowa).
         let r = NSRange(location: edit.range.lowerBound, length: edit.range.count)
         if shouldChangeText(in: r, replacementString: edit.text) {

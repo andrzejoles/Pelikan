@@ -113,7 +113,7 @@ public struct StatementStartMemory: Sendable, Equatable {
             let cp = checkpoints[k]
             // Punkt podprogramu dokładnie na początku linii — przejście jest puste, więc słowo linii sprawdzane osobno
             // (linia zmieniona za wcięciem nie unieważnia punktu, a mogła przestać zaczynać podprogram).
-            if cp.subprogram, cp.position == lineStart, !Self.startsSubprogram(text, at: lineStart) {
+            if cp.subprogram, cp.position == lineStart, !Self.startsSubprogram(text, at: lineStart, typeBody: cp.unit?.typeBody == true) {
                 checkpoints.remove(at: k)
                 continue
             }
@@ -199,13 +199,11 @@ public struct StatementStartMemory: Sendable, Equatable {
         return i > 0 ? i - 1 : nil
     }
 
-    /// Indeks ostatniego znanego początku polecenia nie dalej niż `p`.
-    func lastStartIndex(atOrBefore p: Int) -> Int? {
+    /// Ostatni znany początek polecenia nie dalej niż `p`.
+    func lastStart(atOrBefore p: Int) -> Int? {
         let i = Self.partition(starts) { $0 <= p }
-        return i > 0 ? i - 1 : nil
+        return i > 0 ? starts[i - 1] : nil
     }
-
-    func lastStart(atOrBefore p: Int) -> Int? { lastStartIndex(atOrBefore: p).map { starts[$0] } }
 
     /// Początek polecenia w kolejności, bez powtórzeń (`region` — stan regionów w tym miejscu, gdy znany).
     mutating func insertStart(_ s: Int, region: Region? = nil) {
@@ -217,14 +215,14 @@ public struct StatementStartMemory: Sendable, Equatable {
 
     /// Czy linia od `position` zaczyna się słowem podprogramu — ta sama reguła co sprawdzenie w przejściu (`Scan`):
     /// pierwszy token leksera (`procedure_cnt` to identyfikator, nie PROCEDURE) w zbiorze słów obu rodzajów jednostek.
-    static func startsSubprogram(_ text: NSString, at position: Int) -> Bool {
+    static func startsSubprogram(_ text: NSString, at position: Int, typeBody: Bool = false) -> Bool {
         var end = position
         while end < text.length, ![0x0A, 0x0D].contains(text.character(at: end)) { end += 1 }
         let line = text.substring(with: NSRange(location: position, length: end - position))
         let lexer = Lexer(line)
         guard let first = lexer.tokenize().first(where: { $0.kind != .whitespace }),
               first.kind == .keyword || first.kind == .identifier else { return false }
-        return Scan.packageStarters.union(Scan.typeStarters).contains(lexer.string(first).uppercased())
+        return Scan.starters(typeBody: typeBody).contains(lexer.string(first).uppercased())
     }
 
     /// Liczba linii między pozycjami (najwyżej `limit + 1` — liczenie od końca).
@@ -267,6 +265,9 @@ public struct StatementStartMemory: Sendable, Equatable {
 
         static let packageStarters: Set<String> = ["PROCEDURE", "FUNCTION"]
         static let typeStarters: Set<String> = ["PROCEDURE", "FUNCTION", "MEMBER", "STATIC", "CONSTRUCTOR", "MAP", "ORDER", "OVERRIDING", "FINAL"]
+        /// Słowa zaczynające podprogram jednostki: w ciele pakietu tylko PROCEDURE/FUNCTION (MAP, MEMBER… to tam zwykłe
+        /// identyfikatory).
+        static func starters(typeBody: Bool) -> Set<String> { typeBody ? typeStarters : packageStarters }
         static let createModifiers: Set<String> = ["OR", "REPLACE", "EDITIONABLE", "NONEDITIONABLE", "FORCE", "NOFORCE"]
 
         mutating func run(_ text: NSString, from: Int, to: Int, expectSubprogram: Bool) {
@@ -309,7 +310,7 @@ public struct StatementStartMemory: Sendable, Equatable {
                 let word = t.kind == .keyword || t.kind == .identifier ? lexer.string(t).uppercased() : ""
                 if !checkedFirst {
                     checkedFirst = true
-                    if !(Self.packageStarters.union(Self.typeStarters)).contains(word) {
+                    if !Self.starters(typeBody: unit?.typeBody == true).contains(word) {
                         stale = true
                         stopPosition = pos
                         return
