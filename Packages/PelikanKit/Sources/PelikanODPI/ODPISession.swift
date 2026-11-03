@@ -28,8 +28,9 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     /// Otwarta; zamykana: ROLLBACK (Break go przerywa), wylogowanie (Break nic nie robi — uchwyty OCI są zwalniane);
     /// zamknięta.
     private enum State { case open, rollingBack, ending, closed }
-    private let closedState = Mutex<State>(.open)
-    private var closed: Bool { closedState.withLock { $0 != .open } }
+    private let lifecycle = Mutex<State>(.open)
+    /// Sesja nie przyjmuje już wywołań (zamykana albo zamknięta).
+    private var closed: Bool { lifecycle.withLock { $0 != .open } }
 
     private struct OpenResultSet {
         let stmt: OpaquePointer
@@ -79,7 +80,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     }
 
     deinit {
-        if closedState.withLock({ $0 == .open }) {
+        if lifecycle.withLock({ $0 == .open }) {
             for (_, rs) in resultSets { dpiStmt_release(rs.stmt) }
             dpiConn_release(conn)
         }
@@ -249,7 +250,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         // Celowo poza kolejką: kolejka jest zajęta przez przerywane wywołanie. Blokada wyklucza wyścig z close().
         // Także w trakcie ROLLBACK przy zamykaniu (na zerwanym połączeniu czeka na limit TCP); w trakcie wylogowania — nic
         // (uchwyty OCI zwalniane). Blokada trzymana tylko na czas samego przerwania — szybkie, wątek interfejsu nie czeka.
-        closedState.withLock { state in
+        lifecycle.withLock { state in
             if state == .open || state == .rollingBack { dpiConn_breakExecution(conn) }
         }
     }
@@ -268,7 +269,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                 // Stan pod blokadą, wywołania sieciowe poza nią (ROLLBACK i wylogowanie na zerwanym połączeniu czekają na
                 // limit TCP — wątek interfejsu w `breakExecution` nie może na to czekać). Przejście do wylogowania pod
                 // blokadą czeka na ewentualny Break w toku, potem Break już nie sięga do uchwytów.
-                let proceed = closedState.withLock { state -> Bool in
+                let proceed = lifecycle.withLock { state -> Bool in
                     guard state == .open else { return false }
                     state = .rollingBack
                     return true
@@ -279,10 +280,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                     // Sterownik nigdy nie zatwierdza po cichu: decyzję COMMIT/ROLLBACK podejmuje wcześniej interfejs
                     // (D10); tu zostaje bezpieczne ROLLBACK przed zamknięciem.
                     dpiConn_rollback(conn)
-                    closedState.withLock { $0 = .ending }
+                    lifecycle.withLock { $0 = .ending }
                     dpiConn_close(conn, dpiConnCloseMode(DPI_MODE_CONN_CLOSE_DEFAULT), nil, 0)
                     dpiConn_release(conn)
-                    closedState.withLock { $0 = .closed }
+                    lifecycle.withLock { $0 = .closed }
                 }
                 cont.resume()
             }
@@ -447,7 +448,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     /// Limit czasu wywołania na czas `body` (0 — bez limitu): ustawiany na połączeniu, dziedziczony przez kursory
     /// otwarte w tym czasie (`activeCallTimeoutMs`), potem zdejmowany — COMMIT, ROLLBACK i ping go nie mają.
     private func withCallTimeout<T>(_ ms: UInt32, _ body: () throws -> T) throws -> T {
-        if ms != 0 { try check(dpiConn_setCallTimeout(conn, ms)) }
+        // Zawsze ustawiany (także 0): limit z poprzedniego wywołania nie zostaje, gdy jego zdjęcie się nie udało.
+        try check(dpiConn_setCallTimeout(conn, ms))
         activeCallTimeoutMs = ms
         defer {
             if ms != 0 { dpiConn_setCallTimeout(conn, 0) }

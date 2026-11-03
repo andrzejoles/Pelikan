@@ -168,7 +168,8 @@ public final class SQLPlusEngine {
             .replacingOccurrences(of: #"(?i)(identified\s+by\s+\*{8}\s+replace\s+)("[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)
     }
 
-    nonisolated static let connectPattern = try! NSRegularExpression(pattern: #"(?im)^\s*conn(ect)?\s+[^\s/]*/"#)
+    /// CONN, CONNE, CONNEC, CONNECT — każdy skrót, który przyjmuje okno poleceń (co najmniej 4 litery).
+    nonisolated static let connectPattern = try! NSRegularExpression(pattern: #"(?im)^\s*conn(e(c(t)?)?)?\s+[^\s/]*/"#)
 
     /// Czy tekst z linii poleceń (karta Dialog) to całe polecenie: SQL*Plus — od razu, SQL — po „;”,
     /// PL/SQL — po linii „/” (albo „.” kończącej bez wykonania), jak w SQL*Plus.

@@ -45,6 +45,9 @@ struct OracleNetTests {
         // Istniejąca sekcja SECURITY — portfel dopisany do niej, bez drugiej sekcji.
         let adb = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=h)(PORT=1522))(CONNECT_DATA=(SERVICE_NAME=s))(security=(ssl_server_dn_match=yes)))"
         let merged = TNSNames.resolveForConnection(adb, configDirectory: nil, walletDirectory: "/w")
+        let spaced = TNSNames.resolveForConnection("(DESCRIPTION = (ADDRESS = (PROTOCOL = TCPS)(HOST = h))\n (SECURITY = (SSL_SERVER_DN_MATCH = YES)))", configDirectory: nil, walletDirectory: "/w")
+        #expect(spaced.components(separatedBy: "(SECURITY=").count == 2)
+        #expect(TNSNames.applyTokenAuth("(DESCRIPTION = (ADDRESS = (HOST = h)) (SECURITY = (X = 1)))", parameters: [("TOKEN_AUTH", "OAUTH")])?.components(separatedBy: "(SECURITY=").count == 2)
         #expect(merged.components(separatedBy: "(security=").count == 2 && !merged.contains("(SECURITY=") && merged.contains("(MY_WALLET_DIRECTORY=/w)"))
         #expect(TNSNames.applyTokenAuth("h:1521/s", parameters: [("TOKEN_LOCATION", "/a b/t")]) == "h:1521/s?token_location=\"/a b/t\"")
         #expect(TNSNames.applyTokenAuth("(DESCRIPTION=(ADDRESS=(HOST=h)))", parameters: [("TOKEN_LOCATION", "/a b")])?.contains("(TOKEN_LOCATION=\"/a b\")") == true)

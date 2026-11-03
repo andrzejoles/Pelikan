@@ -3185,6 +3185,13 @@ nieobsługiwany typ kolumny) — inaczej niż nieotwarty REF CURSOR w zmiennej O
 tabela kosztów JSON (`jsonCost`) zostaje — koder SDK nie zamienia znaków spoza ASCII ani U+2028 na `\uXXXX`, a `/`
 liczony z zapasem; nadmiarową ramkę i tak zastępuje `SocketTransport.fittingFrame`.
 
+Dwunaste przejście: maskowanie każdego skrótu CONNECT, który przyjmuje okno poleceń (CONN, CONNE, CONNEC); sekcja
+SECURITY szukana w deskryptorze bez odstępów (wklejony wieloliniowy deskryptor); sygnały `kill` przy zatrzymaniu nie
+są ponawiane po zerwaniu (PID mógł już należeć do innego procesu) — ponawiane tylko odpytywanie; katalog gniazda
+agentów bez końcowego ukośnika (kontrola dowiązania), katalogi nadrzędne z 0700; limit czasu wywołania ustawiany
+zawsze (także 0); serializacja wyniku narzędzia poza głównym wątkiem; stan sesji ODPI jako `lifecycle`. Rozstrzygnięte:
+ślad MCP tylko do zwykłego pliku (nie `/dev/stderr` ani FIFO) — świadomie, ślad zawiera dane z bazy.
+
 Rozstrzygnięte bez zmiany: **RETURNING INTO wielu wierszy** — zmienna wiązana (VARIABLE w SQL*Plus, zmienna okna
 testu) przechowuje jedną wartość, więc dostaje wartość z pierwszego zmienionego wiersza; wiele wartości daje
 `RETURNING … BULK COLLECT INTO` w bloku PL/SQL.

@@ -240,10 +240,13 @@ public final class AgentController: AgentInvocationGate {
         let index: () -> Int? = { [weak self] in self?.activities.lastIndex { $0.id == activityID } }
         do {
             let result = try await workspace.invoke(commandID, args, invoker: session.invoker)
-            let text = result.value.map { $0.description } ?? result.message ?? "ok"
-            // Liczenie długości po kodowaniu (do kilku MB) poza głównym wątkiem.
-            let untrusted = result.value?["untrusted_content"] == .bool(true)
-            let content = await Task.detached { Self.limitedContent(text, untrusted: untrusted) }.value
+            // Serializacja i liczenie długości po kodowaniu (do kilku MB) poza głównym wątkiem.
+            let value = result.value, message = result.message
+            let untrusted = value?["untrusted_content"] == .bool(true)
+            let (text, content) = await Task.detached { () -> (String, [Tool.Content]) in
+                let text = value.map { $0.description } ?? message ?? "ok"
+                return (text, Self.limitedContent(text, untrusted: untrusted))
+            }.value
             // Wynik z hasłem (np. echo polecenia CREATE USER … IDENTIFIED BY) nie trafia do panelu ani dziennika.
             // Maskowanie na rozkodowanych wartościach (tekst wyniku to JSON — w nim `\n` jest zapisane, nie jest końcem linii).
             // Do panelu i dziennika trafia początek — maskowany ograniczony fragment wartości (długie napisy i tablice
@@ -342,7 +345,8 @@ public final class AgentController: AgentInvocationGate {
         case .string(let s) where s.utf8.count > 2000:
             Self.looksLikeJSON(s) ? .string(L10n.tr("<tekst JSON, \(s.utf8.count) bajtów>")) : .string(String(s.prefix(2000)))
         case .array(let a): .array(a.prefix(20).map(preview))
-        case .object(let o): .object(Dictionary(uniqueKeysWithValues: o.sorted { $0.key < $1.key }.prefix(20).map { ($0.key, preview($0.value)) }))
+        // Dowolne 20 kluczy (bez sortowania całego obiektu).
+        case .object(let o): .object(Dictionary(uniqueKeysWithValues: o.prefix(20).map { ($0.key, preview($0.value)) }))
         default: value
         }
     }

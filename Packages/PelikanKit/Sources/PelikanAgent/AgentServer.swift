@@ -41,7 +41,9 @@ public final class AgentServer: @unchecked Sendable {
     }
 
     public func start() throws {
-        let dir = socketURL.deletingLastPathComponent().path(percentEncoded: false)
+        // Bez końcowego ukośnika — z nim `lstat` podąża za dowiązaniem i kontrola „nie dowiązanie” by nie zadziałała.
+        var dir = socketURL.deletingLastPathComponent().path(percentEncoded: false)
+        while dir.count > 1, dir.hasSuffix("/") { dir.removeLast() }
         try Self.prepareDirectory(dir)
         let path = socketURL.path(percentEncoded: false)
         unlink(path)
@@ -98,7 +100,7 @@ public final class AgentServer: @unchecked Sendable {
     static func prepareDirectory(_ dir: String) throws {
         // Katalog nadrzędny (Application Support) tworzony zwykle; sam katalog — wspólną regułą katalogu prywatnego.
         let parent = (dir as NSString).deletingLastPathComponent
-        try FileManager.default.createDirectory(atPath: parent, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(atPath: parent, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         guard PrivateOwnership.ensurePrivateDirectory(dir) else { throw StartError.insecureDirectory(dir) }
     }
 

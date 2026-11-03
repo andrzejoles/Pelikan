@@ -219,6 +219,8 @@ struct BridgeTransportTests {
         #expect(!two.contains("Pass1") && !two.contains("Pass2") && two.contains("@db2"))
         // Zwykły tekst: hasło w cudzysłowie (także z `@`), niezamknięty cudzysłów, ukośnik wsteczny w haśle.
         #expect(SQLPlusEngine.maskPassword("connect u/p") == "connect u/********")
+        #expect(!SQLPlusEngine.maskPassword("connec scott/Tiger123@prod").contains("Tiger123"))
+        #expect(!SQLPlusEngine.maskPassword("conne scott/Tiger123").contains("Tiger123"))
         #expect(SQLPlusEngine.maskPassword(#"connect u/"tajne hasło"@db"#) == "connect u/********@db")
         #expect(SQLPlusEngine.maskPassword(#"connect u/"p@ss""#) == "connect u/********")
         #expect(SQLPlusEngine.maskPassword(#"connect u/"secret pw"#) == "connect u/********")

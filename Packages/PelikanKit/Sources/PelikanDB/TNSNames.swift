@@ -160,6 +160,8 @@ public extension TNSNames {
         let s = connect.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !parameters.isEmpty else { return s }
         if s.hasPrefix("(") {
+            // Deskryptor bez odstępów (wklejony wieloliniowy `(SECURITY = (…))`) — szukanie sekcji jak w `value`.
+            let s = compact(s)
             let items = parameters.map { "(\($0.0)=\(OracleNet.netValue($0.1)))" }.joined()
             if let r = s.range(of: "(SECURITY=", options: .caseInsensitive) {
                 var out = s
@@ -196,7 +198,9 @@ public extension TNSNames {
             s = e.descriptor
         }
         if let w = walletDir, s.hasPrefix("("), (value("PROTOCOL", in: s) ?? "").uppercased() == "TCPS", value("MY_WALLET_DIRECTORY", in: s) == nil {
-            // Do istniejącej sekcji SECURITY (np. `ssl_server_dn_match` z tnsnames.ora ADB) — Oracle Net czyta jedną.
+            // Do istniejącej sekcji SECURITY (np. `ssl_server_dn_match` z tnsnames.ora ADB) — Oracle Net czyta jedną;
+            // deskryptor bez odstępów, żeby znaleźć także `(SECURITY = …`.
+            s = compact(s)
             let item = "(MY_WALLET_DIRECTORY=\(OracleNet.netValue(w)))"
             if let r = s.range(of: "(SECURITY=", options: .caseInsensitive) {
                 s.insert(contentsOf: item, at: r.upperBound)

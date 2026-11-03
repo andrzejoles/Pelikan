@@ -495,14 +495,15 @@ public final class RemoteProcess: Sendable {
         process.cancel()
         guard let pid = remoteProcessID else { return }
         let group = "-\(pid)"
-        _ = try? session.run("kill -TERM \(group) 2>/dev/null; kill -TERM \(pid) 2>/dev/null; exit 0", timeout: 20, idempotent: true)
+        // Sygnały nie są ponawiane po zerwaniu (PID mógł już należeć do innego procesu); ponawiane tylko odpytywanie.
+        _ = try? session.run("kill -TERM \(group) 2>/dev/null; kill -TERM \(pid) 2>/dev/null; exit 0", timeout: 20)
         let deadline = Date().addingTimeInterval(grace)
         while Date() < deadline {
             let r = try? session.run("kill -0 \(group) 2>/dev/null && echo alive", timeout: 20, idempotent: true)
             if r.map({ !String(decoding: $0.output, as: UTF8.self).contains("alive") }) ?? true { return }
             usleep(200_000)
         }
-        _ = try? session.run("kill -KILL \(group) 2>/dev/null; exit 0", timeout: 20, idempotent: true)
+        _ = try? session.run("kill -KILL \(group) 2>/dev/null; exit 0", timeout: 20)
     }
 }
 #endif
