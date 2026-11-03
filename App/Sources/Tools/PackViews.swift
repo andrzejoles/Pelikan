@@ -32,8 +32,6 @@ struct HTMLReportView: View {
 /// SQL Monitor (SD-MON-001): monitorowane zapytania, dwuklik — raport. Lista i raporty z połączenia, dla którego
 /// komenda sprawdziła licencję Tuning Pack (stałe dla okna).
 struct SQLMonitorView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortRows: [ColumnSort<DetailRow>] = []
     let workspace: Workspace
     @State private var connection: UUID?
     @State private var data: (columns: [String], rows: [[String]]) = ([], [])
@@ -49,12 +47,11 @@ struct SQLMonitorView: View {
                 Spacer()
                 Text(message).font(.uiSecondary).foregroundStyle(.secondary)
             }
-            Table((data.rows.indices.map { DetailRow(id: $0, values: data.rows[$0]) }).sorted(by: sortRows), selection: $selection, sortOrder: $sortRows) {
-                TableColumnForEach(data.columns.indices.map { $0 }, id: \.self) { i in
-                    TableColumn(data.columns[i], sortKey: { (r: DetailRow) in i < r.values.count ? r.values[i] : "" }) { (r: DetailRow) in Text(i < r.values.count ? r.values[i] : "").lineLimit(1) }
+            DataTable(data.rows.indices.map { DetailRow(id: $0, values: data.rows[$0]) }, selection: .single($selection), primaryAction: { ids in open(ids.first) }) {
+                for i in data.columns.indices {
+                    DataColumn(data.columns[i], id: "\(i)", sortKey: { (r: DetailRow) in i < r.values.count ? r.values[i] : "" }) { (r: DetailRow) in Text(i < r.values.count ? r.values[i] : "").lineLimit(1) }
                 }
             }
-            .contextMenu(forSelectionType: Int.self) { _ in } primaryAction: { ids in open(ids.first) }
         }
         .padding(10)
         .frame(minWidth: 860, minHeight: 420)

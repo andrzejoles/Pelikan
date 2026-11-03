@@ -4,9 +4,9 @@ import PelikanDB
 /// Komendy siatki wyników (UG 7.1, 7.2): strony, eksport, kopiowanie.
 public enum GridCommands {
     /// Formaty „Kopiuj jako” (parametr komendy, wybór ze wstążki, menu paska wyniku).
-    public static let copyAsFormats: [ExportFormat] = [.csv, .tsv, .html, .xml, .sql, .expressionList]
+    public static let copyAsFormats: [ExportFormat] = [.csv, .tsv, .html, .xml, .json, .text, .sql, .expressionList]
     /// Formaty „Eksportuj wynik” (parametr komendy, menu paska wyniku).
-    public static let exportFormats: [ExportFormat] = [.csv, .tsv, .html, .xml, .sql, .xlsx]
+    public static let exportFormats: [ExportFormat] = [.csv, .tsv, .html, .xml, .json, .text, .sql, .xlsx]
 
     @MainActor
     static func activeTab(_ ws: Workspace) -> ResultTab? {

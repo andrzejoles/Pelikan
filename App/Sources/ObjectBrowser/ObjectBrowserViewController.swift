@@ -807,7 +807,10 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
 /// Informacje o obiekcie (Opis, Właściwości): tabela, kopiowanie zaznaczenia; narzędzie w panelu albo oknie (D183).
 final class ObjectInfoViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
     private var rows: [[String]]
+    /// Wiersze przed filtrem (D214).
+    private let allRows: [[String]]
     private let table = NSTableView()
+    private var tools: AppKitTableTools!
 
     static func show(title: String, columns: [String], rows: [[String]]) {
         let c = ObjectInfoViewController(title: title, columns: columns, rows: rows)
@@ -817,6 +820,7 @@ final class ObjectInfoViewController: NSViewController, NSTableViewDataSource, N
 
     init(title: String, columns: [String], rows: [[String]]) {
         self.rows = rows
+        allRows = rows
         super.init(nibName: nil, bundle: nil)
         table.setAccessibilityLabel(title)
         for (i, name) in columns.enumerated() {
@@ -836,7 +840,30 @@ final class ObjectInfoViewController: NSViewController, NSTableViewDataSource, N
         let scroll = NSScrollView()
         scroll.documentView = table
         scroll.hasVerticalScroller = true
-        view = scroll
+        tools = AppKitTableTools(table: table, title: { title }, total: { [weak self] in self?.allRows.count ?? 0 },
+                                 cell: { [weak self] r, id in self.map { Self.cell($0.rows, r, id) } ?? "" },
+                                 onFilterChange: { [weak self] in self?.refresh() })
+        view = tools.wrap(scroll)
+    }
+
+    private static func cell(_ rows: [[String]], _ r: Int, _ id: String) -> String {
+        let i = Int(id.dropFirst()) ?? 0
+        return r < rows.count && i < rows[r].count ? rows[r][i] : ""
+    }
+
+    /// Wiersze w kolejności z nagłówka (D212) i po filtrze (D214).
+    private func refresh() {
+        let sorted = HeaderSort.sort(allRows, by: table.sortDescriptors) { r, key in
+            let i = Int(key.dropFirst()) ?? 0
+            return (i < r.count ? r[i] : "").sortKey
+        }
+        rows = tools.filter(sorted) { r, id in
+            let i = Int(id.dropFirst()) ?? 0
+            let t = i < r.count ? r[i] : ""
+            return (t, t.sortKey)
+        }
+        table.reloadData()
+        tools.reloaded()
     }
 
     @available(*, unavailable)
@@ -844,13 +871,7 @@ final class ObjectInfoViewController: NSViewController, NSTableViewDataSource, N
 
     func numberOfRows(in tableView: NSTableView) -> Int { rows.count }
 
-    func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
-        rows = HeaderSort.sort(rows, by: tableView.sortDescriptors) { r, key in
-            let i = Int(key.dropFirst()) ?? 0
-            return (i < r.count ? r[i] : "").sortKey
-        }
-        tableView.reloadData()
-    }
+    func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) { refresh() }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         guard let id = tableColumn?.identifier.rawValue, let i = Int(id.dropFirst()) else { return nil }

@@ -6,8 +6,6 @@ import SwiftUI
 
 /// Panel DBA (SD-DBA-001): sekcje słownika, brak uprawnień jako komunikat, zmiany parametrów i kont po potwierdzeniu.
 struct DBAPanelView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortRows: [ColumnSort<DetailRow>] = []
     let workspace: Workspace
     @State private var connection: UUID?
     @State private var section: DBAPanel.Section? = .tablespaces
@@ -36,9 +34,9 @@ struct DBAPanelView: View {
                 switch result {
                 case .rows(let cols, _):
                     let rows = filtered
-                    Table(rows.sorted(by: sortRows), selection: $selection, sortOrder: $sortRows) {
-                        TableColumnForEach(cols.indices.map { $0 }, id: \.self) { i in
-                            TableColumn(cols[i], sortKey: { (r: DetailRow) in i < r.values.count ? r.values[i] : "" }) { (r: DetailRow) in Text(i < r.values.count ? r.values[i] : "").lineLimit(1) }
+                    DataTable(rows, selection: .single($selection)) {
+                        for i in cols.indices {
+                            DataColumn(cols[i], id: "\(i)", sortKey: { (r: DetailRow) in i < r.values.count ? r.values[i] : "" }) { (r: DetailRow) in Text(i < r.values.count ? r.values[i] : "").lineLimit(1) }
                         }
                     }
                 case .noPrivilege(let m):
@@ -110,8 +108,6 @@ struct DBAPanelView: View {
 
 /// Instance Viewer (SD-DBA-004): pulpit instancji z odświeżaniem.
 struct InstanceViewerView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortTopSQL: [ColumnSort<InstanceSnapshot.TopSQL>] = []
     let workspace: Workspace
     /// Auto-odświeżanie pomija narzędzie niewidoczne (karta w tle, zwinięty panel, zminimalizowane okno).
     @Environment(\.toolLifetime) private var lifetime
@@ -151,13 +147,13 @@ struct InstanceViewerView: View {
                     }
                 }
                 Text(L10n.tr("Najdroższe SQL (czas)")).font(.uiSecondary.bold())
-                Table(s.topSQL.sorted(by: sortTopSQL), sortOrder: $sortTopSQL) {
-                    TableColumn("SQL_ID", sortKey: { t in t.sqlID }) { t in Text(t.sqlID).font(.code) }.width(110)
-                    TableColumn(L10n.tr("Wykonania"), sortKey: { t in t.executions }) { t in Text("\(t.executions)").monospacedDigit() }.width(80)
-                    TableColumn(L10n.tr("Czas s"), sortKey: { t in t.elapsedSeconds }) { t in Text(String(format: "%.2f", t.elapsedSeconds)).monospacedDigit() }.width(70)
-                    TableColumn("CPU s", sortKey: { t in t.cpuSeconds }) { t in Text(String(format: "%.2f", t.cpuSeconds)).monospacedDigit() }.width(70)
-                    TableColumn(L10n.tr("Bufory"), sortKey: { t in t.bufferGets }) { t in Text("\(t.bufferGets)").monospacedDigit() }.width(90)
-                    TableColumn("SQL", sortKey: { t in t.text }) { t in Text(t.text).lineLimit(1) }
+                DataTable(s.topSQL) {
+                    DataColumn("SQL_ID", sortKey: { t in t.sqlID }) { t in Text(t.sqlID).font(.code) }.width(110)
+                    DataColumn(L10n.tr("Wykonania"), sortKey: { t in t.executions }) { t in Text("\(t.executions)").monospacedDigit() }.width(80)
+                    DataColumn(L10n.tr("Czas s"), sortKey: { t in t.elapsedSeconds }) { t in Text(String(format: "%.2f", t.elapsedSeconds)).monospacedDigit() }.width(70)
+                    DataColumn("CPU s", sortKey: { t in t.cpuSeconds }) { t in Text(String(format: "%.2f", t.cpuSeconds)).monospacedDigit() }.width(70)
+                    DataColumn(L10n.tr("Bufory"), sortKey: { t in t.bufferGets }) { t in Text("\(t.bufferGets)").monospacedDigit() }.width(90)
+                    DataColumn("SQL", sortKey: { t in t.text }) { t in Text(t.text).lineLimit(1) }
                 }
                 ForEach(s.unavailable, id: \.self) { Text($0).font(.uiSecondary).foregroundStyle(.orange) }
             } else if let error {
@@ -206,8 +202,6 @@ struct SGAItem: Identifiable {
 
 /// Task Monitor (SD-MON-002): zadania w tle ze stanem, czasem i anulowaniem.
 struct TaskMonitorView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortTasks: [ColumnSort<WorkspaceTask>] = []
     let workspace: Workspace
 
     var body: some View {
@@ -217,22 +211,22 @@ struct TaskMonitorView: View {
                 Spacer()
                 Button(L10n.tr("Usuń zakończone")) { workspace.tasks.clearFinished() }
             }
-            Table(workspace.tasks.tasks.sorted(by: sortTasks), sortOrder: $sortTasks) {
-                TableColumn(L10n.tr("Zadanie"), sortKey: { t in t.title }) { t in Text(t.title) }
-                TableColumn(L10n.tr("Rodzaj"), sortKey: { t in t.kind }) { t in Text(t.kind).foregroundStyle(.secondary) }.width(90)
-                TableColumn(L10n.tr("Stan"), sortKey: { t in status(t) }) { t in Text(status(t)).foregroundStyle(color(t)) }.width(160)
+            DataTable(workspace.tasks.tasks) {
+                DataColumn(L10n.tr("Zadanie"), sortKey: { t in t.title }) { t in Text(t.title) }
+                DataColumn(L10n.tr("Rodzaj"), sortKey: { t in t.kind }) { t in Text(t.kind).foregroundStyle(.secondary) }.width(90)
+                DataColumn(L10n.tr("Stan"), sortKey: { t in status(t) }) { t in Text(status(t)).foregroundStyle(color(t)) }.width(160)
                 // Czas zadania w toku odświeża sama komórka (co sekundę) — bez przebudowy tabeli (przewinięcie, „Anuluj”).
-                TableColumn(L10n.tr("Czas"), sortKey: { t in t.duration }) { t in
+                DataColumn(L10n.tr("Czas"), sortKey: { t in t.duration }) { t in
                     if t.isRunning {
                         TimelineView(.periodic(from: .now, by: 1)) { _ in Text(String(format: "%.1f s", t.duration)).monospacedDigit() }
                     } else {
                         Text(String(format: "%.1f s", t.duration)).monospacedDigit()
                     }
                 }.width(70)
-                TableColumn(L10n.tr("Postęp"), sortKey: { t in t.progress ?? -1 }) { t in
+                DataColumn(L10n.tr("Postęp"), sortKey: { t in t.progress ?? -1 }) { t in
                     if let p = t.progress { ProgressView(value: p) } else { Text(t.message ?? "").font(.uiSecondary).lineLimit(1) }
                 }
-                TableColumn("", sortKey: { t in t.isRunning }) { t in
+                DataColumn("", sortKey: { t in t.isRunning }) { t in
                     if t.isRunning { Button(L10n.tr("Anuluj")) { t.cancel() } }
                 }.width(70)
             }

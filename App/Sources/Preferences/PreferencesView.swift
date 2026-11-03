@@ -90,6 +90,12 @@ struct PreferencesView: View {
     }
 }
 
+/// Pole konwencji nazw (D215).
+@MainActor
+func namingSetting(_ ws: Workspace, _ path: WritableKeyPath<NamingConventions, String>) -> Binding<String> {
+    setting(ws, (\PelikanWorkspace.Settings.namingConventions as WritableKeyPath<PelikanWorkspace.Settings, NamingConventions>).appending(path: path))
+}
+
 /// Wiązanie do pola ustawień (zapis przy każdej zmianie).
 @MainActor
 func setting<T>(_ ws: Workspace, _ key: WritableKeyPath<PelikanWorkspace.Settings, T>) -> Binding<T> {
@@ -624,15 +630,28 @@ struct OraclePane: View {
                 Toggle(L10n.tr("Podpowiedzi kompilatora (inspekcje kodu po kompilacji; „-- Ignore” wycisza linię)"), isOn: setting(workspace, \.compilerHints))
                 Toggle(L10n.tr("Sprawdzaj konwencje nazw"), isOn: setting(workspace, \.namingConventions.enabled))
                 if workspace.settings.namingConventions.enabled {
+                    // Konwencje nazw (D215): kilka przedrostków po przecinku; puste OUT / IN OUT — jak IN, puste
+                    // zmienne specyfikacji — jak zmienne ciała pakietu.
                     HStack {
-                        ChoiceField(L10n.tr("Parametry"), text: setting(workspace, \.namingConventions.parameter), choices: PreferenceChoices.naming("parameter"))
-                        ChoiceField(L10n.tr("Lokalne"), text: setting(workspace, \.namingConventions.local), choices: PreferenceChoices.naming("local"))
-                        ChoiceField(L10n.tr("Globalne"), text: setting(workspace, \.namingConventions.global), choices: PreferenceChoices.naming("global"))
+                        ChoiceField(L10n.tr("Parametry IN"), text: namingSetting(workspace, \.parameter), choices: PreferenceChoices.naming("parameter"), mode: .list)
+                        ChoiceField(L10n.tr("Parametry OUT"), text: namingSetting(workspace, \.parameterOut), prompt: L10n.tr("jak IN"), choices: PreferenceChoices.naming("parameterOut"), mode: .list)
+                        ChoiceField(L10n.tr("Parametry IN OUT"), text: namingSetting(workspace, \.parameterInOut), prompt: L10n.tr("jak IN"), choices: PreferenceChoices.naming("parameterInOut"), mode: .list)
                     }
                     HStack {
-                        ChoiceField(L10n.tr("Stałe"), text: setting(workspace, \.namingConventions.constant), choices: PreferenceChoices.naming("constant"))
-                        ChoiceField(L10n.tr("Kursory"), text: setting(workspace, \.namingConventions.cursor), choices: PreferenceChoices.naming("cursor"))
-                        ChoiceField(L10n.tr("Typy"), text: setting(workspace, \.namingConventions.type), choices: PreferenceChoices.naming("type"))
+                        ChoiceField(L10n.tr("Zmienne lokalne"), text: namingSetting(workspace, \.local), choices: PreferenceChoices.naming("local"), mode: .list)
+                        ChoiceField(L10n.tr("Zmienne pakietu (ciało)"), text: namingSetting(workspace, \.global), choices: PreferenceChoices.naming("global"), mode: .list)
+                        ChoiceField(L10n.tr("Zmienne pakietu (specyfikacja)"), text: namingSetting(workspace, \.publicGlobal), prompt: L10n.tr("jak w ciele"), choices: PreferenceChoices.naming("publicGlobal"), mode: .list)
+                    }
+                    HStack {
+                        ChoiceField(L10n.tr("Stałe"), text: namingSetting(workspace, \.constant), prompt: L10n.tr("bez sprawdzania"), choices: PreferenceChoices.naming("constant"), mode: .list)
+                        ChoiceField(L10n.tr("Kursory"), text: namingSetting(workspace, \.cursor), prompt: L10n.tr("bez sprawdzania"), choices: PreferenceChoices.naming("cursor"), mode: .list)
+                        ChoiceField(L10n.tr("Typy"), text: namingSetting(workspace, \.type), prompt: L10n.tr("bez sprawdzania"), choices: PreferenceChoices.naming("type"), mode: .list)
+                    }
+                    HStack {
+                        Button(L10n.tr("Konwencja RMS")) { workspace.settings.namingConventions = .rms }
+                            .help(L10n.tr("I_ (IN), O_ (OUT), O_ albo IO_ (IN OUT), L_ (lokalne), LP_ / GP_ (pakietu), C_ (kursory) — jak w pakietach RMS"))
+                        Text(L10n.tr("Kilka przedrostków po przecinku; puste pole — bez sprawdzania."))
+                            .font(.uiSecondary).foregroundStyle(.secondary)
                     }
                 }
                 Toggle(L10n.tr("Pomijaj inicjalizację pakietów przy krokowaniu"), isOn: setting(workspace, \.debuggerSkipPackageInit))
@@ -682,8 +701,6 @@ struct OraclePane: View {
 
 /// Karta Klawiatura (UG 23.29): profil skrótów, lista komend z wyszukiwaniem, nagrywanie skrótu z wykrywaniem konfliktu.
 struct KeyboardPane: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortRows: [ColumnSort<Row>] = []
     let workspace: Workspace
     @State private var search = ""
     @State private var selection: String?
@@ -713,10 +730,10 @@ struct KeyboardPane: View {
                 Spacer()
                 TextField(L10n.tr("Szukaj komendy"), text: $search).frame(width: 220)
             }
-            Table(rows.sorted(by: sortRows), selection: $selection, sortOrder: $sortRows) {
-                TableColumn(L10n.tr("Komenda"), sortKey: { (r: Row) in r.d.submenu.map { "\($0) › \(r.d.title)" } ?? r.d.title }) { (r: Row) in Text(r.d.submenu.map { "\($0) › \(r.d.title)" } ?? r.d.title) }
-                TableColumn(L10n.tr("Menu"), sortKey: { (r: Row) in r.d.category.displayName }) { (r: Row) in Text(r.d.category.displayName).foregroundStyle(.secondary) }.width(110)
-                TableColumn(L10n.tr("Skróty"), sortKey: { (r: Row) in workspace.keymap.chords(for: r.d.id).map(\.displayString).joined(separator: "  ") }) { (r: Row) in
+            DataTable(rows, selection: .single($selection)) {
+                DataColumn(L10n.tr("Komenda"), sortKey: { (r: Row) in r.d.submenu.map { "\($0) › \(r.d.title)" } ?? r.d.title }) { (r: Row) in Text(r.d.submenu.map { "\($0) › \(r.d.title)" } ?? r.d.title) }
+                DataColumn(L10n.tr("Menu"), sortKey: { (r: Row) in r.d.category.displayName }) { (r: Row) in Text(r.d.category.displayName).foregroundStyle(.secondary) }.width(110)
+                DataColumn(L10n.tr("Skróty"), sortKey: { (r: Row) in workspace.keymap.chords(for: r.d.id).map(\.displayString).joined(separator: "  ") }) { (r: Row) in
                     Text(workspace.keymap.chords(for: r.d.id).map(\.displayString).joined(separator: "  ")).font(.code)
                 }.width(170)
             }

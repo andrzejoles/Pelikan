@@ -4,6 +4,16 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
 
 ## Następna wersja
 
+- **Kopiowanie, eksport i filtr w każdej tabeli:** nad tabelami (sesje, DBA, Scheduler, porównania, plan, profiler,
+  komunikaty kompilacji, aktywność agenta…) jest pasek z filtrem, menu Kopiuj i Eksportuj. Można skopiować komórkę,
+  zaznaczone wiersze, kolumnę, wybrane kolumny albo całą tabelę (wkleja się jako tabela do arkusza i edytora) i zapisać
+  całą tabelę jako TXT, CSV, XLSX, JSON, XML albo HTML. Filtr kolumn: tekst jak LIKE bez wielkości liter (`abc%`,
+  `a_c`), liczby i daty przez `= 5`, `>= 6`, `between 3 and 4`, `= 2026-10-03`, puste — `is null`; filtr „tylko ta
+  wartość” z menu wiersza. Siatka wyników eksportuje i kopiuje teraz także do JSON i tekstu z wyrównanymi kolumnami.
+- **Konwencje nazw (Ustawienia › Oracle):** osobne przedrostki dla parametrów IN, OUT i IN OUT oraz dla zmiennych
+  lokalnych i zmiennych pakietu (w ciele i w specyfikacji); w polu można podać kilka przedrostków po przecinku. Listy
+  wyboru podpowiadają konwencję pakietów RMS (`I_item`, `O_error_message`, `L_program`, `LP_vdate`, `GP_…`, `C_…`),
+  a przycisk „Konwencja RMS” ustawia ją jednym kliknięciem.
 - **Dokumentacja Oracle z lokalnego serwera MCP:** w Ustawieniach › Oracle można włączyć serwer dokumentacji na tym
   komputerze (np. `oracle-docs` pod `http://127.0.0.1:8765/mcp`). F1 i „Dokumentacja Oracle…” pokazują wtedy fragmenty
   dokumentacji 19c albo 11g w oknie Pelikana — z całą sekcją, kopiowaniem i stroną online jednym kliknięciem.

@@ -301,9 +301,7 @@ struct ImportTablesView: View {
 
 struct ImporterView: View {
 
-    /// Sortowanie tabeli po kolumnie (D212).
 
-    @State private var sortPreview: [ColumnSort<PreviewRow>] = []
     let workspace: Workspace
     let excel: Bool
     @State private var connection: UUID?
@@ -336,9 +334,9 @@ struct ImporterView: View {
                 }
             }
             formatControls
-            Table((rows.prefix(100).indices.map { PreviewRow(id: $0, values: rows[$0]) }).sorted(by: sortPreview), sortOrder: $sortPreview) {
-                TableColumnForEach(header.indices.map { $0 }, id: \.self) { i in
-                    TableColumn(header[i], sortKey: { (r: PreviewRow) in i < r.values.count ? r.values[i] : "" }) { (r: PreviewRow) in Text(i < r.values.count ? r.values[i] : "").lineLimit(1) }
+            DataTable(rows.prefix(100).indices.map { PreviewRow(id: $0, values: rows[$0]) }) {
+                for i in header.indices {
+                    DataColumn(header[i], id: "\(i)", sortKey: { (r: PreviewRow) in i < r.values.count ? r.values[i] : "" }) { (r: PreviewRow) in Text(i < r.values.count ? r.values[i] : "").lineLimit(1) }
                 }
             }
             .frame(minHeight: 140)
@@ -536,9 +534,7 @@ struct PreviewRow: Identifiable {
 
 struct DataGeneratorView: View {
 
-    /// Sortowanie tabeli po kolumnie (D212).
 
-    @State private var sortPreview: [ColumnSort<PreviewRow>] = []
     let workspace: Workspace
     @State private var connection: UUID?
     @State private var owner = ""
@@ -595,9 +591,9 @@ struct DataGeneratorView: View {
                 }
             }
             if let t = tables.first(where: { $0.name == current }), !preview.isEmpty {
-                Table((preview.indices.map { i in PreviewRow(id: i, values: t.fields.map { f in preview[i][f.name.uppercased()] ?? "" }) }).sorted(by: sortPreview), sortOrder: $sortPreview) {
-                    TableColumnForEach(t.fields.indices.map { $0 }, id: \.self) { i in
-                        TableColumn(t.fields[i].name, sortKey: { (r: PreviewRow) in i < r.values.count ? r.values[i] : "" }) { (r: PreviewRow) in Text(i < r.values.count ? r.values[i] : "").lineLimit(1) }
+                DataTable(preview.indices.map { i in PreviewRow(id: i, values: t.fields.map { f in preview[i][f.name.uppercased()] ?? "" }) }) {
+                    for i in t.fields.indices {
+                        DataColumn(t.fields[i].name, id: "\(i)", sortKey: { (r: PreviewRow) in i < r.values.count ? r.values[i] : "" }) { (r: PreviewRow) in Text(i < r.values.count ? r.values[i] : "").lineLimit(1) }
                     }
                 }
                 .frame(minHeight: 120)
@@ -662,9 +658,7 @@ struct DataGeneratorView: View {
 
 struct CompareTableDataView: View {
 
-    /// Sortowanie tabeli po kolumnie (D212).
 
-    @State private var sortDiffs: [ColumnSort<TableDataDiff>] = []
     let workspace: Workspace
     @State private var connection: UUID?
     @State private var owner = ""
@@ -706,12 +700,12 @@ struct CompareTableDataView: View {
                         Stepper(L10n.tr("COMMIT co \(options.commitEvery)"), value: $options.commitEvery, in: 0...100_000, step: 100)
                     }
                     .fixedSize()
-                    Table(diffs.sorted(by: sortDiffs), sortOrder: $sortDiffs, columns: {
-                        TableColumn(L10n.tr("Tabela"), text: { $0.table })
-                        TableColumn(L10n.tr("Nowe"), sortKey: { d in d.inserts.count }) { d in Text("\(d.inserts.count)") }.width(60)
-                        TableColumn(L10n.tr("Różne"), sortKey: { d in d.updates.count }) { d in Text("\(d.updates.count)") }.width(60)
-                        TableColumn(L10n.tr("Nadmiarowe"), sortKey: { d in d.deletes.count }) { d in Text("\(d.deletes.count)") }.width(90)
-                    })
+                    DataTable(diffs) {
+                        DataColumn(L10n.tr("Tabela"), text: { $0.table })
+                        DataColumn(L10n.tr("Nowe"), sortKey: { d in d.inserts.count }) { d in Text("\(d.inserts.count)") }.width(60)
+                        DataColumn(L10n.tr("Różne"), sortKey: { d in d.updates.count }) { d in Text("\(d.updates.count)") }.width(60)
+                        DataColumn(L10n.tr("Nadmiarowe"), sortKey: { d in d.deletes.count }) { d in Text("\(d.deletes.count)") }.width(90)
+                    }
                 }
                 .frame(minWidth: 380)
             }

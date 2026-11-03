@@ -61,16 +61,22 @@ public enum PreferenceChoices {
     /// PLSQL_CCFLAGS (pozycje po przecinku).
     public static let ccflags = list(["debug:TRUE", "debug:FALSE", "trace:TRUE", "trace:FALSE", "test:TRUE"])
 
-    /// Konwencje nazw (prefiksy).
+    /// Konwencje nazw (przedrostki; kilka po przecinku). Pierwsze pozycje z przykładem — konwencja pakietów RMS
+    /// (repozytorium właściciela, D215), dalej inne spotykane.
     public static func naming(_ kind: String) -> [PreferenceChoice] {
+        let rms = { (v: String, example: String) in PreferenceChoice(v, L10n.tr("RMS, np. \(example)")) }
         switch kind {
-        case "parameter": list(["p_", "i_", "pi_", "in_", "a_"])
-        case "local": list(["l_", "v_", "lv_"])
-        case "global": list(["g_", "gv_", "gl_"])
-        case "constant": list(["c_", "gc_", "k_", "co_"])
-        case "cursor": list(["cur_", "c_", "cr_"])
-        case "type": list(["t_", "typ_", "tt_", "r_"])
-        default: []
+        case "parameter": return [rms("I_", "I_item IN ITEM_MASTER.ITEM%TYPE")] + list(["p_", "pi_", "in_", "a_"])
+        case "parameterOut": return [rms("O_", "O_exists OUT BOOLEAN")] + list(["p_", "po_", "out_", "x_"])
+        case "parameterInOut": return [rms("O_", "O_error_message IN OUT VARCHAR2"), rms("IO_", "IO_qty IN OUT NUMBER")] + list(["p_", "pio_", "io_"])
+        case "local": return [rms("L_", "L_program VARCHAR2(64)")] + list(["l_", "v_", "lv_"])
+        case "global": return [rms("LP_", "LP_vdate DATE := GET_VDATE")] + list(["g_", "gv_", "gl_"])
+        case "publicGlobal": return [rms("GP_", "GP_replace_mzs_loc BOOLEAN")] + list(["g_", "gv_", "pkg_"])
+        case "constant": return [rms("K_", "K_max_rows CONSTANT NUMBER"), rms("GP_", "GP_CON_F_ERROR CONSTANT"), rms("CON_", "CON_status CONSTANT")]
+            + list(["c_", "gc_", "co_"])
+        case "cursor": return [rms("C_", "CURSOR C_get_item IS …")] + list(["cur_", "c_", "cr_"])
+        case "type": return [rms("TYP_", "TYPE TYP_item_tbl IS TABLE OF …"), rms("T_", "TYPE T_rec IS RECORD …")] + list(["t_", "typ_", "tt_", "r_"])
+        default: return []
         }
     }
 

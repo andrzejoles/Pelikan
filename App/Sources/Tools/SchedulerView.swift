@@ -5,10 +5,6 @@ import SwiftUI
 /// DBMS Scheduler (UG 10, PD-SCHED-001..003): drzewo rodzajów obiektów, lista, View SQL, tworzenie/edycja/usuwanie
 /// zadań, przebiegi z raportami i kolorami, uruchomione zadania ze Stop (Force).
 struct SchedulerView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortDetail: [ColumnSort<DetailRow>] = []
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortObjects: [ColumnSort<SchedulerObject>] = []
     let workspace: Workspace
     @State private var connection: UUID?
     @State private var kind: SchedulerObjectKind? = .jobs
@@ -98,12 +94,12 @@ struct SchedulerView: View {
                 Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
             }
             VSplitView {
-                Table(objects.sorted(by: sortObjects), selection: $selection, sortOrder: $sortObjects) {
-                    TableColumn(L10n.tr("Właściciel"), sortKey: { o in o.owner }) { o in Text(o.owner) }.width(110)
-                    TableColumn(L10n.tr("Nazwa"), sortKey: { o in o.name }) { o in Text(o.name) }
-                    TableColumn(L10n.tr("Stan"), sortKey: { o in o.state }) { o in Text(o.state) }.width(100)
-                    TableColumn(L10n.tr("Harmonogram / szczegóły"), sortKey: { o in o.detail }) { o in Text(o.detail).lineLimit(1) }
-                    TableColumn(L10n.tr("Komentarz"), sortKey: { o in o.comments }) { o in Text(o.comments).lineLimit(1) }
+                DataTable(objects, selection: .single($selection)) {
+                    DataColumn(L10n.tr("Właściciel"), sortKey: { o in o.owner }) { o in Text(o.owner) }.width(110)
+                    DataColumn(L10n.tr("Nazwa"), sortKey: { o in o.name }) { o in Text(o.name) }
+                    DataColumn(L10n.tr("Stan"), sortKey: { o in o.state }) { o in Text(o.state) }.width(100)
+                    DataColumn(L10n.tr("Harmonogram / szczegóły"), sortKey: { o in o.detail }) { o in Text(o.detail).lineLimit(1) }
+                    DataColumn(L10n.tr("Komentarz"), sortKey: { o in o.comments }) { o in Text(o.comments).lineLimit(1) }
                 }
                 .frame(minHeight: 180)
                 ScrollView {
@@ -141,9 +137,9 @@ struct SchedulerView: View {
     }
 
     private func grid(_ data: (columns: [String], rows: [[String]]), colors: [Scheduler.RunReport.ColorRule], selection: Binding<Int?>) -> some View {
-        Table((data.rows.indices.map { DetailRow(id: $0, values: data.rows[$0]) }).sorted(by: sortDetail), selection: selection, sortOrder: $sortDetail) {
-            TableColumnForEach(data.columns.indices.map { $0 }, id: \.self) { i in
-                TableColumn(data.columns[i], sortKey: { (r: DetailRow) in i < r.values.count ? r.values[i] : "" }) { (r: DetailRow) in
+        DataTable(data.rows.indices.map { DetailRow(id: $0, values: data.rows[$0]) }, selection: .single(selection)) {
+            for i in data.columns.indices {
+                DataColumn(data.columns[i], id: "\(i)", sortKey: { (r: DetailRow) in i < r.values.count ? r.values[i] : "" }) { (r: DetailRow) in
                     let rule = colors.first { c in data.columns.firstIndex(of: c.column.uppercased()).map { $0 < r.values.count && r.values[$0] == c.value } ?? false }
                     Text(i < r.values.count ? r.values[i] : "").lineLimit(1)
                         .foregroundStyle(rule.map { Color(red: $0.color.red, green: $0.color.green, blue: $0.color.blue) } ?? .primary)

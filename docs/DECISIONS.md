@@ -3396,6 +3396,59 @@ utrwalał błąd.
 - Wdrożenie Pro*C (SSH) wysyła pliki bajt w bajt — po konwersji na serwer trafia UTF-8 (polskie litery są tylko
   w komentarzach; kompilator Pro*C ich nie interpretuje).
 
+### D214 · 2026-11-03 — Kopiowanie, eksport i filtr wartości kolumn w każdej tabeli
+
+**Prośba właściciela:** „każda tabelka [ma mieć] możliwość kopiowania (zaznaczonych kolumn, zaznaczonych wierszy,
+zawartości komórki, całej tabeli) oraz export całej tabeli (minimum txt, csv, xlsx, json, xml oraz html)” oraz filtr po
+wartościach kolumn — „wyrażenie typu LIKE bez względu na wielkość liter”, dla liczb „=5, >=6, between 3 and 4”, dla dat
+„= 2026-10-03” w formacie YYYY-MM-DD; tekst „tak jak like, czyli wszelkie kombinacje tekstu ze znakami % i _”.
+
+- **Wspólny komponent:** tabele SwiftUI z D212 (≈50) używają `DataTable` z kolumnami `DataColumn` (tytuł, tekst komórki,
+  klucz sortowania, opcjonalny widok komórki); tabele AppKit z D212 (komunikaty kompilacji, aktywność i dziennik
+  agenta — pliki i wpisy, informacje o obiekcie, widok rekordu) — `AppKitTableTools`. Plan wykonania (drzewo) ma ten
+  sam pasek i menu; przy aktywnym filtrze pokazuje pasujące kroki jako płaską listę. Tekst komórki do kopii, eksportu
+  i filtra to tekst pokazany w tabeli (kolumny bez tekstu — z klucza sortowania: liczby, daty `YYYY-MM-DD HH24:MI:SS`).
+- **Pasek nad tabelą:** szybki filtr (wzorzec w dowolnej kolumnie; bez `%` i `_` — fragment tekstu), „Filtr kolumn…”
+  (pole na każdą kolumnę, opis składni), „Wyczyść filtr”, liczba wierszy („z” — przy filtrze), menu Kopiuj i Eksportuj;
+  w wąskim panelu — same ikony.
+- **Kopiowanie** (menu kontekstowe wiersza i menu paska): komórka (lista kolumn klikniętego wiersza; w AppKit — klikniętą
+  komórkę), wiersz / zaznaczone wiersze, kolumna, kolumny zaznaczone do kopii (zaznaczanie w podmenu — tabela SwiftUI nie
+  ma zaznaczania kolumn), zaznaczone kolumny zaznaczonych wierszy, cała tabela (po filtrze, w kolejności widoku),
+  nagłówki; przełącznik „Kopiuj z nagłówkiem” (wspólny, domyślnie włączony). Schowek: tekst z tabulatorami i HTML
+  (wkleja się jako tabela); ⌘C w tabeli SwiftUI kopiuje zaznaczone wiersze.
+- **Eksport** całej tabeli (po filtrze): tekst z wyrównanymi kolumnami (`.txt`), CSV, Excel (xlsx), JSON (tablica
+  obiektów; liczby bez cudzysłowów, puste — `null`), XML (ROWSET/ROW), HTML, TSV. Kolumna, w której każda niepusta wartość
+  jest liczbą, eksportuje się jako liczbowa. Formaty JSON i tekst doszły także do eksportu i „Kopiuj jako” siatki wyników.
+- **Filtr wartości** (`ValueFilter`, `TableFilter`): tekst — LIKE bez wielkości liter (`%`, `_`; bez nich — równość),
+  `not like …`; porównania `= <> != > >= < <=` i `between … and …` — liczby wg wartości (także liczby pokazywane jako
+  tekst), daty `YYYY-MM-DD` z dokładnością do dnia albo `YYYY-MM-DD HH24:MI[:SS]`, inny tekst bez wielkości liter;
+  `is null` / `is not null`. Warunki kolumn łączy AND, szybki filtr dochodzi jako AND. Pusta wartość nie spełnia LIKE ani
+  porównań. Filtr z menu komórki: „tylko ta wartość” (`= wartość`) i „bez tej wartości” (`<> wartość`). Zmiana zestawu
+  kolumn tabeli (np. inne zapytanie) czyści filtr i sortowanie.
+- Czynności tabel nie są komendami rejestru (jak sortowanie nagłówkiem w D212): działają na klikniętej tabeli, a nie na
+  aktywnym oknie. Siatka wyników zachowuje swoje komendy (kopiowanie, eksport, filtr wyrażeniem — PD-GRID-013/015,
+  DB-GRID-001).
+
+### D215 · 2026-11-03 — Konwencje nazw: parametry IN, OUT i IN OUT osobno, zmienne pakietu, przykłady z RMS
+
+**Prośba właściciela:** „W ustawieniach, przy definicji konwencji nazw dla parametrów (osobno typu IN a osobno OUT
+i IN OUT), stałych i zmiennych (zmiennych brakuje — dodaj) oprzyj się w przykładach o konwencję z repo RMSPROD, głównie
+folder packages.”
+
+**Konwencja w repozytorium** (1445 plików pakietów, deklaracje policzone skryptem, repozytorium tylko czytane):
+parametry IN — `I_` (96%), OUT — `O_` (93%), IN OUT — `O_` (89%, `O_error_message IN OUT`) albo `IO_` (7%); zmienne
+lokalne — `L_` (88%), zmienne pakietu w ciele — `LP_`, w specyfikacji — `GP_`; kursory — `C_` (99%); stałe i typy bez
+jednego przedrostka (najczęstsze `K_`, `GP_`, `CON_`; `TYP_`, `T_`).
+
+- **Pola:** parametry IN, OUT, IN OUT; zmienne lokalne, zmienne pakietu w ciele i w specyfikacji; stałe, kursory, typy.
+  Tryb parametru z deklaracji (bez trybu — IN). Puste OUT / IN OUT — jak IN, puste zmienne specyfikacji — jak w ciele
+  (dotychczasowe ustawienia działają bez zmian); inne puste pole — bez sprawdzania.
+- **Kilka przedrostków po przecinku** (`O_, IO_`); wielkość liter bez znaczenia (`I_item` spełnia `i_`).
+- **Listy wyboru** (D211) zaczynają się od przedrostków RMS z przykładem deklaracji z repozytorium („RMS, np. I_item IN
+  ITEM_MASTER.ITEM%TYPE”), dalej inne spotykane; przycisk **Konwencja RMS** ustawia cały zestaw (stałe i typy — bez
+  sprawdzania). Domyślne wartości (`p_`, `l_`, `g_`…) bez zmian — sprawdzanie jest domyślnie wyłączone.
+- Komunikat podpowiedzi nazywa kategorię („Parametr OUT „x_flag” nie zaczyna się od „O_””).
+
 ### D216 · 2026-11-03 — Dokumentacja Oracle z lokalnego serwera MCP
 
 **Prośba właściciela:** „Na swoim laptopie mam dostępny serwer MCP z dokumentacją Oracle. Byłoby super, gdyby Pelikan
