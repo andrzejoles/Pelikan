@@ -893,6 +893,12 @@ public enum BuiltinCommands {
                 if word == nil, let d = ws.activeDocument, let w = OracleDocs.word(at: d.selectedRange.lowerBound, in: d.text) {
                     (word, next) = (w.word, w.next)
                 }
+                // Dokumentacja lokalna (D216): okno wyników z serwera MCP; z niego strona online jednym przyciskiem.
+                if ws.settings.localDocs.enabled, ws.settings.localDocs.endpoint != nil, let ui = ctx.ui {
+                    guard let word else { throw CommandError.notAvailable(L10n.tr("Ustaw kursor na słowie")) }
+                    ui.showLocalDocs(query: next.map { OracleDocs.sqlStatements.contains(word.uppercased() + "-" + $0.uppercased()) ? word + " " + $0 : word } ?? word)
+                    return .ok
+                }
                 guard let word, let url = OracleDocs.url(for: word, next: next, release: ws.settings.oracleDocsRelease) else {
                     throw CommandError.notAvailable(L10n.tr("Ustaw kursor na słowie"))
                 }
@@ -911,6 +917,10 @@ public enum BuiltinCommands {
                                       summary: L10n.tr("Wyszukuje w dokumentacji Oracle wybranej wersji (Ustawienia › Oracle)."), feature: "PD-DOC-001")) { ctx in
                 let ws = ctx.workspace
                 var q = ctx.arguments.string("query")
+                if ws.settings.localDocs.enabled, ws.settings.localDocs.endpoint != nil, let ui = ctx.ui {
+                    ui.showLocalDocs(query: q ?? "")
+                    return .ok
+                }
                 if q == nil, let ui = ctx.ui { q = await ui.askText(L10n.tr("Dokumentacja Oracle"), message: L10n.tr("Szukane słowa"), defaultValue: "") }
                 guard let q, !q.trimmingCharacters(in: .whitespaces).isEmpty else { throw CommandError.cancelledByUser }
                 var c = URLComponents(string: "https://docs.oracle.com/search/")!
@@ -919,6 +929,15 @@ public enum BuiltinCommands {
                 guard let url = c.url else { throw CommandError.invalidArgument("query", q) }
                 ctx.ui?.openURL(url)
                 return CommandResult(value: .string(url.absoluteString))
+            },
+            Command(CommandDescriptor(id: "help.localDocs", title: L10n.tr("Dokumentacja Oracle (lokalna)…"), category: .help,
+                                      parameters: [CommandParameter("query", .string, L10n.tr("Szukane słowa"))],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Otwiera wyszukiwanie w dokumentacji Oracle z lokalnego serwera MCP (Ustawienia › Oracle)."),
+                                      feature: "PD-DOC-002"),
+                    validate: { ws in ws.settings.localDocs.endpoint != nil }) { ctx in
+                ctx.ui?.showLocalDocs(query: ctx.arguments.string("query") ?? "")
+                return .ok
             },
             Command(CommandDescriptor(id: "help.log", title: L10n.tr("Dziennik aplikacji"), category: .help,
                                       agent: .none, effect: .external,

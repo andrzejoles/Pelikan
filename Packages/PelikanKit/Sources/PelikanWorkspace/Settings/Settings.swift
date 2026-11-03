@@ -244,6 +244,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var language: String?
     /// Wersja dokumentacji Oracle dla pomocy F1 (19, 21, 23, 26).
     public var oracleDocsRelease = OracleDocs.defaultRelease
+    /// Dokumentacja Oracle z lokalnego serwera MCP (D216).
+    public var localDocs = LocalDocsSettings()
     /// Wyszukiwania w sieci z `%s` (PD-EDIT-027).
     public var webSearches: [WebSearch] = WebSearch.defaults
     /// Edytor zewnętrzny: nazwa aplikacji albo ścieżka `.app` (nil — program skojarzony z plikiem; PD-EDIT-028).
@@ -371,6 +373,7 @@ public struct Settings: Sendable, Codable, Hashable {
         requireOwnerForSavedPasswords = v(.requireOwnerForSavedPasswords, requireOwnerForSavedPasswords)
         language = v(.language, language)
         oracleDocsRelease = v(.oracleDocsRelease, oracleDocsRelease)
+        localDocs = v(.localDocs, localDocs)
         webSearches = v(.webSearches, webSearches)
         externalEditor = v(.externalEditor, externalEditor)
         externalDiff = v(.externalDiff, externalDiff)

@@ -2325,6 +2325,62 @@
         }
       }
     },
+    "Adres HTTPS albo HTTP na tym komputerze (127.0.0.1, localhost). Pelikan wysyła do serwera tylko szukane słowa." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HTTPS address or HTTP on this computer (127.0.0.1, localhost). Pelikan sends only the search words to the server."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HTTPS-Adresse oder HTTP auf diesem Computer (127.0.0.1, localhost). Pelikan sendet nur die Suchbegriffe an den Server."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dirección HTTPS o HTTP en este equipo (127.0.0.1, localhost). Pelikan solo envía al servidor las palabras buscadas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Адреса HTTPS або HTTP на цьому комп’ютері (127.0.0.1, localhost). Pelikan надсилає серверу лише слова пошуку."
+          }
+        }
+      }
+    },
+    "Adres serwera MCP" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP server address"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse des MCP-Servers"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dirección del servidor MCP"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Адреса сервера MCP"
+          }
+        }
+      }
+    },
     "Adres wyszukiwania „%@” nie jest adresem http(s)" : {
       "localizations" : {
         "en" : {
@@ -9185,6 +9241,34 @@
         }
       }
     },
+    "Błąd serwera dokumentacji: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentation server error: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler des Dokumentationsservers: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error del servidor de documentación: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Помилка сервера документації: %@"
+          }
+        }
+      }
+    },
     "Błąd w aplikacji" : {
       "localizations" : {
         "en" : {
@@ -9909,6 +9993,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "CTAS tabelle neue_tabelle"
+          }
+        }
+      }
+    },
+    "Cała sekcja" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whole section"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ganzer Abschnitt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sección completa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увесь розділ"
           }
         }
       }
@@ -16241,6 +16353,90 @@
         }
       }
     },
+    "Dokumentacja Oracle (agent)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle documentation (agent)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle-Dokumentation (Agent)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentación de Oracle (agente)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документація Oracle (агент)"
+          }
+        }
+      }
+    },
+    "Dokumentacja Oracle (lokalna)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle documentation (local)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle-Dokumentation (lokal)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentación de Oracle (local)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документація Oracle (локальна)"
+          }
+        }
+      }
+    },
+    "Dokumentacja Oracle (lokalna)…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle documentation (local)…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle-Dokumentation (lokal)…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentación de Oracle (local)…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документація Oracle (локальна)…"
+          }
+        }
+      }
+    },
     "Dokumentacja Oracle…" : {
       "localizations" : {
         "en" : {
@@ -16265,6 +16461,118 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Документація Oracle…"
+          }
+        }
+      }
+    },
+    "Dokumentacja lokalna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local documentation"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokale Dokumentation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentación local"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Локальна документація"
+          }
+        }
+      }
+    },
+    "Dokumentacja lokalna z serwera MCP (F1 i „Dokumentacja Oracle…” najpierw w niej)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local documentation from an MCP server (F1 and “Oracle documentation…” use it first)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokale Dokumentation von einem MCP-Server (F1 und „Oracle-Dokumentation…“ zuerst dort)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentación local de un servidor MCP (F1 y «Documentación de Oracle…» primero en ella)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Локальна документація із сервера MCP (F1 і «Документація Oracle…» спершу в ній)"
+          }
+        }
+      }
+    },
+    "Dokumentacja online" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Online documentation"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Online-Dokumentation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentación en línea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Онлайн-документація"
+          }
+        }
+      }
+    },
+    "Dokumentacja online działa bez serwera (przycisk obok)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Online documentation works without the server (button next to it)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Online-Dokumentation funktioniert ohne Server (Schaltfläche daneben)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La documentación en línea funciona sin el servidor (botón al lado)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Онлайн-документація працює без сервера (кнопка поруч)."
           }
         }
       }
@@ -17805,6 +18113,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Подвійне клацання: %@"
+          }
+        }
+      }
+    },
+    "Działa: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Works: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funktioniert: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funciona: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Працює: %@"
           }
         }
       }
@@ -22145,6 +22481,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Фрагменти назв стовпців (через кому або в рядках — можна вставити список)"
+          }
+        }
+      }
+    },
+    "Fragmentów: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragments: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragmente: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragmentos: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фрагментів: %@"
           }
         }
       }
@@ -36373,6 +36737,34 @@
         }
       }
     },
+    "Liczba fragmentów (1–15)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Number of fragments (1–15)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anzahl der Fragmente (1–15)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número de fragmentos (1–15)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кількість фрагментів (1–15)"
+          }
+        }
+      }
+    },
     "Liczba powtórzeń" : {
       "localizations" : {
         "en" : {
@@ -44545,6 +44937,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Недозволені символи в полі SSH-тунелю: «%@»"
+          }
+        }
+      }
+    },
+    "Niedozwolony adres serwera dokumentacji: %@ (HTTPS albo HTTP na tym komputerze)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address not allowed for the documentation server: %@ (HTTPS or HTTP on this computer)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unzulässige Adresse des Dokumentationsservers: %@ (HTTPS oder HTTP auf diesem Computer)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dirección no permitida para el servidor de documentación: %@ (HTTPS o HTTP en este equipo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недозволена адреса сервера документації: %@ (HTTPS або HTTP на цьому комп’ютері)"
           }
         }
       }
@@ -55273,6 +55693,34 @@
         }
       }
     },
+    "Otwiera wyszukiwanie w dokumentacji Oracle z lokalnego serwera MCP (Ustawienia › Oracle)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens search in the Oracle documentation from a local MCP server (Settings › Oracle)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet die Suche in der Oracle-Dokumentation eines lokalen MCP-Servers (Einstellungen › Oracle)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre la búsqueda en la documentación de Oracle de un servidor MCP local (Ajustes › Oracle)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває пошук у документації Oracle з локального сервера MCP (Налаштування › Oracle)."
+          }
+        }
+      }
+    },
     "Otwiera zaznaczony blok PL/SQL (albo całe okno) w oknie testu i wykonuje go z DBMS_OUTPUT." : {
       "localizations" : {
         "en" : {
@@ -55577,6 +56025,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Objekt öffnen (Agent)"
+          }
+        }
+      }
+    },
+    "Otwórz online" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open online"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Online öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir en línea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити онлайн"
           }
         }
       }
@@ -78625,6 +79101,34 @@
         }
       }
     },
+    "Serwer dokumentacji lokalnej nie odpowiada: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local documentation server does not respond: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der lokale Dokumentationsserver antwortet nicht: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor de documentación local no responde: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Локальний сервер документації не відповідає: %@"
+          }
+        }
+      }
+    },
     "Serwer ma już ten commit — wdrożenie przebuduje i zainstaluje binarki" : {
       "localizations" : {
         "en" : {
@@ -78649,6 +79153,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Server hat diesen Commit bereits — das Deployment baut die Binärdateien neu und installiert sie"
+          }
+        }
+      }
+    },
+    "Serwer odpowiada, ale nic nie znalazł" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server responds but found nothing"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server antwortet, hat aber nichts gefunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor responde, pero no encontró nada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер відповідає, але нічого не знайшов"
           }
         }
       }
@@ -80697,6 +81229,62 @@
         }
       }
     },
+    "Sprawdzanie…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird geprüft…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірка…"
+          }
+        }
+      }
+    },
+    "Sprawdź połączenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung prüfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobar conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити з’єднання"
+          }
+        }
+      }
+    },
     "Sprawdź uaktualnienia…" : {
       "localizations" : {
         "en" : {
@@ -82489,6 +83077,34 @@
         }
       }
     },
+    "Szuka tych samych słów na docs.oracle.com" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searches docs.oracle.com for the same words"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sucht dieselben Begriffe auf docs.oracle.com"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Busca las mismas palabras en docs.oracle.com"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукає ті самі слова на docs.oracle.com"
+          }
+        }
+      }
+    },
     "Szukaj" : {
       "localizations" : {
         "en" : {
@@ -82709,6 +83325,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Шукати у визначеннях таблиць (стовпці, коментарі, CHECK)"
+          }
+        }
+      }
+    },
+    "Szukaj w dokumentacji Oracle (po angielsku, np. DBMS_SCHEDULER.CREATE_JOB repeat_interval)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Oracle documentation (in English, e.g. DBMS_SCHEDULER.CREATE_JOB repeat_interval)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In der Oracle-Dokumentation suchen (auf Englisch, z. B. DBMS_SCHEDULER.CREATE_JOB repeat_interval)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar en la documentación de Oracle (en inglés, p. ej. DBMS_SCHEDULER.CREATE_JOB repeat_interval)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукати в документації Oracle (англійською, напр. DBMS_SCHEDULER.CREATE_JOB repeat_interval)"
           }
         }
       }
@@ -82989,6 +83633,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Пошукові слова"
+          }
+        }
+      }
+    },
+    "Szukane słowa (po angielsku, z nazwami Oracle)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search words (in English, with Oracle names)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suchbegriffe (auf Englisch, mit Oracle-Namen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Palabras buscadas (en inglés, con nombres de Oracle)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Слова пошуку (англійською, з назвами Oracle)"
           }
         }
       }
@@ -87469,6 +88141,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nur ewallet.p12 — Wallet mit automatischer Anmeldung (cwallet.sso) erforderlich"
+          }
+        }
+      }
+    },
+    "Tylko fragment" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragment only"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur Fragment"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo el fragmento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лише фрагмент"
           }
         }
       }
@@ -96909,6 +97609,34 @@
         }
       }
     },
+    "Wersja dokumentacji lokalnej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local documentation version"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version der lokalen Dokumentation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versión de la documentación local"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версія локальної документації"
+          }
+        }
+      }
+    },
     "Wersja utPLSQL zainstalowanego w bazie połączenia (ut_runner.version)." : {
       "localizations" : {
         "en" : {
@@ -96933,6 +97661,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Version des in der Datenbank der Verbindung installierten utPLSQL (ut_runner.version)."
+          }
+        }
+      }
+    },
+    "Wersja: 19c, 11g albo all (domyślnie z Ustawień)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version: 19c, 11g or all (default from Settings)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version: 19c, 11g oder all (Standard aus den Einstellungen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versión: 19c, 11g o all (por defecto, de los Ajustes)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версія: 19c, 11g або all (типово з налаштувань)"
           }
         }
       }
@@ -98417,6 +99173,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Befehlsnamen eingeben …"
+          }
+        }
+      }
+    },
+    "Wpisz szukane słowa albo naciśnij F1 na słowie w edytorze." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type search words or press F1 on a word in the editor."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suchbegriffe eingeben oder im Editor F1 auf einem Wort drücken."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escribe las palabras o pulsa F1 sobre una palabra en el editor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть слова пошуку або натисніть F1 на слові в редакторі."
           }
         }
       }
@@ -100181,6 +100965,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Виберіть фільтр Object Browser."
+          }
+        }
+      }
+    },
+    "Wybierz fragment" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a fragment"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragment auswählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona un fragmento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть фрагмент"
           }
         }
       }
@@ -120065,6 +120877,34 @@
         }
       }
     },
+    "Zwraca fragmenty dokumentacji Oracle z lokalnego serwera MCP: tytuł, sekcję, adres strony online i treść." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Returns Oracle documentation fragments from a local MCP server: title, section, online page address and text."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gibt Fragmente der Oracle-Dokumentation eines lokalen MCP-Servers zurück: Titel, Abschnitt, Adresse der Online-Seite und Text."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Devuelve fragmentos de la documentación de Oracle de un servidor MCP local: título, sección, dirección de la página en línea y texto."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повертає фрагменти документації Oracle з локального сервера MCP: назву, розділ, адресу онлайн-сторінки й текст."
+          }
+        }
+      }
+    },
     "Zwykła" : {
       "localizations" : {
         "en" : {
@@ -123285,6 +124125,34 @@
         }
       }
     },
+    "nieczytelna odpowiedź" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unreadable response"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unlesbare Antwort"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "respuesta ilegible"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "нечитабельна відповідь"
+          }
+        }
+      }
+    },
     "niejednoznaczna nazwa folderu „%@” — podaj identyfikator albo ścieżkę (%@)" : {
       "localizations" : {
         "en" : {
@@ -125917,6 +126785,34 @@
         }
       }
     },
+    "serwer oracle-docs na tym komputerze" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "oracle-docs server on this computer"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "oracle-docs-Server auf diesem Computer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "servidor oracle-docs en este equipo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "сервер oracle-docs на цьому комп’ютері"
+          }
+        }
+      }
+    },
     "skompilowano" : {
       "localizations" : {
         "en" : {
@@ -127957,6 +128853,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeilen: %@"
+          }
+        }
+      }
+    },
+    "wszystkie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "all"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "alle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "todas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "усі"
           }
         }
       }

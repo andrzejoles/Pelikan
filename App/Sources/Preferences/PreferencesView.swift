@@ -567,6 +567,7 @@ struct OraclePane: View {
                 Picker(L10n.tr("Wersja dokumentacji"), selection: setting(workspace, \.oracleDocsRelease)) {
                     ForEach(OracleDocs.releases, id: \.self) { r in Text(r == "19" ? "19c" : r == "21" ? "21c" : r + "ai").tag(r) }
                 }
+                LocalDocsPreferences(workspace: workspace)
             }
             Section(L10n.tr("Hasła połączeń")) {
                 Toggle(L10n.tr("Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego hasła"), isOn: setting(workspace, \.requireOwnerForSavedPasswords))
@@ -792,4 +793,37 @@ final class PreferencesWindowController: NSWindowController {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
+}
+
+/// Dokumentacja Oracle z lokalnego serwera MCP (D216): włącznik, adres, wersja i sprawdzenie połączenia.
+struct LocalDocsPreferences: View {
+    let workspace: Workspace
+    @State private var status = ""
+
+    var body: some View {
+        Toggle(L10n.tr("Dokumentacja lokalna z serwera MCP (F1 i „Dokumentacja Oracle…” najpierw w niej)"), isOn: setting(workspace, \.localDocs.enabled))
+        if workspace.settings.localDocs.enabled {
+            ChoiceField(L10n.tr("Adres serwera MCP"), text: setting(workspace, \.localDocs.url), prompt: "http://127.0.0.1:8765/mcp",
+                        choices: [PreferenceChoice("http://127.0.0.1:8765/mcp", L10n.tr("serwer oracle-docs na tym komputerze"))])
+            Picker(L10n.tr("Wersja dokumentacji lokalnej"), selection: setting(workspace, \.localDocs.version)) {
+                ForEach(LocalDocsSettings.versions, id: \.self) { v in Text(v == "all" ? L10n.tr("wszystkie") : v).tag(v) }
+            }
+            HStack {
+                Button(L10n.tr("Sprawdź połączenie")) { Task { await check() } }
+                Text(status).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(2)
+            }
+            Text(L10n.tr("Adres HTTPS albo HTTP na tym komputerze (127.0.0.1, localhost). Pelikan wysyła do serwera tylko szukane słowa."))
+                .font(.uiSecondary).foregroundStyle(.secondary)
+        }
+    }
+
+    private func check() async {
+        let s = workspace.settings.localDocs
+        guard let endpoint = s.endpoint else { status = LocalDocsError.badAddress(s.url).localizedDescription; return }
+        status = L10n.tr("Sprawdzanie…")
+        do {
+            let found = try await LocalDocsClient(endpoint: endpoint).search("SELECT statement", version: s.version, count: 1)
+            status = found.isEmpty ? L10n.tr("Serwer odpowiada, ale nic nie znalazł") : L10n.tr("Działa: \(found[0].title)")
+        } catch { status = error.localizedDescription }
+    }
 }

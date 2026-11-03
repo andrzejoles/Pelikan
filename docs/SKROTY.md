@@ -615,6 +615,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Funkcja |
 |---|---|---|---|---|---|
 | Połączenia (agent) | `agent.connections` |  |  | Odczyt | AI-TOOL-001 |
+| Dokumentacja Oracle (agent) | `agent.oracleDocs` |  |  | Odczyt | AI-TOOL-004 |
 | Stan okien (agent) | `agent.state` |  |  | Odczyt | AI-TOOL-001 |
 | Treść edytora (agent) | `agent.editor` |  |  | Odczyt | AI-TOOL-001 |
 | Nowe okno z tekstem (agent) | `agent.openEditor` |  |  | Pełny | AI-TOOL-002 |
@@ -649,6 +650,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Pomoc kontekstowa (dokumentacja Oracle) | `help.context` | F1 | F1 | Brak | PD-EDIT-026 |
 | Instrukcja Pelikana | `help.manual` | ⇧⌘/ | ⇧⌘/ | Brak | PL-INFRA-010 |
 | Dokumentacja Oracle… | `help.oracleManuals` |  |  | Brak | PD-DOC-001 |
+| Dokumentacja Oracle (lokalna)… | `help.localDocs` |  |  | Brak | PD-DOC-002 |
 | Dziennik aplikacji | `help.log` |  |  | Brak | PL-INFRA-011 |
 | Zgłoś problem… | `help.reportProblem` |  |  | Brak | PL-INFRA-013 |
 | Eksportuj dziennik… | `help.exportLog` |  |  | Brak | PL-INFRA-011 |

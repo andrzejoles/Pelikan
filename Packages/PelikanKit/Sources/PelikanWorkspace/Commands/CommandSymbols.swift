@@ -79,7 +79,7 @@ public enum CommandSymbols {
         "vcs.openBranchChanges": "arrow.triangle.branch",
         "view.toolDockAutoHide": "eye.slash", "view.dockToolRight": "rectangle.righthalf.inset.filled", "view.dockToolBottom": "dock.arrow.down.rectangle",
         "view.floatTool": "macwindow.on.rectangle", "view.closeTool": "xmark.rectangle", "help.manual": "book.closed", "help.context": "questionmark.circle",
-        "help.oracleManuals": "books.vertical", "view.commandPalette": "command.square", "help.log": "doc.text.below.ecg", "help.exportLog": "square.and.arrow.up.on.square", "help.reportProblem": "exclamationmark.bubble", "view.ribbonSearch": "magnifyingglass.circle",
+        "help.oracleManuals": "books.vertical", "help.localDocs": "text.book.closed", "view.commandPalette": "command.square", "help.log": "doc.text.below.ecg", "help.exportLog": "square.and.arrow.up.on.square", "help.reportProblem": "exclamationmark.bubble", "view.ribbonSearch": "magnifyingglass.circle",
         // Wynik
         "sql.refreshResult": "arrow.clockwise", "sql.autoRefresh": "timer", "grid.nextPage": "arrow.down.doc", "grid.lastPage": "arrow.down.to.line",
         "sql.toggleEditor": "rectangle.tophalf.inset.filled", "grid.edit": "pencil", "grid.insertRecord": "plus.rectangle",

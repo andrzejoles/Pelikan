@@ -2,6 +2,13 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## Następna wersja
+
+- **Dokumentacja Oracle z lokalnego serwera MCP:** w Ustawieniach › Oracle można włączyć serwer dokumentacji na tym
+  komputerze (np. `oracle-docs` pod `http://127.0.0.1:8765/mcp`). F1 i „Dokumentacja Oracle…” pokazują wtedy fragmenty
+  dokumentacji 19c albo 11g w oknie Pelikana — z całą sekcją, kopiowaniem i stroną online jednym kliknięciem.
+  Dokumentacja online działa jak dotąd, także gdy serwer nie odpowiada. Agent Pelikana też może z niej korzystać.
+
 ## 1.15.2 — standard plików i UTF-8 dla Pro*C, listy wyboru w ustawieniach, sortowanie tabel
 
 Zmiany z wersji 1.14.0–1.15.2 (bez osobnych wydań), wydane razem.

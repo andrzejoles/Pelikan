@@ -1,0 +1,1 @@
+[{"command": "help.localDocs", "args": {"query": "DBMS_OUTPUT.PUT_LINE"}, "delay": 5}]

@@ -3395,3 +3395,27 @@ utrwalał błąd.
   ISO-8859-2 — zero znaków sterujących i przekłamań), w testach — próbki Windows-1250 i ISO-8859-2.
 - Wdrożenie Pro*C (SSH) wysyła pliki bajt w bajt — po konwersji na serwer trafia UTF-8 (polskie litery są tylko
   w komentarzach; kompilator Pro*C ich nie interpretuje).
+
+### D216 · 2026-11-03 — Dokumentacja Oracle z lokalnego serwera MCP
+
+**Prośba właściciela:** „Na swoim laptopie mam dostępny serwer MCP z dokumentacją Oracle. Byłoby super, gdyby Pelikan
+oprócz dokumentacji Online potrafił z niego korzystać.”
+
+Serwer właściciela (`oracle-docs`, Streamable HTTP, `http://127.0.0.1:8765/mcp`) indeksuje dokumentację 19c i 11g R2
+i ma narzędzia `search_oracle_docs` (fragmenty: tytuł, ścieżka sekcji, adres strony online, `chunk_id`, treść)
+i `get_doc_section` (cała sekcja).
+
+- **Klient MCP w Pelikanie** (`LocalDocsClient`): `initialize` przy pierwszym wywołaniu, `notifications/initialized`,
+  potem `tools/call`; identyfikator sesji `Mcp-Session-Id`, jeśli serwer go nada; odpowiedź JSON albo SSE. Bez
+  zależności zewnętrznych.
+- **Ustawienia › Oracle › Dokumentacja Oracle (F1):** włącznik (domyślnie wyłączony), adres serwera (podpowiedź —
+  adres serwera właściciela), wersja dokumentacji lokalnej (19c, 11g, wszystkie), „Sprawdź połączenie”. Dozwolony
+  adres HTTPS albo HTTP na tym komputerze.
+- **F1 i „Dokumentacja Oracle…”** przy włączonej dokumentacji lokalnej otwierają okno **Dokumentacja Oracle
+  (lokalna)**: pole wyszukiwania (słowo pod kursorem, polecenie dwuwyrazowe jak w F1 online), wersja, lista fragmentów
+  (sekcja i książka), treść fragmentu albo „Cała sekcja”, Kopiuj, „Otwórz online” (strona fragmentu) i „Dokumentacja
+  online” (te same słowa na docs.oracle.com — działa także, gdy serwer nie odpowiada). Kolejne F1 podmienia zapytanie
+  w tym samym oknie. Wyłączona dokumentacja lokalna — F1 jak dotąd (docs.oracle.com).
+- **Komendy:** `help.localDocs` (okno, wstążka Pomoc › Dokumentacja lokalna) i narzędzie agenta `search_oracle_docs`
+  (`agent.oracleDocs`, Odczyt): agent Pelikana może sprawdzić składnię w dokumentacji użytkownika bez sieci; fragmenty
+  oznaczone jako dane niezaufane (jak dane z bazy).
