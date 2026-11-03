@@ -43,7 +43,7 @@ public struct CommandID: Hashable, Sendable, Codable, RawRepresentable, Expressi
 /// Kategoria = menu główne (kolejność menu jak wstążki PL/SQL Developer: File, Project, Edit, Session, Debug, Tools,
 /// Reports, Configure, View, Window, Help — dopasowane do HIG: Configure → Ustawienia w menu aplikacji).
 public enum CommandCategory: String, Sendable, Codable, CaseIterable {
-    case file, project, edit, session, debug, tools, reports, view, window, help
+    case file, project, edit, session, debug, tools, reports, performance, view, window, help
 
     public var displayName: String {
         switch self {
@@ -54,6 +54,7 @@ public enum CommandCategory: String, Sendable, Codable, CaseIterable {
         case .debug: L10n.tr("Debugowanie")
         case .tools: L10n.tr("Narzędzia")
         case .reports: L10n.tr("Raporty")
+        case .performance: L10n.tr("Wydajność")
         case .view: L10n.tr("Widok")
         case .window: L10n.tr("Okno")
         case .help: L10n.tr("Pomoc")

@@ -56,7 +56,7 @@ public enum RibbonModel {
     public static let separator = "-"
 
     @MainActor public static var tabs: [RibbonTab] {
-        [start, edit, database, debug, tools, reports, view, result, program, command, plan, diagram, report, notebook]
+        [start, edit, database, debug, tools, reports, performance, view, result, program, command, plan, diagram, report, notebook]
     }
 
     /// Karty widoczne przy aktywnym oknie danego rodzaju: stałe i kontekstowe tego rodzaju.
@@ -391,6 +391,35 @@ public enum RibbonModel {
             ]),
             RibbonGroup(L10n.tr("Wszystkie"), [
                 .menu(L10n.tr("Raporty z menu"), symbol: "list.bullet.rectangle", commands: ["reports.*"], large: true),
+            ]),
+        ])
+    }
+
+    /// Wydajność (D217): raporty dla zapytania (SQL_ID z zaznaczenia) i raporty bazy z pakietów Diagnostics/Tuning.
+    @MainActor static var performance: RibbonTab {
+        RibbonTab("performance", L10n.tr("Wydajność"), [
+            RibbonGroup(L10n.tr("Zapytanie"), [
+                .large("perf.sqlReports", label: L10n.tr("Raporty dla SQL_ID")),
+            ]),
+            RibbonGroup(L10n.tr("AWR"), [
+                .large("perf.awr", label: L10n.tr("Raport AWR")),
+                .small("perf.awrDiff", label: L10n.tr("Porównanie AWR")), .small("perf.addm", label: L10n.tr("ADDM")),
+                .small("perf.addmCompare", label: L10n.tr("Porównanie ADDM")),
+            ]),
+            RibbonGroup(L10n.tr("ASH"), [
+                .large("perf.ash", label: L10n.tr("Raport ASH")), .small("perf.ashAnalytics", label: L10n.tr("ASH Analytics")),
+            ]),
+            RibbonGroup(L10n.tr("Bieżąca praca"), [
+                .large("perf.perfHub", label: L10n.tr("Performance Hub")),
+                .small("perf.session", label: L10n.tr("Sesja")), .small("perf.realtimeADDM", label: L10n.tr("Real-Time ADDM")),
+                .small("perf.monitorList", label: L10n.tr("SQL Monitor")),
+            ]),
+            RibbonGroup(L10n.tr("Optymalizator"), [
+                .small("perf.statsOps", label: L10n.tr("Statystyki")), .small("perf.autoTuning", label: L10n.tr("Auto SQL Tuning")),
+                .small("perf.spmEvolve", label: L10n.tr("Ewolucja SPM")),
+            ]),
+            RibbonGroup(L10n.tr("Wszystkie"), [
+                .large("perf.reports", label: L10n.tr("Wszystkie raporty")),
             ]),
         ])
     }
