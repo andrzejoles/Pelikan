@@ -3395,3 +3395,36 @@ utrwalał błąd.
   ISO-8859-2 — zero znaków sterujących i przekłamań), w testach — próbki Windows-1250 i ISO-8859-2.
 - Wdrożenie Pro*C (SSH) wysyła pliki bajt w bajt — po konwersji na serwer trafia UTF-8 (polskie litery są tylko
   w komentarzach; kompilator Pro*C ich nie interpretuje).
+
+### D214 · 2026-11-03 — Kopiowanie, eksport i filtr wartości kolumn w każdej tabeli
+
+**Prośba właściciela:** „każda tabelka [ma mieć] możliwość kopiowania (zaznaczonych kolumn, zaznaczonych wierszy,
+zawartości komórki, całej tabeli) oraz export całej tabeli (minimum txt, csv, xlsx, json, xml oraz html)” oraz filtr po
+wartościach kolumn — „wyrażenie typu LIKE bez względu na wielkość liter”, dla liczb „=5, >=6, between 3 and 4”, dla dat
+„= 2026-10-03” w formacie YYYY-MM-DD; tekst „tak jak like, czyli wszelkie kombinacje tekstu ze znakami % i _”.
+
+- **Wspólny komponent:** tabele SwiftUI z D212 (≈50) używają `DataTable` z kolumnami `DataColumn` (tytuł, tekst komórki,
+  klucz sortowania, opcjonalny widok komórki); tabele AppKit z D212 (komunikaty kompilacji, aktywność i dziennik
+  agenta — pliki i wpisy, informacje o obiekcie, widok rekordu) — `AppKitTableTools`. Plan wykonania (drzewo) ma ten
+  sam pasek i menu; przy aktywnym filtrze pokazuje pasujące kroki jako płaską listę. Tekst komórki do kopii, eksportu
+  i filtra to tekst pokazany w tabeli (kolumny bez tekstu — z klucza sortowania: liczby, daty `YYYY-MM-DD HH24:MI:SS`).
+- **Pasek nad tabelą:** szybki filtr (wzorzec w dowolnej kolumnie; bez `%` i `_` — fragment tekstu), „Filtr kolumn…”
+  (pole na każdą kolumnę, opis składni), „Wyczyść filtr”, liczba wierszy („z” — przy filtrze), menu Kopiuj i Eksportuj;
+  w wąskim panelu — same ikony.
+- **Kopiowanie** (menu kontekstowe wiersza i menu paska): komórka (lista kolumn klikniętego wiersza; w AppKit — klikniętą
+  komórkę), wiersz / zaznaczone wiersze, kolumna, kolumny zaznaczone do kopii (zaznaczanie w podmenu — tabela SwiftUI nie
+  ma zaznaczania kolumn), zaznaczone kolumny zaznaczonych wierszy, cała tabela (po filtrze, w kolejności widoku),
+  nagłówki; przełącznik „Kopiuj z nagłówkiem” (wspólny, domyślnie włączony). Schowek: tekst z tabulatorami i HTML
+  (wkleja się jako tabela); ⌘C w tabeli SwiftUI kopiuje zaznaczone wiersze.
+- **Eksport** całej tabeli (po filtrze): tekst z wyrównanymi kolumnami (`.txt`), CSV, Excel (xlsx), JSON (tablica
+  obiektów; liczby bez cudzysłowów, puste — `null`), XML (ROWSET/ROW), HTML, TSV. Kolumna, w której każda niepusta wartość
+  jest liczbą, eksportuje się jako liczbowa. Formaty JSON i tekst doszły także do eksportu i „Kopiuj jako” siatki wyników.
+- **Filtr wartości** (`ValueFilter`, `TableFilter`): tekst — LIKE bez wielkości liter (`%`, `_`; bez nich — równość),
+  `not like …`; porównania `= <> != > >= < <=` i `between … and …` — liczby wg wartości (także liczby pokazywane jako
+  tekst), daty `YYYY-MM-DD` z dokładnością do dnia albo `YYYY-MM-DD HH24:MI[:SS]`, inny tekst bez wielkości liter;
+  `is null` / `is not null`. Warunki kolumn łączy AND, szybki filtr dochodzi jako AND. Pusta wartość nie spełnia LIKE ani
+  porównań. Filtr z menu komórki: „tylko ta wartość” (`= wartość`) i „bez tej wartości” (`<> wartość`). Zmiana zestawu
+  kolumn tabeli (np. inne zapytanie) czyści filtr i sortowanie.
+- Czynności tabel nie są komendami rejestru (jak sortowanie nagłówkiem w D212): działają na klikniętej tabeli, a nie na
+  aktywnym oknie. Siatka wyników zachowuje swoje komendy (kopiowanie, eksport, filtr wyrażeniem — PD-GRID-013/015,
+  DB-GRID-001).

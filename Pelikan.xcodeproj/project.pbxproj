@@ -55,6 +55,7 @@
 		5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */; };
 		5ECD40E66F671B53CBD29985 /* Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3554C8E9BEC253635C7FDF /* Accessibility.swift */; };
 		60E876C2683DB098B85C39A8 /* LocalHTMLView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CCD8DCD02E96AFEB6162242 /* LocalHTMLView.swift */; };
+		618EB76A6295F2ADDB2DB45F /* TableToolsAppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AA3A0B5DC9F48D4EB0FDCF4 /* TableToolsAppKit.swift */; };
 		63D1215F56AA8BD1DE0A8E08 /* AppLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7D6615E89A14B21F573B88A /* AppLogging.swift */; };
 		69DB4FD0F5B586E5F8B98B29 /* TabStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F187215A572499B1DAD61B4 /* TabStrip.swift */; };
 		69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A838393A0802C7E216722E /* TestWindowViewController.swift */; };
@@ -92,6 +93,7 @@
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
 		CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */; };
 		CE85A176807A4599C1FD3C9B /* NotebookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565A13529D730F54DE0A35B8 /* NotebookViewController.swift */; };
+		CFE72E50BFDFD380C3EE8C88 /* DataTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC82F76EB775852356F7D08E /* DataTable.swift */; };
 		D0E4E53E61B71D09B1D4C583 /* ServicesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285C7B10C63EF5F2F56D1679 /* ServicesProvider.swift */; };
 		D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7056F4E355029FE5D90B7C /* AppDelegate.swift */; };
 		D23D6E5FE264EA699F32CE3A /* Stage7Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = 553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */; };
@@ -193,6 +195,7 @@
 		369A71A0156A1C021DAA7137 /* ToolDock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolDock.swift; sourceTree = "<group>"; };
 		369E922BFAFA0E7E2337EF13 /* AgentUIController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentUIController.swift; sourceTree = "<group>"; };
 		36AE2DE94D1F2561A8FB1436 /* DBAViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBAViews.swift; sourceTree = "<group>"; };
+		3AA3A0B5DC9F48D4EB0FDCF4 /* TableToolsAppKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableToolsAppKit.swift; sourceTree = "<group>"; };
 		3CD00EBBD1B1E5BDF5BE3469 /* GridToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridToolViews.swift; sourceTree = "<group>"; };
 		3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBuilderView.swift; sourceTree = "<group>"; };
 		3F187215A572499B1DAD61B4 /* TabStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabStrip.swift; sourceTree = "<group>"; };
@@ -251,6 +254,7 @@
 		C866A6E13301104082FC8632 /* AgentsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentsPane.swift; sourceTree = "<group>"; };
 		CA27E74D0C918323B465606B /* ToolWindows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolWindows.swift; sourceTree = "<group>"; };
 		CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPalette.swift; sourceTree = "<group>"; };
+		CC82F76EB775852356F7D08E /* DataTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTable.swift; sourceTree = "<group>"; };
 		D7D6615E89A14B21F573B88A /* AppLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogging.swift; sourceTree = "<group>"; };
 		D823868EFA8AB35B9B9E1B7C /* TestExplorerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestExplorerView.swift; sourceTree = "<group>"; };
 		DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakpointsView.swift; sourceTree = "<group>"; };
@@ -496,6 +500,7 @@
 				5F92ED91422BB2BB0A701B9B /* AppFonts.swift */,
 				D7D6615E89A14B21F573B88A /* AppLogging.swift */,
 				CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */,
+				CC82F76EB775852356F7D08E /* DataTable.swift */,
 				8CCD8DCD02E96AFEB6162242 /* LocalHTMLView.swift */,
 				763E3F551A3684075944A130 /* main.swift */,
 				16B2BB118EADAF6ADD890DD1 /* MainToolbar.swift */,
@@ -507,6 +512,7 @@
 				9F1B24691B6354EFAAF3C9F2 /* SidebarToggleAccessory.swift */,
 				F7E4D86502008EA02BAC9C4E /* TabGroupViews.swift */,
 				1BF8FF2B449C2E023BDF4F33 /* TableSorting.swift */,
+				3AA3A0B5DC9F48D4EB0FDCF4 /* TableToolsAppKit.swift */,
 				3F187215A572499B1DAD61B4 /* TabStrip.swift */,
 				031C04E8448920291721F4D5 /* UIScriptSnapshots.swift */,
 				BCA1F7D08B4C1DA2D9811189 /* UIScriptWindows.m */,
@@ -877,6 +883,7 @@
 				A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */,
 				950E9DE97966450BC3AAF2A4 /* DBAViews.swift in Sources */,
 				F147BE03144C72C7C41A0947 /* DataGripViews.swift in Sources */,
+				CFE72E50BFDFD380C3EE8C88 /* DataTable.swift in Sources */,
 				2BB6857A69B280020AEE77BF /* DataTransferViews.swift in Sources */,
 				2D222E60B408BB5115D2F892 /* DebuggerPanel.swift in Sources */,
 				03CB6BD82CCC13B71756BCA5 /* DiagramViewController.swift in Sources */,
@@ -930,6 +937,7 @@
 				69DB4FD0F5B586E5F8B98B29 /* TabStrip.swift in Sources */,
 				DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */,
 				37B96C07C2FC724B8DBAF74C /* TableSorting.swift in Sources */,
+				618EB76A6295F2ADDB2DB45F /* TableToolsAppKit.swift in Sources */,
 				997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */,
 				A642A0E43AB977C2957DE20E /* TestExplorerView.swift in Sources */,
 				F98A11652F3F95A8B92579A8 /* TestManagerView.swift in Sources */,

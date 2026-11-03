@@ -7,10 +7,6 @@ import SwiftUI
 /// zaznaczonej sesji, zabijanie sesji i akcje (SQL Trace), edycja zapytań (Define Session Queries). Lista, szczegóły,
 /// zabijanie i akcje na połączeniu okna (ustalonym przy otwarciu) — SID/SERIAL# zawsze z tej samej bazy.
 struct SessionBrowserView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortDetail: [ColumnSort<DetailRow>] = []
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortRows: [ColumnSort<SessionRow>] = []
     let workspace: Workspace
     /// Auto-odświeżanie pomija narzędzie niewidoczne (karta w tle, zwinięty panel, zminimalizowane okno).
     @Environment(\.toolLifetime) private var lifetime
@@ -51,9 +47,9 @@ struct SessionBrowserView: View {
                 Button(L10n.tr("Zapytania…")) { editing = true }
             }
             VSplitView {
-                Table(rows.sorted(by: sortRows), selection: $selection, sortOrder: $sortRows) {
-                    TableColumnForEach(shown, id: \.self) { name in
-                        TableColumn(name, sortKey: { (r: SessionRow) in r.values[name] ?? "" }) { (r: SessionRow) in Text(r.values[name] ?? "").lineLimit(1) }
+                DataTable(rows, title: L10n.tr("Sesje"), selection: .single($selection)) {
+                    for name in shown {
+                        DataColumn(name, text: { (r: SessionRow) in r.values[name] ?? "" })
                     }
                 }
                 .frame(minHeight: 160)
@@ -107,9 +103,9 @@ struct SessionBrowserView: View {
             if let text = d.text {
                 ScrollView { Text(text).font(.code).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
             } else {
-                Table((d.rows.indices.map { DetailRow(id: $0, values: d.rows[$0]) }).sorted(by: sortDetail), sortOrder: $sortDetail) {
-                    TableColumnForEach(d.columns.indices.map { $0 }, id: \.self) { i in
-                        TableColumn(d.columns[i], sortKey: { (r: DetailRow) in i < r.values.count ? r.values[i] : "" }) { (r: DetailRow) in Text(i < r.values.count ? r.values[i] : "").lineLimit(1) }
+                DataTable(d.rows.indices.map { DetailRow(id: $0, values: d.rows[$0]) }, title: detailName) {
+                    for i in d.columns.indices {
+                        DataColumn(d.columns[i], id: "\(i)", text: { (r: DetailRow) in i < r.values.count ? r.values[i] : "" })
                     }
                 }
             }

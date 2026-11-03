@@ -2,6 +2,15 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## Następna wersja
+
+- **Kopiowanie, eksport i filtr w każdej tabeli:** nad tabelami (sesje, DBA, Scheduler, porównania, plan, profiler,
+  komunikaty kompilacji, aktywność agenta…) jest pasek z filtrem, menu Kopiuj i Eksportuj. Można skopiować komórkę,
+  zaznaczone wiersze, kolumnę, wybrane kolumny albo całą tabelę (wkleja się jako tabela do arkusza i edytora) i zapisać
+  całą tabelę jako TXT, CSV, XLSX, JSON, XML albo HTML. Filtr kolumn: tekst jak LIKE bez wielkości liter (`abc%`,
+  `a_c`), liczby i daty przez `= 5`, `>= 6`, `between 3 and 4`, `= 2026-10-03`, puste — `is null`; filtr „tylko ta
+  wartość” z menu wiersza. Siatka wyników eksportuje i kopiuje teraz także do JSON i tekstu z wyrównanymi kolumnami.
+
 ## 1.15.2 — standard plików i UTF-8 dla Pro*C, listy wyboru w ustawieniach, sortowanie tabel
 
 Zmiany z wersji 1.14.0–1.15.2 (bez osobnych wydań), wydane razem.

@@ -5,8 +5,6 @@ import SwiftUI
 
 /// Monitor zdarzeń (UG 24.13): alerty i rury, lista odebranych zdarzeń.
 struct EventMonitorView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortEvents: [ColumnSort<EventMonitor.Event>] = []
     let workspace: Workspace
     @State private var connection: UUID?
     @State private var kind: EventMonitor.Kind = .alert
@@ -31,10 +29,10 @@ struct EventMonitorView: View {
                 }
                 Button(L10n.tr("Wyczyść")) { monitor?.clear() }
             }
-            Table((monitor?.events ?? []).sorted(by: sortEvents), sortOrder: $sortEvents) {
-                TableColumn(L10n.tr("Czas"), sortKey: { e in e.time }) { e in Text(e.time.formatted(date: .omitted, time: .standard)) }.width(90)
-                TableColumn(L10n.tr("Nazwa"), sortKey: { e in e.name }) { e in Text(e.name) }.width(160)
-                TableColumn(L10n.tr("Treść"), sortKey: { e in e.message }) { e in Text(e.message).textSelection(.enabled) }
+            DataTable(monitor?.events ?? []) {
+                DataColumn(L10n.tr("Czas"), sortKey: { e in e.time }) { e in Text(e.time.formatted(date: .omitted, time: .standard)) }.width(90)
+                DataColumn(L10n.tr("Nazwa"), sortKey: { e in e.name }) { e in Text(e.name) }.width(160)
+                DataColumn(L10n.tr("Treść"), sortKey: { e in e.message }) { e in Text(e.message).textSelection(.enabled) }
             }
             Text(monitor?.error ?? message).font(.uiSecondary).foregroundStyle(monitor?.error == nil ? Color.secondary : Color.red)
         }
@@ -62,8 +60,6 @@ struct EventMonitorView: View {
 
 /// Test obciążenia (UG 24.17): kroki, wątki, iteracje; wyniki na żywo w tabeli, słupkach i linii przepustowości.
 struct LoadTesterView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortStats: [ColumnSort<LoadStepStats>] = []
     let workspace: Workspace
     @State private var connection: UUID?
     @State private var test: LoadTest = {
@@ -125,12 +121,12 @@ struct LoadTesterView: View {
         if let t = tester {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.tr("Iteracje: \(t.completedIterations) z \(test.threads * test.iterations)")).font(.uiSecondary)
-                Table(t.stats.sorted(by: sortStats), sortOrder: $sortStats) {
-                    TableColumn(L10n.tr("Krok"), sortKey: { s in s.name }) { s in Text(s.name) }
-                    TableColumn(L10n.tr("Wykonania"), sortKey: { s in s.count }) { s in Text("\(s.count)").monospacedDigit() }.width(80)
-                    TableColumn(L10n.tr("Błędy"), sortKey: { s in s.errors }) { s in Text("\(s.errors)").foregroundStyle(s.errors > 0 ? .red : .primary) }.width(60)
-                    TableColumn(L10n.tr("Średnio ms"), sortKey: { s in s.averageMs }) { s in Text(String(format: "%.1f", s.averageMs)).monospacedDigit() }.width(80)
-                    TableColumn(L10n.tr("Maks ms"), sortKey: { s in s.maxMs }) { s in Text(String(format: "%.1f", s.maxMs)).monospacedDigit() }.width(70)
+                DataTable(t.stats) {
+                    DataColumn(L10n.tr("Krok"), sortKey: { s in s.name }) { s in Text(s.name) }
+                    DataColumn(L10n.tr("Wykonania"), sortKey: { s in s.count }) { s in Text("\(s.count)").monospacedDigit() }.width(80)
+                    DataColumn(L10n.tr("Błędy"), sortKey: { s in s.errors }) { s in Text("\(s.errors)").foregroundStyle(s.errors > 0 ? .red : .primary) }.width(60)
+                    DataColumn(L10n.tr("Średnio ms"), sortKey: { s in s.averageMs }) { s in Text(String(format: "%.1f", s.averageMs)).monospacedDigit() }.width(80)
+                    DataColumn(L10n.tr("Maks ms"), sortKey: { s in s.maxMs }) { s in Text(String(format: "%.1f", s.maxMs)).monospacedDigit() }.width(70)
                 }
                 .frame(minHeight: 120)
                 Chart(t.stats) { s in BarMark(x: .value(L10n.tr("Krok"), s.name), y: .value(L10n.tr("Średnio ms"), s.averageMs)) }

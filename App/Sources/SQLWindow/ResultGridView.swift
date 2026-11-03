@@ -745,7 +745,10 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
     }
 
     private var fields: [Field] = []
+    /// Pola rekordu przed filtrem (D214).
+    private var allFields: [Field] = []
     private let table = NSTableView()
+    private var tools: AppKitTableTools!
     private let label = NSTextField(labelWithString: "")
     var onMove: ((Int) -> Void)?
     /// Czcionka siatki z Preferencji (D178) — ustawia ją siatka przed `show`.
@@ -767,9 +770,13 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
         table.dataSource = self
         table.delegate = self
         table.usesAutomaticRowHeights = true
-        let scroll = NSScrollView()
-        scroll.documentView = table
-        scroll.hasVerticalScroller = true
+        let tableScroll = NSScrollView()
+        tableScroll.documentView = table
+        tableScroll.hasVerticalScroller = true
+        tools = AppKitTableTools(table: table, title: { L10n.tr("Rekord") }, total: { [weak self] in self?.allFields.count ?? 0 },
+                                 cell: { [weak self] r, id in self.map { $0.fields.indices.contains(r) ? Self.text($0.fields[r], id) : "" } ?? "" },
+                                 onFilterChange: { [weak self] in self?.refresh() })
+        let scroll = tools.wrap(tableScroll)
         let prev = ClosureButton(title: "◀︎", action: { [weak self] in self?.onMove?(-1) })
         let next = ClosureButton(title: "▶︎", action: { [weak self] in self?.onMove?(1) })
         prev.toolTip = L10n.tr("Poprzedni rekord")
@@ -796,10 +803,27 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
     required init?(coder: NSCoder) { fatalError() }
 
     func show(row: Int, of count: Int, fields: [Field]) {
-        self.fields = Self.sorted(fields, by: table.sortDescriptors)
+        allFields = fields
+        refresh()
         label.font = .monospacedDigitSystemFont(ofSize: InterfaceFonts.shared.small.pointSize, weight: .regular)
         label.stringValue = count == 0 ? "" : L10n.tr("Rekord \(row + 1) z \(count)")
+    }
+
+    private func refresh() {
+        fields = tools.filter(Self.sorted(allFields, by: table.sortDescriptors)) { f, id in
+            (Self.text(f, id), id == "value" && f.isNull ? .none : Self.text(f, id).sortKey)
+        }
         table.reloadData()
+        tools.reloaded()
+    }
+
+    static func text(_ f: Field, _ column: String) -> String {
+        switch column {
+        case "name": f.name
+        case "value": f.value
+        case "comment": f.comment
+        default: f.type
+        }
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int { fields.count }
@@ -816,10 +840,7 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
         }
     }
 
-    func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
-        fields = Self.sorted(fields, by: tableView.sortDescriptors)
-        tableView.reloadData()
-    }
+    func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) { refresh() }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let f = fields[row]
