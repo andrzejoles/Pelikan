@@ -111,6 +111,12 @@ public struct StatementStartMemory: Sendable, Equatable {
         while let k = lastCheckpoint(atOrBefore: lineStart),
               lastStart(atOrBefore: lineStart).map({ $0 <= checkpoints[k].position }) ?? true {
             let cp = checkpoints[k]
+            // Punkt podprogramu dokładnie na początku linii — przejście jest puste, więc słowo linii sprawdzane osobno
+            // (linia zmieniona za wcięciem nie unieważnia punktu, a mogła przestać zaczynać podprogram).
+            if cp.subprogram, cp.position == lineStart, !Self.startsSubprogram(text, at: lineStart, unit: cp.unit) {
+                checkpoints.remove(at: k)
+                continue
+            }
             var scan = Scan(statement: cp.statement, region: cp.region, unit: cp.unit, checkpointsFrom: cp.position + 1, plsql: true)
             scan.run(text, from: cp.position, to: lineStart, expectSubprogram: cp.subprogram)
             if !scan.ended, !scan.stale {
@@ -206,6 +212,16 @@ public struct StatementStartMemory: Sendable, Equatable {
     }
 
     func lastStart(atOrBefore p: Int) -> Int? { lastStartIndex(atOrBefore: p).map { starts[$0] } }
+
+    /// Czy linia od `position` zaczyna (po wcięciu) słowem podprogramu jednostki.
+    static func startsSubprogram(_ text: NSString, at position: Int, unit: Unit?) -> Bool {
+        var p = position
+        while p < text.length, [0x20, 0x09].contains(text.character(at: p)) { p += 1 }
+        var e = p
+        while e < text.length, let u = UnicodeScalar(text.character(at: e)), CharacterSet.letters.contains(u) { e += 1 }
+        let word = text.substring(with: NSRange(location: p, length: e - p)).uppercased()
+        return (unit?.typeBody == true ? Scan.typeStarters : Scan.packageStarters).contains(word)
+    }
 
     /// Liczba linii między pozycjami (najwyżej `limit + 1` — liczenie od końca).
     static func lines(from a: Int, to b: Int, in text: NSString, limit: Int) -> Int {

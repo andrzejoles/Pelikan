@@ -956,10 +956,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let tabWidth = max(1, ws.settings.tabSize)
         textView.lineEdited = { [weak self] text, caret in
             guard let self else { return true }
-            // Koniec treści linii bez separatora — każdego (LF, CR, U+2028, U+2029, NEL).
-            var start = 0, end = 0, contentsEnd = 0
-            (text as NSString).getLineStart(&start, end: &end, contentsEnd: &contentsEnd, for: NSRange(location: caret, length: 0))
-            return self.editedRanges.touches(line: start..<contentsEnd)
+            return self.editedRanges.touches(lineAt: caret, in: text as NSString)
         }
         textView.enterPlan = { [weak self] text, caret in
             guard let self, self.document.additionalSelections.isEmpty else { return nil }

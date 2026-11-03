@@ -118,7 +118,10 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
             let kind = self.workspace.activeDocument?.kind
-            if kind != self.activeKind || self.visibleTabs.isEmpty { self.show(kind: kind) }
+            guard kind != self.activeKind || self.visibleTabs.isEmpty else { return }
+            // Pierwsze pokazanie od razu (wstążka nie jest pusta przy otwarciu okna); kolejne zmiany rodzaju okna — poza
+            // śledzeniem, żeby to zamknięcie zależało tylko od rodzaju okna, nie od stanu przycisków.
+            if self.visibleTabs.isEmpty { self.show(kind: kind) } else { DispatchQueue.main.async { [weak self] in self?.show(kind: kind) } }
         })
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
@@ -131,8 +134,13 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         // Czcionka interfejsu z Preferencji (D178): wysokości pasów (R3-13), przebudowa kart i grup.
         tokens.append(trackChanges { [weak self] in
             let f = InterfaceFonts.shared
-            _ = (f.family, f.size, f.weight)
+            let font = "\(f.family)|\(f.size)|\(f.weight)"
             guard let self else { return }
+            // Pierwsze wywołanie (rejestracja) i ta sama czcionka — bez przebudowy (wstążkę zbudował już `show`).
+            guard font != self.appliedFont else { return }
+            let first = self.appliedFont == nil
+            self.appliedFont = font
+            if first { return }
             for (c, value) in self.heightConstraints where c.constant != value() { c.constant = value() }
             self.updateFrameHeight()
             guard !self.visibleTabs.isEmpty else { return }
@@ -309,6 +317,9 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
     @objc private func systemColorsChanged() {
         for b in buttons where b.toggleState == true { b.systemColorsChanged() }
     }
+
+    /// Czcionka interfejsu, dla której zbudowano wstążkę.
+    private var appliedFont: String?
 
     private func refreshEnabled() {
         for b in buttons {

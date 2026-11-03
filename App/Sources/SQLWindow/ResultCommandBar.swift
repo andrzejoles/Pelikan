@@ -146,21 +146,30 @@ final class ResultCommandBar: NSView {
         for case .command(let id, let b) in elements {
             let on = workspace.isEnabled(CommandID(rawValue: id))
             if b.isEnabled != on { b.isEnabled = on }
-            // Stan komendy-przełącznika z rejestru (edycja danych, panel wartości).
-            if let state = localState[id]?() ?? workspace.toggleState(CommandID(rawValue: id)) { setState(id, on: state) }
+            // Stan komendy-przełącznika (model siatki paska albo rejestr) — tylko dla przycisków ze stanem.
+            guard statefulIDs.contains(id), let state = localState[id]?() ?? workspace.toggleState(CommandID(rawValue: id)) else { continue }
+            apply(state, to: b, id: id)
         }
     }
 
-    /// Przełącznik włączony albo wyłączony (przycisk wyróżniony, symbol stanu włączonego): ze stanu komendy
-    /// (`toggleState`) albo — stan samego widoku siatki (widok rekordu) — od widoku.
+    /// Komendy paska ze stanem przełącznika (model siatki albo rejestr) — ustalane raz.
+    private lazy var statefulIDs: Set<String> = Set(elements.compactMap { e -> String? in
+        guard case .command(let id, _) = e else { return nil }
+        return localState[id] != nil || workspace.toggleState(CommandID(rawValue: id)) != nil ? id : nil
+    })
+
+    /// Przełącznik włączony albo wyłączony (przycisk wyróżniony, symbol stanu włączonego) — stan samego widoku siatki
+    /// (widok rekordu) ustawia widok.
     func setState(_ id: String, on: Bool) {
-        for case .command(id, let b) in elements {
-            if toggles.insert(id).inserted { b.setButtonType(.pushOnPushOff) } else if (b.state == .on) == on { continue }
-            b.state = on ? .on : .off
-            guard let d = workspace.registry.command(CommandID(rawValue: id))?.descriptor else { continue }
-            let symbol = on ? onSymbols[id] ?? CommandSymbols.symbol(for: id) : CommandSymbols.symbol(for: id)
-            b.image = NSImage(systemSymbolName: symbol ?? "circle.dashed", accessibilityDescription: d.title)
-        }
+        for case .command(id, let b) in elements { apply(on, to: b, id: id) }
+    }
+
+    private func apply(_ on: Bool, to b: NSButton, id: String) {
+        if toggles.insert(id).inserted { b.setButtonType(.pushOnPushOff) } else if (b.state == .on) == on { return }
+        b.state = on ? .on : .off
+        guard let d = workspace.registry.command(CommandID(rawValue: id))?.descriptor else { return }
+        let symbol = on ? onSymbols[id] ?? CommandSymbols.symbol(for: id) : CommandSymbols.symbol(for: id)
+        b.image = NSImage(systemSymbolName: symbol ?? "circle.dashed", accessibilityDescription: d.title)
     }
 
     // MARK: Układ i przepełnienie
@@ -285,8 +294,9 @@ final class ResultCommandBar: NSView {
     private func commandItem(_ raw: String) -> NSMenuItem? {
         MenuBuilder.commandItem(raw, workspace: workspace, target: self, action: #selector(menuCommand(_:)),
                                 // Rejestr — domyślnie w `MenuBuilder.commandItem`; tu tylko stan siatki i widoku.
-                                // Kolejność: model siatki paska, rejestr, stan samego widoku (widok rekordu).
-                                state: localState[raw]?() ?? workspace.toggleState(CommandID(rawValue: raw)) ?? viewState(raw))
+                                // Kolejność jawnie tutaj: model siatki paska, rejestr, stan samego widoku (widok rekordu);
+                                // nil — komenda bez stanu.
+                                state: .some(localState[raw]?() ?? workspace.toggleState(CommandID(rawValue: raw)) ?? viewState(raw)))
     }
 
     @objc private func menuCommand(_ sender: NSMenuItem) {

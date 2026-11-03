@@ -3135,6 +3135,12 @@ wydanie). Poprawione:
   Rozstrzygnięte: komendy paska wyniku działają na aktywnej siatce (jak wstążka); pasek innej siatki jest w innym oknie,
   a pierwsze kliknięcie w nieaktywnym oknie tylko je aktywuje (przycisk go nie dostaje), więc stan przycisku i siatka
   komendy się zgadzają.
+- **Trzynaste przejście:** punkt podprogramu dokładnie na początku linii sprawdzany słowem linii (zmiana za wcięciem
+  go nie unieważnia); zakres zaczynający się w miejscu Entera bez wcięcia oznacza obie strony (jak z wcięciem); reguła
+  linii edytowanej w jednym miejscu (`EditedRanges.touches(lineAt:in:)` — edytor i test); wstążka przebudowywana poza
+  śledzeniem także przy zmianie rodzaju okna, bez drugiej przebudowy przy otwarciu; pasek wyniku odświeża stan tylko
+  przycisków-przełączników. Rozstrzygnięte: koniec bloku `/` rozpoznawany tylko przed LF/CR — jak w SQL*Plus (U+2028
+  nie kończy tam linii polecenia); separatory U+2028/U+2029/NEL dotyczą linii edytora.
 - **AutoReplace i wielkość liter przy Enter (rozstrzygnięte, sprzeczne uwagi przeglądów):** przy włączonym
   formatowaniu przy Enter obie zmiany słowa przed kursorem działają tylko w linii edytowanej — także w zwykłym Enterze,
   gdy plan nie powstał (jedno miejsce reguły: `insertText` dla znaku nowej linii pyta `lineEdited`). Skrót albo słowo

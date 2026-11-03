@@ -336,6 +336,22 @@ struct BeautifierEnterTests {
         #expect(m2.scannedLength - before < inA4 - text.range(of: "  procedure a3").location + 10)
     }
 
+    @Test("pamięć: punkt podprogramu na początku linii zmienionej za wcięciem — nieaktualny, kontekst od poprzedniego")
+    func staleCheckpointAtLineStart() {
+        var s = "create or replace package body a is\n"
+        for n in 0..<6 { s += "  procedure a\(n) is\n  begin\n    null;\n  end;\n" }
+        let text = s as NSString
+        var memory = StatementStartMemory()
+        let a5 = text.range(of: "  procedure a5").location
+        _ = memory.context(forLineAt: text.range(of: "    null;", options: .backwards).location, in: text, lineLimit: 10)
+        #expect(memory.checkpoints.contains { $0.position == a5 && $0.subprogram })
+        // Linia `  procedure a5 is` zamieniona na `  x := 1;` (zmiana za wcięciem — punkt nie jest unieważniany).
+        let changed = text.replacingCharacters(in: NSRange(location: a5 + 2, length: 15), with: "x := 1;") as NSString
+        let c = memory.context(forLineAt: a5, in: changed, lineLimit: 10)
+        #expect(c.start != a5 || c.header.isEmpty)
+        #expect(!memory.checkpoints.contains { $0.position == a5 && $0.subprogram })
+    }
+
     @Test("pamięć: punkty z przejścia nie po kolei (ORDER/MAP dopisany przy MEMBER) — scalane rosnąco")
     func mergeUnsorted() {
         typealias C = StatementStartMemory.Checkpoint

@@ -173,6 +173,11 @@ struct FormatOnEnterTests {
         d.record(edited: 5..<5, delta: -1)
         d.record(edited: 5..<6, delta: 1, newlineFirst: true)
         #expect(d.touches(line: 0..<5) && d.ranges == [5..<5, 6..<6])
+        // Zmiana tuż za kursorem (wpisane „XY” w 3..<5), Enter w 3 bez wcięcia — obie strony edytowane, jak z wcięciem.
+        var xy = EditedRanges()
+        xy.record(edited: 3..<5, delta: 2)
+        xy.record(edited: 3..<4, delta: 1, newlineFirst: true)
+        #expect(xy.touches(line: 0..<3) && xy.touches(line: 4..<10))
         // Usunięcie na początku linii (wcięcie), potem Enter tam — przeniesiona treść zostaje edytowana.
         var b = EditedRanges()
         b.record(edited: 6..<6, delta: -4)
@@ -281,10 +286,9 @@ struct FormatOnEnterTests {
         tracker.ranges.reset()
         func plan(at caret: Int) -> FormatOnEnter.Plan? {
             let ns = view.string as NSString
-            let line = ns.lineRange(for: NSRange(location: caret, length: 0))
             var memory = StatementStartMemory()
             return FormatOnEnter.plan(text: view.string, caret: caret, kind: .sql, options: BeautifierOptions(), indentMode: .automatic,
-                                      unit: "  ", tabWidth: 2, lineEdited: tracker.ranges.touches(line: line.location..<caret), memory: &memory)
+                                      unit: "  ", tabWidth: 2, lineEdited: tracker.ranges.touches(lineAt: caret, in: ns), memory: &memory)
         }
         let end = (view.string as NSString).range(of: "then").upperBound
         // Linia bez zmian (tylko wcięcie nowej linii według formatera).

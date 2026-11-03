@@ -203,18 +203,22 @@ public struct EditedRanges: Sendable, Equatable {
         // Sam znak nowej linii (Enter na początku linii albo na jej końcu bez wcięcia) — żadna treść się nie zmieniła:
         // tylko przesunięcie zakresów za miejscem wstawienia, bez pustego zakresu na początku przeniesionej linii.
         if newlineFirst, edited.isEmpty {
-            ranges = ranges.map { r in
-                // Pusty zakres w miejscu wstawienia (usunięcie) — nie wiadomo, czy dotyczy końca linii przed nim, czy
-                // początku treści za nim: obie strony zostają oznaczone (`extra`).
-                if r.isEmpty, r.lowerBound == input.lowerBound { return r }
-                if r.lowerBound >= input.lowerBound { return (r.lowerBound + delta)..<(r.upperBound + delta) }
-                if r.upperBound > input.lowerBound { return r.lowerBound..<(r.upperBound + delta) }
-                return r
+            // Zakres zaczynający się w miejscu wstawienia (zmiana tuż przy kursorze) — oznacza obie strony: opuszczaną linię
+            // (pusty zakres w miejscu wstawienia) i przeniesioną treść (zakres przesunięty), jak przy Enterze z wcięciem.
+            var out: [Range<Int>] = []
+            for r in ranges {
+                if r.lowerBound == input.lowerBound {
+                    out.append(input.lowerBound..<input.lowerBound)
+                    out.append((r.lowerBound + delta)..<(r.upperBound + delta))
+                } else if r.lowerBound > input.lowerBound {
+                    out.append((r.lowerBound + delta)..<(r.upperBound + delta))
+                } else if r.upperBound > input.lowerBound {
+                    out.append(r.lowerBound..<(r.upperBound + delta))
+                } else {
+                    out.append(r)
+                }
             }
-            if ranges.contains(where: { $0.isEmpty && $0.lowerBound == input.lowerBound }) {
-                let moved = (input.lowerBound + delta)..<(input.lowerBound + delta)
-                ranges.insert(moved, at: ranges.firstIndex { $0.lowerBound > moved.lowerBound } ?? ranges.count)
-            }
+            ranges = out
             return
         }
         var out: [Range<Int>] = []
@@ -244,6 +248,14 @@ public struct EditedRanges: Sendable, Equatable {
         let newline = first.map { [0x0A, 0x0D, 0x2028, 0x2029, 0x85].contains($0) } ?? false
         record(edited: edited.location..<(edited.location + edited.length), delta: delta, newlineFirst: newline,
                newlineLength: first == 0x0D && second == 0x0A ? 2 : 1)
+    }
+
+    /// Czy linia z pozycją `caret` (treść bez separatora — LF, CR, U+2028, U+2029, NEL, jak `NSString.lineRange`) była
+    /// zmieniona — reguła edytora dla formatowania przy Enter (D205).
+    public func touches(lineAt caret: Int, in text: NSString) -> Bool {
+        var start = 0, end = 0, contentsEnd = 0
+        text.getLineStart(&start, end: &end, contentsEnd: &contentsEnd, for: NSRange(location: caret, length: 0))
+        return touches(line: start..<contentsEnd)
     }
 
     /// Czy treść linii (`line` — od początku linii do znaku nowej linii, bez niego) była zmieniona: zakres zmiany
