@@ -47,6 +47,8 @@ final class ExplainPlanViewController: NSViewController, DocumentContentControll
 struct PlanPanel: View {
     /// Sortowanie planu po kolumnie (D212).
     @State private var sortPlan: [ColumnSort<PlanLine>] = []
+    /// Filtr, kopiowanie i eksport kroków planu (D214).
+    @State private var tools = TableToolsState()
     @Bindable var document: PelikanWorkspace.Document
     let workspace: Workspace
     @State private var selection: PlanLine.ID?
@@ -56,6 +58,40 @@ struct PlanPanel: View {
     static var initialMode = 0
 
     private var ordered: [PlanLine] { document.plan?.executionOrder ?? [] }
+
+    private var planColumns: [DataColumn<PlanLine>] {
+        let num: (Int64?) -> String = { $0.map(String.init) ?? "" }
+        return [
+            DataColumn(L10n.tr("Opis"), sortKey: { (l: PlanLine) in l.title }) { (l: PlanLine) in
+                Text(l.title).fontWeight(l.id == selection ? .semibold : .regular)
+            }.width(min: 200, ideal: 280),
+            DataColumn(L10n.tr("Obiekt"), text: { (l: PlanLine) in l.object }).width(min: 80, ideal: 160),
+            DataColumn(L10n.tr("Koszt"), sortKey: { (l: PlanLine) in l.cost }, text: { num($0.cost) }) { (l: PlanLine) in Text(num(l.cost)).monospacedDigit() }.width(60),
+            DataColumn(L10n.tr("Wiersze"), sortKey: { (l: PlanLine) in l.cardinality }, text: { num($0.cardinality) }) { (l: PlanLine) in Text(num(l.cardinality)).monospacedDigit() }.width(70),
+            DataColumn(L10n.tr("Bajty"), sortKey: { (l: PlanLine) in l.bytes }, text: { num($0.bytes) }) { (l: PlanLine) in Text(num(l.bytes)).monospacedDigit() }.width(70),
+            DataColumn(L10n.tr("Czas"), sortKey: { (l: PlanLine) in l.time }, text: { num($0.time) }) { (l: PlanLine) in Text(num(l.time)).monospacedDigit() }.width(50),
+            DataColumn(L10n.tr("Kolejność"), sortKey: { (l: PlanLine) in l.executionOrder }) { (l: PlanLine) in Text("\(l.executionOrder)").monospacedDigit() }.width(60),
+        ]
+    }
+
+    /// Kroki planu spełniające filtr; nil — filtr pusty (widok drzewa).
+    private var filteredLines: [PlanLine]? {
+        let f = tools.filter.compiled()
+        guard !f.isEmpty else { return nil }
+        let cols = planColumns
+        let ids = cols.map(\.id)
+        return (document.plan?.lines ?? []).filter { l in
+            f.matches(all: ids) { id in cols.first { $0.id == id }.map { ($0.text(l), $0.key(l)) } ?? ("", .none) }
+        }
+    }
+
+    private func planContents(_ lines: [PlanLine]) -> TableContents {
+        let cols = planColumns
+        let shown = lines.sorted(by: sortPlan)
+        return TableContents(title: L10n.tr("Plan wykonania"), columns: cols.map { ($0.id, $0.title) }, rowCount: shown.count,
+                             cell: { r, id in r < shown.count ? cols.first { $0.id == id }?.text(shown[r]) ?? "" : "" },
+                             selectedRows: shown.indices.filter { shown[$0].id == selection })
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -112,20 +148,34 @@ struct PlanPanel: View {
                 }
             } else {
                 // Rozwinięcie gałęzi w modelu okna (`planExpanded`) — komendy Rozwiń/Zwiń wszystko (PD-OPT-001).
+                let lines = filteredLines
+                let contents = planContents(lines ?? document.plan?.lines ?? [])
+                TableToolsBar(contents: contents, state: $tools, total: document.plan?.lines.count ?? 0)
                 ScrollViewReader { proxy in
                     Table(of: PlanLine.self, selection: $selection, sortOrder: $sortPlan) {
-                        TableColumn(L10n.tr("Opis"), sortKey: { l in l.title }) { l in
-                            Text(l.title).fontWeight(l.id == selection ? .semibold : .regular)
+                        TableColumnForEach(planColumns) { c in
+                            TableColumn(c.title, sortUsing: ColumnSort(c.id, c.key)) { (l: PlanLine) in
+                                if let content = c.content { content(l) } else { Text(c.text(l)) }
+                            }
+                            .width(min: c.minWidth, ideal: c.idealWidth, max: c.maxWidth)
                         }
-                        .width(min: 200, ideal: 280)
-                        TableColumn(L10n.tr("Obiekt"), sortKey: { l in l.object }) { l in Text(l.object) }.width(min: 80, ideal: 160)
-                        TableColumn(L10n.tr("Koszt"), sortKey: { l in l.cost.map(String.init) ?? "" }) { l in Text(l.cost.map(String.init) ?? "").monospacedDigit() }.width(60)
-                        TableColumn(L10n.tr("Wiersze"), sortKey: { l in l.cardinality.map(String.init) ?? "" }) { l in Text(l.cardinality.map(String.init) ?? "").monospacedDigit() }.width(70)
-                        TableColumn(L10n.tr("Bajty"), sortKey: { l in l.bytes.map(String.init) ?? "" }) { l in Text(l.bytes.map(String.init) ?? "").monospacedDigit() }.width(70)
-                        TableColumn(L10n.tr("Czas"), sortKey: { l in l.time.map(String.init) ?? "" }) { l in Text(l.time.map(String.init) ?? "").monospacedDigit() }.width(50)
-                        TableColumn(L10n.tr("Kolejność"), sortKey: { l in l.executionOrder }) { l in Text("\(l.executionOrder)").monospacedDigit() }.width(60)
                     } rows: {
-                        ForEach((document.plan?.roots ?? []).sorted(by: sortPlan)) { PlanTreeRows(line: $0, expanded: $document.planExpanded, sort: sortPlan) }
+                        // Filtr (D214): pasujące kroki jako płaska lista; bez filtra — drzewo planu.
+                        if let lines {
+                            ForEach(lines.sorted(by: sortPlan)) { TableRow($0) }
+                        } else {
+                            ForEach((document.plan?.roots ?? []).sorted(by: sortPlan)) { PlanTreeRows(line: $0, expanded: $document.planExpanded, sort: sortPlan) }
+                        }
+                    }
+                    .contextMenu(forSelectionType: PlanLine.ID.self) { ids in
+                        let rows = (lines ?? document.plan?.lines ?? []).indices.filter { ids.contains((lines ?? document.plan?.lines ?? [])[$0].id) }
+                        TableCopyMenu(contents: contents, state: $tools, rows: rows)
+                        if let r = rows.first {
+                            Divider()
+                            TableValueFilterMenu(contents: contents, state: $tools, row: r)
+                        }
+                        Divider()
+                        Menu(L10n.tr("Eksportuj")) { TableExportMenu(contents: contents) }
                     }
                     // Krok zaznaczony nawigacją albo w Diagramie/Flame graph: rozwinięte gałęzie nad nim i przewinięcie do niego.
                     .onChange(of: selection, initial: true) { _, id in

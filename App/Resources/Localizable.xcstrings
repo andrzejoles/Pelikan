@@ -17865,6 +17865,34 @@
         }
       }
     },
+    "Dziennik agenta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent log"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agentenprotokoll"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registro del agente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Журнал агента"
+          }
+        }
+      }
+    },
     "Dziennik agentów" : {
       "localizations" : {
         "en" : {
@@ -20049,6 +20077,34 @@
         }
       }
     },
+    "Filtr (LIKE: abc%%, a_c)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter (LIKE: abc%%, a_c)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter (LIKE: abc%%, a_c)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtro (LIKE: abc%%, a_c)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтр (LIKE: abc%%, a_c)"
+          }
+        }
+      }
+    },
     "Filtr SQL, np. :KWOTA > 0" : {
       "localizations" : {
         "en" : {
@@ -20101,6 +20157,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Фільтр стовпців"
+          }
+        }
+      }
+    },
+    "Filtr kolumn (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Column filter (%@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spaltenfilter (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtro de columnas (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтр стовпців (%@)"
+          }
+        }
+      }
+    },
+    "Filtr kolumn…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Column filter…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spaltenfilter…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtro de columnas…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтр стовпців…"
           }
         }
       }
@@ -20357,6 +20469,34 @@
         }
       }
     },
+    "Filtr wartości kolumn: wzorzec LIKE, porównanie liczb i dat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Column value filter: LIKE pattern, number and date comparison"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter für Spaltenwerte: LIKE-Muster, Vergleich von Zahlen und Datumswerten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtro de valores de columna: patrón LIKE, comparación de números y fechas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтр значень стовпців: шаблон LIKE, порівняння чисел і дат"
+          }
+        }
+      }
+    },
     "Filtr wyników" : {
       "localizations" : {
         "en" : {
@@ -20605,6 +20745,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Filter mit Ausdruck …"
+          }
+        }
+      }
+    },
+    "Filtruj „%@”: bez tej wartości" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter “%@”: exclude this value"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter „%@“: ohne diesen Wert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrar «%@»: sin este valor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтр «%@»: без цього значення"
+          }
+        }
+      }
+    },
+    "Filtruj „%@”: tylko ta wartość" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter “%@”: only this value"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter „%@“: nur dieser Wert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrar «%@»: solo este valor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтр «%@»: лише це значення"
           }
         }
       }
@@ -27861,6 +28057,34 @@
         }
       }
     },
+    "JSON" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON"
+          }
+        }
+      }
+    },
     "Jak AND / OR ogólnie" : {
       "localizations" : {
         "en" : {
@@ -33097,6 +33321,34 @@
         }
       }
     },
+    "Komunikaty kompilacji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilation messages"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kompilierungsmeldungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensajes de compilación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомлення компіляції"
+          }
+        }
+      }
+    },
     "Komórka Markdown" : {
       "localizations" : {
         "en" : {
@@ -34133,6 +34385,34 @@
         }
       }
     },
+    "Kopiuj całą tabelę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy entire table"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ganze Tabelle kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar toda la tabla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати всю таблицю"
+          }
+        }
+      }
+    },
     "Kopiuj dane" : {
       "localizations" : {
         "en" : {
@@ -34413,6 +34693,90 @@
         }
       }
     },
+    "Kopiuj kolumnę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy column"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalte kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar columna"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати стовпець"
+          }
+        }
+      }
+    },
+    "Kopiuj kolumnę „%@”" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy column “%@”"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalte „%@“ kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar columna «%@»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати стовпець «%@»"
+          }
+        }
+      }
+    },
+    "Kopiuj komórkę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy cell"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zelle kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar celda"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати клітинку"
+          }
+        }
+      }
+    },
     "Kopiuj nagłówek" : {
       "localizations" : {
         "en" : {
@@ -34437,6 +34801,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Überschrift kopieren"
+          }
+        }
+      }
+    },
+    "Kopiuj nagłówki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy headers"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überschriften kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar encabezados"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати заголовки"
           }
         }
       }
@@ -34637,6 +35029,34 @@
         }
       }
     },
+    "Kopiuj wiersz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy row"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeile kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar fila"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати рядок"
+          }
+        }
+      }
+    },
     "Kopiuj wyniki" : {
       "localizations" : {
         "en" : {
@@ -34689,6 +35109,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit Überschrift kopieren"
+          }
+        }
+      }
+    },
+    "Kopiuj zaznaczone kolumny (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy marked columns (%@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markierte Spalten kopieren (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar columnas marcadas (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати позначені стовпці (%@)"
+          }
+        }
+      }
+    },
+    "Kopiuj zaznaczone kolumny zaznaczonych wierszy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy marked columns of selected rows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markierte Spalten der ausgewählten Zeilen kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar columnas marcadas de las filas seleccionadas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати позначені стовпці вибраних рядків"
+          }
+        }
+      }
+    },
+    "Kopiuj zaznaczone wiersze (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy selected rows (%@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgewählte Zeilen kopieren (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar filas seleccionadas (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати вибрані рядки (%@)"
           }
         }
       }
@@ -50429,6 +50933,34 @@
         }
       }
     },
+    "Odznacz wszystkie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unmark all"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Markierungen aufheben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desmarcar todas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зняти всі позначки"
+          }
+        }
+      }
+    },
     "Odzyskaj" : {
       "localizations" : {
         "en" : {
@@ -59469,6 +60001,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Файли журналу"
+          }
+        }
+      }
+    },
+    "Pliki dziennika agenta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent log files"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokolldateien des Agenten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivos de registro del agente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файли журналу агента"
           }
         }
       }
@@ -84897,6 +85457,34 @@
         }
       }
     },
+    "Tekst (kolumny wyrównane)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text (aligned columns)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text (ausgerichtete Spalten)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto (columnas alineadas)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст (вирівняні стовпці)"
+          }
+        }
+      }
+    },
     "Tekst bez symboli wieloznacznych jako „zawiera”" : {
       "localizations" : {
         "en" : {
@@ -85341,6 +85929,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Текст буде замінено джерелом із бази."
+          }
+        }
+      }
+    },
+    "Tekst: wzorzec LIKE bez wielkości liter (%% — dowolny ciąg, _ — jeden znak; bez nich — równość), not like …. Liczby i daty: = 5, >= 6, <> 0, between 3 and 4, = 2026-10-03 (cały dzień), > 2026-10-03 12:00. Puste: is null, is not null." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text: case-insensitive LIKE pattern (%% — any string, _ — one character; without them — equality), not like …. Numbers and dates: = 5, >= 6, <> 0, between 3 and 4, = 2026-10-03 (whole day), > 2026-10-03 12:00. Empty: is null, is not null."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text: LIKE-Muster ohne Groß-/Kleinschreibung (%% — beliebige Zeichenfolge, _ — ein Zeichen; ohne sie — Gleichheit), not like …. Zahlen und Datumswerte: = 5, >= 6, <> 0, between 3 and 4, = 2026-10-03 (ganzer Tag), > 2026-10-03 12:00. Leer: is null, is not null."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto: patrón LIKE sin distinguir mayúsculas (%% — cualquier cadena, _ — un carácter; sin ellos — igualdad), not like …. Números y fechas: = 5, >= 6, <> 0, between 3 and 4, = 2026-10-03 (todo el día), > 2026-10-03 12:00. Vacíos: is null, is not null."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст: шаблон LIKE без урахування регістру (%% — будь-який рядок, _ — один символ; без них — рівність), not like …. Числа й дати: = 5, >= 6, <> 0, between 3 and 4, = 2026-10-03 (увесь день), > 2026-10-03 12:00. Порожні: is null, is not null."
           }
         }
       }
@@ -97805,6 +98421,34 @@
         }
       }
     },
+    "Wiersze, w których dowolna kolumna pasuje do wzorca (bez wielkości liter; bez %% i _ — fragment tekstu)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rows in which any column matches the pattern (case-insensitive; without %% and _ — part of the text)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilen, in denen eine beliebige Spalte zum Muster passt (ohne Groß-/Kleinschreibung; ohne %% und _ — Textteil)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filas en las que cualquier columna coincide con el patrón (sin distinguir mayúsculas; sin %% ni _ — parte del texto)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рядки, у яких будь-який стовпець відповідає шаблону (без урахування регістру; без %% і _ — частина тексту)."
+          }
+        }
+      }
+    },
     "Wiersze: %@" : {
       "localizations" : {
         "en" : {
@@ -97913,6 +98557,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeilen: %@"
+          }
+        }
+      }
+    },
+    "Wierszy: %@ z %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rows: %@ of %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilen: %@ von %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filas: %@ de %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рядків: %@ з %@"
           }
         }
       }
@@ -115445,6 +116117,34 @@
         }
       }
     },
+    "Zaznacz kolumny do kopii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark columns to copy"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalten zum Kopieren markieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcar columnas para copiar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позначити стовпці для копіювання"
+          }
+        }
+      }
+    },
     "Zaznacz kolumnę" : {
       "localizations" : {
         "en" : {
@@ -115469,6 +116169,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Виділити стовпець"
+          }
+        }
+      }
+    },
+    "Zaznacz kolumnę „%@” do kopii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark column “%@” to copy"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalte „%@“ zum Kopieren markieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcar la columna «%@» para copiar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позначити стовпець «%@» для копіювання"
           }
         }
       }

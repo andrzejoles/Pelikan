@@ -94,8 +94,6 @@ struct DualityViewsView: View {
 
 /// Moduły i środowiska MLE (SD-MLE-001).
 struct MLEModulesView: View {
-    /// Sortowanie tabeli po kolumnie (D212).
-    @State private var sortModules: [ColumnSort<MLE.Module>] = []
     let workspace: Workspace
     @State private var connection: UUID?
     @State private var modules: [MLE.Module] = []
@@ -128,12 +126,11 @@ struct MLEModulesView: View {
                 Spacer()
                 Text(message).font(.uiSecondary).foregroundStyle(.secondary)
             }
-            Table(modules.sorted(by: sortModules), selection: $selection, sortOrder: $sortModules) {
-                TableColumn(L10n.tr("Moduł"), text: { $0.name })
-                TableColumn(L10n.tr("Język"), text: { $0.language }).width(110)
-                TableColumn(L10n.tr("Wersja"), text: { $0.version }).width(80)
+            DataTable(modules, selection: .single($selection), primaryAction: { _ in Task { await openSource() } }) {
+                DataColumn(L10n.tr("Moduł"), text: { $0.name })
+                DataColumn(L10n.tr("Język"), text: { $0.language }).width(110)
+                DataColumn(L10n.tr("Wersja"), text: { $0.version }).width(80)
             }
-            .contextMenu(forSelectionType: MLE.Module.ID.self) { _ in } primaryAction: { _ in Task { await openSource() } }
             Text(L10n.tr("Środowiska: \(environments.isEmpty ? "—" : environments.joined(separator: ", "))")).font(.uiSecondary)
         }
         .padding(10)
