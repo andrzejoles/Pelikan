@@ -1,5 +1,4 @@
 import AppKit
-import Charts
 import PelikanDB
 import PelikanWorkspace
 import SwiftUI
@@ -136,17 +135,10 @@ struct InstanceViewerView: View {
                 Button { Task { await refresh() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
             }
             if let s = snap {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading) {
-                        Text(L10n.tr("Oczekiwania (s/s, bez Idle)")).font(.uiSecondary.bold())
-                        Chart(s.waitClasses) { w in BarMark(x: .value("s", w.rate ?? 0), y: .value(L10n.tr("Klasa"), w.name)) }
-                            .frame(height: 180)
-                    }
-                    VStack(alignment: .leading) {
-                        Text(L10n.tr("SGA (MB)") + (s.pgaAllocatedMB.map { " · PGA \($0) MB" } ?? "")).font(.uiSecondary.bold())
-                        Chart(s.sga.prefix(8).map { SGAItem(name: $0.0, mb: $0.1) }) { p in BarMark(x: .value("MB", p.mb), y: .value(L10n.tr("Pula"), p.name)) }
-                            .frame(height: 180)
-                    }
+                // Wykresy obok siebie, w wąskim panelu jeden pod drugim (D222).
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .top, spacing: 16) { charts(s) }
+                    VStack(alignment: .leading, spacing: 10) { charts(s) }
                 }
                 Text(L10n.tr("Najdroższe SQL (czas)")).font(.uiSecondary.bold())
                 DataTable(s.topSQL) {
@@ -177,6 +169,18 @@ struct InstanceViewerView: View {
         }
     }
 
+    /// Oczekiwania (przyrost od poprzedniego odświeżenia) i pule SGA.
+    @ViewBuilder private func charts(_ s: InstanceSnapshot) -> some View {
+        InstanceBarChart(title: L10n.tr("Oczekiwania (s/s, bez Idle)"),
+                         items: s.waitClasses.map { BarItem(name: $0.name, value: $0.rate ?? 0) },
+                         format: { String(format: "%.2f", $0) }, empty: L10n.tr("Przyrost oczekiwań po następnym odświeżeniu"))
+            .frame(minWidth: 320)
+        InstanceBarChart(title: L10n.tr("SGA (MB)") + (s.pgaAllocatedMB.map { " · PGA \($0) MB" } ?? ""),
+                         items: s.sga.prefix(8).map { BarItem(name: $0.0, value: $0.1) },
+                         format: { String(format: "%.0f", $0) }, empty: "")
+            .frame(minWidth: 320)
+    }
+
     private func refresh() async {
         do {
             let s = try await workspace.toolSession("instance", connection: connection)
@@ -197,10 +201,50 @@ struct InstanceViewerView: View {
     }
 }
 
-struct SGAItem: Identifiable {
+struct BarItem: Identifiable {
     let name: String
-    let mb: Double
+    let value: Double
     var id: String { name }
+}
+
+/// Wykres słupkowy poziomy (D222): w każdym wierszu nazwa (osobna kolumna), słupek proporcjonalny do największej
+/// wartości (zaokrąglony koniec, jeden kolor) i wartość — tekst nigdy nie nachodzi na słupek; malejąco.
+struct InstanceBarChart: View {
+    let title: String
+    let items: [BarItem]
+    let format: (Double) -> String
+    let empty: String
+
+    var body: some View {
+        let sorted = items.sorted { $0.value != $1.value ? $0.value > $1.value : $0.name < $1.name }
+        let maxValue = sorted.first?.value ?? 0
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.uiSecondary.bold())
+            if maxValue <= 0, !empty.isEmpty {
+                Text(empty).font(.uiSecondary).foregroundStyle(.secondary)
+            }
+            Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 5) {
+                ForEach(sorted) { item in
+                    GridRow {
+                        Text(item.name).font(.uiSecondary).lineLimit(1).gridColumnAlignment(.trailing)
+                        GeometryReader { g in
+                            let w = maxValue > 0 ? g.size.width * CGFloat(item.value / maxValue) : 0
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 3).fill(Color.secondary.opacity(0.08))
+                                UnevenRoundedRectangle(cornerRadii: .init(bottomTrailing: 4, topTrailing: 4))
+                                    .fill(Color.accentColor)
+                                    .frame(width: max(w, item.value > 0 ? 2 : 0))
+                            }
+                        }
+                        .frame(height: 12)
+                        Text(format(item.value)).font(.uiSecondary).monospacedDigit().foregroundStyle(.secondary)
+                            .gridColumnAlignment(.trailing)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+        }
+    }
 }
 
 /// Task Monitor (SD-MON-002): zadania w tle ze stanem, czasem i anulowaniem.

@@ -78,10 +78,10 @@ struct PerfReportDBTests {
         await run("perf.addm", .text)
         await run("perf.ash", .html) { $0.source = .ashBoth }
         await run("perf.perfHub", .active) { $0.realtime = true }   // historyczny na krótkim AWR testowym: ORA-01476 w PRVT_AWR_VIEWER
-        await run("perf.realtimeADDM", .active)
+        await run("perf.realtimeADDM", .xml)
         await run("perf.monitorList", .html)
         await run("perf.statsOps", .html)
-        await run("perf.session", .active) { $0.realtime = true }
+        await run("perf.session", .xml) { $0.realtime = true }
         print("PERF-FAILURES", failures)
         #expect(failures.isEmpty, "\(failures)")
     }

@@ -64,6 +64,27 @@ public enum PerfReportRunner {
         }
     }
 
+    /// Pakiety potrzebne raportowi (EXECUTE): ADDM korzysta też z repozytorium AWR.
+    static func packages(_ id: String) -> [String] {
+        switch id {
+        case "perf.addm": ["DBMS_WORKLOAD_REPOSITORY", "DBMS_ADDM"]
+        case "perf.autoTuning": ["DBMS_SQLTUNE"]
+        default: package(id).map { [$0] } ?? []
+        }
+    }
+
+    static let allPackages = ["DBMS_XPLAN", "DBMS_WORKLOAD_REPOSITORY", "DBMS_SQLTUNE", "DBMS_PERF", "DBMS_SQLDIAG", "DBMS_ADDM",
+                              "DBMS_STATS", "DBMS_SPM", "DBMS_AUTO_SQLTUNE", "DBMS_AUTO_REPORT"]
+
+    /// Powód blokady raportu z braku EXECUTE (z poleceniem GRANT); nil — uprawnienie jest albo nie sprawdzono.
+    public static func missingPrivilege(_ id: String, accessible: Set<String>?, user: String) -> String? {
+        guard let accessible else { return nil }
+        let missing = packages(id).filter { !accessible.contains($0) }
+        guard !missing.isEmpty else { return nil }
+        let grants = missing.map { "GRANT EXECUTE ON SYS.\($0) TO \(ManagementPacks.grantee(user));" }.joined(separator: " ")
+        return L10n.tr("Brak uprawnienia EXECUTE do \(missing.joined(separator: ", ")) — administrator bazy może je nadać: \(grants)")
+    }
+
     /// Wykrycie formatu treści: HTML (także ACTIVE), XML albo tekst.
     static func detect(_ content: String, requested: ReportFormat) -> ReportFormat {
         let head = content.prefix(800).lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
@@ -76,7 +97,7 @@ public enum PerfReportRunner {
         guard let report = PerfReportCatalog.report(q.reportID) else { throw CommandError.invalidArgument("report", q.reportID) }
         let major = s.info.server.major > 0 ? s.info.server.major : 19
         let dbid = SQLProbe.dbid(major)
-        if let p = package(q.reportID) { try await ManagementPacks.requireExecute(p, in: s, report: report.title) }
+        for p in packages(q.reportID) { try await ManagementPacks.requireExecute(p, in: s, report: report.title) }
         let id = q.sqlID ?? ""
         let inst = q.instance ?? availability?.instance
         var content: String
@@ -221,9 +242,20 @@ public enum PerfReportRunner {
                 dbms_stats.report_stats_operations(detail_level => 'TYPICAL', format => :ty, since => systimestamp - numtodsinterval(:d, 'DAY'), until => systimestamp)
                 """, [text("ty", ty), num("d", q.days)])
         case "perf.autoTuning":
-            content = try await clob(major >= 12 ? "dbms_auto_sqltune.report_auto_tuning_task(type => 'TEXT')" : "dbms_sqltune.report_auto_tuning_task(type => 'TEXT')", [])
+            // DBMS_AUTO_SQLTUNE (12c+) bywa bez EXECUTE dla użytkownika — wtedy przestarzały, ale dostępny DBMS_SQLTUNE.
+            let autoCount = major >= 12 ? ((try? await s.scalar("select count(*) from all_objects where owner = 'SYS' and object_name = 'DBMS_AUTO_SQLTUNE' and object_type = 'PACKAGE'")) ?? nil) : "0"
+            let auto = autoCount != "0"
+            do {
+                content = try await clob(auto ? "dbms_auto_sqltune.report_auto_tuning_task(type => 'TEXT')" : "dbms_sqltune.report_auto_tuning_task(type => 'TEXT')", [])
+            } catch let e as OracleError where [13605, 13631, 13780].contains(e.code) {
+                throw CommandError.notAvailable(await autoTaskReason("SYS_AUTO_SQL_TUNING_TASK", in: s))
+            }
         case "perf.spmEvolve":
-            content = try await clob("dbms_spm.report_auto_evolve_task(type => :ty)", [text("ty", ty)])
+            do {
+                content = try await clob("dbms_spm.report_auto_evolve_task(type => :ty)", [text("ty", ty)])
+            } catch let e as OracleError where [13605, 13631].contains(e.code) {
+                throw CommandError.notAvailable(await autoTaskReason("SYS_AUTO_SPM_EVOLVE_TASK", in: s))
+            }
         default:
             throw CommandError.invalidArgument("report", q.reportID)
         }
@@ -235,6 +267,21 @@ public enum PerfReportRunner {
         let name = (q.sqlID.map { report.title + " " + $0 } ?? report.title)
         return PerfReportOutput(title: name, format: format, content: content,
                                 suggestedName: name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: " ", with: "_") + "." + format.fileExtension)
+    }
+
+    /// Dlaczego raport zadania automatycznego jest pusty (D223): liczba wykonań zadania, stan klienta „sql tuning
+    /// advisor” w oknie konserwacji (uruchamia SQL Tuning i ewolucję SPM) i parametr AUTO_SPM_EVOLVE_TASK.
+    static func autoTaskReason(_ task: String, in s: any DatabaseSession) async -> String {
+        let t = BindVariable(name: "t", value: .text(task))
+        let runs = (try? await s.scalar("select count(*) from dba_advisor_executions where task_name = :t", binds: [t])) ?? nil
+        let client = (try? await s.scalar("select status from dba_autotask_client where client_name = 'sql tuning advisor'")) ?? nil
+        let spm = task.contains("SPM") ? ((try? await s.scalar("select parameter_value from dba_sql_management_config where parameter_name = 'AUTO_SPM_EVOLVE_TASK'")) ?? nil) : nil
+        var parts: [String] = []
+        if let runs { parts.append(runs == "0" ? L10n.tr("zadanie \(task) nie było uruchamiane") : L10n.tr("ostatnie wykonanie zadania \(task) nie ma wyników")) }
+        if let client { parts.append(L10n.tr("klient zadań automatycznych „sql tuning advisor”: \(client)")) }
+        if let spm { parts.append("AUTO_SPM_EVOLVE_TASK = \(spm)") }
+        if parts.isEmpty { parts.append(L10n.tr("ostatnie wykonanie zadania \(task) nie ma wyników")) }
+        return L10n.tr("Brak wyników do raportu: \(parts.joined(separator: "; ")).")
     }
 
     /// Raporty ACTIVE z Oracle 19c ładują przeglądarkę raportów z `http://download.oracle.com/…` (23ai — już https).

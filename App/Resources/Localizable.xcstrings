@@ -2773,6 +2773,34 @@
         }
       }
     },
+    "AWR ma statystyki zapytania, ale nie zapisał jego planu (DBA_HIST_SQL_PLAN)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR has statistics for the statement but did not store its plan (DBA_HIST_SQL_PLAN)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR hat Statistiken zur Anweisung, hat aber ihren Plan nicht gespeichert (DBA_HIST_SQL_PLAN)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR tiene estadísticas de la sentencia, pero no guardó su plan (DBA_HIST_SQL_PLAN)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR має статистику запиту, але не зберіг його план (DBA_HIST_SQL_PLAN)"
+          }
+        }
+      }
+    },
     "AWR, migawka %@, %@: %@" : {
       "localizations" : {
         "en" : {
@@ -9465,6 +9493,34 @@
         }
       }
     },
+    "Brak uprawnienia EXECUTE do %@ — administrator bazy może je nadać: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing EXECUTE privilege on %@ — a database administrator can grant it: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlendes EXECUTE-Recht für %@ — ein Datenbankadministrator kann es erteilen: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falta el privilegio EXECUTE sobre %@ — un administrador de la base de datos puede concederlo: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає привілею EXECUTE на %@ — адміністратор бази даних може його надати: %@"
+          }
+        }
+      }
+    },
     "Brak uprawnień do widoków słownika tej sekcji (potrzebne np. SELECT_CATALOG_ROLE)." : {
       "localizations" : {
         "en" : {
@@ -9713,6 +9769,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine DBMS_OUTPUT-Ausgabe"
+          }
+        }
+      }
+    },
+    "Brak wyników do raportu: %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No results for the report: %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Ergebnisse für den Bericht: %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay resultados para el informe: %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає результатів для звіту: %@."
           }
         }
       }
@@ -32141,34 +32225,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Кілька префіксів через кому; порожнє поле — без перевірки."
-          }
-        }
-      }
-    },
-    "Klasa" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Class"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Клас"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clase"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klasse"
           }
         }
       }
@@ -56365,6 +56421,34 @@
         }
       }
     },
+    "Oracle zwraca raport w XML; aktywna wersja kończy się stroną 404 na serwerze Oracle (D223)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle returns this report as XML; the active version ends with a 404 page on the Oracle server (D223)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle liefert diesen Bericht als XML; die aktive Version endet mit einer 404-Seite auf dem Oracle-Server (D223)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle devuelve este informe en XML; la versión activa termina con una página 404 en el servidor de Oracle (D223)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle повертає цей звіт у XML; активна версія завершується сторінкою 404 на сервері Oracle (D223)."
+          }
+        }
+      }
+    },
     "Oracle zwrócił pusty raport (brak danych w wybranym źródle albo okresie)" : {
       "localizations" : {
         "en" : {
@@ -62241,6 +62325,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "План із кешу курсорів"
+          }
+        }
+      }
+    },
+    "Plany w AWR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plans in AWR"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pläne in AWR"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planes en AWR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плани в AWR"
           }
         }
       }
@@ -76469,6 +76581,34 @@
         }
       }
     },
+    "Przyrost oczekiwań po następnym odświeżeniu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wait increase after the next refresh"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuwachs der Wartezeiten nach der nächsten Aktualisierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aumento de esperas tras la próxima actualización"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приріст очікувань після наступного оновлення"
+          }
+        }
+      }
+    },
     "Przywraca binarkę na celu z wersji .prev albo z wybranej kopii w katalogu kopii zapasowych (po potwierdzeniu; PROD — nazwą celu). Źródła wycofuje się przez revert w git." : {
       "localizations" : {
         "en" : {
@@ -77277,34 +77417,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffentlich"
-          }
-        }
-      }
-    },
-    "Pula" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pool"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пул"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pool"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pool"
           }
         }
       }
@@ -93153,6 +93265,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nur Diagnostics Pack"
+          }
+        }
+      }
+    },
+    "Tylko XML: przeglądarka Oracle nie wyświetla aktywnej wersji tego raportu („Not a sfx file”), a DBMS_REPORT nie zamienia go na HTML ani tekst (D223)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "XML only: the Oracle report viewer does not display the active version of this report (“Not a sfx file”), and DBMS_REPORT does not convert it to HTML or text (D223)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur XML: Der Oracle-Berichtsviewer zeigt die aktive Version dieses Berichts nicht an („Not a sfx file“), und DBMS_REPORT wandelt ihn nicht in HTML oder Text um (D223)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo XML: el visor de informes de Oracle no muestra la versión activa de este informe («Not a sfx file») y DBMS_REPORT no lo convierte a HTML ni a texto (D223)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лише XML: переглядач звітів Oracle не показує активну версію цього звіту («Not a sfx file»), а DBMS_REPORT не перетворює його на HTML чи текст (D223)."
           }
         }
       }
@@ -129361,6 +129501,34 @@
         }
       }
     },
+    "klient zadań automatycznych „sql tuning advisor”: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "automatic task client “sql tuning advisor”: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Client für automatische Aufgaben „sql tuning advisor“: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cliente de tareas automáticas «sql tuning advisor»: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "клієнт автоматичних завдань «sql tuning advisor»: %@"
+          }
+        }
+      }
+    },
     "kod w bazie" : {
       "localizations" : {
         "en" : {
@@ -131849,6 +132017,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "letzte Tage: #Dni"
+          }
+        }
+      }
+    },
+    "ostatnie wykonanie zadania %@ nie ma wyników" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the latest execution of task %@ has no results"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "die letzte Ausführung der Aufgabe %@ hat keine Ergebnisse"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la última ejecución de la tarea %@ no tiene resultados"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "останнє виконання завдання %@ не має результатів"
           }
         }
       }
@@ -135965,6 +136161,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "із «/» (команда після одиниці): %@"
+          }
+        }
+      }
+    },
+    "zadanie %@ nie było uruchamiane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "task %@ has never been run"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "die Aufgabe %@ wurde nie ausgeführt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la tarea %@ nunca se ha ejecutado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "завдання %@ ніколи не запускалося"
           }
         }
       }

@@ -101,6 +101,13 @@ public struct SQLAvailability: Sendable {
     public var instance = 1
     public var license = PerfLicense.all
     public var major = 19
+    /// Najstarsza migawka w AWR (retencja) — początek zakresu nie może być wcześniejszy (ORA-13768, D223).
+    public var oldestSnapshot: Int?
+    /// Wiersze planu zapytania w AWR (DBA_HIST_SQL_PLAN); 0 — AWR ma statystyki, ale nie zapisał planu.
+    public var awrPlanRows: Int?
+    /// Pakiety SYS dostępne dla użytkownika (EXECUTE) — raporty bez uprawnienia blokowane z poleceniem GRANT.
+    public var accessiblePackages: Set<String>?
+    public var user = ""
 
     public init(sqlID: String) { self.sqlID = sqlID; hashValue = SQLIdentity.hashValue(sqlID: sqlID) }
 
@@ -121,7 +128,8 @@ public struct SQLAvailability: Sendable {
     /// Pierwsza i ostatnia migawka AWR z zapytaniem; początek raportu — migawka przed pierwszą (raport liczy różnice).
     public var snapshotRange: (begin: Int, end: Int)? {
         guard let lo = snapshots.map(\.snapID).min(), let hi = snapshots.map(\.snapID).max() else { return nil }
-        return (lo == hi ? lo - 1 : lo - 1, hi)
+        let begin = max(lo - 1, oldestSnapshot ?? Int.min)
+        return begin < hi ? (begin, hi) : nil
     }
 
     /// Różne plany (z pamięci i AWR).
@@ -155,6 +163,14 @@ public enum SQLProbe {
         return nil
     }
 
+    /// Pakiety raportów, do których użytkownik ma EXECUTE (pakiet SYS jest w ALL_OBJECTS tylko z uprawnieniem); nil —
+    /// nie udało się sprawdzić (wtedy bez blokad — Pelikan sprawdza pakiet przed wywołaniem).
+    public static func accessiblePackages(in s: any DatabaseSession) async -> Set<String>? {
+        let names = PerfReportRunner.allPackages.map { "'\($0)'" }.joined(separator: ", ")
+        guard let (_, rows) = try? await s.queryAll("select object_name from all_objects where owner = 'SYS' and object_type = 'PACKAGE' and object_name in (\(names))", limit: 100) else { return nil }
+        return Set(rows.compactMap { $0.first?.displayText })
+    }
+
     /// SQL_ID polecenia o tym tekście w pamięci kursorów (SQL_TEXT to pierwsze 1000 znaków) — gdy SQL_ID policzony
     /// z tekstu edytora nie pasuje (np. inne białe znaki niż wysłane do bazy).
     public static func resolve(text: String, in s: any DatabaseSession) async -> String? {
@@ -181,6 +197,8 @@ public enum SQLProbe {
             }
         }
         a.now = (try? await s.scalar("select to_char(sysdate, \(ts)) from dual")) ?? ""
+        a.accessiblePackages = await accessiblePackages(in: s)
+        a.user = s.info.sessionUser
         a.instance = Int((try? await s.scalar("select instance_number from v$instance")) ?? "1") ?? 1
 
         // Pamięć kursorów i sesje — bez licencji.
@@ -220,6 +238,10 @@ public enum SQLProbe {
                 a.snapshots.append(.init(snapID: Int(r[0]) ?? 0, instance: Int(r[1]) ?? 1, begin: r[2], end: r[3], planHash: r[4], executions: r[5],
                                          elapsedSeconds: r[6], bufferGets: r[7], diskReads: r[8], rows: r[9]))
                 if a.schema == nil, !r[10].isEmpty { a.schema = r[10] }
+            }
+            a.oldestSnapshot = Int(await rows("select min(snap_id) from dba_hist_snapshot where dbid = \(dbid(a.major)) and :id is not null", L10n.tr("Migawki AWR")).first?.first ?? "")
+            if !a.snapshots.isEmpty {
+                a.awrPlanRows = Int(await rows("select count(*) from dba_hist_sql_plan where sql_id = :id", L10n.tr("Plany w AWR")).first?.first ?? "")
             }
             if a.text == nil, !a.snapshots.isEmpty {
                 a.text = try? await s.queryAll("select sql_text from dba_hist_sqltext where sql_id = :id and dbid = \(dbid(a.major)) and rownum = 1",
@@ -293,6 +315,10 @@ extension SQLAvailability {
         PerfReportCatalog.sqlReports.map { r in
             if major < r.minMajor { return (r, false, L10n.tr("Wymaga Oracle \(r.minMajor) lub nowszej")) }
             if !license.allows(r.need) { return (r, false, L10n.tr("Wymaga licencji \(r.need.displayName)")) }
+            if let reason = PerfReportRunner.missingPrivilege(r.id, accessible: accessiblePackages, user: user) { return (r, false, reason) }
+            if r.id == "sql.planAWR", awrPlanRows == 0 {
+                return (r, false, L10n.tr("AWR ma statystyki zapytania, ale nie zapisał jego planu (DBA_HIST_SQL_PLAN)"))
+            }
             if r.id == "sql.binds" {
                 return bindSets.isEmpty ? (r, false, L10n.tr("Oracle nie przechwycił bindów tego zapytania")) : (r, true, nil)
             }

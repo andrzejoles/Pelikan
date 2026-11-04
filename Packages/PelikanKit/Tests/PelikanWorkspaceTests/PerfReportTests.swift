@@ -77,6 +77,24 @@ struct PerfReportTests {
         #expect(old.reports().first { $0.report.id == "sql.repair" }!.available == false)
     }
 
+    @Test("Baza 19c właściciela (D223): zakres migawek w retencji, plan bez wierszy w AWR, brak EXECUTE z poleceniem GRANT")
+    func productionFindings() {
+        var a = availability()
+        a.oldestSnapshot = 100
+        #expect(a.snapshotRange! == (100, 102))   // migawka przed pierwszą (99) jest poza retencją — ORA-13768
+        a.awrPlanRows = 0
+        a.user = "PERF_USER"
+        a.accessiblePackages = Set(PerfReportRunner.allPackages).subtracting(["DBMS_WORKLOAD_REPOSITORY"])
+        let r = Dictionary(uniqueKeysWithValues: a.reports().map { ($0.report.id, $0) })
+        #expect(!r["sql.planAWR"]!.available && r["sql.planAWR"]!.reason!.contains("DBA_HIST_SQL_PLAN"))
+        #expect(!r["sql.awr"]!.available && r["sql.awr"]!.reason!.contains("GRANT EXECUTE ON SYS.DBMS_WORKLOAD_REPOSITORY TO PERF_USER;"))
+        #expect(r["sql.planCursor"]!.available && r["sql.tuning"]!.available)
+        #expect(PerfReportRunner.missingPrivilege("perf.addm", accessible: ["DBMS_ADDM"], user: "PERF_USER")!.contains("DBMS_WORKLOAD_REPOSITORY"))
+        #expect(PerfReportRunner.missingPrivilege("perf.awr", accessible: nil, user: "PERF_USER") == nil)   // nie sprawdzono — bez blokady
+        #expect(PerfReportCatalog.report("perf.session")?.formats == [.xml])
+        #expect(PerfReportCatalog.report("perf.realtimeADDM")?.formats == [.xml])
+    }
+
     @Test("Raport AWR dla SQL i ASH: funkcje, źródło ASH, wartości tylko jako bindy")
     func awrAndASH() async throws {
         let s = PerfCaptureSession()
