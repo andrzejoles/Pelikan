@@ -104,7 +104,7 @@ public struct ValueFilter: Sendable, Hashable {
             let hit = !isEmpty && (compiled ?? LikePattern.cached(p)).matches(text)
             return negated ? !hit && !isEmpty : hit
         case .compare(let op, let v):
-            guard !isEmpty, let r = Self.compare(text: text, key: key, v) else { return false }
+            guard !isEmpty, let r = Self.compare(text: text, key: key, v, exact: op == .eq || op == .ne) else { return false }
             switch op {
             case .eq: return r == .orderedSame
             case .ne: return r != .orderedSame
@@ -119,30 +119,18 @@ public struct ValueFilter: Sendable, Hashable {
         }
     }
 
-    /// Liczba z jednostką czasu, rozmiaru albo procentem (kody jak „19c”, „11g” nie są liczbami).
-    private static let unitRE = try! NSRegularExpression(pattern: #"^\s*([-+]?[0-9][0-9 \u00A0.,]*)\s*(%|ns|µs|us|ms|s|min|h|B|KB|MB|GB|TB)\s*$"#,
-                                                         options: [.caseInsensitive])
-
-    /// Liczba pokazana w komórce, także z jednostką albo procentem („12.3%”, „1.2 s”, „45 ms”) — filtr porównuje z tym,
-    /// co widać, a nie z kluczem w innej skali (ułamek, nanosekundy).
-    static func shownNumber(_ text: String) -> Double? {
-        if let n = CellOrder.number(text) { return n }
-        let ns = text as NSString
-        guard text.count < 40, let m = unitRE.firstMatch(in: text, range: NSRange(location: 0, length: ns.length)) else { return nil }
-        return CellOrder.number(ns.substring(with: m.range(at: 1)).trimmingCharacters(in: .whitespaces))
-    }
-
     /// Porównanie wartości komórki z wartością filtra (komórka względem filtra); nil — wartości nieporównywalne
     /// (np. liczba w filtrze, tekst w komórce).
-    static func compare(text: String, key: SortKey, _ v: Value) -> ComparisonResult? {
+    /// `exact` — równość (`=`, `<>`): liczba pokazana w komórce (tekst to sama liczba, np. „12.35” przy kluczu
+    /// 12.345678 — „tylko ta wartość” trafia w to, co widać); porządek (`<`, `>`, between) — klucz liczbowy kolumny
+    /// (jednolita skala także przy tekstach z jednostkami: „450 ms” obok „1.2 s”).
+    static func compare(text: String, key: SortKey, _ v: Value, exact: Bool = false) -> ComparisonResult? {
         func order<T: Comparable>(_ a: T, _ b: T) -> ComparisonResult { a < b ? .orderedAscending : a > b ? .orderedDescending : .orderedSame }
         switch v {
         case .number(let n):
-            // Najpierw liczba z tekstu pokazanego w tabeli (np. „12.35” przy kluczu 12.345678) — filtr „tylko ta
-            // wartość” i wpisane „= 12.35” trafiają w to, co widać; klucz, gdy tekst nie jest liczbą.
-            if let shown = Self.shownNumber(text) { return order(shown, n) }
+            if exact, let shown = CellOrder.number(text) { return order(shown, n) }
             if case .number(let x) = key { return order(x, n) }
-            return nil
+            return CellOrder.number(text).map { order($0, n) }
         case .date(let d, let precision):
             var cell: Date?
             if case .date(let x) = key { cell = x } else { cell = date(text)?.date }

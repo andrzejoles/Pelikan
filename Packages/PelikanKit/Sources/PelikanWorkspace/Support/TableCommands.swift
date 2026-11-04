@@ -57,7 +57,10 @@ extension TableExport {
     /// Warunek filtra „tylko ta wartość” / „bez tej wartości” dla tekstu komórki.
     public static func condition(_ value: String, exclude: Bool) -> String {
         if value.isEmpty { return exclude ? "is not null" : "is null" }
-        let v = value.contains("'") || value.hasPrefix(" ") || value.hasSuffix(" ") ? "'" + value.replacingOccurrences(of: "'", with: "''") + "'" : value
+        // W cudzysłowach, gdy tekst ma apostrof albo białe znaki na brzegach (spacja, tabulator, nowa linia, twarda spacja) —
+        // parser filtra je obcina, a warunek ma trafić w tę samą komórkę.
+        let edges = value.trimmingCharacters(in: .whitespacesAndNewlines) != value
+        let v = value.contains("'") || edges ? "'" + value.replacingOccurrences(of: "'", with: "''") + "'" : value
         return (exclude ? "<> " : "= ") + v
     }
 }
@@ -70,7 +73,7 @@ enum TableCommands {
     static let submenu = L10n.tr("Tabela")
 
     static let rowsParam = CommandParameter("rows", .string, L10n.tr("Numery wierszy widoku od 1, po przecinku (domyślnie zaznaczone)"))
-    static let columnParam = CommandParameter("column", .string, L10n.tr("Kolumna: identyfikator albo tytuł (bez argumentu — wybór z listy)"))
+    static let columnParam = CommandParameter("column", .string, L10n.tr("Kolumna: identyfikator, tytuł albo #numer (bez argumentu — wybór z listy)"))
 
     static func handle(_ ctx: CommandContext) throws -> any TableHandle {
         // Tabela z menu (cel wywołania) — jej brak to błąd, nie zamiana na tabelę z fokusem.
@@ -107,16 +110,17 @@ enum TableCommands {
 
     static let rowParam = CommandParameter("row", .integer, L10n.tr("Numer wiersza widoku od 1 (domyślnie pierwszy zaznaczony)"))
 
-    /// Argumenty wybrane w oknie pytania — do makra (odtworzenie nie pyta ponownie).
-    static func resolved(_ ctx: CommandContext, _ values: [String: JSONValue]) -> CommandArguments? {
-        let chosen = values.filter { ctx.arguments.values[$0.key] == nil }
-        return chosen.isEmpty ? nil : CommandArguments(chosen)
+    /// Kolumna do makra: pozycja „#n” — tytuły (i identyfikatory z tytułów) zależą od języka interfejsu.
+    static func columnArgument(_ id: String, _ c: TableContents) -> JSONValue {
+        .string(c.columns.firstIndex { $0.id == id }.map { "#\($0 + 1)" } ?? id)
     }
 
     /// Kolumna z argumentu `column` (identyfikator albo tytuł, bez wielkości liter); bez argumentu — wybór z listy.
     static func column(_ ctx: CommandContext, _ c: TableContents) async throws -> String {
         // Pusty identyfikator to też kolumna (kolumny bez tytułu, np. ikona ważności) — brak argumentu ≠ "".
         if let raw = ctx.arguments.string("column") {
+            // „#n” — n-ta kolumna (makra: niezależnie od języka tytułów).
+            if raw.hasPrefix("#"), let n = Int(raw.dropFirst()), n >= 1, n <= c.columns.count { return c.columns[n - 1].id }
             guard let col = c.columns.first(where: { $0.id == raw })
                     ?? (raw.isEmpty ? nil : c.columns.first(where: { $0.title.caseInsensitiveCompare(raw) == .orderedSame }))
             else { throw CommandError.invalidArgument("column", raw) }
@@ -173,7 +177,7 @@ enum TableCommands {
                 let mark = ctx.arguments.bool("marked") ?? !h.markedColumns.contains(id)
                 h.markedColumns.removeAll { $0 == id }
                 if mark { h.markedColumns.append(id) }
-                return CommandResult(resolvedArguments: resolved(ctx, ["column": .string(id), "marked": .bool(mark)]))
+                return CommandResult(resolvedArguments: CommandArguments(["column": columnArgument(id, h.contents), "marked": .bool(mark)]))
             },
             command("table.clearMarkedColumns", L10n.tr("Odznacz kolumny do kopii"), L10n.tr("Usuwa zaznaczenie wszystkich kolumn do kopii."),
                     effect: .uiState) { ctx in
@@ -215,7 +219,7 @@ enum TableCommands {
                 let value = try ctx.arguments.string("value") ?? c.cell(try row(ctx, c), col)
                 h.filter.columns[col] = TableExport.condition(value, exclude: ctx.arguments.bool("exclude") ?? false)
                 // Do makra wartość, nie numer wiersza — odtworzenie filtruje tą samą wartością w każdej tabeli i kolejności.
-                return CommandResult(resolvedArguments: CommandArguments(["column": .string(col), "value": .string(value)]))
+                return CommandResult(resolvedArguments: CommandArguments(["column": columnArgument(col, c), "value": .string(value)]))
             },
             command("table.clearFilter", L10n.tr("Wyczyść filtr tabeli"), L10n.tr("Usuwa szybki filtr i filtry kolumn tabeli."), effect: .uiState) { ctx in
                 try handle(ctx).filter = TableFilter()
@@ -241,7 +245,7 @@ enum TableCommands {
                 guard await ctx.ui?.saveFile(suggestedName: name, fileExtension: format.fileExtension, data: TableExport.file(format, data), table: table) == true
                 else { return .ok }
                 Log.tools.info("Eksport tabeli: \(format.rawValue, privacy: .public), wierszy \(data.rows.count, privacy: .public)")
-                return CommandResult(message: L10n.tr("Zapisano wierszy: \(data.rows.count)"), resolvedArguments: resolved(ctx, ["format": .string(format.rawValue)]))
+                return CommandResult(message: L10n.tr("Zapisano wierszy: \(data.rows.count)"), resolvedArguments: ctx.arguments.string("format") == nil ? CommandArguments(["format": .string(format.rawValue)]) : nil)
             },
         ]
     }

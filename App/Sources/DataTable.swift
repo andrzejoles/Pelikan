@@ -16,6 +16,8 @@ struct DataColumn<Row>: Identifiable {
     var minWidth: CGFloat?
     var idealWidth: CGFloat?
     var maxWidth: CGFloat?
+    /// Kolumna z danymi (kopia, eksport, filtr); kolumny czynności (przycisk, kosz) — nie.
+    var exportable = true
 
     private init(title: String, id: String?, text: @escaping (Row) -> String, key: @escaping (Row) -> SortKey, content: ((Row) -> AnyView)?) {
         self.id = id ?? title
@@ -62,6 +64,13 @@ struct DataColumn<Row>: Identifiable {
     /// Kolumna z własnym widokiem komórki i tekstem (sortowanie po tekście).
     init<V: View>(_ title: String, id: String? = nil, text: @escaping (Row) -> String, @ViewBuilder content: @escaping (Row) -> V) {
         self.init(title: title, id: id, text: text, key: { text($0).sortKey }, content: { AnyView(content($0)) })
+    }
+
+    /// Kolumna czynności (przycisk) — bez kopii, eksportu i filtra wartości.
+    func action() -> Self {
+        var c = self
+        c.exportable = false
+        return c
     }
 
     func width(_ w: CGFloat) -> Self { width(min: w, ideal: w, max: w) }
@@ -148,7 +157,7 @@ protocol FocusTable: TableHandle {
 /// użytkownik — także gdy tabela odświeży się przed jej startem; widok liczony raz na czynność. Filtr i kolumny do kopii
 /// zmieniają stan żywej tabeli.
 @MainActor
-final class FrozenTable: TableHandle {
+final class FrozenTable: FocusTable {
     let contents: TableContents
     private let indexer: ([AnyHashable]) -> [Int]
     private weak var base: (any FocusTable)?
@@ -164,6 +173,8 @@ final class FrozenTable: TableHandle {
 
     /// Tabela zamknięta przed startem komendy — komenda to zgłasza (zapis filtra nie miałby skutku).
     var isAvailable: Bool { base != nil }
+    var sqlTarget: SQLReportTarget? { nil }
+    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) { (contents, indexer) }
 
     var filter: TableFilter {
         get { base?.filter ?? TableFilter() }
@@ -285,7 +296,25 @@ enum TableFocus {
     }
 
     /// Okno tabeli komendy (migawka z menu albo tabela z fokusem) — arkusz zapisu eksportu.
-    static func window(for table: any TableHandle) -> NSWindow? { (table as? FrozenTable)?.window ?? (table as? any FocusTable)?.window }
+    static func window(for table: any TableHandle) -> NSWindow? { (table as? any FocusTable)?.window }
+}
+
+/// Rejestracja tabeli SwiftUI jako celu komend `table.*`: okno (sonda w tle) i widok `NSTableView` przy zdobyciu
+/// fokusu — wspólne dla `DataTable` i tabeli planu.
+struct TableRegistration: ViewModifier {
+    let handle: SwiftUITableHandle
+    @FocusState private var focused: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .focused($focused)
+            .onChange(of: focused, initial: true) { _, now in if now { handle.focused() } }
+            .background(TableWindowProbe(handle: handle))
+    }
+}
+
+extension View {
+    func registersTable(_ handle: SwiftUITableHandle) -> some View { modifier(TableRegistration(handle: handle)) }
 }
 
 /// Sonda w tle tabeli SwiftUI: zapisuje okno tabeli w uchwycie (tytuł, arkusz zapisu) — bez szukania widoków.
@@ -320,7 +349,8 @@ enum TableActions {
     /// Komenda na wierszach z menu: na migawce tabeli z chwili wyboru pozycji (`args` z tej migawki — wiersze po
     /// identyfikatorach). Cel przekazany jako `CommandContext.target`, poza argumentami (nie trafia do makr).
     static func performOnRows(_ handle: any FocusTable, _ id: String, _ args: (FrozenTable) -> [String: JSONValue]) {
-        let frozen = FrozenTable(handle)
+        // Menu kontekstowe tabeli SwiftUI przekazuje migawkę z chwili otwarcia (etykiety i czynność — te same dane).
+        let frozen = (handle as? FrozenTable) ?? FrozenTable(handle)
         let a = args(frozen)
         (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(a), target: frozen)
     }
@@ -581,7 +611,6 @@ struct DataTable<Row: Identifiable>: View {
     @State private var tools = TableToolsState()
     /// Uchwyt tabeli dla komend `table.*` i raportów SQL (rejestrowany z widokiem NSTableView przy zdobyciu fokusu).
     @StateObject private var handle = SwiftUITableHandle()
-    @FocusState private var focused: Bool
     /// Połączenie tabeli narzędzia — raporty SQL z wiersza z kolumną SQL_ID/hash (D217).
     @Environment(\.reportConnection) private var reportConnection
 
@@ -641,7 +670,8 @@ struct DataTable<Row: Identifiable>: View {
 
     static func snapshot(columns: [DataColumn<Row>], title: String?, connection: UUID?, selection: DataTableSelection<Row.ID>,
                          handle: SwiftUITableHandle) -> Snapshot {
-        Snapshot(texts: columns.map { ($0.id, $0.title, $0.text) }, title: title, connection: connection, selected: { selection.ids }, handle: handle)
+        Snapshot(texts: columns.filter(\.exportable).map { ($0.id, $0.title, $0.text) }, title: title, connection: connection,
+                 selected: { selection.ids }, handle: handle)
     }
 
     var body: some View {
@@ -656,9 +686,7 @@ struct DataTable<Row: Identifiable>: View {
         VStack(spacing: 3) {
             TableToolsBar(contents: contents, handle: handle, state: $tools, total: rows.count)
             table(shown)
-                .focused($focused)
-                .onChange(of: focused, initial: true) { _, now in if now { handle.focused() } }
-                .background(TableWindowProbe(handle: handle))
+                .registersTable(handle)
                 .contextMenu(forSelectionType: Row.ID.self) { ids in
                     rowMenuContent(ids, shown: shown, contents: contents, snapshot: snapshot)
                 } primaryAction: { ids in
@@ -692,11 +720,13 @@ struct DataTable<Row: Identifiable>: View {
             rowMenu(ids)
             Divider()
         }
-        // Klik poza wierszami — menu jak na pasku (zaznaczenie w chwili komendy).
-        TableCopyMenu(contents: contents, handle: handle, marked: tools.markedColumns, rows: .from(ids, shown: shown))
+        // Migawka z chwili otwarcia menu: etykiety („Kolumna: wartość”) i czynność na tych samych danych, także gdy tabela
+        // odświeży się przed wyborem pozycji. Klik poza wierszami — menu jak na pasku (zaznaczenie w chwili komendy).
+        let frozen = FrozenTable(handle)
+        TableCopyMenu(contents: frozen.contents, handle: frozen, marked: tools.markedColumns, rows: .from(ids, shown: shown))
         if let r = idx.first {
             Divider()
-            TableValueFilterMenu(columns: contents.columns, handle: handle, rowID: AnyHashable(shown[r].id))
+            TableValueFilterMenu(columns: frozen.contents.columns, handle: frozen, rowID: AnyHashable(shown[r].id))
         }
         if tools.filter.isActive { Button(L10n.tr("Wyczyść filtr")) { TableActions.perform(handle, "table.clearFilter") } }
         Divider()

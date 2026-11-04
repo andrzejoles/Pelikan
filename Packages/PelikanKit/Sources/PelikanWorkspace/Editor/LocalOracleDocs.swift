@@ -183,6 +183,8 @@ public actor LocalDocsClient {
             }
             if initialization == task { return }
         }
+        // Sesja unieważniana raz po raz (serwer ciągle odrzuca) — błąd zamiast żądania bez zainicjowanej sesji.
+        throw LocalDocsError.server(L10n.tr("nie udało się nawiązać sesji MCP"))
     }
 
     private func callToolOnce(_ name: String, _ arguments: [String: Any]) async throws -> String {
@@ -228,7 +230,8 @@ public actor LocalDocsClient {
             throw LocalDocsError.unreachable(error.localizedDescription)
         }
         if let http = response as? HTTPURLResponse {
-            if let s = http.value(forHTTPHeaderField: "Mcp-Session-Id") { session = s }
+            // Identyfikator sesji tylko z udanej odpowiedzi na initialize (odpowiedź błędu nie ustanawia sesji).
+            if method == "initialize", (200..<300).contains(http.statusCode), let s = http.value(forHTTPHeaderField: "Mcp-Session-Id") { session = s }
             guard (200..<300).contains(http.statusCode) else {
                 throw LocalDocsError.http(http.statusCode, String(decoding: data.prefix(500), as: UTF8.self))
             }

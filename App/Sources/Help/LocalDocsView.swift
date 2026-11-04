@@ -37,9 +37,10 @@ final class LocalDocsModel {
     func search(settings: LocalDocsSettings) async {
         let q = query.trimmingCharacters(in: .whitespaces)
         guard !q.isEmpty else { return }
-        guard let endpoint = settings.endpoint else { message = LocalDocsError.badAddress(settings.url).localizedDescription; return }
         searchRequest += 1
         let request = searchRequest
+        // Zły adres unieważnia też wyszukiwanie w toku (jego wynik nie nadpisze komunikatu).
+        guard let endpoint = settings.endpoint else { message = LocalDocsError.badAddress(settings.url).localizedDescription; return }
         pending += 1
         defer { pending -= 1 }
         do {
@@ -119,7 +120,8 @@ struct LocalDocsView: View {
         .frame(minWidth: 320, minHeight: 380)
         .task(id: model.request) {
             model.version = settings.version
-            if !model.query.trimmingCharacters(in: .whitespaces).isEmpty { await search() }
+            // Wykonanie zlecenia komendy (F1, „Szukaj”, paleta) — samo wyszukiwanie.
+            if !model.query.trimmingCharacters(in: .whitespaces).isEmpty { await model.search(settings: settings) }
         }
     }
 
@@ -127,7 +129,7 @@ struct LocalDocsView: View {
         TextField(L10n.tr("Szukaj w dokumentacji Oracle (po angielsku, np. DBMS_SCHEDULER.CREATE_JOB repeat_interval)"), text: $model.query)
             .textFieldStyle(.roundedBorder)
             .frame(minWidth: 200)
-            .onSubmit { Task { await search() } }
+            .onSubmit { search() }
     }
 
     private var searchControls: some View {
@@ -136,7 +138,7 @@ struct LocalDocsView: View {
                 ForEach(LocalDocsSettings.versions, id: \.self) { v in Text(v == "all" ? L10n.tr("wszystkie") : v).tag(v) }
             }
             .fixedSize()
-            Button(L10n.tr("Szukaj")) { Task { await search() } }
+            Button(L10n.tr("Szukaj")) { search() }
                 .disabled(model.query.trimmingCharacters(in: .whitespaces).isEmpty || model.busy)
             if model.busy { ProgressView().controlSize(.small) }
         }
@@ -186,7 +188,8 @@ struct LocalDocsView: View {
         }
     }
 
-    private func search() async { await model.search(settings: settings) }
+    /// Wyszukiwanie z okna — komenda „Dokumentacja Oracle (lokalna)” z zapytaniem (paleta, makra, historia).
+    private func search() { workspace.perform("help.localDocs", CommandArguments(["query": .string(model.query)])) }
 
 }
 

@@ -245,7 +245,7 @@ struct TestPanel: View {
                         DataColumn(L10n.tr("Linia"), sortKey: { (l: ProfilerLine) in String(l.line) }) { (l: ProfilerLine) in Text(String(l.line)) }.width(44)
                         DataColumn(L10n.tr("Wykonań"), sortKey: { (l: ProfilerLine) in String(l.occurrences) }) { (l: ProfilerLine) in Text(String(l.occurrences)) }.width(64)
                         DataColumn(L10n.tr("Czas [\(unit.symbol)]"), sortKey: { (l: ProfilerLine) in unit.format(nanoseconds: l.totalTime) }) { (l: ProfilerLine) in Text(unit.format(nanoseconds: l.totalTime)) }.width(84)
-                        DataColumn("%", sortKey: { (l: ProfilerLine) in l.totalTime }, text: { (l: ProfilerLine) in String(format: "%.1f%%", l.totalTime / total * 100) }) { (l: ProfilerLine) in bar(l.totalTime / total) }.width(90)
+                        DataColumn("%", sortKey: { (l: ProfilerLine) in l.totalTime / total * 100 }, text: { (l: ProfilerLine) in String(format: "%.1f%%", l.totalTime / total * 100) }) { (l: ProfilerLine) in bar(l.totalTime / total) }.width(90)
                         DataColumn(L10n.tr("Tekst"), sortKey: { (l: ProfilerLine) in l.text }) { (l: ProfilerLine) in Text(l.text).font(.code).lineLimit(1) }
                     }
                 } else if showCallTree {
@@ -266,7 +266,7 @@ struct TestPanel: View {
                         DataColumn(L10n.tr("Wywołań"), sortKey: { (f: ProfilerFunction) in String(f.calls) }) { (f: ProfilerFunction) in Text(String(f.calls)) }.width(64)
                         DataColumn.digits(L10n.tr("Własny [µs]"), sortKey: { (f: ProfilerFunction) in f.functionTime }, text: { (f: ProfilerFunction) in String(format: "%.0f", f.functionTime) }).width(84)
                         DataColumn.digits(L10n.tr("Z wywołaniami [µs]"), sortKey: { (f: ProfilerFunction) in f.subtreeTime }, text: { (f: ProfilerFunction) in String(format: "%.0f", f.subtreeTime) }).width(120)
-                        DataColumn("%", sortKey: { (f: ProfilerFunction) in f.subtreeTime }, text: { (f: ProfilerFunction) in String(format: "%.1f%%", f.subtreeTime / total * 100) }) { (f: ProfilerFunction) in bar(f.subtreeTime / total) }.width(90)
+                        DataColumn("%", sortKey: { (f: ProfilerFunction) in f.subtreeTime / total * 100 }, text: { (f: ProfilerFunction) in String(format: "%.1f%%", f.subtreeTime / total * 100) }) { (f: ProfilerFunction) in bar(f.subtreeTime / total) }.width(90)
                     }
                 }
             } else {

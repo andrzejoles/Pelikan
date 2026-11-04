@@ -207,11 +207,12 @@ struct TableToolsReviewTests {
         #expect(!ValueFilter.parse("<> 12.35")!.matches(text: "12.35", key: .number(12.345678)))
         #expect(ValueFilter.parse("> 3")!.matches(text: "", key: .number(5)))   // bez tekstu — wartość klucza
         #expect(LikePattern("dba%").matches("DBA_USERS") && !LikePattern("dba%").matches("X"))
-        // Tekst z jednostką albo procentem — liczba z tekstu, nie klucz w innej skali.
-        #expect(ValueFilter.parse("> 10")!.matches(text: "12.3%", key: .number(0.123)))
-        #expect(ValueFilter.parse("> 50")!.matches(text: "75%", key: .number(0.75)))
-        #expect(ValueFilter.parse("< 2")!.matches(text: "1.2 s", key: .number(1_200_000_000)))
-        // Kody z literami (wersje, klasy) nie są liczbami z jednostką.
+        // Porządek według klucza kolumny (jednolita skala przy jednostkach w tekście: „450 ms” obok „1.2 s”).
+        #expect(ValueFilter.parse("< 1")!.matches(text: "450 ms", key: .number(0.45)))
+        #expect(!ValueFilter.parse("< 1")!.matches(text: "1.2 s", key: .number(1.2)))
+        #expect(ValueFilter.parse("> 1000")!.matches(text: "1,234", key: .number(1234)))
+        // Wartość z białymi znakami na brzegach — „tylko ta wartość” trafia w tę samą komórkę.
+        #expect(ValueFilter.parse(TableExport.condition("abc\n", exclude: false))!.matches(text: "abc\n", key: .text("abc\n")))
         #expect(!ValueFilter.parse("= 19")!.matches(text: "19c", key: .text("19c")))
     }
 

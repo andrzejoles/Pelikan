@@ -3650,18 +3650,23 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   szukania po geometrii); sonda w tle zapisuje okno tabeli. Uchwyt tabeli SwiftUI trzyma wartości tabeli, nie widok,
   i liczy wiersze przy wywołaniu. Makra nagrywają komendy zmieniające stan tabeli: filtr z wartością (nie numerem wiersza —
   odtworzenie działa tak samo w każdej kolejności i tabeli), zaznaczenie kolumny jako stan docelowy (nie przełączenie),
-  kolumnę wybraną w oknie pytania; kopie — jak w siatce — nie. Migawka tabeli AppKit obejmuje tylko wiersze czynności
-  menu (zaznaczone i spod kursora). Menu tabel AppKit nie zmienia zaznaczenia. Pusty identyfikator
+  kolumnę wybraną w oknie pytania; kopie — jak w siatce — nie. Kolumna w makrze to jej pozycja „#n” (tytuły zależą od języka).
+  Migawka menu: SwiftUI — z chwili otwarcia menu (etykiety i czynność na tych samych danych); AppKit — wiersz spod
+  kursora i zaznaczenie jako indeksy. Kolumny czynności (przyciski) nie trafiają do kopii, eksportu ani filtra.
+  Paleta ustala tabelę pod sobą przed zamknięciem i przekazuje ją jako cel. Rejestracja tabeli SwiftUI — wspólny
+  modyfikator `registersTable` (`DataTable`, plan). Menu tabel AppKit nie zmienia zaznaczenia. Pusty identyfikator
   kolumny (kolumna bez tytułu) jest kolumną. „Kopiuj z nagłówkiem” — ustawienie, dostępne bez tabeli. ⌘C w tabeli to
   systemowe Edycja › Kopiuj (zawartość od razu); w menu tabeli i palecie — „Kopiuj wiersze tabeli”. Kolumny liczbowe
   i czasowe mają jedno formatowanie dla komórki i kopii (`DataColumn.digits`). Kopia, eksport i licznik planu — wiersze
   jak na ekranie (zwinięte gałęzie pominięte).
 - Komendy `table.*` w menu Edycja › Tabela i w palecie (poza wstążką — działają w oknach narzędzi). Liczba w filtrze
-  porównywana z liczbą pokazaną w komórce (także z jednostką czasu, rozmiaru albo procentem: „12.3%”, „1.2 s”; kody
-  jak „19c” to tekst); data z dokładnością, z jaką ją wpisano (dzień, minuta, sekunda); tekst kolumn całkowitych bez przejścia przez Double. Zapis pliku (arkusz)
+  — równość (`=`, `<>`) z liczbą pokazaną w komórce (tekst to sama liczba: „= 12.35” trafia przy kluczu 12.345678),
+  porządek (`<`, `>`, between) z kluczem kolumny (jednolita skala, także „450 ms” obok „1.2 s”); kolumny procentu
+  i postępu mają klucz w skali pokazanej; kody jak „19c” to tekst; „tylko ta wartość” ujmuje w cudzysłowy wartości
+  z białymi znakami na brzegach; data z dokładnością, z jaką ją wpisano (dzień, minuta, sekunda); tekst kolumn całkowitych bez przejścia przez Double. Zapis pliku (arkusz)
   w oknie, z którego go wywołano; nazwa pliku z tytułu okna tabeli.
 - Klient MCP inicjuje sesję raz także przy równoczesnych wywołaniach (wywołanie czekające na unieważnioną sesję czeka
-  na nową); ponowienie po odpowiedzi 4xx na żądanie z sesją, jeden raz na sesję
+  na nową; sesja tylko z udanej odpowiedzi na initialize); wyszukiwanie z okna to komenda `help.localDocs`; ponowienie po odpowiedzi 4xx na żądanie z sesją, jeden raz na sesję
   (równoczesne wywołania dołączają do nowej); okno dokumentacji pomija wyniki starszych żądań po numerze żądania.
   Wzorce LIKE: filtr siatki kompiluje je raz na filtrowanie, filtr tabel — z pamięci wzorców. Okno dokumentacji
   trzyma wyniki, zaznaczenie i sekcję w modelu; „Kopiuj”, „Cała sekcja”, „Otwórz online” i „Dokumentacja online” to

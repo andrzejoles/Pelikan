@@ -226,13 +226,14 @@ public struct LikePattern: @unchecked Sendable {
 
     /// Wzorzec skompilowany raz na tekst (pamięć ograniczona do 256 wzorców).
     public static func cached(_ pattern: String) -> LikePattern {
+        if let p = cache.withLock({ $0[pattern] }) { return p }
+        // Kompilacja poza blokadą; przy pełnej pamięci usuwany jeden wzorzec, nie wszystkie.
+        let p = LikePattern(pattern)
         cache.withLock { c in
-            if let p = c[pattern] { return p }
-            if c.count >= 256 { c.removeAll() }
-            let p = LikePattern(pattern)
-            c[pattern] = p
-            return p
+            if c[pattern] == nil, c.count >= 256, let k = c.keys.first { c.removeValue(forKey: k) }
+            c[pattern] = c[pattern] ?? p
         }
+        return p
     }
 
     public func matches(_ s: String) -> Bool {

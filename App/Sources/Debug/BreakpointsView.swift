@@ -36,7 +36,7 @@ struct BreakpointsView: View {
                 }.width(90)
                 DataColumn("", sortKey: { b in b.wrappedValue.enabled }, text: { _ in "" }) { $b in
                     Button { workspace.perform("debug.removeBreakpoint", CommandArguments(["id": .string(b.id.uuidString)])) } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń")).buttonStyle(.borderless)
-                }.width(30)
+                }.width(30).action()
             }
             HStack {
                 Button(L10n.tr("Włącz wszystkie")) { workspace.perform("debug.enableAllBreakpoints") }

@@ -34357,30 +34357,30 @@
         }
       }
     },
-    "Kolumna: identyfikator albo tytuł (bez argumentu — wybór z listy)" : {
+    "Kolumna: identyfikator, tytuł albo #numer (bez argumentu — wybór z listy)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Column: identifier or title (without argument — choose from a list)"
+            "value" : "Column: identifier, title or #number (without argument — choose from a list)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spalte: Kennung oder Titel (ohne Argument — Auswahl aus einer Liste)"
+            "value" : "Spalte: Kennung, Titel oder #Nummer (ohne Argument — Auswahl aus einer Liste)"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Columna: identificador o título (sin argumento: elegir de una lista)"
+            "value" : "Columna: identificador, título o #número (sin argumento: elegir de una lista)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Стовпець: ідентифікатор або назва (без аргументу — вибір зі списку)"
+            "value" : "Стовпець: ідентифікатор, назва або #номер (без аргументу — вибір зі списку)"
           }
         }
       }
@@ -132073,6 +132073,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "немає такої одиниці"
+          }
+        }
+      }
+    },
+    "nie udało się nawiązać sesji MCP" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "could not establish an MCP session"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP-Sitzung konnte nicht aufgebaut werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no se pudo establecer una sesión MCP"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не вдалося встановити сеанс MCP"
           }
         }
       }

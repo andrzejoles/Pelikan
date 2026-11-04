@@ -296,12 +296,12 @@ struct TaskMonitorView: View {
                         Text(String(format: "%.1f s", t.duration)).monospacedDigit()
                     }
                 }.width(70)
-                DataColumn(L10n.tr("Postęp"), sortKey: { t in t.progress ?? -1 }, text: { t in t.progress.map { String(format: "%.0f%%", $0 * 100) } ?? (t.message ?? "") }) { t in
+                DataColumn(L10n.tr("Postęp"), sortKey: { t in t.progress.map { $0 * 100 } ?? -1 }, text: { t in t.progress.map { String(format: "%.0f%%", $0 * 100) } ?? (t.message ?? "") }) { t in
                     if let p = t.progress { ProgressView(value: p) } else { Text(t.message ?? "").font(.uiSecondary).lineLimit(1) }
                 }
                 DataColumn("", sortKey: { t in t.isRunning }, text: { _ in "" }) { t in
                     if t.isRunning { Button(L10n.tr("Anuluj")) { t.cancel() } }
-                }.width(70)
+                }.width(70).action()
             }
         }
         .padding(10)

@@ -39,18 +39,18 @@ func BlockMenuItem(_ title: String, state: Bool = false, enabled: Bool = true, _
 final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     var window: NSWindow? { table.window }
 
-    /// Migawka z chwili otwarcia menu: tekst tylko wierszy, których dotyczą czynności menu (zaznaczone i spod kursora)
-    /// — bez przepisywania całej tabeli.
+    /// Migawka z chwili otwarcia menu: tekst wiersza spod kursora (czynności na nim dostają go w argumencie);
+    /// zaznaczenie jako indeksy — bez przepisywania wielu wierszy przy każdym prawym kliknięciu.
     func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) {
         let c = contents
-        var wanted = Set(c.selectedRows)
-        if table.clickedRow >= 0 { wanted.insert(table.clickedRow) }
-        let cells = Dictionary(uniqueKeysWithValues: wanted.filter { $0 < c.rowCount }.map { r in
-            (r, Dictionary(c.columns.map { ($0.id, c.cell(r, $0.id)) }, uniquingKeysWith: { a, _ in a }))
-        })
+        let clicked = table.clickedRow
+        let row = clicked >= 0 && clicked < c.rowCount
+            ? Dictionary(c.columns.map { ($0.id, c.cell(clicked, $0.id)) }, uniquingKeysWith: { a, _ in a }) : [:]
         let frozen = TableContents(title: c.title, columns: c.columns, rowCount: c.rowCount,
-                                   cell: { r, id in cells[r]?[id] ?? "" }, selectedRows: c.selectedRows)
-        return (frozen, { _ in [] })
+                                   cell: { r, id in r == clicked ? row[id] ?? "" : c.cell(r, id) }, selectedRows: c.selectedRows)
+        let count = c.rowCount
+        // Identyfikatory wierszy tabel AppKit to ich indeksy.
+        return (frozen, { ids in ids.compactMap { $0 as? Int }.filter { $0 < count } })
     }
 
     var filter: TableFilter {

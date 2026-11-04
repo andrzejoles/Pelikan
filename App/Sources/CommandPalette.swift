@@ -98,8 +98,10 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
         guard row >= 0, row < items.count else { return }
         // Niedostępnej teraz komendy nie wykonuje (jak „Szukaj czynności”).
         guard workspace.isEnabled(items[row].id) else { NSSound.beep(); return }
+        // Tabela pod paletą ustalona przed jej zamknięciem (okno z fokusem może się potem zmienić).
+        let target: AnyObject? = items[row].id.rawValue.hasPrefix("table.") ? TableFocus.current() : nil
         panel.orderOut(nil)
-        workspace.perform(items[row].id)
+        workspace.perform(items[row].id, target: target)
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int { items.count }
