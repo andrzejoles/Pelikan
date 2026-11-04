@@ -75,6 +75,14 @@ public enum SQLTargetFinder {
     }
 }
 
+/// Zapytanie z elementu z fokusem (UIServices.focusedSQLTarget).
+public enum FocusedSQL: Sendable {
+    case target(SQLReportTarget)
+    /// Fokus w tabeli z kolumną SQL_ID/hash, bez zaznaczonego zapytania.
+    case tableWithoutTarget
+    case noTarget
+}
+
 extension ManagementPacks {
     /// Licencje połączenia dla okna raportów (D217): deklaracja (pytanie przy pierwszym użyciu, gdy `ask`) i parametr
     /// CONTROL_MANAGEMENT_PACK_ACCESS. Raporty bez licencji działają zawsze.
@@ -141,9 +149,12 @@ enum PerfCommands {
             guard h > 0, h <= Int64(UInt32.max) else { throw CommandError.invalidArgument("hash", String(h)) }
             return SQLReportTarget(target: .hash(UInt32(h)), origin: L10n.tr("parametr komendy"))
         }
-        if let t = ctx.ui?.focusedSQLTarget() { return t }
-        // Fokus w tabeli bez SQL_ID w zaznaczonym wierszu — pytanie, nie polecenie z edytora w tle.
-        if ctx.ui?.focusIsInTable() != true, let t = SQLTargetFinder.fromWorkspace(ctx.workspace) { return t }
+        switch ctx.ui?.focusedSQLTarget() ?? .noTarget {
+        case .target(let t): return t
+        // Fokus w tabeli z kolumną SQL bez zaznaczonego zapytania — pytanie, nie polecenie z edytora w tle.
+        case .tableWithoutTarget: break
+        case .noTarget: if let t = SQLTargetFinder.fromWorkspace(ctx.workspace) { return t }
+        }
         guard let ui = ctx.ui, let raw = await ui.askText(L10n.tr("Raporty dla SQL"), message: L10n.tr("SQL_ID albo HASH_VALUE zapytania"), defaultValue: "") else {
             throw CommandError.cancelledByUser
         }

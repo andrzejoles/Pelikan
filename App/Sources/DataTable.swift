@@ -175,8 +175,6 @@ protocol FocusTable: TableHandle {
     var sqlTarget: SQLReportTarget? { get }
     /// Okno tabeli (tytuł do nazwy pliku, arkusz zapisu eksportu).
     var window: NSWindow? { get }
-    /// Zawartość i indeksy wierszy po identyfikatorach — liczone raz (migawka do komendy z menu).
-    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int])
     /// Tabela ma kolumnę SQL_ID albo hash (źródło „Raporty dla SQL_ID”).
     var hasSQLColumn: Bool { get }
 }
@@ -187,19 +185,12 @@ protocol FocusTable: TableHandle {
 @MainActor
 final class FrozenTable: FocusTable {
     let contents: TableContents
-    private let indexer: ([AnyHashable]) -> [Int]
     private weak var base: (any FocusTable)?
     weak var window: NSWindow?
 
-    convenience init(_ base: any FocusTable) {
-        let snap = base.snapshot()
-        self.init(base, contents: snap.contents, indexes: snap.indexes)
-    }
-
-    /// Migawka z zawartości już policzonej przy rysowaniu (menu kontekstowe — bez ponownego filtrowania i sortowania).
     /// `menuRows` — wiersze menu kontekstowego (indeksy w `contents`): migawka ma je jako zaznaczenie, więc komendy
     /// wierszy idą zwykłą ścieżką „zaznaczone” (bez numerów wierszy w argumentach).
-    init(_ base: any FocusTable, contents: TableContents, indexes: @escaping ([AnyHashable]) -> [Int], menuRows: [Int]? = nil) {
+    init(_ base: any FocusTable, contents: TableContents, menuRows: [Int]? = nil) {
         self.base = base
         window = base.window
         if let menuRows, !menuRows.isEmpty {
@@ -208,14 +199,14 @@ final class FrozenTable: FocusTable {
         } else {
             self.contents = contents
         }
-        indexer = indexes
     }
 
     /// Tabela zamknięta przed startem komendy — komenda to zgłasza (zapis filtra nie miałby skutku).
     var isAvailable: Bool { base != nil }
     var sqlTarget: SQLReportTarget? { nil }
     var hasSQLColumn: Bool { false }
-    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) { (contents, indexer) }
+    /// Migawka nie zmienia się — to jest jej stała zawartość.
+    func stableContents(_ live: TableContents, rows: [Int]?, columns: [String]?) -> TableContents { live }
 
     var filter: TableFilter {
         get { base?.filter ?? TableFilter() }
@@ -225,7 +216,6 @@ final class FrozenTable: FocusTable {
         get { base?.markedColumns ?? [] }
         set { base?.markedColumns = newValue }
     }
-    func indexes(of ids: [AnyHashable]) -> [Int] { indexer(ids) }
 }
 
 /// Tabela SwiftUI: jeden obiekt na widok (`@State`), odświeżany przy każdym rysowaniu — komenda wywołana później
@@ -235,9 +225,7 @@ final class FrozenTable: FocusTable {
 final class SwiftUITableHandle: FocusTable, ObservableObject {
     /// Każde liczone osobno przy wywołaniu z bieżącymi wierszami widoku (filtr i sortowanie) — tylko to, czego trzeba.
     private var targetNow: () -> SQLReportTarget? = { nil }
-    private var snapshotNow: () -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) = {
-        (TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []), { _ in [] })
-    }
+    private var contentsNow: () -> TableContents = { TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []) }
     private var state: Binding<TableToolsState>?
     private(set) var hasSQLColumn = false
     /// Okno tabeli (sonda w tle tabeli).
@@ -249,24 +237,14 @@ final class SwiftUITableHandle: FocusTable, ObservableObject {
                                    sqlTarget: (rows: () -> [Row], target: ([Row]) -> SQLReportTarget?)?) {
         targetNow = sqlTarget.map { t in { t.target(t.rows()) } } ?? { nil }
         hasSQLColumn = sqlTarget != nil
-        snapshotNow = {
-            let shown = rows()
-            return (contents(shown), Self.indexer(shown))
-        }
+        contentsNow = { contents(rows()) }
         self.state = state
     }
 
-    var contents: TableContents { snapshotNow().contents }
+    var contents: TableContents { contentsNow() }
     var sqlTarget: SQLReportTarget? { targetNow() }
-    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) { snapshotNow() }
-
-    /// Indeksy wierszy o identyfikatorach w wierszach widoku.
-    static func indexer<Row: Identifiable>(_ shown: [Row]) -> ([AnyHashable]) -> [Int] {
-        { ids in
-            let set = Set(ids)
-            return shown.indices.filter { set.contains(AnyHashable(shown[$0].id)) }
-        }
-    }
+    /// Wiersze liczone przy każdym wywołaniu z danych widoku (wartości) — zawartość jest stała dla komendy.
+    func stableContents(_ live: TableContents, rows: [Int]?, columns: [String]?) -> TableContents { live }
 
     var filter: TableFilter {
         get { state?.wrappedValue.filter ?? TableFilter() }
@@ -334,12 +312,9 @@ struct TableWindowProbe: NSViewRepresentable {
             observation = window?.observe(\.firstResponder, options: [.initial, .new]) { [weak self] window, _ in
                 MainActor.assumeIsolated { self?.responderChanged(window.firstResponder) }
             }
-            // Druga droga: zmiana zaznaczenia w tabeli z fokusem (np. fokus przeszedł z pola edycji komórki).
+            // Po przeniesieniu okna — od nowa (obserwacja zaznaczenia dotyczy tabeli zarejestrowanej w tym oknie).
             NotificationCenter.default.removeObserver(self, name: NSTableView.selectionDidChangeNotification, object: nil)
             observedTable = nil
-            if window != nil {
-                NotificationCenter.default.addObserver(self, selector: #selector(selectionChanged(_:)), name: NSTableView.selectionDidChangeNotification, object: nil)
-            }
         }
 
         @objc private func selectionChanged(_ note: Notification) {
@@ -356,7 +331,7 @@ struct TableWindowProbe: NSViewRepresentable {
             let overlap = outer.convert(outer.bounds, to: nil).intersection(mine)
             guard mine.width > 1, mine.height > 1, !overlap.isNull, overlap.width * overlap.height > mine.width * mine.height / 2 else { return }
             TableFocus.registerSwiftUI(tv, handle)
-            // Dalej tylko zaznaczenie tej tabeli (nie wszystkich tabel aplikacji).
+            // Druga droga dla tej tabeli: zmiana zaznaczenia przy fokusie (np. fokus przeszedł z pola edycji komórki).
             if observedTable !== tv {
                 NotificationCenter.default.removeObserver(self, name: NSTableView.selectionDidChangeNotification, object: nil)
                 NotificationCenter.default.addObserver(self, selector: #selector(selectionChanged(_:)), name: NSTableView.selectionDidChangeNotification, object: tv)
@@ -442,7 +417,7 @@ struct TableCopyMenu: View {
         }
         Menu(L10n.tr("Zaznacz kolumny do kopii")) {
             ForEach(contents.columns, id: \.id) { c in
-                Toggle(c.title, isOn: Binding(get: { marked.contains(c.id) }, set: { _ in run("table.markColumn", ["column": .string(c.id)]) }))
+                Toggle(c.title, isOn: Binding(get: { marked.contains(c.id) }, set: { on in run("table.markColumn", ["column": .string(c.id), "marked": .bool(on)]) }))
             }
             if !marked.isEmpty {
                 Divider()
@@ -731,7 +706,7 @@ struct DataTable<Row: Identifiable>: View {
 
     /// Menu wiersza: raporty SQL, menu właściciela tabeli, kopia, filtr wartością, eksport.
     @ViewBuilder private func rowMenuContent(_ ids: Set<Row.ID>, shown: [Row], contents: TableContents, snapshot: Snapshot) -> some View {
-        let idx = shown.indices.filter { ids.contains(shown[$0].id) }
+        let idx = TableMenuRows.indices(ids, shown: shown)
         if let r = idx.first, let t = snapshot.sqlTarget(row: shown[r]) {
             Button(L10n.tr("Raporty dla \(t.label)…")) { SQLReportLauncher.open(t) }
             Divider()
@@ -742,7 +717,7 @@ struct DataTable<Row: Identifiable>: View {
         }
         // Migawka z chwili otwarcia menu: etykiety („Kolumna: wartość”) i czynność na tych samych danych, także gdy tabela
         // odświeży się przed wyborem pozycji. Klik poza wierszami — menu jak na pasku (zaznaczenie w chwili komendy).
-        let frozen = FrozenTable(handle, contents: contents, indexes: SwiftUITableHandle.indexer(shown), menuRows: idx)
+        let frozen = FrozenTable(handle, contents: contents, menuRows: idx)
         TableCopyMenu(contents: frozen.contents, handle: idx.isEmpty ? handle : frozen, marked: tools.markedColumns, rows: .from(idx))
         if !idx.isEmpty {
             Divider()

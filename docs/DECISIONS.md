@@ -3649,8 +3649,9 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   komendy wierszy idą zwykłą ścieżką „zaznaczone”, bez numerów wierszy w argumentach. Pasek i czynności bez wierszy
   działają na żywej tabeli. Zamknięta tabela — komunikat. Paleta, skrót i makro: tabela z fokusem w oknie bieżącym
   (pod paletą — w oknie, nad którym ją otwarto; paleta przed wykonaniem oddaje mu fokus bez przestawiania okien);
-  komendy biorą na starcie tekst tylko wierszy i kolumn, których dotyczą (`stableContents(_:rows:columns:)` —
-  AppKit przepisuje je, bo tabela może się przeładować w trakcie wyboru kolumny). Tabele AppKit rejestrują swój
+  komendy biorą na starcie tekst tylko wierszy i kolumn, których dotyczą (`stableContents(_:rows:columns:)` — wymagana
+  bez domyślnej implementacji, więc każda tabela deklaruje ją wprost; AppKit przepisuje tekst, bo tabela może się
+  przeładować w trakcie wyboru kolumny; migawka i SwiftUI — zawartość już stała). Tabele AppKit rejestrują swój
   `NSTableView` przy utworzeniu; tabela SwiftUI — zdarzeniem zmiany widoku z fokusem okna (obserwacja `firstResponder`)
   i zmiany zaznaczenia, gdy tabela z fokusem pokrywa większość ramki sondy w tle tabeli (sprawdzenie dopasowania, nie
   wyszukiwanie widoków); wspólny modyfikator `registersTable` (`DataTable`, plan). Uchwyt tabeli SwiftUI trzyma wartości
@@ -3712,3 +3713,10 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
 - Runda 17: „Cała sekcja” zgłasza błąd, gdy sekcji nie udało się pobrać (nic nie trafia do makra jako sukces);
   „Kopiuj zaznaczone kolumny” — w kolejności zaznaczania; liczba w eksporcie do 15 cyfr i 15 znaków (jak w xlsx);
   „Sprawdź” w Ustawieniach — własny klient (weto wobec jednego klienta MCP odrzucone; test nie zastępuje klienta okna).
+- Runda 18: tabele AppKit naprawdę zamrażają tekst na starcie komendy (wcześniej niezgodna sygnatura po cichu brała
+  domyślną implementację — usunięta); „Cała sekcja” zastąpiona nowszym żądaniem to nie błąd; pusta komórka „Postęp”
+  ma pusty klucz (filtr „tylko ta wartość” trafia); liczba w eksporcie — do 15 cyfr znaczących, a arkusz xlsx stosuje tę
+  samą regułę per komórka (kolumna nie przechodzi na tekst przez jedną długą wartość); `focusedSQLTarget()` zwraca
+  jedną odpowiedź (`FocusedSQL`: cel, tabela SQL bez zaznaczenia, brak) zamiast dwóch metod; przełącznik kolumny do
+  kopii ustawia stan (`marked`). Weta odrzucone: walidacja z celem w `validate` zamiast `acceptsTarget` (ergonomia
+  równa) i leniwa migawka menu AppKit (decyzja rundy 16 — to, co widział użytkownik).

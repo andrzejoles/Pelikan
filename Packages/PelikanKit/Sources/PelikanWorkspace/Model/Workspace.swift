@@ -118,10 +118,9 @@ public protocol UIServices: AnyObject {
     /// Raporty wydajności (D217): okno raportów zapytania i okno raportów bazy (nil — lista wszystkich).
     func showSQLReports(_ target: SQLReportTarget)
     func showPerfReport(_ reportID: String?, connection: UUID)
-    /// Zapytanie z elementu z fokusem (wiersz albo komórka tabeli, edytor) — przed oknem aktywnym.
-    func focusedSQLTarget() -> SQLReportTarget?
-    /// Fokus w tabeli z kolumną SQL_ID/hash (tabela narzędzia) — cel SQL tylko z jej wiersza, bez polecenia z edytora.
-    func focusIsInTable() -> Bool
+    /// Zapytanie z elementu z fokusem (wiersz albo komórka tabeli, edytor) — przed oknem aktywnym; jedna odpowiedź
+    /// o fokusie: cel, tabela z kolumną SQL bez zaznaczonego zapytania (pytanie zamiast polecenia z edytora) albo brak.
+    func focusedSQLTarget() -> FocusedSQL
     /// Tabela okna narzędzia z fokusem (ostatnio używana w oknie aktywnym) — dla komend `table.*` (D214).
     func focusedTable() -> (any TableHandle)?
     /// Fragment wybrany w oknie dokumentacji lokalnej (tekst — fragment albo cała sekcja, adres online) — D216.
@@ -274,8 +273,7 @@ extension UIServices {
     public func showLocalDocs(query: String) {}
     public func showSQLReports(_ target: SQLReportTarget) {}
     public func showPerfReport(_ reportID: String?, connection: UUID) {}
-    public func focusedSQLTarget() -> SQLReportTarget? { nil }
-    public func focusIsInTable() -> Bool { false }
+    public func focusedSQLTarget() -> FocusedSQL { .noTarget }
     public func focusedTable() -> (any TableHandle)? { nil }
     public func localDocsFragment() -> (text: String, link: URL?)? { nil }
     public func localDocsToggleSection() async -> Bool { false }

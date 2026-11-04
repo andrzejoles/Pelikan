@@ -41,13 +41,13 @@ public protocol TableHandle: AnyObject {
     var isAvailable: Bool { get }
     /// Zawartość, która nie zmieni się do końca komendy (tabela może się przeładować w trakcie): z `live` — tekst
     /// wierszy `rows` i kolumn `columns` (nil — wszystkich) przepisany teraz. Tabele z niezmienną zawartością (migawka,
-    /// SwiftUI — wiersze liczone przy wywołaniu) zwracają `live`.
+    /// SwiftUI — wiersze liczone przy wywołaniu) zwracają `live`. Bez domyślnej implementacji: każda tabela deklaruje to
+    /// wprost (niezgodna sygnatura to błąd kompilacji, nie ciche użycie żywej tabeli).
     func stableContents(_ live: TableContents, rows: [Int]?, columns: [String]?) -> TableContents
 }
 
 extension TableHandle {
     public var isAvailable: Bool { true }
-    public func stableContents(_ live: TableContents, rows: [Int]?, columns: [String]?) -> TableContents { live }
 }
 
 extension TableExport {

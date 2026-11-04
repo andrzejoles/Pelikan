@@ -127,6 +127,7 @@ final class FakeTableHandle: TableHandle {
     let rows: [[String]]
     var selected: [Int]
     init(rows: [[String]], selected: [Int]) { self.rows = rows; self.selected = selected }
+    func stableContents(_ live: TableContents, rows: [Int]?, columns: [String]?) -> TableContents { live }
     var contents: TableContents {
         TableContents(title: "T", columns: [("a", "A"), ("b", "B")], rowCount: rows.count,
                       cell: { [rows] r, id in rows[r][id == "a" ? 0 : 1] }, selectedRows: selected)
@@ -135,6 +136,7 @@ final class FakeTableHandle: TableHandle {
 
 @MainActor
 final class EmptyColumnTable: TableHandle {
+    func stableContents(_ live: TableContents, rows: [Int]?, columns: [String]?) -> TableContents { live }
     var filter = TableFilter()
     var markedColumns: [String] = []
     var contents: TableContents {
@@ -226,6 +228,9 @@ struct TableToolsReviewTests {
         #expect(ValueFilter.parse(TableExport.condition("0012", exclude: false))!.matches(text: "0012", key: .text("0012")))
         #expect(!ValueFilter.parse("= 'EMP2'")!.matches(text: "EMP02", key: .text("EMP02")))
         #expect(TableExport.isNumber("5."))
+        // Liczba z zerami po przecinku (16 znaków, 8 cyfr znaczących) — liczba; kolumna zostaje liczbowa.
+        #expect(TableExport.isNumber("-0.0000012345678"))
+        #expect(ResultExporter.significantDigits("-123456789012.34") == 14)
         // Wartość z białymi znakami na brzegach — „tylko ta wartość” trafia w tę samą komórkę.
         #expect(ValueFilter.parse(TableExport.condition("abc\n", exclude: false))!.matches(text: "abc\n", key: .text("abc\n")))
         #expect(!ValueFilter.parse("= 19")!.matches(text: "19c", key: .text("19c")))

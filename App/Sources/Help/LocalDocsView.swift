@@ -85,12 +85,14 @@ final class LocalDocsModel {
         defer { pending -= 1 }
         do {
             let text = try await LocalDocsClient.shared(for: endpoint).section(f.chunk)
-            // W międzyczasie wybrano inny fragment albo pobrano inną sekcję — ten wynik jest nieaktualny.
-            guard request == sectionRequest, selection == f.id else { return false }
+            // W międzyczasie wybrano inny fragment albo pobrano inną sekcję — ten wynik jest nieaktualny (zastąpiony, nie
+            // błąd).
+            guard request == sectionRequest, selection == f.id else { return true }
             detail = text
             return true
         } catch {
-            if request == sectionRequest, selection == f.id { message = error.localizedDescription }
+            guard request == sectionRequest, selection == f.id else { return true }
+            message = error.localizedDescription
             return false
         }
     }

@@ -43,28 +43,30 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
 
     /// Tekst wierszy `rows` (nil — wszystkich) przepisany teraz — komenda działa na nich, choć tabela może się potem
     /// przeładować. Jedno miejsce dla migawki menu i komend z palety, skrótu i paska.
-    func frozenContents(rows: Set<Int>?) -> TableContents {
+    func frozenContents(rows: Set<Int>?, columns: [String]?) -> TableContents {
         let c = contents
         let wanted = rows ?? Set(0..<c.rowCount)
+        let ids = columns.map(Set.init)
+        let cols = c.columns.filter { ids?.contains($0.id) ?? true }
         let cells = Dictionary(uniqueKeysWithValues: wanted.filter { $0 < c.rowCount }.map { r in
-            (r, Dictionary(c.columns.map { ($0.id, c.cell(r, $0.id)) }, uniquingKeysWith: { a, _ in a }))
+            (r, Dictionary(cols.map { ($0.id, c.cell(r, $0.id)) }, uniquingKeysWith: { a, _ in a }))
         })
         return TableContents(title: c.title, columns: c.columns, rowCount: c.rowCount,
                              cell: { r, id in cells[r]?[id] ?? "" }, selectedRows: c.selectedRows)
     }
 
     /// Migawka menu z chwili jego otwarcia: zaznaczone wiersze i wiersz spod kursora (to, co widział użytkownik).
-    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) {
+    func snapshot() -> TableContents {
         var wanted = Set(table.selectedRowIndexes)
         if table.clickedRow >= 0 { wanted.insert(table.clickedRow) }
-        let frozen = frozenContents(rows: wanted)
-        let count = frozen.rowCount
-        // Identyfikatory wierszy tabel AppKit to ich indeksy.
-        return (frozen, { ids in ids.compactMap { $0 as? Int }.filter { $0 < count } })
+        return frozenContents(rows: wanted, columns: nil)
     }
 
-    /// Komendy z palety, skrótu i paska: tekst wierszy, których dotyczą, przepisany na starcie komendy.
-    func stableContents(rows: [Int]?) -> TableContents { frozenContents(rows: rows.map(Set.init)) }
+    /// Komendy z palety, skrótu i paska: tekst wierszy i kolumn, których dotyczą, przepisany na starcie komendy
+    /// (tabela może się przeładować, zanim użytkownik wybierze kolumnę albo format).
+    func stableContents(_ live: TableContents, rows: [Int]?, columns: [String]?) -> TableContents {
+        frozenContents(rows: rows.map(Set.init), columns: columns)
+    }
 
     var filter: TableFilter {
         get { model.state.filter }
@@ -179,7 +181,7 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         func rowItem(_ title: String, _ id: String, menuRows: [Int], _ args: [String: JSONValue] = [:]) -> NSMenuItem {
             BlockMenuItem(title) { [weak self] in
                 guard let self, let snap else { return }
-                TableActions.perform(FrozenTable(self, contents: snap.contents, indexes: snap.indexes, menuRows: menuRows), id, args)
+                TableActions.perform(FrozenTable(self, contents: snap, menuRows: menuRows), id, args)
             }
         }
         // Raporty SQL z wiersza z kolumną SQL_ID/hash (D217).

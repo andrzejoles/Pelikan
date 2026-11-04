@@ -201,7 +201,7 @@ struct PlanPanel: View {
                     .contextMenu(forSelectionType: PlanLine.ID.self) { ids in
                         // Migawka z chwili otwarcia menu, wiersze menu jako jej zaznaczenie (jak w DataTable).
                         let idx = TableMenuRows.indices(ids, shown: shownLines)
-                        let frozen = FrozenTable(handle, contents: contents, indexes: SwiftUITableHandle.indexer(shownLines), menuRows: idx)
+                        let frozen = FrozenTable(handle, contents: contents, menuRows: idx)
                         TableCopyMenu(contents: frozen.contents, handle: idx.isEmpty ? handle : frozen, marked: tools.markedColumns, rows: .from(idx))
                         if !idx.isEmpty {
                             Divider()
