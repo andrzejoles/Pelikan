@@ -2,10 +2,18 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## 1.20.4 — czytelne wykresy Instance Viewera
+## 1.20.4 — czytelne wykresy Instance Viewera, raporty wydajności sprawdzone na produkcji
 
 - **Instance Viewer:** wykresy oczekiwań i SGA z nazwami w osobnej kolumnie, słupkami i wartościami obok — słupki nie
   zasłaniają już nazw; w wąskim panelu wykresy jeden pod drugim.
+- **Raporty wydajności — brak uprawnień widać od razu:** raporty, do których pakietu użytkownik nie ma EXECUTE, są
+  zablokowane na liście z powodem i gotowym poleceniem GRANT dla administratora.
+- **SQL Tuning Advisor ze źródła AWR** nie kończy się już ORA-13768, gdy najstarsze migawki zapytania wypadły z retencji.
+- **Plany z AWR:** gdy AWR nie zapisał planu zapytania, raport jest zablokowany z wyjaśnieniem zamiast pustego wyniku.
+- **Automatyczny SQL Tuning i ewolucja planów SPM:** bez wyników — przyczyna (zadanie nieuruchamiane, wyłączone w oknie
+  konserwacji, AUTO_SPM_EVOLVE_TASK = OFF) zamiast błędu Oracle; automatyczny SQL Tuning działa też bez uprawnienia do
+  DBMS_AUTO_SQLTUNE.
+- **Raport sesji i Real-Time ADDM** w XML — aktywnej wersji tych raportów przeglądarka Oracle nie wyświetla.
 
 ## 1.20.3 — plan bez formatu Active
 

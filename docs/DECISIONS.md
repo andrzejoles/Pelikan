@@ -3595,3 +3595,25 @@ zerowych przyrostach oś pokazywała wartości 5,0E-7.
   nachodzi na słupki; wiersze malejąco; bez osi (wartości są przy słupkach). Przy samych zerach w oczekiwaniach — opis,
   że przyrost pojawi się po następnym odświeżeniu.
 - Wykresy obok siebie, a w wąskim panelu jeden pod drugim.
+
+### D223 · 2026-11-04 — Raporty wydajności na produkcyjnej bazie 19c: poprawki
+
+**Zlecenie właściciela:** przetestować wszystkie raporty D217 na jego bazie 19c (połączenie przez Oracle Wallet), błędy
+poprawić, braki uprawnień zanotować. Przebieg: 52 wywołania (wszystkie raporty, formaty i źródła), 32 działające; wynik
+tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
+
+- **Zakres migawek w retencji:** zakres raportów SQL zaczyna się od migawki przed pierwszą z danymi zapytania, ale nie
+  wcześniej niż najstarsza migawka w AWR — inaczej SQL Tuning Advisor ze źródła AWR kończył się ORA-13768.
+- **Plan bez wierszy w AWR:** AWR bywa ze statystykami zapytania, ale bez planu (DBA_HIST_SQL_PLAN pusty) — „Plany z AWR”
+  zablokowane z tym powodem zamiast pustego raportu.
+- **Uprawnienia sprawdzane przy otwarciu okna:** pakiety SYS z EXECUTE (ALL_OBJECTS) — raporty bez uprawnienia
+  zablokowane na liście z poleceniem GRANT (wcześniej komunikat dopiero po uruchomieniu). ADDM wymaga też
+  DBMS_WORKLOAD_REPOSITORY.
+- **Automatyczny SQL Tuning bez EXECUTE na DBMS_AUTO_SQLTUNE** — raport przez DBMS_SQLTUNE.REPORT_AUTO_TUNING_TASK.
+- **Zadania automatyczne bez wyników** (ORA-13631/13605 — SQL Tuning, ewolucja SPM): zamiast błędu Oracle przyczyna —
+  czy zadanie było uruchamiane (DBA_ADVISOR_EXECUTIONS), stan klienta „sql tuning advisor” w oknie konserwacji
+  (DBA_AUTOTASK_CLIENT) i parametr AUTO_SPM_EVOLVE_TASK. Na badanej bazie zadania nie były nigdy uruchamiane
+  (klient DISABLED, AUTO_SPM_EVOLVE_TASK = OFF).
+- **Raport sesji i Real-Time ADDM tylko w XML:** aktywny raport sesji przeglądarka Oracle odrzuca („Not a sfx file”),
+  także z SID aktywnej sesji; aktywna wersja Real-Time ADDM przez DBMS_REPORT.FORMAT_REPORT kończy się stroną 404 na
+  serwerze Oracle, a formaty HTML i tekst — ORA-13972 (tak jak raport planu, D221).

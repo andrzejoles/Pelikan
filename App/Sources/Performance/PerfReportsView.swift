@@ -17,6 +17,9 @@ final class PerfReportsModel {
     var snapshots: [(id: Int, begin: String, end: String, instance: Int)] = []
     var dbNow = ""
     var dbHourAgo = ""
+    /// Pakiety raportów z EXECUTE dla użytkownika (D223) — raporty bazy bez uprawnienia są blokowane z poleceniem GRANT.
+    var packages: Set<String>?
+    var sessionUser = ""
     var loading = false
     var running = false
     var message = ""
@@ -62,6 +65,8 @@ final class PerfReportsModel {
                 dbNow = r[0].displayText ?? ""; dbHourAgo = r[1].displayText ?? ""
             }
             snapshots = (try? await ManagementPacks.snapshots(in: s)) ?? []
+            packages = await SQLProbe.accessiblePackages(in: s)
+            sessionUser = s.info.sessionUser
             if case .sql(var t) = mode {
                 var sqlID: String
                 switch t.target {
@@ -113,6 +118,7 @@ final class PerfReportsModel {
         return reports.map { r in
             if !lic.allows(r.need) { return (r, false, L10n.tr("Wymaga licencji \(r.need.displayName)")) }
             if major < r.minMajor { return (r, false, L10n.tr("Wymaga Oracle \(r.minMajor) lub nowszej")) }
+            if let reason = PerfReportRunner.missingPrivilege(r.id, accessible: packages, user: sessionUser) { return (r, false, reason) }
             if r.parameters.contains(.snapshots), snapshots.count < 2 { return (r, false, L10n.tr("W AWR są mniej niż dwie migawki")) }
             return (r, true, nil)
         }
