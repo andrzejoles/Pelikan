@@ -2,6 +2,11 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.20.4 — czytelne wykresy Instance Viewera
+
+- **Instance Viewer:** wykresy oczekiwań i SGA z nazwami w osobnej kolumnie, słupkami i wartościami obok — słupki nie
+  zasłaniają już nazw; w wąskim panelu wykresy jeden pod drugim.
+
 ## 1.20.3 — plan bez formatu Active
 
 - **Plan wykonania** (karta sesji i raport „Plan z pamięci kursorów”) jako HTML, tekst albo XML. Format Active usunięty —

@@ -32145,34 +32145,6 @@
         }
       }
     },
-    "Klasa" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Class"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Клас"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clase"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klasse"
-          }
-        }
-      }
-    },
     "Klasa zadania" : {
       "localizations" : {
         "en" : {
@@ -76469,6 +76441,34 @@
         }
       }
     },
+    "Przyrost oczekiwań po następnym odświeżeniu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wait increase after the next refresh"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuwachs der Wartezeiten nach der nächsten Aktualisierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aumento de esperas tras la próxima actualización"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приріст очікувань після наступного оновлення"
+          }
+        }
+      }
+    },
     "Przywraca binarkę na celu z wersji .prev albo z wybranej kopii w katalogu kopii zapasowych (po potwierdzeniu; PROD — nazwą celu). Źródła wycofuje się przez revert w git." : {
       "localizations" : {
         "en" : {
@@ -77277,34 +77277,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffentlich"
-          }
-        }
-      }
-    },
-    "Pula" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pool"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пул"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pool"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pool"
           }
         }
       }

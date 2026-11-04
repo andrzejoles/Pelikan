@@ -3583,3 +3583,15 @@ Oracle już nie ma — odtworzone na kopii pliku właściciela. Tego nie da się
 
 - Plan (karta sesji i raport „Plan z pamięci kursorów”): HTML (domyślnie), tekst, XML — bez Active; zapamiętany wybór
   Active traktowany jak HTML. Interaktywny widok wykonania: SQL Monitor i SQL Detail ACTIVE („Raporty dla SQL_ID…”).
+
+### D222 · 2026-11-04 — Czytelne wykresy Instance Viewera
+
+**Zgłoszenie właściciela:** „Instance viewer — trochę mało czytelne wykresy (słupki zakrywają etykiety)”. Wykresy Swift
+Charts rysowały nazwy klas oczekiwań i pul SGA w obszarze wykresu (linie siatki przez tekst, słupki na nazwach), a przy
+zerowych przyrostach oś pokazywała wartości 5,0E-7.
+
+- Własny wykres słupkowy (`InstanceBarChart`): nazwa w osobnej kolumnie (do prawej), słupek proporcjonalny do
+  największej wartości (zaokrąglony koniec, jeden kolor, jasne tło toru), wartość w osobnej kolumnie — tekst nie
+  nachodzi na słupki; wiersze malejąco; bez osi (wartości są przy słupkach). Przy samych zerach w oczekiwaniach — opis,
+  że przyrost pojawi się po następnym odświeżeniu.
+- Wykresy obok siebie, a w wąskim panelu jeden pod drugim.
