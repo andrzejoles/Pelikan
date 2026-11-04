@@ -174,10 +174,7 @@ struct QueryBuilderView: View {
     }
 
     private var preview: some View {
-        ScrollView {
-            Text(model.sql()).font(.code).textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading).padding(6)
-        }
+        CodePreview(text: model.sql()).padding(6)
         .background(Color(nsColor: .textBackgroundColor))
         .border(Color(nsColor: .separatorColor))
     }

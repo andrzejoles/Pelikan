@@ -3521,3 +3521,18 @@ raporty SQL dla listy SQL_ID, PERF-421).
   okna czasu i migawek przed wywołaniem. Agent: brak dostępu (pakiety zarządzania, PROMPT §7.3).
 - Dotychczasowe komendy Narzędzia › Wydajność (AWR, ASH, ADDM, SQL Monitor, SQL Tuning Advisor z domyślnymi
   parametrami) zostają bez zmian.
+
+### D218 · 2026-11-04 — SQL_ID w wynikach zapytań; podgląd kodu z kolorowaniem i widokiem sformatowanym
+
+**Prośba właściciela:** „SQL_ID i hash zapytania wykrywane również w wynikach zwykłego zapytania” oraz „okna wyświetlające
+kod SQL, PL/SQL (tak jak Narzędzia › Sesje) [mają mieć] opcje kolorowania składni i włączenia widoku sformatowanego”.
+
+- **Siatka wyniku dowolnego zapytania**: kolumny SQL_ID i hash (nazwy jak w D217) oraz komórki tekstowe z wartością
+  w postaci SQL_ID są wyróżnione kolorem odnośnika; pozycja menu kontekstowego pokazuje wykryty identyfikator
+  klikniętego wiersza („Raporty dla SQL_ID 0mrddqch8r0vm…”), a bez niego jest wyłączona z opisem braku; przycisk
+  „Raporty SQL_ID” na karcie Wynik (i pasku wyniku nad siatką) bierze SQL_ID zaznaczonego wiersza.
+- **Podgląd kodu** (`CodePreview`): kolorowanie tym samym leksykonem co edytor, przełącznik „Sformatowany” (formater
+  z Ustawień, tekst w bazie bez zmian), Kopiuj, Otwórz w oknie SQL; przełączniki wspólne dla wszystkich podglądów
+  (zapamiętane). Użyty w: Sesje (bieżące SQL i inne szczegóły tekstowe), raporty SQL (tekst zapytania), Autotrace
+  (polecenie), Query Builder (SQL), proste edytory obiektów (podgląd SQL), refaktoryzacja (DDL zmiany), zgoda agenta
+  (polecenia — bez otwierania w oknie SQL).

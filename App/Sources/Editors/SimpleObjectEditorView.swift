@@ -20,10 +20,7 @@ struct SimpleObjectEditorView: View {
                 .frame(minWidth: 380)
                 VStack(alignment: .leading, spacing: 6) {
                     Text("SQL").font(.uiHeadline).padding(.horizontal, 8).padding(.top, 8)
-                    ScrollView {
-                        Text(preview).font(.code).textSelection(.enabled)
-                            .frame(maxWidth: .infinity, alignment: .topLeading).padding(8)
-                    }
+                    CodePreview(text: preview).padding(8)
                     .background(Color(nsColor: .textBackgroundColor))
                     .accessibilityLabel(L10n.tr("Podgląd DDL"))
                 }

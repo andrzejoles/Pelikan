@@ -87,7 +87,7 @@ struct RefactoringPreviewView: View {
             }
             if let ddl = plan.ddl {
                 Text(L10n.tr("DDL zmiany w bazie (nowe okno SQL, bez wykonania):")).font(.ui)
-                Text(ddl).font(.code).textSelection(.enabled)
+                CodePreview(text: ddl).frame(minHeight: 80, maxHeight: 220)
             }
             HStack {
                 Spacer()

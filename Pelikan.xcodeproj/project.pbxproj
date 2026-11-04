@@ -111,6 +111,7 @@
 		E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */; };
 		EA03C2AF4B38B21F5987B27C /* AgentsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C866A6E13301104082FC8632 /* AgentsPane.swift */; };
 		EBB91D4E331A89078F54F583 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CD6A006B64ECCA95F14C9E9 /* Assets.xcassets */; };
+		EBC025717821067F9DB1A4CE /* CodePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC46AF5BAABF755F3D8B53EE /* CodePreview.swift */; };
 		ED1A5FBBBA6072361C0B0A94 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0427D9CBADA2F10B268B10 /* SearchBarView.swift */; };
 		EDDF2B30C34EE7482B2EC5FC /* PreferenceIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8877900ED39A5D37A825941 /* PreferenceIndex.swift */; };
 		EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C283921294ECF4112EB71BEE /* CodeContentsView.swift */; };
@@ -264,6 +265,7 @@
 		D7D6615E89A14B21F573B88A /* AppLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogging.swift; sourceTree = "<group>"; };
 		D823868EFA8AB35B9B9E1B7C /* TestExplorerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestExplorerView.swift; sourceTree = "<group>"; };
 		DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakpointsView.swift; sourceTree = "<group>"; };
+		DC46AF5BAABF755F3D8B53EE /* CodePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodePreview.swift; sourceTree = "<group>"; };
 		DCAA0454A6D4E853A00B93A6 /* ResultCommandBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultCommandBar.swift; sourceTree = "<group>"; };
 		DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
 		E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramWindowViewController.swift; sourceTree = "<group>"; };
@@ -507,6 +509,7 @@
 				6D7056F4E355029FE5D90B7C /* AppDelegate.swift */,
 				5F92ED91422BB2BB0A701B9B /* AppFonts.swift */,
 				D7D6615E89A14B21F573B88A /* AppLogging.swift */,
+				DC46AF5BAABF755F3D8B53EE /* CodePreview.swift */,
 				CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */,
 				CC82F76EB775852356F7D08E /* DataTable.swift */,
 				8CCD8DCD02E96AFEB6162242 /* LocalHTMLView.swift */,
@@ -892,6 +895,7 @@
 				EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */,
 				CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */,
 				5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */,
+				EBC025717821067F9DB1A4CE /* CodePreview.swift in Sources */,
 				53A071441267FB1A65FE9E57 /* CodeTextEditor.swift in Sources */,
 				A3E61CC8AF2B22C31ECA4161 /* CommandPalette.swift in Sources */,
 				E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */,

@@ -2,7 +2,9 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## Następna wersja
+## 1.20.0 — raporty wydajności dla SQL_ID z zaznaczenia, menu i karta Wydajność, podgląd kodu z kolorowaniem
+
+Zmiany z wersji 1.19.0–1.20.0 (bez osobnych wydań), wydane razem.
 
 - **Raporty dla SQL_ID z zaznaczenia (Wydajność › Raporty dla SQL_ID, ⌃⌘R, menu kontekstowe):** SQL_ID albo hash Pelikan
   bierze sam — z zaznaczonego wiersza albo komórki siatki, wiersza tabeli (sesje, SQL Monitor, Top SQL…), słowa pod
@@ -10,6 +12,10 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   kursorów, sesje, ASH, AWR, SQL Monitor, zapisane raporty, bindy), i proponuje raporty: plany, SQL Monitor, SQL Detail,
   Performance Hub, raporty AWR i ASH, historię wykonań, bindy, SQL Tuning i Repair Advisor — ze źródłem, formatem
   (domyślnie ACTIVE), parametrami i zapamiętanymi bindami do wyboru. Raporty ACTIVE otwierają się w przeglądarce.
+- **SQL_ID w wynikach każdego zapytania:** kolumny SQL_ID i HASH_VALUE (i wartości wyglądające jak SQL_ID) są
+  wyróżnione; menu kontekstowe pokazuje wykryty SQL_ID wiersza, a na karcie Wynik jest przycisk „Raporty SQL_ID”.
+- **Kod z kolorowaniem i formatowaniem w oknach narzędzi:** Sesje (bieżące SQL), raporty SQL, Autotrace, Query Builder
+  i podglądy SQL mają kolorowanie składni, przełącznik „Sformatowany”, kopiowanie i otwarcie w oknie SQL.
 - **Menu i karta wstążki Wydajność:** AWR, porównanie AWR, ADDM i porównanie ADDM, ASH, ASH Analytics, Performance Hub,
   raport sesji, Real-Time ADDM, SQL Monitor, operacje statystyk, Auto SQL Tuning i ewolucja SPM — z pytaniem
   o migawki, okres, źródło i format. Pelikan pokazuje tylko raporty objęte licencją bazy i wersją Oracle.

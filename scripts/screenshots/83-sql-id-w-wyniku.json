@@ -1,0 +1,1 @@
+[{"command": "agent.openEditor", "args": {"kind": "sql", "text": "select sql_id, hash_value, plan_hash_value, executions, substr(sql_text, 1, 60) tekst from v$sql where parsing_schema_name = user and executions > 0 order by executions desc fetch first 15 rows only"}, "delay": 1}, {"command": "sql.execute", "delay": 4}, {"command": "tools.sessions", "delay": 4}]

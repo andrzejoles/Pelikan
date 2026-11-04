@@ -395,6 +395,10 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
                        state: grid.edit.isEditing ? grid.pendingCellState(row: row, column: i) : .normal,
                        overflow: grid.edit.isEditing && grid.isOverflow(row: row, column: i),
                        editable: grid.isEditable(column: i), lines: tab.rowLines)
+        // SQL_ID i hash zapytania wyróżnione jak odnośnik — raporty z menu kontekstowego (D218).
+        if !v.isNull, !grid.edit.isEditing, SQLIdentity.columnKind(grid.columns[i].name) != nil || (grid.columns[i].type.isCharacter && SQLIdentity.isSQLID(cell.textField?.stringValue ?? "")) {
+            cell.textField?.textColor = .linkColor
+        }
         // Komórka bloku (PD-GRID-007): tło zaznaczenia zamiast podświetlenia całego wiersza.
         if let block = tab.selectedColumns, block.contains(i), table.isRowSelected(row) {
             cell.layer?.backgroundColor = NSColor.selectedContentBackgroundColor.withAlphaComponent(0.45).cgColor
@@ -555,8 +559,12 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         // Raporty wydajności dla SQL_ID / HASH_VALUE z klikniętego wiersza albo komórki (D217).
         let reports = menu.addItem(withTitle: L10n.tr("Raporty dla SQL_ID z wiersza…"), action: #selector(sqlReports(_:)), keyEquivalent: "")
         reports.target = self
+        reports.tag = Self.sqlReportsTag
         reports.image = NSImage(systemSymbolName: "magnifyingglass.circle", accessibilityDescription: nil)
         menu.addItem(.separator())
+        // Tytuł z wykrytym SQL_ID/hashem klikniętego wiersza (D218).
+        sqlMenuUpdater.grid = self
+        menu.delegate = sqlMenuUpdater
         for (title, id) in [(L10n.tr("Kopiuj"), "grid.copy"), (L10n.tr("Kopiuj z nagłówkiem"), "grid.copyWithHeader"),
                             (L10n.tr("Kopiuj nagłówek"), "grid.copyHeader"), (L10n.tr("Kopiuj jako listę wyrażeń"), "grid.copyExpressionList")] {
             let item = menu.addItem(withTitle: title, action: #selector(contextCommand(_:)), keyEquivalent: "")
@@ -623,6 +631,30 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             table.selectRowIndexes([table.clickedRow], byExtendingSelection: false)
             tab.selectedRows = [table.clickedRow]
         }
+    }
+
+    static let sqlReportsTag = 9217
+    private let sqlMenuUpdater = GridSQLMenuUpdater()
+
+    /// SQL_ID albo hash z wiersza i kolumny widoku (komórka z SQL_ID ma pierwszeństwo, potem kolumny wiersza).
+    func sqlTarget(row: Int, column: Int?) -> SQLReportTarget? {
+        guard row >= 0, row < grid.rowCount else { return nil }
+        let names = grid.columns.map(\.name)
+        let values = grid.columns.indices.map { grid.value(row: row, column: $0).format(grid.format) }
+        if let c = column, c < values.count, let t = SQLIdentity.parse(values[c]) {
+            if case .sqlID = t { return SQLReportTarget(target: t, origin: "") }
+            if SQLIdentity.columnKind(names[c]) == .hash { return SQLReportTarget(target: t, origin: "") }
+        }
+        return SQLIdentity.target(columns: names, values: values).map { SQLReportTarget(target: $0, origin: "") }
+    }
+
+    /// Aktualizacja pozycji raportów w menu: wykryty SQL_ID albo informacja o braku.
+    func updateSQLMenuItem(_ menu: NSMenu) {
+        guard let item = menu.item(withTag: Self.sqlReportsTag) else { return }
+        let target = sqlTarget(row: table.clickedRow >= 0 ? table.clickedRow : (tab.selectedRows?.first ?? -1),
+                               column: dataColumn(atTableColumn: table.clickedColumn))
+        item.title = target.map { L10n.tr("Raporty dla \($0.label)…") } ?? L10n.tr("Raporty dla SQL_ID — brak SQL_ID i HASH_VALUE w wierszu")
+        item.isEnabled = target != nil
     }
 
     @objc private func sqlReports(_ sender: NSMenuItem) {
@@ -883,4 +915,11 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
         }
         return tf
     }
+}
+
+/// Delegat menu siatki: tytuł pozycji raportów z SQL_ID klikniętego wiersza (D218).
+@MainActor
+final class GridSQLMenuUpdater: NSObject, NSMenuDelegate {
+    weak var grid: ResultGridView?
+    func menuNeedsUpdate(_ menu: NSMenu) { grid?.updateSQLMenuItem(menu) }
 }

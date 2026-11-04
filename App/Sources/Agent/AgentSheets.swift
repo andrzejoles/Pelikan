@@ -33,7 +33,7 @@ struct ApprovalView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     if !preview.statements.isEmpty {
                         section(L10n.tr("Polecenia")) {
-                            Text(preview.statements.joined(separator: "\n\n")).font(.code).textSelection(.enabled)
+                            CodePreview(text: preview.statements.joined(separator: "\n\n"), allowsOpen: false).frame(minHeight: 80, idealHeight: 160, maxHeight: 300)
                         }
                     }
                     if !preview.affectedObjects.isEmpty {
