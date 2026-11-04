@@ -32453,6 +32453,34 @@
         }
       }
     },
+    "Kod" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Код"
+          }
+        }
+      }
+    },
     "Kod SQL generuje się dla tabeli albo widoku" : {
       "localizations" : {
         "en" : {
@@ -33401,6 +33429,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Колір виділених"
+          }
+        }
+      }
+    },
+    "Kolorowanie składni" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syntax highlighting"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syntaxhervorhebung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resaltado de sintaxis"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підсвічування синтаксису"
           }
         }
       }
@@ -78989,6 +79045,34 @@
         }
       }
     },
+    "Raporty SQL_ID" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID reports"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID-Berichte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes de SQL_ID"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіти SQL_ID"
+          }
+        }
+      }
+    },
     "Raporty dla %@…" : {
       "localizations" : {
         "en" : {
@@ -79125,6 +79209,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Звіти для SQL_ID з рядка…"
+          }
+        }
+      }
+    },
+    "Raporty dla SQL_ID — brak SQL_ID i HASH_VALUE w wierszu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reports for SQL_ID — no SQL_ID or HASH_VALUE in the row"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichte für SQL_ID — keine SQL_ID und kein HASH_VALUE in der Zeile"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes para SQL_ID — no hay SQL_ID ni HASH_VALUE en la fila"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіти для SQL_ID — у рядку немає SQL_ID ані HASH_VALUE"
           }
         }
       }
@@ -84305,6 +84417,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Formatiert: %@"
+          }
+        }
+      }
+    },
+    "Sformatowany" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatted"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formateado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відформатований"
           }
         }
       }
@@ -102841,6 +102981,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Подання (редактор)…"
+          }
+        }
+      }
+    },
+    "Widok po formaterze Pelikana (Ustawienia › Formater); tekst w bazie bez zmian" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View after Pelikan's formatter (Settings › Formatter); the text in the database is unchanged"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ansicht nach dem Pelikan-Formatierer (Einstellungen › Formatierer); der Text in der Datenbank bleibt unverändert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista tras el formateador de Pelikan (Ajustes › Formateador); el texto en la base de datos no cambia"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вигляд після форматувальника Pelikan (Налаштування › Форматувальник); текст у базі без змін"
           }
         }
       }

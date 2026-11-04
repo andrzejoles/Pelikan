@@ -102,7 +102,7 @@ struct AutotraceView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(sql).font(.code).lineLimit(3).textSelection(.enabled)
+            CodePreview(text: sql).frame(height: 110)
             Text(L10n.tr("SQL_ID \(result.sqlID) · wierszy \(result.rowsFetched) · \(String(format: "%.3f", result.elapsedSeconds)) s")).font(.uiSecondary).foregroundStyle(.secondary)
             Picker("", selection: $tab) {
                 Text(L10n.tr("Plan rzeczywisty")).tag(0)

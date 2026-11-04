@@ -103,7 +103,7 @@ struct SessionBrowserView: View {
     @ViewBuilder private var detailView: some View {
         if let d = detail {
             if let text = d.text {
-                ScrollView { Text(text).font(.code).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+                CodePreview(text: text)
             } else {
                 DataTable(d.rows.indices.map { DetailRow(id: $0, values: d.rows[$0]) }, title: detailName) {
                     for i in d.columns.indices {

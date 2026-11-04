@@ -214,7 +214,7 @@ struct PerfReportsView: View {
                 if let a = model.availability { AvailabilityStrip(a: a) }
                 if let text = model.availability?.text ?? t.statement {
                     DisclosureGroup(L10n.tr("Tekst zapytania\(model.availability?.schema.map { L10n.tr(" (schemat \($0))") } ?? "")")) {
-                        ScrollView { Text(text).font(.code).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }.frame(maxHeight: 120)
+                        CodePreview(text: text).frame(height: 140)
                     }
                     .font(.uiSecondary)
                 }
