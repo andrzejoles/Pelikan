@@ -3732,3 +3732,7 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   apostrofów i wzorce LIKE — bez wielkości liter, jak dotąd. Cel komendy zachowany także w ścieżce agenta; „Zaznacz
   kolumnę do kopii” w menu AppKit ustawia stan z chwili otwarcia menu. Pominięte jako nieistotne: wyścig „Całej
   sekcji” w makrach, koszt migawki menu przy zaznaczeniu wszystkiego, zapasowa kompilacja wzorca w filtrze siatki.
+- Druga runda medium: kolumna w makrze zapisywana identyfikatorem, gdy nie jest on tytułem (kolumny AppKit — odporne na
+  przestawienie), a „#n” tylko dla identyfikatorów z tytułów; `file.new.sql` z tekstem od agenta zapisuje okno
+  w dzienniku zmian agenta (bez drugiej bramki zgody przez `agent.openEditor`). Odrzucone: „bez tej wartości” miałoby
+  zostawiać puste komórki — filtr ma składnię i znaczenie SQL (wymaganie D214), `<>` pomija puste jak NULL.

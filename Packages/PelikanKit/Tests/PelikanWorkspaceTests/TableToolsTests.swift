@@ -296,10 +296,9 @@ struct TableToolsReviewTests {
         #expect(ui.clipboard == "błąd")
         #expect(ws.registry.command("file.new.sql")?.descriptor.parameters.map(\.name) == ["text"])
         #expect(ws.registry.command("file.new.program")?.descriptor.parameters.isEmpty == true)
-        // Agent nie wpisuje tekstu przez file.new.sql (tylko agent.openEditor — zgoda i dziennik zmian).
-        await #expect(throws: (any Error).self) {
-            _ = try await ws.registry.command("file.new.sql")!.run(CommandContext(workspace: ws, invoker: .agent(sessionID: "s", agentName: "test"), arguments: CommandArguments(["text": "delete from emp"])))
-        }
+        // Okno z tekstem od agenta — w dzienniku zmian agenta (cofnięcie sesji je zamyka).
+        _ = try await ws.registry.command("file.new.sql")!.run(CommandContext(workspace: ws, invoker: .agent(sessionID: "s", agentName: "test"), arguments: CommandArguments(["text": "select 1 from dual"])))
+        #expect(ws.agentEdits.contains { $0.session == "s" && $0.created })
         // Menu tabeli wskazuje ją identyfikatorem — działa na niej, choć fokus ma inna tabela; bez tabeli — przełącznik nagłówka.
         let other = FakeTableHandle(rows: [["9", "q"]], selected: [0])
         ui.table = other

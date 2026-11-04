@@ -117,6 +117,7 @@ public struct ValueFilter: Sendable, Hashable {
             let hit = !isEmpty && (compiled ?? LikePattern.cached(p)).matches(text)
             return negated ? !hit && !isEmpty : hit
         case .compare(let op, let v):
+            // Puste komórki nie spełniają porównań, także „<>” — jak NULL w SQL (filtr ma składnię i znaczenie SQL).
             guard !isEmpty, let r = Self.compare(text: text, key: key, v) else { return false }
             switch op {
             case .eq: return r == .orderedSame

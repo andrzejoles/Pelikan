@@ -119,9 +119,11 @@ enum TableCommands {
 
     static let rowParam = CommandParameter("row", .integer, L10n.tr("Numer wiersza widoku od 1 (domyślnie pierwszy zaznaczony)"))
 
-    /// Kolumna do makra: pozycja „#n” — tytuły (i identyfikatory z tytułów) zależą od języka interfejsu.
+    /// Kolumna do makra: identyfikator, gdy nie jest tytułem (stały: nazwa kolumny AppKit, identyfikator nadany jawnie —
+    /// odporny na przestawienie kolumn); gdy identyfikator to tytuł (zależny od języka) — pozycja „#n”.
     static func columnArgument(_ id: String, _ c: TableContents) -> JSONValue {
-        .string(c.columns.firstIndex { $0.id == id }.map { "#\($0 + 1)" } ?? id)
+        guard let i = c.columns.firstIndex(where: { $0.id == id }) else { return .string(id) }
+        return .string(c.columns[i].title == id ? "#\(i + 1)" : id)
     }
 
     /// Kolumna z argumentu `column` (identyfikator albo tytuł, bez wielkości liter); bez argumentu — wybór z listy.
