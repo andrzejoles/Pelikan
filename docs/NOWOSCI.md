@@ -2,6 +2,18 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## Następna wersja
+
+- **Raporty dla SQL_ID z zaznaczenia (Wydajność › Raporty dla SQL_ID, ⌃⌘R, menu kontekstowe):** SQL_ID albo hash Pelikan
+  bierze sam — z zaznaczonego wiersza albo komórki siatki, wiersza tabeli (sesje, SQL Monitor, Top SQL…), słowa pod
+  kursorem albo polecenia pod kursorem (SQL_ID liczony z tekstu). Okno pokazuje, gdzie zapytanie jeszcze jest (pamięć
+  kursorów, sesje, ASH, AWR, SQL Monitor, zapisane raporty, bindy), i proponuje raporty: plany, SQL Monitor, SQL Detail,
+  Performance Hub, raporty AWR i ASH, historię wykonań, bindy, SQL Tuning i Repair Advisor — ze źródłem, formatem
+  (domyślnie ACTIVE), parametrami i zapamiętanymi bindami do wyboru. Raporty ACTIVE otwierają się w przeglądarce.
+- **Menu i karta wstążki Wydajność:** AWR, porównanie AWR, ADDM i porównanie ADDM, ASH, ASH Analytics, Performance Hub,
+  raport sesji, Real-Time ADDM, SQL Monitor, operacje statystyk, Auto SQL Tuning i ewolucja SPM — z pytaniem
+  o migawki, okres, źródło i format. Pelikan pokazuje tylko raporty objęte licencją bazy i wersją Oracle.
+
 ## 1.18.1 — kopiowanie, eksport i filtr w każdej tabeli, konwencje nazw RMS, dokumentacja Oracle z lokalnego MCP
 
 Zmiany z wersji 1.16.0–1.18.1 (bez osobnych wydań), wydane razem.

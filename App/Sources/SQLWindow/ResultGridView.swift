@@ -552,6 +552,11 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
 
     private func contextMenu() -> NSMenu {
         let menu = NSMenu()
+        // Raporty wydajności dla SQL_ID / HASH_VALUE z klikniętego wiersza albo komórki (D217).
+        let reports = menu.addItem(withTitle: L10n.tr("Raporty dla SQL_ID z wiersza…"), action: #selector(sqlReports(_:)), keyEquivalent: "")
+        reports.target = self
+        reports.image = NSImage(systemSymbolName: "magnifyingglass.circle", accessibilityDescription: nil)
+        menu.addItem(.separator())
         for (title, id) in [(L10n.tr("Kopiuj"), "grid.copy"), (L10n.tr("Kopiuj z nagłówkiem"), "grid.copyWithHeader"),
                             (L10n.tr("Kopiuj nagłówek"), "grid.copyHeader"), (L10n.tr("Kopiuj jako listę wyrażeń"), "grid.copyExpressionList")] {
             let item = menu.addItem(withTitle: title, action: #selector(contextCommand(_:)), keyEquivalent: "")
@@ -617,6 +622,18 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         if table.clickedRow >= 0, !(tab.selectedRows ?? []).contains(table.clickedRow) {
             table.selectRowIndexes([table.clickedRow], byExtendingSelection: false)
             tab.selectedRows = [table.clickedRow]
+        }
+    }
+
+    @objc private func sqlReports(_ sender: NSMenuItem) {
+        adoptClickedCell()
+        guard let t = SQLTargetFinder.fromGrid(tab) else {
+            workspace.ui?.showError(L10n.tr("Wiersz nie zawiera SQL_ID ani HASH_VALUE (kolumna SQL_ID, PREV_SQL_ID, HASH_VALUE…, albo komórka z wartością SQL_ID)"))
+            return
+        }
+        switch t.target {
+        case .sqlID(let id): workspace.perform("perf.sqlReports", CommandArguments(["sqlId": .string(id)]))
+        case .hash(let h): workspace.perform("perf.sqlReports", CommandArguments(["hash": .int(Int64(h))]))
         }
     }
 

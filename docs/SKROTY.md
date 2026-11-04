@@ -541,6 +541,26 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Raport › Odblokuj definicję raportu | `report.unlock` |  |  | Brak | PD-REP-004 |
 | Raport › Dodaj raport do menu Raporty | `report.addToMenu` |  |  | Brak | PD-REP-004 |
 
+## Wydajność
+
+| Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Funkcja |
+|---|---|---|---|---|---|
+| Raporty dla SQL_ID… | `perf.sqlReports` | ⌃⌘R | ⌃⌘R | Brak | PD-PERF-001 |
+| AWR › Raport AWR… | `perf.awr` |  |  | Brak | PD-PERF-002 |
+| AWR › Porównanie okresów AWR… | `perf.awrDiff` |  |  | Brak | PD-PERF-002 |
+| AWR › ADDM… | `perf.addm` |  |  | Brak | PD-PERF-002 |
+| AWR › Porównanie okresów ADDM… | `perf.addmCompare` |  |  | Brak | PD-PERF-002 |
+| ASH › Raport ASH… | `perf.ash` |  |  | Brak | PD-PERF-002 |
+| ASH › ASH Analytics… | `perf.ashAnalytics` |  |  | Brak | PD-PERF-002 |
+| Bieżąca praca › Performance Hub… | `perf.perfHub` |  |  | Brak | PD-PERF-002 |
+| Bieżąca praca › Raport sesji… | `perf.session` |  |  | Brak | PD-PERF-002 |
+| Bieżąca praca › Real-Time ADDM… | `perf.realtimeADDM` |  |  | Brak | PD-PERF-002 |
+| Bieżąca praca › SQL Monitor — lista… | `perf.monitorList` |  |  | Brak | PD-PERF-002 |
+| Optymalizator › Operacje statystyk optymalizatora… | `perf.statsOps` |  |  | Brak | PD-PERF-002 |
+| Optymalizator › Automatyczny SQL Tuning… | `perf.autoTuning` |  |  | Brak | PD-PERF-002 |
+| Optymalizator › Ewolucja planów SPM… | `perf.spmEvolve` |  |  | Brak | PD-PERF-002 |
+| Wszystkie raporty wydajności… | `perf.reports` |  |  | Brak | PD-PERF-002 |
+
 ## Widok
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Funkcja |

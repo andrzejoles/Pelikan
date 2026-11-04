@@ -134,6 +134,9 @@
   (127.0.0.1, localhost, ::1) — zapytania nie idą do sieci otwartym tekstem; wysyłane są wyłącznie szukane słowa
   (bez treści okna, połączeń i danych z bazy). Wyłączone domyślnie. Agent korzysta z wyszukiwania tylko do odczytu
   (narzędzie `search_oracle_docs`, treść oznaczona jako niezaufana); dziennik zapisuje wersję dokumentacji, nie treść zapytania.
+- Raporty wydajności (D217): tylko użytkownik (agent: Brak); źródła płatne pytane wyłącznie z licencją zadeklarowaną
+  na połączeniu i dozwoloną parametrem bazy; wartości wywołań jako bindy; zadania doradców tylko własne (nazwa
+  `PLK_…`), usuwane po raporcie; raporty ACTIVE zapisywane w katalogu tymczasowym użytkownika.
 
 ### 4.1 Pierwotny opis (Etap 0)
 Jak w Bifoldzie SECURITY §4: gniazdo i katalog sprawdzane przy starcie (właściciel, brak dowiązań), kolejność

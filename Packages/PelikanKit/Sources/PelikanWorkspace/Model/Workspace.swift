@@ -113,6 +113,11 @@ public protocol UIServices: AnyObject {
     func showUserManual()
     /// Okno dokumentacji Oracle z lokalnego serwera MCP z wyszukiwaniem `query` (D216).
     func showLocalDocs(query: String)
+    /// Raporty wydajności (D217): okno raportów zapytania i okno raportów bazy (nil — lista wszystkich).
+    func showSQLReports(_ target: SQLReportTarget)
+    func showPerfReport(_ reportID: String?, connection: UUID)
+    /// Zapytanie z elementu z fokusem (wiersz albo komórka tabeli, edytor) — przed oknem aktywnym.
+    func focusedSQLTarget() -> SQLReportTarget?
     /// Okno druku dla dokumentu HTML (PD-SQLW-016).
     func printHTML(title: String, html: String)
     /// Widoki dualności (SD-DV-001), moduły MLE (SD-MLE-001), podgląd przestrzenny (SD-DATA-001).
@@ -254,6 +259,9 @@ extension UIServices {
     public func editTemplate(_ template: CodeTemplate, folders: [String]) async -> CodeTemplate? { nil }
     public func showUserManual() {}
     public func showLocalDocs(query: String) {}
+    public func showSQLReports(_ target: SQLReportTarget) {}
+    public func showPerfReport(_ reportID: String?, connection: UUID) {}
+    public func focusedSQLTarget() -> SQLReportTarget? { nil }
     public func printHTML(title: String, html: String) {}
     public func showDualityViews() {}
     public func showMLEModules() {}

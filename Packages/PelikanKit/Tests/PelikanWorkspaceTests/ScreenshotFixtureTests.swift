@@ -24,6 +24,8 @@ struct ScreenshotFixtureTests {
         target.walletAuth = true
         var def = ConnectionDefinition(name: "dev_baza_testowa", target: target, connectOnStartup: true)
         def.environment = .test
+        // Oracle Free ma pakiety w licencji — okno raportów wydajności bez pytania (D217, scenariusz 81).
+        def.managementPacks = .diagnosticsAndTuning
         try ws.connections.upsert(def)
         // Drugie połączenie do tej samej bazy — drzewo Object Browsera z kilkoma połączeniami (D185, scenariusz 62).
         var second = ConnectionDefinition(name: "dev_baza_druga", target: target)

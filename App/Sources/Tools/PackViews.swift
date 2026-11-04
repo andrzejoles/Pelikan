@@ -55,6 +55,8 @@ struct SQLMonitorView: View {
         }
         .padding(10)
         .frame(minWidth: 860, minHeight: 420)
+        .environment(\.reportConnection, connection)
+
         .toolTask(id: 0) { await reload() }
     }
 

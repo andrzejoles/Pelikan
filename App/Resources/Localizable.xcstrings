@@ -57,6 +57,90 @@
         }
       }
     },
+    " (schemat %@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (schema %@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (Schema %@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (esquema %@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (схема %@)"
+          }
+        }
+      }
+    },
+    " ani SQL Monitor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " or SQL Monitor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " oder SQL Monitor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " ni SQL Monitor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " ані SQL Monitor"
+          }
+        }
+      }
+    },
+    " ani w AWR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " or in AWR"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " oder im AWR"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " ni en AWR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " ані в AWR"
+          }
+        }
+      }
+    },
     " bez BOM" : {
       "localizations" : {
         "en" : {
@@ -757,6 +841,90 @@
         }
       }
     },
+    "%@ · %@ · %@ s · wykonanie %@ · instancja %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@ · %@ s · execution %@ · instance %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@ · %@ s · Ausführung %@ · Instanz %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@ · %@ s · ejecución %@ · instancia %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@ · %@ с · виконання %@ · інстанс %@"
+          }
+        }
+      }
+    },
+    "%@ · plan %@ · wykonań %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · plan %@ · executions %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · Plan %@ · Ausführungen %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · plan %@ · ejecuciones %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · план %@ · виконань %@"
+          }
+        }
+      }
+    },
+    "%@ · wykonanie %@ · raport %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · execution %@ · report %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · Ausführung %@ · Bericht %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · ejecución %@ · informe %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · виконання %@ · звіт %@"
+          }
+        }
+      }
+    },
     "%@ — brak prawa zapisu" : {
       "localizations" : {
         "en" : {
@@ -897,6 +1065,34 @@
         }
       }
     },
+    "%@: do" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: to"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: bis"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: hasta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: до"
+          }
+        }
+      }
+    },
     "%@: kod %@ %@" : {
       "localizations" : {
         "en" : {
@@ -1005,6 +1201,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@: erwartet %@, tatsächlich %@"
+          }
+        }
+      }
+    },
+    "%@: od" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: from"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: von"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: desde"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: від"
           }
         }
       }
@@ -1429,6 +1653,34 @@
         }
       }
     },
+    "(nie przechwycono)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(not captured)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(nicht erfasst)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(no capturado)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(не перехоплено)"
+          }
+        }
+      }
+    },
     "(niedostępna)" : {
       "localizations" : {
         "en" : {
@@ -1821,6 +2073,34 @@
         }
       }
     },
+    ", ASH, AWR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", ASH, AWR"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", ASH, AWR"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", ASH, AWR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", ASH, AWR"
+          }
+        }
+      }
+    },
     ", bez linii „/”" : {
       "localizations" : {
         "en" : {
@@ -2045,6 +2325,34 @@
         }
       }
     },
+    "ADDM" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ADDM"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ADDM"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ADDM"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ADDM"
+          }
+        }
+      }
+    },
     "ALIAS nazwa=polecenie" : {
       "localizations" : {
         "en" : {
@@ -2209,6 +2517,398 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AND / OR"
+          }
+        }
+      }
+    },
+    "ASH" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH"
+          }
+        }
+      }
+    },
+    "ASH Analytics" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH Analytics"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH Analytics"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH Analytics"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH Analytics"
+          }
+        }
+      }
+    },
+    "ASH i AWR pominięte — brak Diagnostics Pack dla połączenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH and AWR skipped — no Diagnostics Pack for the connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH und AWR übersprungen — kein Diagnostics Pack für die Verbindung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH y AWR omitidos — sin Diagnostics Pack para la conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH і AWR пропущено — немає Diagnostics Pack для з’єднання"
+          }
+        }
+      }
+    },
+    "ASH w pamięci" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH in memory"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH im Speicher"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH en memoria"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH у пам’яті"
+          }
+        }
+      }
+    },
+    "ASH w pamięci: brak" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH in memory: none"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH im Speicher: keine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH en memoria: nada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH у пам’яті: немає"
+          }
+        }
+      }
+    },
+    "ASH: %@ – %@ (%@ próbek)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH: %@ – %@ (%@ samples)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH: %@ – %@ (%@ Stichproben)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH: %@ – %@ (%@ muestras)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH: %@ – %@ (%@ вибірок)"
+          }
+        }
+      }
+    },
+    "ASH: pamięć i AWR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH: memory and AWR"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH: Speicher und AWR"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH: memoria y AWR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH: пам’ять і AWR"
+          }
+        }
+      }
+    },
+    "AWR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR"
+          }
+        }
+      }
+    },
+    "AWR (historia)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR (history)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR (Historie)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR (historial)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR (історія)"
+          }
+        }
+      }
+    },
+    "AWR, migawka %@, %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR, snapshot %@, %@: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR, Snapshot %@, %@: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR, instantánea %@, %@: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR, знімок %@, %@: %@"
+          }
+        }
+      }
+    },
+    "AWR, migawka %@, instancja %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR, snapshot %@, instance %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR, Snapshot %@, Instanz %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR, instantánea %@, instancia %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR, знімок %@, інстанс %@"
+          }
+        }
+      }
+    },
+    "AWR: brak" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR: none"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR: keine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR: nada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR: немає"
+          }
+        }
+      }
+    },
+    "AWR: migawki %@–%@ (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR: snapshots %@–%@ (%@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR: Snapshots %@–%@ (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR: instantáneas %@–%@ (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR: знімки %@–%@ (%@)"
+          }
+        }
+      }
+    },
+    "Active (interaktywny HTML)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active (interactive HTML)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active (interaktives HTML)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active (HTML interactivo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active (інтерактивний HTML)"
           }
         }
       }
@@ -3109,6 +3809,62 @@
         }
       }
     },
+    "Aktywne sesje" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active sessions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktive Sitzungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesiones activas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активні сесії"
+          }
+        }
+      }
+    },
+    "Aktywne sesje: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active sessions: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktive Sitzungen: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesiones activas: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активні сесії: %@"
+          }
+        }
+      }
+    },
     "Aktywność agenta" : {
       "localizations" : {
         "en" : {
@@ -3133,6 +3889,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Активність агента"
+          }
+        }
+      }
+    },
+    "Aktywność sesji w oknie czasu: oczekiwania, SQL, sesje, obiekty." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session activity in a time window: waits, SQL, sessions, objects."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzungsaktivität im Zeitfenster: Wartezustände, SQL, Sitzungen, Objekte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actividad de las sesiones en una ventana de tiempo: esperas, SQL, sesiones, objetos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активність сесій у часовому вікні: очікування, SQL, сесії, об’єкти."
+          }
+        }
+      }
+    },
+    "Aktywność, plany, statystyki i wykonania zapytania z ASH, AWR i SQL Monitor w jednym raporcie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activity, plans, statistics and executions of the statement from ASH, AWR and SQL Monitor in one report."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktivität, Pläne, Statistiken und Ausführungen der Anweisung aus ASH, AWR und SQL Monitor in einem Bericht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actividad, planes, estadísticas y ejecuciones de la sentencia desde ASH, AWR y SQL Monitor en un solo informe."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активність, плани, статистика й виконання запиту з ASH, AWR і SQL Monitor в одному звіті."
+          }
+        }
+      }
+    },
+    "Aktywność, zapytania monitorowane i metryki jednej sesji." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activity, monitored statements and metrics of one session."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktivität, überwachte Anweisungen und Metriken einer Sitzung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actividad, sentencias monitorizadas y métricas de una sesión."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активність, відстежувані запити й метрики однієї сесії."
           }
         }
       }
@@ -3585,6 +4425,62 @@
         }
       }
     },
+    "Analiza ADDM okresu między migawkami: ustalenia i zalecenia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ADDM analysis of the period between snapshots: findings and recommendations."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ADDM-Analyse des Zeitraums zwischen Snapshots: Befunde und Empfehlungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Análisis ADDM del periodo entre instantáneas: hallazgos y recomendaciones."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аналіз ADDM періоду між знімками: висновки й рекомендації."
+          }
+        }
+      }
+    },
+    "Analiza ADDM ostatnich 5 minut z danych w pamięci." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ADDM analysis of the last 5 minutes from in-memory data."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ADDM-Analyse der letzten 5 Minuten aus Daten im Speicher."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Análisis ADDM de los últimos 5 minutos con datos en memoria."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аналіз ADDM останніх 5 хвилин із даних у пам’яті."
+          }
+        }
+      }
+    },
     "Analiza i okna" : {
       "localizations" : {
         "en" : {
@@ -3945,6 +4841,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abgebrochen"
+          }
+        }
+      }
+    },
+    "Anulowano — bez deklaracji licencji dostępne są tylko raporty bez pakietów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelled — without a license declaration only reports without packs are available"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgebrochen — ohne Lizenzangabe sind nur Berichte ohne Packs verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelado — sin declarar la licencia solo están disponibles los informes sin paquetes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасовано — без оголошення ліцензії доступні лише звіти без пакетів"
           }
         }
       }
@@ -4425,6 +5349,34 @@
         }
       }
     },
+    "Auto SQL Tuning" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto SQL Tuning"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto SQL Tuning"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto SQL Tuning"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto SQL Tuning"
+          }
+        }
+      }
+    },
     "AutoCommit po wykonaniu okna testu" : {
       "localizations" : {
         "en" : {
@@ -4701,6 +5653,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Автоматично після крапки"
+          }
+        }
+      }
+    },
+    "Automatyczny SQL Tuning" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic SQL Tuning"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisches SQL Tuning"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Tuning automático"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматичний SQL Tuning"
           }
         }
       }
@@ -5993,6 +6973,34 @@
         }
       }
     },
+    "Bieżąca praca" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current workload"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuelle Last"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carga actual"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поточне навантаження"
+          }
+        }
+      }
+    },
     "Bieżące SQL" : {
       "localizations" : {
         "en" : {
@@ -6213,6 +7221,118 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Binärdateien (durch Komma getrennt)"
+          }
+        }
+      }
+    },
+    "Bindy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бінди"
+          }
+        }
+      }
+    },
+    "Bindy w AWR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds in AWR"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds im AWR"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds en AWR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бінди в AWR"
+          }
+        }
+      }
+    },
+    "Bindy w pamięci kursorów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds in the cursor cache"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds im Cursor-Cache"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds en la caché de cursores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бінди в кеші курсорів"
+          }
+        }
+      }
+    },
+    "Bindy: %@ zestaw(y)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds: %@ set(s)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds: %@ Satz/Sätze"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds: %@ conjunto(s)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бінди: %@ набір(и)"
           }
         }
       }
@@ -11005,6 +12125,34 @@
         }
       }
     },
+    "Compare Period ADDM — przyczyny różnicy wydajności dwóch okresów." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare Period ADDM — causes of the performance difference between two periods."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare Period ADDM — Ursachen des Leistungsunterschieds zweier Zeiträume."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare Period ADDM — causas de la diferencia de rendimiento entre dos periodos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare Period ADDM — причини різниці продуктивності двох періодів."
+          }
+        }
+      }
+    },
     "Cudzysłów" : {
       "localizations" : {
         "en" : {
@@ -11173,6 +12321,62 @@
         }
       }
     },
+    "Czas [s]" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time [s]"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeit [s]"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo [s]"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Час [с]"
+          }
+        }
+      }
+    },
+    "Czas bazy, YYYY-MM-DD HH24:MI:SS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Database time, YYYY-MM-DD HH24:MI:SS"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenbankzeit, YYYY-MM-DD HH24:MI:SS"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hora de la base de datos, YYYY-MM-DD HH24:MI:SS"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Час бази даних, YYYY-MM-DD HH24:MI:SS"
+          }
+        }
+      }
+    },
     "Czas pracy: %@ · sesje: %@, aktywne: %@" : {
       "localizations" : {
         "en" : {
@@ -11197,6 +12401,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Laufzeit: %@ · Sitzungen: %@, aktiv: %@"
+          }
+        }
+      }
+    },
+    "Czas rzeczywisty (dane w pamięci; bez — historia z AWR)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Real time (in-memory data; off — history from AWR)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Echtzeit (Daten im Speicher; aus — Historie aus AWR)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo real (datos en memoria; sin él — historial de AWR)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Реальний час (дані в пам’яті; без нього — історія з AWR)"
           }
         }
       }
@@ -11673,6 +12905,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vor Ausführung leeren"
+          }
+        }
+      }
+    },
+    "Część raportów korzysta z płatnych pakietów Oracle: Diagnostics Pack (AWR, ASH, ADDM, Performance Hub) i Tuning Pack (SQL Monitor, SQL Detail, SQL Tuning Advisor). Pelikan pokaże tylko raporty objęte licencją bazy. Odpowiedź zostanie zapamiętana dla połączenia (zmiana w definicji połączenia)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some reports use paid Oracle packs: Diagnostics Pack (AWR, ASH, ADDM, Performance Hub) and Tuning Pack (SQL Monitor, SQL Detail, SQL Tuning Advisor). Pelikan shows only the reports covered by the database license. The answer is remembered for the connection (changeable in the connection definition)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einige Berichte nutzen kostenpflichtige Oracle-Packs: Diagnostics Pack (AWR, ASH, ADDM, Performance Hub) und Tuning Pack (SQL Monitor, SQL Detail, SQL Tuning Advisor). Pelikan zeigt nur Berichte, die von der Datenbanklizenz abgedeckt sind. Die Antwort wird für die Verbindung gespeichert (änderbar in der Verbindungsdefinition)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunos informes usan paquetes de pago de Oracle: Diagnostics Pack (AWR, ASH, ADDM, Performance Hub) y Tuning Pack (SQL Monitor, SQL Detail, SQL Tuning Advisor). Pelikan muestra solo los informes cubiertos por la licencia de la base de datos. La respuesta se guarda para la conexión (se puede cambiar en la definición de la conexión)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Частина звітів використовує платні пакети Oracle: Diagnostics Pack (AWR, ASH, ADDM, Performance Hub) і Tuning Pack (SQL Monitor, SQL Detail, SQL Tuning Advisor). Pelikan показує лише звіти, на які є ліцензія бази. Відповідь буде збережено для з’єднання (можна змінити у визначенні з’єднання)."
           }
         }
       }
@@ -12401,6 +13661,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Testdaten — generiert von Pelikan"
+          }
+        }
+      }
+    },
+    "Dane zapytania: %@ – %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statement data: %@ – %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daten der Anweisung: %@ – %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datos de la sentencia: %@ – %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дані запиту: %@ – %@"
           }
         }
       }
@@ -13385,6 +14673,34 @@
         }
       }
     },
+    "Diagnoza problemu wydajności zapytania i proponowana poprawka (SQL patch)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnosis of the statement's performance problem and a proposed fix (SQL patch)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnose des Leistungsproblems der Anweisung und vorgeschlagene Korrektur (SQL Patch)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnóstico del problema de rendimiento de la sentencia y corrección propuesta (SQL patch)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Діагностика проблеми продуктивності запиту й запропоноване виправлення (SQL patch)."
+          }
+        }
+      }
+    },
     "Diagram" : {
       "localizations" : {
         "en" : {
@@ -13633,6 +14949,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tage zurück"
+          }
+        }
+      }
+    },
+    "Do" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bis"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До"
           }
         }
       }
@@ -17221,6 +18565,62 @@
         }
       }
     },
+    "Doradca użyje tekstu zapytania z tymi wartościami (sql_text i bind_list)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The advisor will use the statement text with these values (sql_text and bind_list)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Advisor verwendet den Anweisungstext mit diesen Werten (sql_text und bind_list)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El asesor usará el texto de la sentencia con estos valores (sql_text y bind_list)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Радник використає текст запиту з цими значеннями (sql_text і bind_list)."
+          }
+        }
+      }
+    },
+    "Doradcy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advisors"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advisors"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asesores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Радники"
+          }
+        }
+      }
+    },
     "Dostosuj pasek" : {
       "localizations" : {
         "en" : {
@@ -20301,6 +21701,62 @@
         }
       }
     },
+    "Ewolucja SPM" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SPM evolution"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SPM-Evolution"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evolución SPM"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Еволюція SPM"
+          }
+        }
+      }
+    },
+    "Ewolucja planów SPM" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SPM plan evolution"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evolution der SPM-Pläne"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evolución de planes SPM"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Еволюція планів SPM"
+          }
+        }
+      }
+    },
     "Excel (xlsx)" : {
       "localizations" : {
         "en" : {
@@ -21925,6 +23381,62 @@
         }
       }
     },
+    "Format planu (DBMS_XPLAN)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan format (DBMS_XPLAN)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planformat (DBMS_XPLAN)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato del plan (DBMS_XPLAN)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Формат плану (DBMS_XPLAN)"
+          }
+        }
+      }
+    },
+    "Format wyniku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Output format"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgabeformat"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato del resultado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Формат результату"
+          }
+        }
+      }
+    },
     "Format wyniku albo pokrycia" : {
       "localizations" : {
         "en" : {
@@ -23185,6 +24697,34 @@
         }
       }
     },
+    "Generowanie: %@…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generating: %@…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird erstellt: %@…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generando: %@…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створення: %@…"
+          }
+        }
+      }
+    },
     "Generuj" : {
       "localizations" : {
         "en" : {
@@ -23857,6 +25397,34 @@
         }
       }
     },
+    "Gotowe: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fertig: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listo: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово: %@"
+          }
+        }
+      }
+    },
     "Gotowy tekst jednostki zamiast szablonu" : {
       "localizations" : {
         "en" : {
@@ -24469,6 +26037,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Haupt"
+          }
+        }
+      }
+    },
+    "HASH_VALUE zapytania (zamiast SQL_ID)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statement HASH_VALUE (instead of SQL_ID)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HASH_VALUE der Anweisung (statt SQL_ID)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HASH_VALUE de la sentencia (en lugar de SQL_ID)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HASH_VALUE запиту (замість SQL_ID)"
           }
         }
       }
@@ -25701,6 +27297,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verlauf gelöscht"
+          }
+        }
+      }
+    },
+    "Historia wykonań w AWR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execution history in AWR"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausführungshistorie im AWR"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial de ejecuciones en AWR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Історія виконань в AWR"
+          }
+        }
+      }
+    },
+    "Historia wykonań w AWR — %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execution history in AWR — %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausführungshistorie im AWR — %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial de ejecuciones en AWR — %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Історія виконань в AWR — %@"
           }
         }
       }
@@ -28277,6 +29929,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Розумний (структура PL/SQL)"
+          }
+        }
+      }
+    },
+    "Interaktywna analiza ASH z wymiarami (oczekiwania, SQL, moduły…)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interactive ASH analysis with dimensions (waits, SQL, modules…)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interaktive ASH-Analyse mit Dimensionen (Wartezustände, SQL, Module…)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Análisis interactivo de ASH con dimensiones (esperas, SQL, módulos…)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інтерактивний аналіз ASH із вимірами (очікування, SQL, модулі…)."
           }
         }
       }
@@ -33909,6 +35589,34 @@
         }
       }
     },
+    "Koniec" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ende"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fin"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кінець"
+          }
+        }
+      }
+    },
     "Koniec miesiąca" : {
       "localizations" : {
         "en" : {
@@ -36849,6 +38557,34 @@
         }
       }
     },
+    "Kursor %@ (instancja %@), %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor %@ (instance %@), %@: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor %@ (Instanz %@), %@: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor %@ (instancia %@), %@: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Курсор %@ (інстанс %@), %@: %@"
+          }
+        }
+      }
+    },
     "Kursor nie jest w jednostce programu" : {
       "localizations" : {
         "en" : {
@@ -36957,6 +38693,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cursor steht nicht auf einem Bezeichner"
+          }
+        }
+      }
+    },
+    "Kursor potomny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Child cursor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kind-Cursor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor hijo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дочірній курсор"
           }
         }
       }
@@ -37185,6 +38949,34 @@
         }
       }
     },
+    "Licencja DBMS_SQLDIAG nie jest opisana w Licensing Information; zadanie diagnozy jest usuwane po raporcie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The license of DBMS_SQLDIAG is not described in Licensing Information; the diagnosis task is dropped after the report."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Lizenz von DBMS_SQLDIAG ist in Licensing Information nicht beschrieben; die Diagnoseaufgabe wird nach dem Bericht gelöscht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La licencia de DBMS_SQLDIAG no está descrita en Licensing Information; la tarea de diagnóstico se elimina tras el informe."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ліцензію DBMS_SQLDIAG не описано в Licensing Information; завдання діагностики видаляється після звіту."
+          }
+        }
+      }
+    },
     "Licencja Diagnostics/Tuning Pack" : {
       "localizations" : {
         "en" : {
@@ -37265,6 +39057,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ліцензія Oracle не дозволяє долучити Instant Client до Pelikan. Без нього можна використати драйвер «thin» (Визначення з'єднання › Загальні › Драйвер) — з обмеженнями: без TCPS/wallet, Kerberos і переривання виконання."
+          }
+        }
+      }
+    },
+    "Licencje Oracle dla połączenia „%@”" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle licenses for connection “%@”"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle-Lizenzen für die Verbindung „%@“"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licencias de Oracle para la conexión «%@»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ліцензії Oracle для з’єднання «%@»"
           }
         }
       }
@@ -37573,6 +39393,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeitlimit (s)"
+          }
+        }
+      }
+    },
+    "Limit czasu doradcy: %@ s" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advisor time limit: %@ s"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeitlimit des Advisors: %@ s"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Límite de tiempo del asesor: %@ s"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ліміт часу радника: %@ с"
           }
         }
       }
@@ -39929,6 +41777,34 @@
         }
       }
     },
+    "Migawka %@: %@ – %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot %@: %@ – %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot %@: %@ – %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instantánea %@: %@ – %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімок %@: %@ – %@"
+          }
+        }
+      }
+    },
     "Migawka końcowa" : {
       "localizations" : {
         "en" : {
@@ -40009,6 +41885,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Знімок також перед кожним виконанням (F8, компіляція, тест)"
+          }
+        }
+      }
+    },
+    "Migawki AWR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR snapshots"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR-Snapshots"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instantáneas AWR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімки AWR"
           }
         }
       }
@@ -40485,6 +42389,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Event Monitor …"
+          }
+        }
+      }
+    },
+    "Monitorowane wykonania zapytania z czasem, stanem i zasobami." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitored executions of the statement with time, status and resources."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überwachte Ausführungen der Anweisung mit Zeit, Status und Ressourcen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecuciones monitorizadas de la sentencia con tiempo, estado y recursos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відстежувані виконання запиту з часом, станом і ресурсами."
+          }
+        }
+      }
+    },
+    "Monitorowane zapytania i operacje bazy w oknie czasu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitored statements and database operations in a time window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überwachte Anweisungen und Datenbankoperationen im Zeitfenster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sentencias monitorizadas y operaciones de la base de datos en una ventana de tiempo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відстежувані запити й операції бази в часовому вікні."
+          }
+        }
+      }
+    },
+    "Monitorowanie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitoring"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überwachung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitorización"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Моніторинг"
           }
         }
       }
@@ -45277,6 +47265,34 @@
         }
       }
     },
+    "Nie znaleziono zapytania o HASH_VALUE %@ w pamięci kursorów%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No statement with HASH_VALUE %@ found in the cursor cache%@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Anweisung mit HASH_VALUE %@ im Cursor-Cache gefunden%@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontró ninguna sentencia con HASH_VALUE %@ en la caché de cursores%@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не знайдено запиту з HASH_VALUE %@ у кеші курсорів%@"
+          }
+        }
+      }
+    },
     "Nie znaleziono źródła w bazie" : {
       "localizations" : {
         "en" : {
@@ -45357,6 +47373,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не переносити"
+          }
+        }
+      }
+    },
+    "Nie — zapytanie z %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No — statement from %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nein — Anweisung aus %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No — sentencia de %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ні — запит із %@"
           }
         }
       }
@@ -50485,6 +52529,34 @@
         }
       }
     },
+    "Od" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desde"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Від"
+          }
+        }
+      }
+    },
     "Od %@" : {
       "localizations" : {
         "en" : {
@@ -53033,6 +55105,34 @@
         }
       }
     },
+    "Okno raportów wydajności bazy (AWR, ASH, ADDM, Performance Hub, SQL Monitor, statystyki) z wyborem parametrów i formatu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Database performance reports window (AWR, ASH, ADDM, Performance Hub, SQL Monitor, statistics) with choice of parameters and format."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster der Datenbank-Leistungsberichte (AWR, ASH, ADDM, Performance Hub, SQL Monitor, Statistiken) mit Auswahl von Parametern und Format."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ventana de informes de rendimiento de la base de datos (AWR, ASH, ADDM, Performance Hub, SQL Monitor, estadísticas) con elección de parámetros y formato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно звітів продуктивності бази (AWR, ASH, ADDM, Performance Hub, SQL Monitor, статистика) з вибором параметрів і формату."
+          }
+        }
+      }
+    },
     "Okno szablonów" : {
       "localizations" : {
         "en" : {
@@ -53453,6 +55553,62 @@
         }
       }
     },
+    "Okres" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Period"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeitraum"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Periodo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Період"
+          }
+        }
+      }
+    },
+    "Okres do porównania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Period to compare"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergleichszeitraum"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Periodo a comparar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Період для порівняння"
+          }
+        }
+      }
+    },
     "Okres w sekundach (0 — wyłącz)" : {
       "localizations" : {
         "en" : {
@@ -53621,6 +55777,34 @@
         }
       }
     },
+    "Operacje statystyk optymalizatora" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimizer statistics operations"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operationen der Optimizer-Statistiken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operaciones de estadísticas del optimizador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Операції статистики оптимізатора"
+          }
+        }
+      }
+    },
     "Opis" : {
       "localizations" : {
         "en" : {
@@ -53785,6 +55969,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Очистити кошик…"
+          }
+        }
+      }
+    },
+    "Optymalizator" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimizer"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimizer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimizador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оптимізатор"
           }
         }
       }
@@ -53981,6 +56193,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Oracle Wallet (Passwortspeicher)"
+          }
+        }
+      }
+    },
+    "Oracle nie przechwycił bindów tego zapytania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle has not captured binds for this statement"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle hat für diese Anweisung keine Binds erfasst"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle no capturó binds de esta sentencia"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle не перехопив біндів цього запиту"
+          }
+        }
+      }
+    },
+    "Oracle przechwytuje tylko bindy w WHERE/HAVING, bez LOB, LONG i typów obiektowych." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle captures only binds in WHERE/HAVING, without LOB, LONG and object types."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle erfasst nur Binds in WHERE/HAVING, ohne LOB, LONG und Objekttypen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle solo captura binds en WHERE/HAVING, sin LOB, LONG ni tipos de objeto."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle перехоплює лише бінди в WHERE/HAVING, без LOB, LONG і об’єктних типів."
+          }
+        }
+      }
+    },
+    "Oracle zwrócił pusty raport (brak danych w wybranym źródle albo okresie)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle returned an empty report (no data in the chosen source or period)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle hat einen leeren Bericht geliefert (keine Daten in der gewählten Quelle oder im Zeitraum)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle devolvió un informe vacío (sin datos en la fuente o el periodo elegidos)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle повернув порожній звіт (немає даних у вибраному джерелі або періоді)"
           }
         }
       }
@@ -54265,6 +56561,34 @@
         }
       }
     },
+    "Ostatnia godzina" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last hour"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte Stunde"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última hora"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Остання година"
+          }
+        }
+      }
+    },
     "Ostatnia kolumna (nazwa); brak — jedna kolumna" : {
       "localizations" : {
         "en" : {
@@ -54429,6 +56753,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Letzte 24 Stunden"
+          }
+        }
+      }
+    },
+    "Ostatnie dni: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last days: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte Tage: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Últimos días: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Останні дні: %@"
           }
         }
       }
@@ -57065,6 +59417,34 @@
         }
       }
     },
+    "Otwórz w przeglądarce" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open in browser"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Browser öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir en el navegador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити в браузері"
+          }
+        }
+      }
+    },
     "Otwórz w zewnętrznym edytorze" : {
       "localizations" : {
         "en" : {
@@ -57817,6 +60197,118 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Befehlspalette …"
+          }
+        }
+      }
+    },
+    "Pamięć kursorów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor cache"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor-Cache"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caché de cursores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кеш курсорів"
+          }
+        }
+      }
+    },
+    "Pamięć kursorów (V$SQL)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor cache (V$SQL)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor-Cache (V$SQL)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caché de cursores (V$SQL)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кеш курсорів (V$SQL)"
+          }
+        }
+      }
+    },
+    "Pamięć kursorów: %@ kursor(y), plany %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor cache: %@ cursor(s), plans %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor-Cache: %@ Cursor, Pläne %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caché de cursores: %@ cursor(es), planes %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кеш курсорів: %@ курсор(и), плани %@"
+          }
+        }
+      }
+    },
+    "Pamięć kursorów: brak" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor cache: none"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor-Cache: keiner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caché de cursores: nada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кеш курсорів: немає"
           }
         }
       }
@@ -58997,6 +61489,90 @@
         }
       }
     },
+    "Performance Hub" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance Hub"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance Hub"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance Hub"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance Hub"
+          }
+        }
+      }
+    },
+    "Performance Hub — SQL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance Hub — SQL"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance Hub — SQL"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance Hub — SQL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance Hub — SQL"
+          }
+        }
+      }
+    },
+    "Performance Hub: aktywność, top SQL, monitorowane zapytania, ADDM — w czasie rzeczywistym albo z AWR." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance Hub: activity, top SQL, monitored statements, ADDM — in real time or from AWR."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance Hub: Aktivität, Top-SQL, überwachte Anweisungen, ADDM — in Echtzeit oder aus AWR."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance Hub: actividad, SQL principales, sentencias monitorizadas, ADDM — en tiempo real o desde AWR."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance Hub: активність, топ SQL, відстежувані запити, ADDM — у реальному часі або з AWR."
+          }
+        }
+      }
+    },
     "Pełny" : {
       "localizations" : {
         "en" : {
@@ -59361,6 +61937,34 @@
         }
       }
     },
+    "Plan (PLAN_HASH_VALUE)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan (PLAN_HASH_VALUE)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan (PLAN_HASH_VALUE)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan (PLAN_HASH_VALUE)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "План (PLAN_HASH_VALUE)"
+          }
+        }
+      }
+    },
     "Plan rzeczywisty" : {
       "localizations" : {
         "en" : {
@@ -59445,6 +62049,34 @@
         }
       }
     },
+    "Plan wykonania z V$SQL_PLAN z rzeczywistymi statystykami (ALLSTATS LAST) i wartościami podejrzanymi przy parsowaniu (+PEEKED_BINDS)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execution plan from V$SQL_PLAN with actual statistics (ALLSTATS LAST) and values peeked at parse (+PEEKED_BINDS)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausführungsplan aus V$SQL_PLAN mit tatsächlichen Statistiken (ALLSTATS LAST) und beim Parsen ermittelten Werten (+PEEKED_BINDS)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan de ejecución de V$SQL_PLAN con estadísticas reales (ALLSTATS LAST) y valores observados al analizar (+PEEKED_BINDS)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "План виконання з V$SQL_PLAN із фактичною статистикою (ALLSTATS LAST) і значеннями, підглянутими під час розбору (+PEEKED_BINDS)."
+          }
+        }
+      }
+    },
     "Plan wykonania zaznaczenia albo polecenia pod kursorem w oknie planu; w kodzie PL/SQL zmienne zamieniane na wiązane, INTO pomijane." : {
       "localizations" : {
         "en" : {
@@ -59469,6 +62101,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausführungsplan der Auswahl oder des Befehls unter dem Cursor im Explain Plan Window; in PL/SQL-Code werden Variablen durch Bind-Variablen ersetzt, INTO wird ausgelassen."
+          }
+        }
+      }
+    },
+    "Plan z pamięci kursorów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan from the cursor cache"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan aus dem Cursor-Cache"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan de la caché de cursores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "План із кешу курсорів"
+          }
+        }
+      }
+    },
+    "Plany z AWR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plans from AWR"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pläne aus AWR"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planes de AWR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плани з AWR"
           }
         }
       }
@@ -66809,6 +69497,62 @@
         }
       }
     },
+    "Porównanie ADDM" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ADDM comparison"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ADDM-Vergleich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparación ADDM"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняння ADDM"
+          }
+        }
+      }
+    },
+    "Porównanie AWR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR comparison"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR-Vergleich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparación AWR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняння AWR"
+          }
+        }
+      }
+    },
     "Porównanie danych tabel" : {
       "localizations" : {
         "en" : {
@@ -66833,6 +69577,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tabellendatenvergleich"
+          }
+        }
+      }
+    },
+    "Porównanie dwóch okresów AWR (np. dziś i tydzień temu)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparison of two AWR periods (e.g. today and a week ago)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergleich zweier AWR-Zeiträume (z. B. heute und vor einer Woche)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparación de dos periodos AWR (p. ej., hoy y hace una semana)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняння двох періодів AWR (напр., сьогодні й тиждень тому)."
           }
         }
       }
@@ -66889,6 +69661,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vergleich von Benutzerobjekten"
+          }
+        }
+      }
+    },
+    "Porównanie okresów ADDM" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare ADDM periods"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ADDM-Zeiträume vergleichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar periodos ADDM"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти періоди ADDM"
+          }
+        }
+      }
+    },
+    "Porównanie okresów AWR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare AWR periods"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR-Zeiträume vergleichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar periodos AWR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти періоди AWR"
           }
         }
       }
@@ -68261,6 +71089,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Інші дії з результатом"
+          }
+        }
+      }
+    },
+    "Pozycja" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Position"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Position"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posición"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позиція"
           }
         }
       }
@@ -70389,6 +73245,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Speicher"
+          }
+        }
+      }
+    },
+    "Przechwycono" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captured"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erfasst"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capturado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перехоплено"
           }
         }
       }
@@ -74537,6 +77421,34 @@
         }
       }
     },
+    "Puste SID — sesja narzędzia Pelikana" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empty SID — Pelikan tool session"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leere SID — Werkzeugsitzung von Pelikan"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SID vacío — sesión de herramienta de Pelikan"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порожній SID — сесія інструмента Pelikan"
+          }
+        }
+      }
+    },
     "Puste pole albo „Jak serwer” — parametr sesji kompilacji nie jest zmieniany. Wartości z apostrofem albo średnikiem są pomijane." : {
       "localizations" : {
         "en" : {
@@ -75433,6 +78345,34 @@
         }
       }
     },
+    "Raport ACTIVE pobiera przy oglądaniu skrypty z serwerów Oracle — otwiera się w przeglądarce; bez internetu wybierz HTML, tekst albo XML." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An ACTIVE report downloads scripts from Oracle servers when viewed — it opens in the browser; without internet choose HTML, text or XML."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein ACTIVE-Bericht lädt beim Ansehen Skripte von Oracle-Servern — er wird im Browser geöffnet; ohne Internet HTML, Text oder XML wählen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un informe ACTIVE descarga scripts de servidores de Oracle al verlo — se abre en el navegador; sin internet elige HTML, texto o XML."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіт ACTIVE під час перегляду завантажує скрипти із серверів Oracle — відкривається в браузері; без інтернету виберіть HTML, текст або XML."
+          }
+        }
+      }
+    },
     "Raport ADDM" : {
       "localizations" : {
         "en" : {
@@ -75517,6 +78457,62 @@
         }
       }
     },
+    "Raport ASH dla SQL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH report for SQL"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH-Bericht für SQL"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informe ASH para SQL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіт ASH для SQL"
+          }
+        }
+      }
+    },
+    "Raport ASH zawężony do zapytania: oczekiwania, sesje, wiersze planu w oknie czasu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH report narrowed to the statement: waits, sessions, plan lines in a time window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASH-Bericht beschränkt auf die Anweisung: Wartezustände, Sitzungen, Planzeilen im Zeitfenster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informe ASH limitado a la sentencia: esperas, sesiones, líneas del plan en una ventana de tiempo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіт ASH, звужений до запиту: очікування, сесії, рядки плану в часовому вікні."
+          }
+        }
+      }
+    },
     "Raport AWR" : {
       "localizations" : {
         "en" : {
@@ -75573,6 +78569,62 @@
         }
       }
     },
+    "Raport AWR dla SQL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR report for SQL"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR-Bericht für SQL"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informe AWR para SQL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіт AWR для SQL"
+          }
+        }
+      }
+    },
+    "Raport AWR instancji (albo wszystkich instancji RAC) między migawkami." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR report of the instance (or all RAC instances) between snapshots."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWR-Bericht der Instanz (oder aller RAC-Instanzen) zwischen Snapshots."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informe AWR de la instancia (o de todas las instancias RAC) entre instantáneas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіт AWR інстансу (або всіх інстансів RAC) між знімками."
+          }
+        }
+      }
+    },
     "Raport Real-Time SQL Monitoring (HTML) dla SQL_ID; wymaga Tuning Pack." : {
       "localizations" : {
         "en" : {
@@ -75597,6 +78649,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Real-Time-SQL-Monitoring-Bericht (HTML) für SQL_ID; erfordert Tuning Pack."
+          }
+        }
+      }
+    },
+    "Raport Real-Time SQL Monitoring wybranego wykonania: plan z czasem i wierszami na krok, oczekiwania, bindy." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Real-Time SQL Monitoring report of the chosen execution: plan with time and rows per step, waits, binds."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Real-Time-SQL-Monitoring-Bericht der gewählten Ausführung: Plan mit Zeit und Zeilen je Schritt, Wartezustände, Binds."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informe Real-Time SQL Monitoring de la ejecución elegida: plan con tiempo y filas por paso, esperas, binds."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіт Real-Time SQL Monitoring вибраного виконання: план із часом і рядками на крок, очікування, бінди."
           }
         }
       }
@@ -75657,6 +78737,34 @@
         }
       }
     },
+    "Raport interaktywny (ACTIVE) otwarto w przeglądarce — pobiera skrypty z serwerów Oracle, więc wymaga internetu przy oglądaniu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The interactive (ACTIVE) report was opened in the browser — it downloads scripts from Oracle servers, so it needs internet when viewed."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der interaktive Bericht (ACTIVE) wurde im Browser geöffnet — er lädt Skripte von Oracle-Servern und braucht beim Ansehen Internet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El informe interactivo (ACTIVE) se abrió en el navegador — descarga scripts de servidores de Oracle, por lo que necesita internet al verlo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інтерактивний звіт (ACTIVE) відкрито в браузері — він завантажує скрипти із серверів Oracle, тож потребує інтернету під час перегляду."
+          }
+        }
+      }
+    },
     "Raport pokrycia" : {
       "localizations" : {
         "en" : {
@@ -75681,6 +78789,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abdeckungsbericht"
+          }
+        }
+      }
+    },
+    "Raport sesji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session report"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzungsbericht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informe de sesión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіт сесії"
           }
         }
       }
@@ -75797,6 +78933,230 @@
         }
       }
     },
+    "Raporty SQL dla polecenia pod kursorem…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL reports for the statement at the cursor…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL-Berichte für die Anweisung am Cursor…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes SQL para la sentencia en el cursor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL-звіти для запиту під курсором…"
+          }
+        }
+      }
+    },
+    "Raporty SQL: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL reports: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL-Berichte: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes SQL: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL-звіти: %@"
+          }
+        }
+      }
+    },
+    "Raporty dla %@…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reports for %@…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichte für %@…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes para %@…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіти для %@…"
+          }
+        }
+      }
+    },
+    "Raporty dla SQL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reports for SQL"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichte für SQL"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes para SQL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіти для SQL"
+          }
+        }
+      }
+    },
+    "Raporty dla SQL_ID" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reports for SQL_ID"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichte für SQL_ID"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes para SQL_ID"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіти для SQL_ID"
+          }
+        }
+      }
+    },
+    "Raporty dla SQL_ID %@…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reports for SQL_ID %@…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichte für SQL_ID %@…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes para SQL_ID %@…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіти для SQL_ID %@…"
+          }
+        }
+      }
+    },
+    "Raporty dla SQL_ID z wiersza…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reports for SQL_ID from the row…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichte für SQL_ID aus der Zeile…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes para SQL_ID de la fila…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіти для SQL_ID з рядка…"
+          }
+        }
+      }
+    },
+    "Raporty dla SQL_ID…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reports for SQL_ID…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichte für SQL_ID…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes para SQL_ID…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіти для SQL_ID…"
+          }
+        }
+      }
+    },
     "Raporty predefiniowane" : {
       "localizations" : {
         "en" : {
@@ -75881,6 +79241,62 @@
         }
       }
     },
+    "Raporty wydajności" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance reports"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leistungsberichte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes de rendimiento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіти продуктивності"
+          }
+        }
+      }
+    },
+    "Raporty wydajności bazy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Database performance reports"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leistungsberichte der Datenbank"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes de rendimiento de la base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіти продуктивності бази"
+          }
+        }
+      }
+    },
     "Raporty z menu" : {
       "localizations" : {
         "en" : {
@@ -75961,6 +79377,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gesamt"
+          }
+        }
+      }
+    },
+    "Real-Time ADDM" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Real-Time ADDM"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Real-Time ADDM"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Real-Time ADDM"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Real-Time ADDM"
           }
         }
       }
@@ -78905,6 +82349,34 @@
         }
       }
     },
+    "SQL Detail" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Detail"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Detail"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Detail"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Detail"
+          }
+        }
+      }
+    },
     "SQL Format: %@" : {
       "localizations" : {
         "en" : {
@@ -78957,6 +82429,258 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SQL Monitor"
+          }
+        }
+      }
+    },
+    "SQL Monitor (pamięć)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor (memory)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor (Speicher)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor (memoria)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor (пам’ять)"
+          }
+        }
+      }
+    },
+    "SQL Monitor pominięty — brak Tuning Pack dla połączenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor skipped — no Tuning Pack for the connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor übersprungen — kein Tuning Pack für die Verbindung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor omitido — sin Tuning Pack para la conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor пропущено — немає Tuning Pack для з’єднання"
+          }
+        }
+      }
+    },
+    "SQL Monitor — lista" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor — list"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor — Liste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor — lista"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor — список"
+          }
+        }
+      }
+    },
+    "SQL Monitor — lista wykonań" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor — list of executions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor — Liste der Ausführungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor — lista de ejecuciones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor — список виконань"
+          }
+        }
+      }
+    },
+    "SQL Monitor — wykonanie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor — execution"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor — Ausführung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor — ejecución"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor — виконання"
+          }
+        }
+      }
+    },
+    "SQL Monitor, wykonanie %@ (%@), instancja %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor, execution %@ (%@), instance %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor, Ausführung %@ (%@), Instanz %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor, ejecución %@ (%@), instancia %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor, виконання %@ (%@), інстанс %@"
+          }
+        }
+      }
+    },
+    "SQL Monitor, wykonanie %@ z %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor, execution %@ from %@: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor, Ausführung %@ vom %@: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor, ejecución %@ del %@: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor, виконання %@ від %@: %@"
+          }
+        }
+      }
+    },
+    "SQL Monitor: %@ wykonań" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor: %@ executions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor: %@ Ausführungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor: %@ ejecuciones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Monitor: %@ виконань"
+          }
+        }
+      }
+    },
+    "SQL Repair Advisor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Repair Advisor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Repair Advisor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Repair Advisor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Repair Advisor"
           }
         }
       }
@@ -79153,6 +82877,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SQL_ID %@ · Zeilen %@ · %@ s"
+          }
+        }
+      }
+    },
+    "SQL_ID (domyślnie z zaznaczonego wiersza, komórki albo polecenia pod kursorem)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID (by default from the selected row, cell or statement at the cursor)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID (standardmäßig aus der markierten Zeile, Zelle oder Anweisung am Cursor)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID (por defecto de la fila, celda o sentencia seleccionada en el cursor)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID (типово з виділеного рядка, клітинки або запиту під курсором)"
+          }
+        }
+      }
+    },
+    "SQL_ID albo HASH_VALUE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID or HASH_VALUE"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID oder HASH_VALUE"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID o HASH_VALUE"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID або HASH_VALUE"
+          }
+        }
+      }
+    },
+    "SQL_ID albo HASH_VALUE zapytania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statement SQL_ID or HASH_VALUE"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID oder HASH_VALUE der Anweisung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID o HASH_VALUE de la sentencia"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL_ID або HASH_VALUE запиту"
           }
         }
       }
@@ -81229,6 +85037,34 @@
         }
       }
     },
+    "Skrypt zaleceń (DBMS_SQLTUNE.SCRIPT_TUNING_TASK) — przejrzyj przed wykonaniem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recommendations script (DBMS_SQLTUNE.SCRIPT_TUNING_TASK) — review before running"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfehlungsskript (DBMS_SQLTUNE.SCRIPT_TUNING_TASK) — vor dem Ausführen prüfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Script de recomendaciones (DBMS_SQLTUNE.SCRIPT_TUNING_TASK) — revísalo antes de ejecutarlo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрипт рекомендацій (DBMS_SQLTUNE.SCRIPT_TUNING_TASK) — перегляньте перед виконанням"
+          }
+        }
+      }
+    },
     "Skrypty SQL" : {
       "localizations" : {
         "en" : {
@@ -81505,6 +85341,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Клавіатурні скорочення"
+          }
+        }
+      }
+    },
+    "Skąd: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herkunft: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Origen: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звідки: %@"
           }
         }
       }
@@ -82041,6 +85905,34 @@
         }
       }
     },
+    "Sprawdź" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити"
+          }
+        }
+      }
+    },
     "Sprawdź połączenie" : {
       "localizations" : {
         "en" : {
@@ -82541,6 +86433,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Statistiken"
+          }
+        }
+      }
+    },
+    "Statystyki i plany zapytania między migawkami AWR (odpowiednik awrsqrpt.sql)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statement statistics and plans between AWR snapshots (equivalent of awrsqrpt.sql)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistiken und Pläne der Anweisung zwischen AWR-Snapshots (entspricht awrsqrpt.sql)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estadísticas y planes de la sentencia entre instantáneas AWR (equivalente a awrsqrpt.sql)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Статистика й плани запиту між знімками AWR (відповідник awrsqrpt.sql)."
           }
         }
       }
@@ -83745,6 +87665,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Details (:sid, /* concatenate */)"
+          }
+        }
+      }
+    },
+    "Szczegóły zapytania w Performance Hub: aktywność, plany, monitorowane wykonania (czas rzeczywisty albo historia AWR)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statement details in Performance Hub: activity, plans, monitored executions (real time or AWR history)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details der Anweisung im Performance Hub: Aktivität, Pläne, überwachte Ausführungen (Echtzeit oder AWR-Historie)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles de la sentencia en Performance Hub: actividad, planes, ejecuciones monitorizadas (tiempo real o historial AWR)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подробиці запиту в Performance Hub: активність, плани, відстежувані виконання (реальний час або історія AWR)."
           }
         }
       }
@@ -86577,6 +90525,34 @@
         }
       }
     },
+    "Tekst zapytania%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statement text%@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text der Anweisung%@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto de la sentencia%@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст запиту%@"
+          }
+        }
+      }
+    },
     "Tekst zostanie zastąpiony źródłem z bazy." : {
       "localizations" : {
         "en" : {
@@ -88813,6 +92789,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erstellt aus einer JavaScript-Datei die DDL eines MLE-Moduls in einem neuen Program Window (Kompilierung wie bei anderen Objekten)."
+          }
+        }
+      }
+    },
+    "Tworzy zadanie ADDM (usuwane po raporcie)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creates an ADDM task (dropped after the report)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstellt eine ADDM-Aufgabe (nach dem Bericht gelöscht)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea una tarea ADDM (eliminada tras el informe)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створює завдання ADDM (видаляється після звіту)."
+          }
+        }
+      }
+    },
+    "Tworzy zadanie doradcy w bazie (usuwane po raporcie) i wykonuje zapytanie testowo w limicie czasu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creates an advisor task in the database (dropped after the report) and test-executes the statement within the time limit."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstellt eine Advisor-Aufgabe in der Datenbank (nach dem Bericht gelöscht) und führt die Anweisung testweise im Zeitlimit aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea una tarea de asesor en la base de datos (eliminada tras el informe) y ejecuta la sentencia de prueba dentro del límite de tiempo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створює завдання радника в базі (видаляється після звіту) і тестово виконує запит у межах ліміту часу."
           }
         }
       }
@@ -91501,6 +95533,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erneut ausführen"
+          }
+        }
+      }
+    },
+    "Uruchom raport" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run report"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht ausführen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecutar informe"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити звіт"
           }
         }
       }
@@ -96125,6 +100185,34 @@
         }
       }
     },
+    "W AWR są mniej niż dwie migawki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There are fewer than two snapshots in AWR"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im AWR gibt es weniger als zwei Snapshots"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En AWR hay menos de dos instantáneas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В AWR менше двох знімків"
+          }
+        }
+      }
+    },
     "W dół" : {
       "localizations" : {
         "en" : {
@@ -96877,6 +100965,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Werte der Vorlagenvariablen (Name → Text); fehlende — Standard"
+          }
+        }
+      }
+    },
+    "Wartości zmiennych wiązanych przechwycone przez Oracle (co najwyżej co 15 min na kursor, tylko typy proste)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bind variable values captured by Oracle (at most every 15 min per cursor, simple types only)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von Oracle erfasste Werte der Bind-Variablen (höchstens alle 15 Min. je Cursor, nur einfache Typen)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valores de variables bind capturados por Oracle (como máximo cada 15 min por cursor, solo tipos simples)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Значення змінних прив’язки, перехоплені Oracle (не частіше ніж раз на 15 хв на курсор, лише прості типи)."
           }
         }
       }
@@ -99089,6 +103205,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Рядок (від 1); порожньо — виділений"
+          }
+        }
+      }
+    },
+    "Wiersz nie zawiera SQL_ID ani HASH_VALUE (kolumna SQL_ID, PREV_SQL_ID, HASH_VALUE…, albo komórka z wartością SQL_ID)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The row contains no SQL_ID or HASH_VALUE (column SQL_ID, PREV_SQL_ID, HASH_VALUE…, or a cell with a SQL_ID value)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Zeile enthält keine SQL_ID und keinen HASH_VALUE (Spalte SQL_ID, PREV_SQL_ID, HASH_VALUE… oder eine Zelle mit SQL_ID-Wert)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La fila no contiene SQL_ID ni HASH_VALUE (columna SQL_ID, PREV_SQL_ID, HASH_VALUE… o una celda con un valor SQL_ID)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рядок не містить SQL_ID ані HASH_VALUE (стовпець SQL_ID, PREV_SQL_ID, HASH_VALUE… або клітинка зі значенням SQL_ID)"
           }
         }
       }
@@ -101389,6 +105533,34 @@
         }
       }
     },
+    "Wszystkie instancje RAC" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All RAC instances"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle RAC-Instanzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas las instancias RAC"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі інстанси RAC"
+          }
+        }
+      }
+    },
     "Wszystkie kolumny wymienione" : {
       "localizations" : {
         "en" : {
@@ -101441,6 +105613,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Усі об’єкти в кошику буде видалено без можливості відновлення."
+          }
+        }
+      }
+    },
+    "Wszystkie plany zapytania zapisane w repozytorium AWR (DBA_HIST_SQL_PLAN)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All plans of the statement stored in the AWR repository (DBA_HIST_SQL_PLAN)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle im AWR-Repository gespeicherten Pläne der Anweisung (DBA_HIST_SQL_PLAN)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los planes de la sentencia guardados en el repositorio AWR (DBA_HIST_SQL_PLAN)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі плани запиту, збережені в репозиторії AWR (DBA_HIST_SQL_PLAN)."
           }
         }
       }
@@ -101525,6 +105725,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Усі звіти"
+          }
+        }
+      }
+    },
+    "Wszystkie raporty dla zapytania z zaznaczonego wiersza, komórki albo polecenia pod kursorem: plany, SQL Monitor, SQL Detail, Performance Hub, AWR, ASH, bindy, doradcy — ze sprawdzeniem, gdzie zapytanie jest dostępne." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All reports for the statement from the selected row, cell or statement at the cursor: plans, SQL Monitor, SQL Detail, Performance Hub, AWR, ASH, binds, advisors — checking where the statement is still available."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Berichte für die Anweisung aus markierter Zeile, Zelle oder Anweisung am Cursor: Pläne, SQL Monitor, SQL Detail, Performance Hub, AWR, ASH, Binds, Advisors — mit Prüfung, wo die Anweisung noch verfügbar ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los informes para la sentencia de la fila, celda o sentencia en el cursor: planes, SQL Monitor, SQL Detail, Performance Hub, AWR, ASH, binds, asesores — comprobando dónde sigue disponible la sentencia."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі звіти для запиту з виділеного рядка, клітинки або запиту під курсором: плани, SQL Monitor, SQL Detail, Performance Hub, AWR, ASH, бінди, радники — з перевіркою, де запит ще доступний."
+          }
+        }
+      }
+    },
+    "Wszystkie raporty wydajności…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All performance reports…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Leistungsberichte…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los informes de rendimiento…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі звіти продуктивності…"
           }
         }
       }
@@ -102141,6 +106397,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Datei auswählen …"
+          }
+        }
+      }
+    },
+    "Wybierz raport" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a report"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht wählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige un informe"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть звіт"
           }
         }
       }
@@ -104161,6 +108445,34 @@
         }
       }
     },
+    "Wykonania, czas, odczyty i plan w każdej migawce AWR — widać zmianę planu i regresję." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Executions, time, reads and plan in every AWR snapshot — plan changes and regressions are visible."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausführungen, Zeit, Lesevorgänge und Plan in jedem AWR-Snapshot — Planwechsel und Regressionen werden sichtbar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecuciones, tiempo, lecturas y plan en cada instantánea AWR — se ven cambios de plan y regresiones."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виконання, час, читання й план у кожному знімку AWR — видно зміну плану й регресію."
+          }
+        }
+      }
+    },
     "Wykonania/s" : {
       "localizations" : {
         "en" : {
@@ -105421,6 +109733,62 @@
         }
       }
     },
+    "Wymaga Oracle %@ lub nowszej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requires Oracle %@ or later"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erfordert Oracle %@ oder neuer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requiere Oracle %@ o posterior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Потрібна Oracle %@ або новіша"
+          }
+        }
+      }
+    },
+    "Wymaga licencji %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requires license %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erfordert die Lizenz %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requiere la licencia %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Потрібна ліцензія %@"
+          }
+        }
+      }
+    },
     "Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego hasła" : {
       "localizations" : {
         "en" : {
@@ -105613,6 +109981,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ergebnis auf %@ Zeilen gekürzt"
+          }
+        }
+      }
+    },
+    "Wynik ostatniego automatycznego zadania ewolucji SQL Plan Baselines." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Result of the last automatic SQL Plan Baselines evolution task."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergebnis der letzten automatischen Evolution der SQL Plan Baselines."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultado de la última tarea automática de evolución de SQL Plan Baselines."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Результат останнього автоматичного завдання еволюції SQL Plan Baselines."
+          }
+        }
+      }
+    },
+    "Wynik ostatniego przebiegu automatycznego doradcy SQL Tuning (SYS_AUTO_SQL_TUNING_TASK)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Result of the last run of the automatic SQL Tuning advisor (SYS_AUTO_SQL_TUNING_TASK)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergebnis des letzten Laufs des automatischen SQL Tuning Advisors (SYS_AUTO_SQL_TUNING_TASK)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultado de la última ejecución del asesor automático SQL Tuning (SYS_AUTO_SQL_TUNING_TASK)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Результат останнього запуску автоматичного радника SQL Tuning (SYS_AUTO_SQL_TUNING_TASK)."
           }
         }
       }
@@ -110545,6 +114969,34 @@
         }
       }
     },
+    "Zalecenia doradcy (profil SQL, indeksy, statystyki, przebudowa) i skrypt; z wybranym zestawem bindów — analiza tekstu z tymi wartościami." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advisor recommendations (SQL profile, indexes, statistics, restructuring) and script; with a chosen bind set — analysis of the text with those values."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfehlungen des Advisors (SQL-Profil, Indizes, Statistiken, Umbau) und Skript; mit gewähltem Bind-Satz — Analyse des Texts mit diesen Werten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recomendaciones del asesor (perfil SQL, índices, estadísticas, reestructuración) y script; con un conjunto de binds elegido — análisis del texto con esos valores."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рекомендації радника (профіль SQL, індекси, статистика, перебудова) і скрипт; з вибраним набором біндів — аналіз тексту з цими значеннями."
+          }
+        }
+      }
+    },
     "Zależności" : {
       "localizations" : {
         "en" : {
@@ -112197,6 +116649,118 @@
         }
       }
     },
+    "Zapamiętane bindy (%@ zestaw(y)) — użyć?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captured binds (%@ set(s)) — use them?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erfasste Binds (%@ Satz/Sätze) — verwenden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds capturados (%@ conjunto(s)) — ¿usarlos?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перехоплені бінди (%@ набір(и)) — використати?"
+          }
+        }
+      }
+    },
+    "Zapamiętane wartości bindów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captured bind values"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erfasste Bind-Werte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valores de binds capturados"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перехоплені значення біндів"
+          }
+        }
+      }
+    },
+    "Zapamiętane wartości bindów — %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captured bind values — %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erfasste Bind-Werte — %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valores de binds capturados — %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перехоплені значення біндів — %@"
+          }
+        }
+      }
+    },
+    "Zapamiętanych bindów nie ma — doradca analizuje zapytanie z pamięci kursorów albo AWR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No captured binds — the advisor analyzes the statement from the cursor cache or AWR"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine erfassten Binds — der Advisor analysiert die Anweisung aus dem Cursor-Cache oder AWR"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay binds capturados — el asesor analiza la sentencia de la caché de cursores o de AWR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перехоплених біндів немає — радник аналізує запит із кешу курсорів або AWR"
+          }
+        }
+      }
+    },
     "Zapamiętuj stan okien plików (kursor, zakładki, znaczniki, zmienne)" : {
       "localizations" : {
         "en" : {
@@ -112333,6 +116897,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Збереження замінить зміни, внесені поза цим вікном."
+          }
+        }
+      }
+    },
+    "Zapisane raporty SQL Monitor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stored SQL Monitor reports"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespeicherte SQL-Monitor-Berichte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes de SQL Monitor guardados"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережені звіти SQL Monitor"
+          }
+        }
+      }
+    },
+    "Zapisane raporty SQL Monitor (DBA_HIST_REPORTS)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stored SQL Monitor reports (DBA_HIST_REPORTS)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespeicherte SQL-Monitor-Berichte (DBA_HIST_REPORTS)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes de SQL Monitor guardados (DBA_HIST_REPORTS)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережені звіти SQL Monitor (DBA_HIST_REPORTS)"
+          }
+        }
+      }
+    },
+    "Zapisane raporty: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stored reports: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespeicherte Berichte: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes guardados: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережені звіти: %@"
           }
         }
       }
@@ -112921,6 +117569,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gespeicherte Änderungen: %@ — Transaktion offen"
+          }
+        }
+      }
+    },
+    "Zapisany raport" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stored report"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespeicherter Bericht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informe guardado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережений звіт"
           }
         }
       }
@@ -114941,6 +119617,34 @@
         }
       }
     },
+    "Zapytania %@ nie ma już w pamięci kursorów, aktywnych sesjach%@%@ — raporty nie mają danych. Sprawdź SQL_ID albo połączenie (%@)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statement %@ is no longer in the cursor cache, active sessions%@%@ — the reports have no data. Check the SQL_ID or the connection (%@)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anweisung %@ ist nicht mehr im Cursor-Cache, in aktiven Sitzungen%@%@ — die Berichte haben keine Daten. SQL_ID oder Verbindung prüfen (%@)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sentencia %@ ya no está en la caché de cursores, sesiones activas%@%@ — los informes no tienen datos. Comprueba el SQL_ID o la conexión (%@)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запиту %@ уже немає в кеші курсорів, активних сесіях%@%@ — звіти не мають даних. Перевірте SQL_ID або з’єднання (%@)."
+          }
+        }
+      }
+    },
     "Zapytania agenta (run_query)" : {
       "localizations" : {
         "en" : {
@@ -114965,6 +119669,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Agentenabfragen (run_query)"
+          }
+        }
+      }
+    },
+    "Zapytania nie ma w żadnym ze źródeł tego raportu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The statement is not in any source of this report"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anweisung ist in keiner Quelle dieses Berichts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sentencia no está en ninguna fuente de este informe"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запиту немає в жодному джерелі цього звіту"
+          }
+        }
+      }
+    },
+    "Zapytania nie ma w: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The statement is not in: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anweisung ist nicht in: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sentencia no está en: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запиту немає в: %@"
           }
         }
       }
@@ -118073,6 +122833,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Збирати покриття профайлером PL/SQL"
+          }
+        }
+      }
+    },
+    "Zbieranie statystyk (ręczne i automatyczne) z ostatnich dni: czas, obiekty, błędy." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistics gathering (manual and automatic) from the last days: time, objects, errors."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistikerfassung (manuell und automatisch) der letzten Tage: Zeit, Objekte, Fehler."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recogida de estadísticas (manual y automática) de los últimos días: tiempo, objetos, errores."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збирання статистики (ручне й автоматичне) за останні дні: час, об’єкти, помилки."
           }
         }
       }
@@ -122333,6 +127121,34 @@
         }
       }
     },
+    "bez licencji pakietów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "without packs"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ohne Packs"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sin paquetes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "без пакетів"
+          }
+        }
+      }
+    },
     "bez nazwy" : {
       "localizations" : {
         "en" : {
@@ -122805,6 +127621,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "keine Berechtigung"
+          }
+        }
+      }
+    },
+    "brak uprawnień do widoku (zwykle rola SELECT_CATALOG_ROLE)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no privileges on the view (usually the SELECT_CATALOG_ROLE role)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keine Rechte auf die View (meist Rolle SELECT_CATALOG_ROLE)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sin privilegios sobre la vista (normalmente el rol SELECT_CATALOG_ROLE)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "немає привілеїв на подання (зазвичай роль SELECT_CATALOG_ROLE)"
           }
         }
       }
@@ -124377,6 +129221,34 @@
         }
       }
     },
+    "komórka %@ wiersza %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cell %@ of row %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zelle %@ der Zeile %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "celda %@ de la fila %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "клітинка %@ рядка %@"
+          }
+        }
+      }
+    },
     "konflikt" : {
       "localizations" : {
         "en" : {
@@ -124569,6 +129441,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "курсор"
+          }
+        }
+      }
+    },
+    "kursor %@, instancja %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cursor %@, instance %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor %@, Instanz %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cursor %@, instancia %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "курсор %@, інстанс %@"
           }
         }
       }
@@ -124905,6 +129805,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "klein"
+          }
+        }
+      }
+    },
+    "migawka początkowa %@ musi być wcześniejsza niż końcowa %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the begin snapshot %@ must be earlier than the end snapshot %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "der Anfangs-Snapshot %@ muss vor dem End-Snapshot %@ liegen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la instantánea inicial %@ debe ser anterior a la final %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "початковий знімок %@ має бути раніше за кінцевий %@"
+          }
+        }
+      }
+    },
+    "migawki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "snapshots"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshots"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "instantáneas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "знімки"
           }
         }
       }
@@ -126365,6 +131321,34 @@
         }
       }
     },
+    "okno czasu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "time window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeitfenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ventana de tiempo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "часове вікно"
+          }
+        }
+      }
+    },
     "okno połączenia niedostępnego dla agenta" : {
       "localizations" : {
         "en" : {
@@ -126533,6 +131517,34 @@
         }
       }
     },
+    "pamięci kursorów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the cursor cache"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dem Cursor-Cache"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la caché de cursores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "кешу курсорів"
+          }
+        }
+      }
+    },
     "parametr" : {
       "localizations" : {
         "en" : {
@@ -126557,6 +131569,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "параметр"
+          }
+        }
+      }
+    },
+    "parametr komendy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "command parameter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Befehlsparameter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "parámetro del comando"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "параметр команди"
           }
         }
       }
@@ -126757,6 +131797,34 @@
         }
       }
     },
+    "początek %@ musi być wcześniejszy niż koniec %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "begin %@ must be earlier than end %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anfang %@ muss vor Ende %@ liegen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "el inicio %@ debe ser anterior al fin %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "початок %@ має бути раніше за кінець %@"
+          }
+        }
+      }
+    },
     "polecenia SQL*Plus są niedostępne dla agenta" : {
       "localizations" : {
         "en" : {
@@ -126781,6 +131849,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SQL*Plus-Befehle sind für den Agenten nicht verfügbar"
+          }
+        }
+      }
+    },
+    "polecenie pod kursorem (SQL_ID policzony z tekstu)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "statement at the cursor (SQL_ID computed from the text)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anweisung am Cursor (SQL_ID aus dem Text berechnet)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sentencia en el cursor (SQL_ID calculado a partir del texto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "запит під курсором (SQL_ID обчислено з тексту)"
+          }
+        }
+      }
+    },
+    "polecenie pod kursorem (SQL_ID z pamięci kursorów po tekście)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "statement at the cursor (SQL_ID from the cursor cache by text)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anweisung am Cursor (SQL_ID aus dem Cursor-Cache über den Text)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sentencia en el cursor (SQL_ID de la caché de cursores por el texto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "запит під курсором (SQL_ID з кешу курсорів за текстом)"
           }
         }
       }
@@ -128293,6 +133417,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "публічний синонім"
+          }
+        }
+      }
+    },
+    "słowo pod kursorem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "word at the cursor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wort am Cursor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "palabra en el cursor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "слово під курсором"
           }
         }
       }
@@ -129921,6 +135073,34 @@
         }
       }
     },
+    "wiersz %@ siatki wyniku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "row %@ of the result grid"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeile %@ des Ergebnisrasters"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fila %@ de la cuadrícula de resultados"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "рядок %@ сітки результату"
+          }
+        }
+      }
+    },
     "wiersz %@: %@" : {
       "localizations" : {
         "en" : {
@@ -129945,6 +135125,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeile %@: %@"
+          }
+        }
+      }
+    },
+    "wiersz tabeli" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "table row"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabellenzeile"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fila de la tabla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "рядок таблиці"
           }
         }
       }
@@ -130001,6 +135209,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeilen: %@"
+          }
+        }
+      }
+    },
+    "wpisany" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "typed"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eingegeben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "introducido"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "введено"
           }
         }
       }
@@ -130593,6 +135829,34 @@
         }
       }
     },
+    "zaznaczenie w edytorze" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "selection in the editor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markierung im Editor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "selección en el editor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "виділення в редакторі"
+          }
+        }
+      }
+    },
     "zaznaczony tekst" : {
       "localizations" : {
         "en" : {
@@ -130617,6 +135881,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ausgewählter Text"
+          }
+        }
+      }
+    },
+    "zaznaczony wiersz tabeli" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "selected table row"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "markierte Tabellenzeile"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fila de tabla seleccionada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "виділений рядок таблиці"
           }
         }
       }
@@ -132073,6 +137365,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Джерело Java"
+          }
+        }
+      }
+    },
+    "Źródło danych" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data source"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenquelle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuente de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Джерело даних"
           }
         }
       }

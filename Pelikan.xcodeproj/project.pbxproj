@@ -75,6 +75,7 @@
 		A2A4DB2FE33716A33108215C /* PlanVisualViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 570D3064D5201AF56E748711 /* PlanVisualViews.swift */; };
 		A31A871F39BE737A965BFC71 /* DiffViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335AC06B5D604A8B96621019 /* DiffViewer.swift */; };
 		A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */; };
+		A3B8A9927A8A17EE746CA4DA /* PerfReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A7AB38578901FB5D0CA9D28 /* PerfReportsView.swift */; };
 		A3E61CC8AF2B22C31ECA4161 /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */; };
 		A642A0E43AB977C2957DE20E /* TestExplorerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D823868EFA8AB35B9B9E1B7C /* TestExplorerView.swift */; };
 		AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */; };
@@ -113,6 +114,7 @@
 		ED1A5FBBBA6072361C0B0A94 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0427D9CBADA2F10B268B10 /* SearchBarView.swift */; };
 		EDDF2B30C34EE7482B2EC5FC /* PreferenceIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8877900ED39A5D37A825941 /* PreferenceIndex.swift */; };
 		EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C283921294ECF4112EB71BEE /* CodeContentsView.swift */; };
+		EF4BB70072BC3A0DF6A16142 /* PerfReportPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79865F3329A3B881A1861D50 /* PerfReportPresenter.swift */; };
 		F147BE03144C72C7C41A0947 /* DataGripViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C22FA5C168C63547B4D8E77 /* DataGripViews.swift */; };
 		F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */; };
 		F4DD0E5A44AD7B7874E85021 /* ObjectToolsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */; };
@@ -211,6 +213,7 @@
 		5F92ED91422BB2BB0A701B9B /* AppFonts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFonts.swift; sourceTree = "<group>"; };
 		62611D2986EABAD106F9D86C /* DebuggerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebuggerPanel.swift; sourceTree = "<group>"; };
 		683515088F140833D5EF9EE2 /* Pelikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pelikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A7AB38578901FB5D0CA9D28 /* PerfReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerfReportsView.swift; sourceTree = "<group>"; };
 		6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLWindowViewController.swift; sourceTree = "<group>"; };
 		6C474097D823409ADBB63C09 /* CodeTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeTextEditor.swift; sourceTree = "<group>"; };
 		6D7056F4E355029FE5D90B7C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -218,6 +221,7 @@
 		7224E809D72537BD3EF62A08 /* Stage7ToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stage7ToolViews.swift; sourceTree = "<group>"; };
 		72FFE2A47AC0EDD7845C019C /* EditorToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorToolViews.swift; sourceTree = "<group>"; };
 		763E3F551A3684075944A130 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		79865F3329A3B881A1861D50 /* PerfReportPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerfReportPresenter.swift; sourceTree = "<group>"; };
 		7BDD00050FBA5650E960C7ED /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
 		7BF32F55F976564F7AA608BF /* SSHTargetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHTargetManager.swift; sourceTree = "<group>"; };
 		7C22FA5C168C63547B4D8E77 /* DataGripViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataGripViews.swift; sourceTree = "<group>"; };
@@ -489,6 +493,7 @@
 				5694E390076FE23B8716CFC4 /* Help */,
 				3C380357B07D0CE9BD6F01DC /* Notebook */,
 				334095D94316C5129A5B1A6B /* ObjectBrowser */,
+				84208978D7AD81935D26BF7E /* Performance */,
 				04AA0F0ED1F31BC87839A227 /* Preferences */,
 				08A837C768E73A2A195BEB42 /* ProgramWindow */,
 				C1F67E62A7276D0917058CE5 /* Project */,
@@ -522,6 +527,15 @@
 				2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		84208978D7AD81935D26BF7E /* Performance */ = {
+			isa = PBXGroup;
+			children = (
+				79865F3329A3B881A1861D50 /* PerfReportPresenter.swift */,
+				6A7AB38578901FB5D0CA9D28 /* PerfReportsView.swift */,
+			);
+			path = Performance;
 			sourceTree = "<group>";
 		};
 		94B8513C5D09CD2AC6BAC631 /* Diff */ = {
@@ -912,6 +926,8 @@
 				52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */,
 				40419B4A25B38AB31CFDF7A6 /* Oracle23Views.swift in Sources */,
 				B31E9AE8546184D3A8287258 /* PackViews.swift in Sources */,
+				EF4BB70072BC3A0DF6A16142 /* PerfReportPresenter.swift in Sources */,
+				A3B8A9927A8A17EE746CA4DA /* PerfReportsView.swift in Sources */,
 				A2A4DB2FE33716A33108215C /* PlanVisualViews.swift in Sources */,
 				EDDF2B30C34EE7482B2EC5FC /* PreferenceIndex.swift in Sources */,
 				16AAE826A71D9329061526D4 /* PreferenceSetsPane.swift in Sources */,

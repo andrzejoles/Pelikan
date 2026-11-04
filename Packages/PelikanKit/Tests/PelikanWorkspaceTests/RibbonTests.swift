@@ -67,7 +67,7 @@ struct RibbonTests {
     @Test("karty kontekstowe tylko przy oknie swojego rodzaju; domyślna karta rodzaju jest widoczna")
     func contextualTabs() {
         let standard = RibbonModel.visibleTabs(for: nil).map(\.id)
-        #expect(standard == ["start", "edit", "database", "debug", "tools", "reports", "view"])
+        #expect(standard == ["start", "edit", "database", "debug", "tools", "reports", "performance", "view"])
         #expect(RibbonModel.visibleTabs(for: .program).map(\.id) == standard + ["program"])
         #expect(RibbonModel.visibleTabs(for: .sql).map(\.id) == standard + ["result"])
         for kind in DocumentKind.allCases {

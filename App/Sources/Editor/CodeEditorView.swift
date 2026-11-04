@@ -1501,7 +1501,21 @@ final class CodeTextView: NSTextView {
         let menu = super.menu(for: event) ?? NSMenu()
         guard let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return menu }
         let i = characterIndexForInsertion(at: convert(event.locationInWindow, from: nil))
-        guard let word = EditorObjectMenu.objectName(at: i, in: string) else { return menu }
+        // Raporty wydajności (D217): SQL_ID pod kursorem albo SQL_ID polecenia pod kursorem (liczony z tekstu).
+        let sqlItem: NSMenuItem
+        if let w = OracleDocs.word(at: i, in: string), let t = SQLIdentity.parse(w.word), case .sqlID(let id) = t {
+            sqlItem = ClosureMenuItem(title: L10n.tr("Raporty dla SQL_ID \(id)…")) { ws.perform("perf.sqlReports", CommandArguments(["sqlId": .string(id)])) }
+        } else {
+            sqlItem = ClosureMenuItem(title: L10n.tr("Raporty SQL dla polecenia pod kursorem…")) { [weak self] in
+                if self?.selectedRange().length == 0 { self?.setSelectedRange(NSRange(location: i, length: 0)) }
+                ws.perform("perf.sqlReports")
+            }
+        }
+        guard let word = EditorObjectMenu.objectName(at: i, in: string) else {
+            menu.insertItem(.separator(), at: 0)
+            menu.insertItem(sqlItem, at: 0)
+            return menu
+        }
         if selectedRange().length == 0 { setSelectedRange(NSRange(location: i, length: 0)) }
         var items: [NSMenuItem] = []
         let header = NSMenuItem(title: L10n.tr("Obiekt „\(word)”"), action: nil, keyEquivalent: "")
@@ -1512,6 +1526,8 @@ final class CodeTextView: NSTextView {
             items.append(item)
         }
         items.append(ClosureMenuItem(title: L10n.tr("Przejdź do deklaracji")) { ws.perform("edit.gotoDeclaration") })
+        items.append(.separator())
+        items.append(sqlItem)
         items.append(.separator())
         for (k, item) in items.enumerated() { menu.insertItem(item, at: k) }
         return menu

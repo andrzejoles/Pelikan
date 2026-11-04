@@ -372,6 +372,8 @@ struct DataTable<Row: Identifiable>: View {
     let onViewRowsChange: (([Row.ID]) -> Void)?
     @State private var sort: [ColumnSort<Row>] = []
     @State private var tools = TableToolsState()
+    /// Połączenie tabeli narzędzia — raporty SQL z wiersza z kolumną SQL_ID/hash (D217).
+    @Environment(\.reportConnection) private var reportConnection
 
     init(_ rows: [Row], title: String? = nil, selection: DataTableSelection<Row.ID> = .none,
          rowMenu: ((Set<Row.ID>) -> AnyView)? = nil, primaryAction: ((Set<Row.ID>) -> Void)? = nil,
@@ -396,6 +398,16 @@ struct DataTable<Row: Identifiable>: View {
         return filtered.sorted(by: sort)
     }
 
+    /// Tabela ma kolumnę SQL_ID albo hash zapytania.
+    private var hasSQLColumn: Bool { columns.contains { SQLIdentity.columnKind($0.title) != nil || SQLIdentity.columnKind($0.id) != nil } }
+
+    /// Zapytanie z wiersza (kolumna SQL_ID, potem hash).
+    private func sqlTarget(_ row: Row) -> SQLReportTarget? {
+        let names = columns.map { SQLIdentity.columnKind($0.title) != nil ? $0.title : $0.id }
+        return SQLIdentity.target(columns: names, values: columns.map { $0.text(row) })
+            .map { SQLReportTarget(target: $0, origin: L10n.tr("zaznaczony wiersz tabeli"), connection: reportConnection) }
+    }
+
     private func contents(_ shown: [Row]) -> TableContents {
         let byID = Dictionary(columns.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         let selected = selection.ids
@@ -412,6 +424,10 @@ struct DataTable<Row: Identifiable>: View {
             table(shown)
                 .contextMenu(forSelectionType: Row.ID.self) { ids in
                     let idx = shown.indices.filter { ids.contains(shown[$0].id) }
+                    if hasSQLColumn, let r = idx.first, let t = sqlTarget(shown[r]) {
+                        Button(L10n.tr("Raporty dla \(t.label)…")) { SQLReportLauncher.open(t) }
+                        Divider()
+                    }
                     if let rowMenu, !ids.isEmpty {
                         rowMenu(ids)
                         Divider()
@@ -435,6 +451,11 @@ struct DataTable<Row: Identifiable>: View {
                 }
         }
         .onChange(of: shown.map(\.id), initial: true) { _, ids in onViewRowsChange?(ids) }
+        // Zaznaczony wiersz z SQL_ID — dla komendy „Raporty dla SQL_ID” ze wstążki i skrótu (D217).
+        .onChange(of: selection.ids) { _, ids in
+            guard hasSQLColumn else { return }
+            SQLTargetRegistry.shared.note(shown.first { ids.contains($0.id) }.flatMap(sqlTarget))
+        }
         // Inny zestaw kolumn (np. inne zapytanie w tej samej tabeli) — filtr i sortowanie dotyczyły starych kolumn.
         .onChange(of: columns.map { $0.id + "\u{1}" + $0.title }) {
             tools = TableToolsState()

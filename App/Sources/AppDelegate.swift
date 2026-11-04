@@ -830,6 +830,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolWindowController.show(key: "spatial-" + UUID().uuidString, title: L10n.tr("Podgląd przestrzenny: \(title)"), size: NSSize(width: 640, height: 520)) { SpatialPreviewView(wkt: wkt) }
     }
 
+    /// Raporty dla zapytania (D217): okno na SQL_ID i połączenie — ponowne wywołanie dla tego samego je przywołuje.
+    func showSQLReports(_ target: SQLReportTarget) {
+        guard let conn = target.connection ?? workspace.toolConnection() else { showError(CommandError.notConnected.localizedDescription); return }
+        let key = "sqlReports-\(conn.uuidString)-\(PerfReportsModel.text(target.target))"
+        let title = L10n.tr("Raporty SQL: \(PerfReportsModel.text(target.target))")
+        ToolWindowController.show(key: key, title: title, size: NSSize(width: 1000, height: 680)) {
+            PerfReportsView(model: PerfReportsModel(workspace: workspace, connection: conn, mode: .sql(target)))
+        }
+    }
+
+    /// Raporty bazy (D217): jedno okno na połączenie; wywołanie z raportem zaznacza go w otwartym oknie.
+    func showPerfReport(_ reportID: String?, connection: UUID) {
+        let key = "perfReports-\(connection.uuidString)-\(reportID ?? "all")"
+        let title = reportID.flatMap { PerfReportCatalog.report($0)?.title } ?? L10n.tr("Raporty wydajności")
+        ToolWindowController.show(key: key, title: title, size: NSSize(width: 960, height: 620)) {
+            PerfReportsView(model: PerfReportsModel(workspace: workspace, connection: connection, mode: .global, report: reportID))
+        }
+    }
+
+    /// Zapytanie z elementu z fokusem: edytor (zaznaczenie, słowo, polecenie), siatka (wiersz, komórka), tabela narzędzia.
+    func focusedSQLTarget() -> SQLReportTarget? {
+        let responder = NSApp.keyWindow?.firstResponder
+        if responder is GridTableView, let doc = workspace.activeDocument, doc.kind == .sql,
+           let tab = doc.results.first(where: { $0.id == doc.activeResultID }) ?? doc.results.first {
+            return SQLTargetFinder.fromGrid(tab)
+        }
+        if let tv = responder as? NSTextView, !tv.isFieldEditor, NSApp.keyWindow === mainWindow?.window, let doc = workspace.activeDocument {
+            return SQLTargetFinder.fromEditor(doc)
+        }
+        if responder is NSTableView { return SQLTargetRegistry.shared.current() }
+        return nil
+    }
+
     /// Dokumentacja Oracle z lokalnego serwera MCP (D216): jedno okno, nowe zapytanie wyszukuje od nowa.
     func showLocalDocs(query: String) {
         let model = LocalDocsModel.shared

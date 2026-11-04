@@ -3472,3 +3472,52 @@ i `get_doc_section` (cała sekcja).
 - **Komendy:** `help.localDocs` (okno, wstążka Pomoc › Dokumentacja lokalna) i narzędzie agenta `search_oracle_docs`
   (`agent.oracleDocs`, Odczyt): agent Pelikana może sprawdzić składnię w dokumentacji użytkownika bez sieci; fragmenty
   oznaczone jako dane niezaufane (jak dane z bazy).
+
+### D217 · 2026-11-04 — Raporty wydajności: raporty dla SQL_ID z zaznaczenia, menu i karta Wydajność
+
+**Prośba właściciela:** w każdym miejscu z SQL_ID albo hashem zapytania wywołać wszystkie raporty tego zapytania
+(Diagnostics/Tuning Pack — materiał właściciela: 72 obiekty raportowe, przykłady wywołań), parametry i format (ACTIVE,
+jeśli dostępny) zapytać oknem; bindy — sprawdzić, czy są, i zapytać o użycie; przy wielu źródłach najpierw sprawdzić,
+gdzie zapytanie jeszcze jest, potem zapytać o wybór (nigdzie — komunikat); osobne menu i karta wstążki dla raportów bez
+SQL_ID; połączenie z aktywnego okna, karty albo elementu; SQL_ID/hash brane automatycznie z zaznaczonego wiersza, komórki
+albo innego identyfikowalnego elementu. Przejrzane też wcześniejsze narzędzia właściciela w Pythonie (Performance Hub,
+raporty SQL dla listy SQL_ID, PERF-421).
+
+- **SQL_ID i hash** (`SQLIdentity`): SQL_ID z tekstu polecenia liczony lokalnie (dolne 64 bity MD5 tekstu z bajtem 0 —
+  zgodne z V$SQL na bazie testowej), HASH_VALUE z SQL_ID lokalnie, SQL_ID z hasha — z GV$SQL, potem (z licencją) AWR.
+  Kolumny rozpoznawane po nazwie (SQL_ID, PREV_SQL_ID, *_SQL_ID, HASH_VALUE, SQL_HASH_VALUE…), wartość SQL_ID także
+  w dowolnej komórce.
+- **Skąd zapytanie** (kolejność, element z fokusem pierwszy): wiersz albo komórka siatki wyniku (kolumna SQL_ID/hash
+  zaznaczonego wiersza, także gdy kursor stoi w innej kolumnie), zaznaczony wiersz dowolnej tabeli z kolumną SQL_ID
+  (sesje, SQL Monitor, Top SQL…; połączenie narzędzia), zaznaczony SQL_ID albo hash w edytorze, słowo pod kursorem,
+  inaczej SQL_ID polecenia pod kursorem liczony z tekstu (brak w bazie — wyszukanie po tekście w GV$SQL); bez żadnego
+  — pytanie o SQL_ID albo hash. Wejścia: menu kontekstowe siatki („Raporty dla SQL_ID z wiersza…”), każdej tabeli
+  z kolumną SQL_ID, edytora (SQL_ID pod kursorem albo polecenie), menu i karta Wydajność, skrót ⌃⌘R, paleta.
+- **Dostępność** (`SQLProbe`): pamięć kursorów, aktywne sesje i bindy z kursorów (bez licencji); ASH w pamięci, AWR
+  (migawki, plany) i bindy z AWR (Diagnostics); SQL Monitor, zapisane raporty DBA_HIST_REPORTS i bindy z BINDS_XML
+  (Tuning). Źródła płatne pytane tylko z licencją (deklaracja na połączeniu — pytanie przy pierwszym użyciu, D63,
+  i CONTROL_MANAGEMENT_PACK_ACCESS); brak uprawnień do widoku — uwaga w oknie zamiast błędu.
+- **Katalog** (`PerfReportCatalog`) — raporty dla SQL: plan z pamięci kursorów (DISPLAY_CURSOR, ALLSTATS LAST
+  +PEEKED_BINDS), plany z AWR (DISPLAY_WORKLOAD_REPOSITORY z `awr_location => 'AWR_PDB'` w PDB z własnym AWR, inaczej
+  DISPLAY_AWR), SQL Monitor — wykonanie (z pamięci albo zapisany raport) i lista, SQL Detail, Performance Hub SQL,
+  raport AWR i ASH dla SQL, historia wykonań w AWR, zapamiętane bindy, SQL Tuning Advisor, SQL Repair Advisor (19c);
+  raporty bazy: AWR (instancja albo RAC), porównanie AWR, ADDM, porównanie ADDM, ASH, ASH Analytics, Performance Hub,
+  raport sesji, Real-Time ADDM, lista SQL Monitor, operacje statystyk, Auto SQL Tuning, ewolucja SPM. Każdy z licencją,
+  najniższą wersją Oracle, formatami (ACTIVE pierwszy) i źródłami.
+- **Okno raportów**: nagłówek (SQL_ID, hash, połączenie, skąd, dostępność w źródłach, tekst i schemat), lista raportów
+  z powodem niedostępności (licencja, wersja, brak danych w źródłach raportu), formularz z wartościami domyślnymi
+  z dostępności: źródło (tylko te, w których zapytanie jest), format, migawki (zakres z danymi zapytania), okno czasu
+  (dane zapytania, ostatnia godzina, migawki), wykonanie SQL Monitor, plan, kursor potomny, format planu, limit doradcy,
+  bindy. Dwuklik albo Enter — uruchomienie. Zapytania nie ma nigdzie — komunikat z prośbą o sprawdzenie SQL_ID
+  i połączenia. Okna raportów otwierają się domyślnie jako osobne okna (można je zadokować — miejsce zapamiętane).
+- **Bindy**: dla doradców (STA, SQL Repair) wybór „Nie” albo zestaw z pamięci kursorów lub migawki AWR z podglądem
+  wartości; z zestawem — `sql_text` + `bind_list` (ANYDATA z V$SQL_BIND_CAPTURE / DBA_HIST_SQLBIND) i schemat
+  parsowania. Zestawy z SQL Monitor tylko do podglądu (brak ANYDATA). Wszystkie wartości wywołań jako bindy.
+- **Wynik**: ACTIVE — plik w katalogu tymczasowym otwierany w przeglądarce (raport pobiera skrypty z serwerów Oracle, jak
+  w narzędziach właściciela w Pythonie), HTML — podgląd w oknie, tekst i XML — czcionką kodu; Zapisz, Kopiuj, Otwórz
+  w przeglądarce. Format wykrywany z treści (np. raport „tekstowy” zwrócony jako HTML).
+- **Zabezpieczenia z doświadczeń (PERF-421)**: sprawdzenie EXECUTE do pakietu przed wywołaniem (komunikat z GRANT zamiast
+  ORA-00904), nazwy zadań doradców ≤ 30 znaków i usuwanie tylko własnych zadań, STA tylko w formacie tekstowym, walidacja
+  okna czasu i migawek przed wywołaniem. Agent: brak dostępu (pakiety zarządzania, PROMPT §7.3).
+- Dotychczasowe komendy Narzędzia › Wydajność (AWR, ASH, ADDM, SQL Monitor, SQL Tuning Advisor z domyślnymi
+  parametrami) zostają bez zmian.
