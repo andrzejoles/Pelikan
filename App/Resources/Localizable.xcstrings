@@ -6497,6 +6497,34 @@
         }
       }
     },
+    "Bez tej wartości (domyślnie tylko ta wartość)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exclude this value (default: only this value)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohne diesen Wert (Standard: nur dieser Wert)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excluir este valor (por defecto: solo este valor)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без цього значення (типово: лише це значення)"
+          }
+        }
+      }
+    },
     "Bez wielkości liter" : {
       "localizations" : {
         "en" : {
@@ -9461,6 +9489,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tabelle %@.%@ fehlt im Ziel"
+          }
+        }
+      }
+    },
+    "Brak tabeli okna narzędzia z fokusem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No focused tool window table"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Tabelle eines Werkzeugfensters im Fokus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ninguna tabla de ventana de herramienta con el foco"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає таблиці вікна інструмента у фокусі"
           }
         }
       }
@@ -16941,6 +16997,34 @@
         }
       }
     },
+    "Dodaje kolumnę do kolumn kopiowanych razem albo ją z nich usuwa." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adds the column to the columns copied together, or removes it from them."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fügt die Spalte zu den gemeinsam kopierten Spalten hinzu oder entfernt sie daraus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade la columna a las columnas que se copian juntas o la quita de ellas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додає стовпець до стовпців, що копіюються разом, або вилучає його з них."
+          }
+        }
+      }
+    },
     "Dodaje komendę do paska szybkiego dostępu (Quick Access Toolbar)." : {
       "localizations" : {
         "en" : {
@@ -21477,6 +21561,34 @@
         }
       }
     },
+    "Eksportuj tabelę…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Table…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabelle exportieren…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar tabla…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати таблицю…"
+          }
+        }
+      }
+    },
     "Eksportuj ustawienia…" : {
       "localizations" : {
         "en" : {
@@ -22093,6 +22205,34 @@
         }
       }
     },
+    "Filtr kolumny: tylko wartość komórki wiersza (domyślnie pierwszego zaznaczonego) albo bez niej." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Column filter: only the value of the row's cell (default: first selected row) or without it."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spaltenfilter: nur der Zellwert der Zeile (Standard: erste ausgewählte Zeile) oder ohne ihn."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtro de columna: solo el valor de la celda de la fila (por defecto, la primera seleccionada) o sin él."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтр стовпця: лише значення клітинки рядка (типово першого виділеного) або без нього."
+          }
+        }
+      }
+    },
     "Filtr kolumn…" : {
       "localizations" : {
         "en" : {
@@ -22593,6 +22733,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Фільтр стовпців…"
+          }
+        }
+      }
+    },
+    "Filtruj tabelę wartością" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter Table by Value"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabelle nach Wert filtern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrar tabla por valor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтрувати таблицю за значенням"
           }
         }
       }
@@ -23489,6 +23657,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Datumsformat"
+          }
+        }
+      }
+    },
+    "Format eksportu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export format"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportformat"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato de exportación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Формат експорту"
           }
         }
       }
@@ -34105,6 +34301,34 @@
         }
       }
     },
+    "Kolumna: identyfikator albo tytuł (bez argumentu — wybór z listy)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Column: identifier or title (without argument — choose from a list)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalte: Kennung oder Titel (ohne Argument — Auswahl aus einer Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Columna: identificador o título (sin argumento: elegir de una lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стовпець: ідентифікатор або назва (без аргументу — вибір зі списку)"
+          }
+        }
+      }
+    },
     "Kolumny" : {
       "localizations" : {
         "en" : {
@@ -36933,6 +37157,34 @@
         }
       }
     },
+    "Kopiuj kolumnę tabeli" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Table Column"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabellenspalte kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar columna de la tabla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати стовпець таблиці"
+          }
+        }
+      }
+    },
     "Kopiuj kolumnę „%@”" : {
       "localizations" : {
         "en" : {
@@ -36989,6 +37241,34 @@
         }
       }
     },
+    "Kopiuj komórkę tabeli" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Table Cell"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabellenzelle kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar celda de la tabla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати клітинку таблиці"
+          }
+        }
+      }
+    },
     "Kopiuj nagłówek" : {
       "localizations" : {
         "en" : {
@@ -37041,6 +37321,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Копіювати заголовки"
+          }
+        }
+      }
+    },
+    "Kopiuj nagłówki tabeli" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Table Headers"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabellenüberschriften kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar encabezados de la tabla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати заголовки таблиці"
           }
         }
       }
@@ -37185,6 +37493,34 @@
         }
       }
     },
+    "Kopiuj tabele z nagłówkiem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Tables with Header"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabellen mit Überschrift kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar tablas con encabezado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати таблиці із заголовком"
+          }
+        }
+      }
+    },
     "Kopiuj treść" : {
       "localizations" : {
         "en" : {
@@ -37265,6 +37601,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Копіювати рядок"
+          }
+        }
+      }
+    },
+    "Kopiuj wiersze tabeli" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Table Rows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabellenzeilen kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar filas de la tabla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати рядки таблиці"
           }
         }
       }
@@ -37353,6 +37717,34 @@
         }
       }
     },
+    "Kopiuj zaznaczone kolumny tabeli" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Marked Table Columns"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markierte Tabellenspalten kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar columnas marcadas de la tabla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати позначені стовпці таблиці"
+          }
+        }
+      }
+    },
     "Kopiuj zaznaczone kolumny zaznaczonych wierszy" : {
       "localizations" : {
         "en" : {
@@ -37409,6 +37801,34 @@
         }
       }
     },
+    "Kopiuje całą kolumnę tabeli (wiersze widoku)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies the whole table column (rows of the view)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert die ganze Tabellenspalte (Zeilen der Ansicht)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia toda la columna de la tabla (filas de la vista)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіює весь стовпець таблиці (рядки подання)."
+          }
+        }
+      }
+    },
     "Kopiuje do schowka tekst elementu Zawartości kodu." : {
       "localizations" : {
         "en" : {
@@ -37433,6 +37853,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Копіює в буфер обміну текст елемента вмісту коду."
+          }
+        }
+      }
+    },
+    "Kopiuje kolumny zaznaczone do kopii: wszystkie wiersze widoku albo podane wiersze." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies the columns marked for copying: all rows of the view or the given rows."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert die zum Kopieren markierten Spalten: alle Zeilen der Ansicht oder die angegebenen Zeilen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia las columnas marcadas para copiar: todas las filas de la vista o las filas indicadas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіює стовпці, позначені для копіювання: усі рядки подання або вказані рядки."
           }
         }
       }
@@ -37577,6 +38025,90 @@
         }
       }
     },
+    "Kopiuje tekst komórki wiersza (domyślnie pierwszego zaznaczonego) w kolumnie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies the text of the row's cell (default: first selected row) in the column."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert den Text der Zelle der Zeile (Standard: erste ausgewählte Zeile) in der Spalte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia el texto de la celda de la fila (por defecto, la primera seleccionada) en la columna."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіює текст клітинки рядка (типово першого виділеного) у стовпці."
+          }
+        }
+      }
+    },
+    "Kopiuje tytuły kolumn tabeli." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies the table's column titles."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert die Spaltentitel der Tabelle."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia los títulos de las columnas de la tabla."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіює назви стовпців таблиці."
+          }
+        }
+      }
+    },
+    "Kopiuje wszystkie wiersze widoku tabeli (po filtrze, w kolejności sortowania)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies all rows of the table view (after the filter, in sort order)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert alle Zeilen der Tabellenansicht (nach dem Filter, in Sortierreihenfolge)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia todas las filas de la vista de la tabla (tras el filtro, en el orden de clasificación)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіює всі рядки подання таблиці (після фільтра, у порядку сортування)."
+          }
+        }
+      }
+    },
     "Kopiuje zaznaczenie (albo cały tekst) jako literał tekstowy języka %@; agent dostaje wynik zamiast schowka." : {
       "localizations" : {
         "en" : {
@@ -37713,6 +38245,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kopiert die ausgewählten Zellen mit Spaltenüberschriften (Text mit Tabulatoren und HTML)."
+          }
+        }
+      }
+    },
+    "Kopiuje zaznaczone wiersze tabeli (tekst z tabulatorami i HTML)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies the selected table rows (tab-separated text and HTML)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert die ausgewählten Tabellenzeilen (Text mit Tabulatoren und HTML)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia las filas seleccionadas de la tabla (texto con tabulaciones y HTML)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіює виділені рядки таблиці (текст із табуляціями та HTML)."
           }
         }
       }
@@ -51185,6 +51745,62 @@
         }
       }
     },
+    "Numer wiersza widoku od 1 (domyślnie pierwszy zaznaczony)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Row number in the view, from 1 (default: first selected)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilennummer der Ansicht ab 1 (Standard: erste ausgewählte)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número de fila de la vista desde 1 (por defecto, la primera seleccionada)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Номер рядка подання від 1 (типово перший виділений)"
+          }
+        }
+      }
+    },
+    "Numery wierszy widoku od 1, po przecinku (domyślnie zaznaczone)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Row numbers in the view, from 1, comma-separated (default: selected)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilennummern der Ansicht ab 1, durch Kommas getrennt (Standard: ausgewählte)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Números de fila de la vista desde 1, separados por comas (por defecto, las seleccionadas)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Номери рядків подання від 1 через кому (типово виділені)"
+          }
+        }
+      }
+    },
     "O bazie danych" : {
       "localizations" : {
         "en" : {
@@ -53589,6 +54205,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Auswahl aufheben"
+          }
+        }
+      }
+    },
+    "Odznacz kolumny do kopii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unmark Columns for Copying"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spaltenmarkierung zum Kopieren aufheben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desmarcar columnas para copiar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зняти позначку стовпців для копіювання"
           }
         }
       }
@@ -59417,6 +60061,34 @@
         }
       }
     },
+    "Otwórz przebieg profilera" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Profiler Run"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiler-Lauf öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir ejecución del perfilador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити запуск профайлера"
+          }
+        }
+      }
+    },
     "Otwórz przebieg profilera…" : {
       "localizations" : {
         "en" : {
@@ -64177,6 +64849,34 @@
         }
       }
     },
+    "Początkowy tekst okna (domyślnie puste)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Initial text of the window (default: empty)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anfangstext des Fensters (Standard: leer)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto inicial de la ventana (por defecto, vacío)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Початковий текст вікна (типово порожній)"
+          }
+        }
+      }
+    },
     "Pod pierwszym warunkiem" : {
       "localizations" : {
         "en" : {
@@ -64481,34 +65181,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neues Passwort eingeben (zweimal)."
-          }
-        }
-      }
-    },
-    "Podaj numer przebiegu" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Specify the run number"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geben Sie die Laufnummer an"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indique el número de ejecución"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вкажіть номер запуску"
           }
         }
       }
@@ -97861,6 +98533,34 @@
         }
       }
     },
+    "Usuwa szybki filtr i filtry kolumn tabeli." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removes the quick filter and the table's column filters."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernt den Schnellfilter und die Spaltenfilter der Tabelle."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina el filtro rápido y los filtros de columna de la tabla."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучає швидкий фільтр і фільтри стовпців таблиці."
+          }
+        }
+      }
+    },
     "Usuwa tekst od kursora do końca następnego słowa (albo zaznaczenie)." : {
       "localizations" : {
         "en" : {
@@ -98193,6 +98893,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Löscht ein gespeichertes Workset (Fenster des aktuellen Worksets bleiben geöffnet)."
+          }
+        }
+      }
+    },
+    "Usuwa zaznaczenie wszystkich kolumn do kopii." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unmarks all columns for copying."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hebt die Markierung aller Spalten zum Kopieren auf."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desmarca todas las columnas para copiar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімає позначку з усіх стовпців для копіювання."
           }
         }
       }
@@ -107773,6 +108501,34 @@
         }
       }
     },
+    "Wyczyść filtr tabeli" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Table Filter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabellenfilter löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar filtro de la tabla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистити фільтр таблиці"
+          }
+        }
+      }
+    },
     "Wyczyść historię filtra" : {
       "localizations" : {
         "en" : {
@@ -113033,6 +113789,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вмикає або вимикає стовпець із номером рядка під час копіювання й експорту таблиці."
+          }
+        }
+      }
+    },
+    "Włącza albo wyłącza nagłówki kolumn przy kopiowaniu z tabel." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turns column headers on or off when copying from tables."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schaltet Spaltenüberschriften beim Kopieren aus Tabellen ein oder aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa o desactiva los encabezados de columna al copiar desde tablas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вмикає або вимикає заголовки стовпців під час копіювання з таблиць."
           }
         }
       }
@@ -118861,6 +119645,34 @@
         }
       }
     },
+    "Zapisuje wszystkie wiersze widoku tabeli do pliku: tekst, CSV, Excel, JSON, XML, HTML albo TSV." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saves all rows of the table view to a file: text, CSV, Excel, JSON, XML, HTML or TSV."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichert alle Zeilen der Tabellenansicht in einer Datei: Text, CSV, Excel, JSON, XML, HTML oder TSV."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda todas las filas de la vista de la tabla en un archivo: texto, CSV, Excel, JSON, XML, HTML o TSV."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає всі рядки подання таблиці у файл: текст, CSV, Excel, JSON, XML, HTML або TSV."
+          }
+        }
+      }
+    },
     "Zapisuje wszystkie wyniki okna jako skoroszyt xlsx (arkusz na wynik, polecenie SQL na osobnym arkuszu)." : {
       "localizations" : {
         "en" : {
@@ -122221,6 +123033,34 @@
         }
       }
     },
+    "Zaznacz kolumnę do kopii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark Column for Copying"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalte zum Kopieren markieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcar columna para copiar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позначити стовпець для копіювання"
+          }
+        }
+      }
+    },
     "Zaznacz kolumnę „%@” do kopii" : {
       "localizations" : {
         "en" : {
@@ -122469,6 +123309,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sichtbare auswählen"
+          }
+        }
+      }
+    },
+    "Zaznacz wiersz tabeli" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a table row"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen Sie eine Tabellenzeile aus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccione una fila de la tabla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виділіть рядок таблиці"
+          }
+        }
+      }
+    },
+    "Zaznacz wiersze tabeli" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select table rows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen Sie Tabellenzeilen aus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccione filas de la tabla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виділіть рядки таблиці"
           }
         }
       }
@@ -132049,6 +132945,34 @@
         }
       }
     },
+    "ostrzeżenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "warning"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "advertencia"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "попередження"
+          }
+        }
+      }
+    },
     "otwarte" : {
       "localizations" : {
         "en" : {
@@ -138065,6 +138989,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Джерело в базі"
+          }
+        }
+      }
+    },
+    "Źródło „%@” wymaga licencji %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source “%@” requires the %@ license"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelle „%@“ erfordert die Lizenz %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El origen «%@» requiere la licencia %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Джерело «%@» потребує ліцензії %@"
           }
         }
       }

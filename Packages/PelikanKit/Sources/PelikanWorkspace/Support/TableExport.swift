@@ -30,9 +30,15 @@ public enum TableExport {
         return ExportData(title: title, columns: infos, rows: values)
     }
 
-    /// Liczba w zapisie z kropką dziesiętną (tak jak liczby w tabelach), bez separatorów tysięcy.
+    /// Liczba w zapisie z kropką dziesiętną (tak jak liczby w tabelach), bez separatorów tysięcy — i bez straty przy
+    /// zapisie jako liczba: bez zer wiodących (kody „0012”) i najwyżej 15 cyfr znaczących (identyfikatory jak DBID,
+    /// FORCE_MATCHING_SIGNATURE zostają tekstem — Excel i JSON zaokrągliłyby je).
     static func isNumber(_ s: String) -> Bool {
-        s.range(of: #"^-?([0-9]+(\.[0-9]*)?|\.[0-9]+)([eE][+-]?[0-9]+)?$"#, options: .regularExpression) != nil
+        guard s.range(of: #"^-?(0|[1-9][0-9]*)?(\.[0-9]+)?([eE][+-]?[0-9]+)?$"#, options: .regularExpression) != nil,
+              s.contains(where: \.isNumber) else { return false }
+        let mantissa = s.split(whereSeparator: { $0 == "e" || $0 == "E" }).first ?? ""
+        let digits = mantissa.filter(\.isNumber).drop { $0 == "0" }
+        return digits.count <= 15
     }
 
     /// Plik eksportu w formacie.

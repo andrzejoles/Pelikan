@@ -7,7 +7,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + PerfCommands.all + MultiObjectCommands.all + ProfilerCommands.all + DebugP2Commands.all + P1DataCommands.all + WindowListCommands.all + TabGroupCommands.all + GridStage8Commands.all + BrowserCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + ToolDockCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + ProgramUnitCommands.all + CodeContentsCommands.all + EditorViewCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + PerfCommands.all + TableCommands.all + MultiObjectCommands.all + ProfilerCommands.all + DebugP2Commands.all + P1DataCommands.all + WindowListCommands.all + TabGroupCommands.all + GridStage8Commands.all + BrowserCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + ToolDockCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + ProgramUnitCommands.all + CodeContentsCommands.all + EditorViewCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + view + window + help
     }
 
     /// Połączenie aktywnego okna, inaczej główne — dla zmiany hasła.
@@ -20,11 +20,12 @@ public enum BuiltinCommands {
                                     agent: AgentAccess = .none, feature: String) -> Command {
         Command(CommandDescriptor(
             id: CommandID(rawValue: id), title: title, category: .file, submenu: L10n.tr("Nowy"), pd: pd, mac: mac,
+            parameters: [CommandParameter("text", .sql, L10n.tr("Początkowy tekst okna (domyślnie puste)"))],
             agent: agent, effect: .uiState,
             summary: kind == .command ? L10n.tr("Otwiera nową, pustą konsolę SQL*Plus.") : L10n.tr("Otwiera nowe puste okno: \(kind.displayName)."),
             feature: feature
         )) { ctx in
-            let doc = ctx.workspace.newDocument(kind)
+            let doc = ctx.workspace.newDocument(kind, text: ctx.arguments.string("text") ?? "")
             return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
         }
     }

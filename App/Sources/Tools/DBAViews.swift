@@ -144,8 +144,8 @@ struct InstanceViewerView: View {
                 DataTable(s.topSQL) {
                     DataColumn("SQL_ID", sortKey: { t in t.sqlID }) { t in Text(t.sqlID).font(.code) }.width(110)
                     DataColumn(L10n.tr("Wykonania"), sortKey: { t in t.executions }) { t in Text("\(t.executions)").monospacedDigit() }.width(80)
-                    DataColumn(L10n.tr("Czas s"), sortKey: { t in t.elapsedSeconds }) { t in Text(String(format: "%.2f", t.elapsedSeconds)).monospacedDigit() }.width(70)
-                    DataColumn("CPU s", sortKey: { t in t.cpuSeconds }) { t in Text(String(format: "%.2f", t.cpuSeconds)).monospacedDigit() }.width(70)
+                    DataColumn(L10n.tr("Czas s"), sortKey: { t in t.elapsedSeconds }, text: { t in String(format: "%.2f", t.elapsedSeconds) }) { t in Text(String(format: "%.2f", t.elapsedSeconds)).monospacedDigit() }.width(70)
+                    DataColumn("CPU s", sortKey: { t in t.cpuSeconds }, text: { t in String(format: "%.2f", t.cpuSeconds) }) { t in Text(String(format: "%.2f", t.cpuSeconds)).monospacedDigit() }.width(70)
                     DataColumn(L10n.tr("Bufory"), sortKey: { t in t.bufferGets }) { t in Text("\(t.bufferGets)").monospacedDigit() }.width(90)
                     DataColumn("SQL", sortKey: { t in t.text }) { t in Text(t.text).lineLimit(1) }
                 }
@@ -263,17 +263,17 @@ struct TaskMonitorView: View {
                 DataColumn(L10n.tr("Rodzaj"), sortKey: { t in t.kind }) { t in Text(t.kind).foregroundStyle(.secondary) }.width(90)
                 DataColumn(L10n.tr("Stan"), sortKey: { t in status(t) }) { t in Text(status(t)).foregroundStyle(color(t)) }.width(160)
                 // Czas zadania w toku odświeża sama komórka (co sekundę) — bez przebudowy tabeli (przewinięcie, „Anuluj”).
-                DataColumn(L10n.tr("Czas"), sortKey: { t in t.duration }) { t in
+                DataColumn(L10n.tr("Czas"), sortKey: { t in t.duration }, text: { t in String(format: "%.1f s", t.duration) }) { t in
                     if t.isRunning {
                         TimelineView(.periodic(from: .now, by: 1)) { _ in Text(String(format: "%.1f s", t.duration)).monospacedDigit() }
                     } else {
                         Text(String(format: "%.1f s", t.duration)).monospacedDigit()
                     }
                 }.width(70)
-                DataColumn(L10n.tr("Postęp"), sortKey: { t in t.progress ?? -1 }) { t in
+                DataColumn(L10n.tr("Postęp"), sortKey: { t in t.progress ?? -1 }, text: { t in t.progress.map { String(format: "%.0f%%", $0 * 100) } ?? (t.message ?? "") }) { t in
                     if let p = t.progress { ProgressView(value: p) } else { Text(t.message ?? "").font(.uiSecondary).lineLimit(1) }
                 }
-                DataColumn("", sortKey: { t in t.isRunning }) { t in
+                DataColumn("", sortKey: { t in t.isRunning }, text: { _ in "" }) { t in
                     if t.isRunning { Button(L10n.tr("Anuluj")) { t.cancel() } }
                 }.width(70)
             }

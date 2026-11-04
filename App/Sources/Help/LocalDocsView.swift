@@ -102,7 +102,10 @@ struct LocalDocsView: View {
         busy = true
         defer { busy = false }
         do {
-            results = try await LocalDocsClient(endpoint: endpoint).search(q, version: version, count: 10)
+            let found = try await LocalDocsClient.shared(for: endpoint).search(q, version: version, count: 10)
+            // Nowsze zapytanie w trakcie — wynik starego pomijany.
+            guard model.query.trimmingCharacters(in: .whitespaces) == q else { return }
+            results = found
             selection = results.first?.id
             message = results.isEmpty ? L10n.tr("Nic nie znaleziono") : L10n.tr("Fragmentów: \(results.count)")
         } catch {
@@ -115,7 +118,14 @@ struct LocalDocsView: View {
         guard let endpoint = settings.endpoint else { return }
         busy = true
         defer { busy = false }
-        do { detail = try await LocalDocsClient(endpoint: endpoint).section(f.chunk) } catch { message = error.localizedDescription }
+        do {
+            let text = try await LocalDocsClient.shared(for: endpoint).section(f.chunk)
+            // W międzyczasie wybrano inny fragment — sekcja należy do poprzedniego.
+            guard selection == f.id else { return }
+            detail = text
+        } catch {
+            if selection == f.id { message = error.localizedDescription }
+        }
     }
 
     private func openOnline() {

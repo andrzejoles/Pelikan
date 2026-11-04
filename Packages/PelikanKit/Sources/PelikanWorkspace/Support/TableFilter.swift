@@ -82,8 +82,9 @@ public struct ValueFilter: Sendable, Hashable {
         return (d, m.range(at: 4).location == NSNotFound)
     }
 
-    /// Czy wartość komórki (tekst pokazany w tabeli i klucz sortowania kolumny) spełnia warunek.
-    public func matches(text: String, key: SortKey) -> Bool {
+    /// Czy wartość komórki (tekst pokazany w tabeli i klucz sortowania kolumny) spełnia warunek; `like` — wzorzec
+    /// skompilowany wcześniej (`TableFilter.compiled()`), inaczej kompilowany przy wywołaniu.
+    public func matches(text: String, key: SortKey, like compiled: LikePattern? = nil) -> Bool {
         // Pusta: brak klucza albo pusty tekst przy kluczu tekstowym (liczba i data mają wartość także bez tekstu).
         let isEmpty: Bool = {
             switch key {
@@ -96,7 +97,7 @@ public struct ValueFilter: Sendable, Hashable {
         case .isNull: return isEmpty
         case .notNull: return !isEmpty
         case .like(let p, let negated):
-            let hit = !isEmpty && GridFilter.like(text, p)
+            let hit = !isEmpty && (compiled ?? LikePattern(p)).matches(text)
             return negated ? !hit && !isEmpty : hit
         case .compare(let op, let v):
             guard !isEmpty, let r = Self.compare(text: text, key: key, v) else { return false }
@@ -127,15 +128,17 @@ public struct ValueFilter: Sendable, Hashable {
             if case .date(let x) = key { cell = x } else { cell = date(text)?.date }
             guard let cell else { return nil }
             let cal = Calendar(identifier: .gregorian)
-            return dayOnly ? order(cal.startOfDay(for: cell), cal.startOfDay(for: d)) : order(cell, d)
+            if dayOnly { return order(cal.startOfDay(for: cell), cal.startOfDay(for: d)) }
+            // Tekst w tabeli i w filtrze ma dokładność do sekundy — ułamki klucza daty pomijane („tylko ta wartość”).
+            return order(cell.timeIntervalSinceReferenceDate.rounded(.down), d.timeIntervalSinceReferenceDate.rounded(.down))
         case .text(let s):
             return text.compare(s, options: [.caseInsensitive, .numeric])
         }
     }
 }
 
-/// Filtr tabeli (D214): warunki na kolumnach (wszystkie muszą być spełnione) i szybki filtr — wzorzec LIKE
-/// spełniony w dowolnej kolumnie (bez `%` i `_` — fragment tekstu).
+/// Filtr tabeli (D214): warunki na kolumnach (wszystkie muszą być spełnione) i szybki filtr — fragment tekstu w dowolnej
+/// kolumnie (`_` — jeden dowolny znak), a z `%` — wzorzec LIKE całej wartości.
 public struct TableFilter: Sendable, Hashable {
     /// Tekst filtra po identyfikatorze kolumny.
     public var columns: [String: String] = [:]
@@ -148,13 +151,19 @@ public struct TableFilter: Sendable, Hashable {
     /// Warunki gotowe do sprawdzania wierszy.
     public func compiled() -> Compiled {
         let q = quick.trimmingCharacters(in: .whitespaces)
-        let pattern = q.isEmpty ? nil : (q.contains("%") || q.contains("_") ? q : "%\(q)%")
-        return Compiled(columns: columns.compactMapValues(ValueFilter.parse), quick: pattern)
+        // `_` jest częste w nazwach Oracle (DBA_USERS, SQL_ID) — nie wyłącza wyszukiwania fragmentu; tylko `%` tak.
+        let pattern = q.isEmpty ? nil : (q.contains("%") ? q : "%\(q)%")
+        let filters = columns.compactMapValues(ValueFilter.parse)
+        return Compiled(columns: filters.mapValues { f in
+                            if case .like(let p, _) = f.condition { return (f, LikePattern(p)) }
+                            return (f, nil)
+                        },
+                        quick: pattern.map(LikePattern.init))
     }
 
     public struct Compiled: Sendable {
-        public let columns: [String: ValueFilter]
-        public let quick: String?
+        public let columns: [String: (filter: ValueFilter, like: LikePattern?)]
+        public let quick: LikePattern?
         public var isEmpty: Bool { columns.isEmpty && quick == nil }
 
         /// Wiersz spełnia filtr; `cell` podaje tekst i klucz komórki po identyfikatorze kolumny, `all` — identyfikatory
@@ -162,9 +171,9 @@ public struct TableFilter: Sendable, Hashable {
         public func matches(all: [String], cell: (String) -> (text: String, key: SortKey)) -> Bool {
             for (id, f) in columns {
                 let c = cell(id)
-                if !f.matches(text: c.text, key: c.key) { return false }
+                if !f.filter.matches(text: c.text, key: c.key, like: f.like) { return false }
             }
-            if let quick { return all.contains { GridFilter.like(cell($0).text, quick) } }
+            if let quick { return all.contains { quick.matches(cell($0).text) } }
             return true
         }
     }

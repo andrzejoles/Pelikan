@@ -3,6 +3,7 @@ import Foundation
 import FoundationNetworking
 #endif
 import PelikanLog
+import Synchronization
 
 /// Dokumentacja Oracle z lokalnego serwera MCP (D216): wyszukiwanie pełnotekstowe i semantyczne w dokumentacji
 /// zainstalowanej na komputerze użytkownika (narzędzia `search_oracle_docs` i `get_doc_section`), obok dokumentacji
@@ -83,8 +84,21 @@ public enum LocalDocsError: Error, LocalizedError, Equatable {
 }
 
 /// Klient MCP serwera dokumentacji: `initialize` przy pierwszym wywołaniu (z identyfikatorem sesji, jeśli serwer go
-/// nada), potem `tools/call`. Odpowiedź JSON albo strumień SSE (`data:`).
+/// nada), potem `tools/call`. Odpowiedź JSON albo strumień SSE (`data:`). Jeden klient na adres (`shared`) — sesja MCP
+/// jest używana ponownie, a po restarcie serwera (HTTP 404 dla starej sesji) nawiązywana od nowa.
 public actor LocalDocsClient {
+    private static let clients = Mutex<[URL: LocalDocsClient]>([:])
+
+    /// Wspólny klient dla adresu serwera (okno dokumentacji, F1, ustawienia, agent).
+    public static func shared(for endpoint: URL) -> LocalDocsClient {
+        clients.withLock { c in
+            if let existing = c[endpoint] { return existing }
+            let new = LocalDocsClient(endpoint: endpoint)
+            c[endpoint] = new
+            return new
+        }
+    }
+
     public let endpoint: URL
     private var session: String?
     private var initialized = false
@@ -101,7 +115,9 @@ public actor LocalDocsClient {
         var args: [String: Any] = ["query": query, "k": max(1, min(15, count)), "version": version]
         if let book, !book.isEmpty { args["book"] = book }
         let text = try await callTool("search_oracle_docs", args)
-        Log.tools.info("Dokumentacja lokalna: wyszukiwanie, wersja \(version, privacy: .public)")
+        // Wersja bywa z argumentu agenta — jawnie tylko znane wartości (stałe techniczne).
+        let shown = LocalDocsSettings.versions.contains(version) ? version : "?"
+        Log.tools.info("Dokumentacja lokalna: wyszukiwanie, wersja \(shown, privacy: .public)")
         return Self.parseSearch(text)
     }
 
@@ -111,6 +127,17 @@ public actor LocalDocsClient {
     }
 
     private func callTool(_ name: String, _ arguments: [String: Any]) async throws -> String {
+        do {
+            return try await callToolOnce(name, arguments)
+        } catch LocalDocsError.server("HTTP 404") where session != nil {
+            // Sesja wygasła albo serwer uruchomiono ponownie — nowa sesja i jedno ponowienie.
+            session = nil
+            initialized = false
+            return try await callToolOnce(name, arguments)
+        }
+    }
+
+    private func callToolOnce(_ name: String, _ arguments: [String: Any]) async throws -> String {
         if !initialized {
             _ = try await rpc("initialize", ["protocolVersion": "2025-06-18", "capabilities": [String: Any](),
                                              "clientInfo": ["name": "Pelikan", "version": "1"]])

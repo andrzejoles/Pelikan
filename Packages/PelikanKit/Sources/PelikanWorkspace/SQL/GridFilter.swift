@@ -144,11 +144,7 @@ public struct GridFilter: Sendable, Hashable {
         return GridFilter(groups: groups, text: expression)
     }
 
-    nonisolated static func like(_ s: String, _ pattern: String) -> Bool {
-        // (?s): `%` i `_` obejmują też znak nowej linii; \z — dokładnie koniec tekstu (jak LIKE w Oracle).
-        let re = "(?s)^" + NSRegularExpression.escapedPattern(for: pattern).replacingOccurrences(of: "%", with: ".*").replacingOccurrences(of: "_", with: ".") + #"\z"#
-        return s.range(of: re, options: [.regularExpression, .caseInsensitive]) != nil
-    }
+    nonisolated static func like(_ s: String, _ pattern: String) -> Bool { LikePattern(pattern).matches(s) }
 
     /// Czy wiersz spełnia filtr (wartości porównywane jako liczby, gdy obie są liczbami; inaczej jako tekst).
     public func matches(_ row: [OracleValue], columns: [ColumnInfo], format: ValueFormat) -> Bool {
@@ -205,5 +201,22 @@ extension ResultGridModel {
         }
         return firstSeen.map { k in (value: counts[k]!.0 ? "NULL" : k, isNull: counts[k]!.0, count: counts[k]!.1) }
             .sorted { $0.count != $1.count ? $0.count > $1.count : $0.value < $1.value }
+    }
+}
+
+/// Wzorzec LIKE skompilowany raz (filtry tabel sprawdzają nim tysiące komórek): `%` — dowolny ciąg, `_` — jeden znak,
+/// bez wielkości liter; `%` i `_` obejmują też znak nowej linii, dopasowanie do końca tekstu (jak LIKE w Oracle).
+public struct LikePattern: @unchecked Sendable {
+    /// NSRegularExpression jest niezmienne po utworzeniu i bezpieczne między wątkami (dokumentacja Foundation).
+    private let re: NSRegularExpression?
+
+    public init(_ pattern: String) {
+        let body = NSRegularExpression.escapedPattern(for: pattern).replacingOccurrences(of: "%", with: ".*").replacingOccurrences(of: "_", with: ".")
+        re = try? NSRegularExpression(pattern: "^" + body + #"\z"#, options: [.caseInsensitive, .dotMatchesLineSeparators])
+    }
+
+    public func matches(_ s: String) -> Bool {
+        guard let re else { return false }
+        return re.firstMatch(in: s, range: NSRange(s.startIndex..., in: s)) != nil
     }
 }

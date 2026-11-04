@@ -149,7 +149,7 @@ struct TodoItemsView: View {
                 Button(L10n.tr("Zamknij / otwórz")) { if let id = ids.first, let r = rows.first(where: { $0.id == id }) { toggle(r) } } }) }, primaryAction: { ids in
                 if let id = ids.first, let r = rows.first(where: { $0.id == id }) { go(r) }
             }) {
-                DataColumn("", sortKey: { r in r.item.closed }) { r in Image(systemName: r.item.closed ? "checkmark.circle.fill" : "circle").foregroundStyle(r.item.closed ? .green : .secondary) }.width(22)
+                DataColumn("", sortKey: { r in r.item.closed }, text: { r in checkText(r.item.closed) }) { r in Image(systemName: r.item.closed ? "checkmark.circle.fill" : "circle").foregroundStyle(r.item.closed ? .green : .secondary) }.width(22)
                 DataColumn(L10n.tr("Zadanie"), sortKey: { r in r.item.text }) { r in Text(r.item.text).strikethrough(r.item.closed) }
                 DataColumn(L10n.tr("Priorytet"), sortKey: { r in r.item.priority.map(String.init) ?? "" }) { r in Text(r.item.priority.map(String.init) ?? "") }.width(60)
                 DataColumn(L10n.tr("Kategoria"), sortKey: { r in r.item.category ?? "" }) { r in Text(r.item.category ?? "") }.width(90)

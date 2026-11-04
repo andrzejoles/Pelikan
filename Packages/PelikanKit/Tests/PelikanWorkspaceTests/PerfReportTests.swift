@@ -95,18 +95,34 @@ struct PerfReportTests {
         #expect(PerfReportCatalog.report("perf.realtimeADDM")?.formats == [.xml])
     }
 
+    @Test("Wykonanie (D224): raport i źródło spoza licencji oraz raport z nowszej wersji nie wywołują Oracle")
+    func runnerGating() async throws {
+        let s = PerfCaptureSession(major: 11)
+        var q = PerfReportRequest(reportID: "perf.ashAnalytics", format: .active)
+        await #expect(throws: CommandError.self) { _ = try await PerfReportRunner.run(q, availability: nil, license: .all, in: s) }
+        q = PerfReportRequest(reportID: "sql.monitor", sqlID: "ghkw1782vah43", format: .active)
+        let s19 = PerfCaptureSession()
+        await #expect(throws: CommandError.self) { _ = try await PerfReportRunner.run(q, availability: nil, license: .unlicensed, in: s19) }
+        q = PerfReportRequest(reportID: "sql.planCursor", sqlID: "ghkw1782vah43", format: .text)
+        q.source = .awr
+        await #expect(throws: CommandError.self) { _ = try await PerfReportRunner.run(q, availability: nil, license: .unlicensed, in: s19) }
+        #expect(s.all.isEmpty && s19.all.isEmpty)
+        #expect(PerfLicense.unlicensed.blockReason(PerfReportCatalog.report("perf.awr")!, major: 19) != nil)
+        #expect(PerfLicense.all.blockReason(PerfReportCatalog.report("perf.ashAnalytics")!, major: 12)!.contains("19"))
+    }
+
     @Test("Raport AWR dla SQL i ASH: funkcje, źródło ASH, wartości tylko jako bindy")
     func awrAndASH() async throws {
         let s = PerfCaptureSession()
         var q = PerfReportRequest(reportID: "sql.awr", sqlID: "ghkw1782vah43", format: .html)
         q.beginSnap = 99; q.endSnap = 102
-        _ = try? await PerfReportRunner.run(q, availability: availability(), in: s)
+        _ = try? await PerfReportRunner.run(q, availability: availability(), license: .all, in: s)
         let awr = try #require(s.last(containing: "awr_sql_report_html"))
         #expect(awr.sql.contains("con_dbid") && !awr.sql.contains("ghkw1782vah43"))
         #expect(awr.binds.map(\.name) == ["inst", "bs", "es", "id"])
         var a = PerfReportRequest(reportID: "sql.ash", sqlID: "ghkw1782vah43", format: .text)
         a.source = .ashMemory; a.begin = "2026-11-03 08:00:00"; a.end = "2026-11-03 09:00:00"
-        _ = try? await PerfReportRunner.run(a, availability: availability(), in: s)
+        _ = try? await PerfReportRunner.run(a, availability: availability(), license: .all, in: s)
         let ash = try #require(s.last(containing: "ash_report_text"))
         #expect(ash.binds.first { $0.name == "src" }?.value == .text("1"))
     }
@@ -115,13 +131,13 @@ struct PerfReportTests {
     func plans() async throws {
         for (major, fn) in [(19, "awr_location => 'AWR_PDB'"), (11, "display_awr")] {
             let s = PerfCaptureSession(major: major)
-            _ = try? await PerfReportRunner.run(PerfReportRequest(reportID: "sql.planAWR", sqlID: "ghkw1782vah43", format: .text), availability: nil, in: s)
+            _ = try? await PerfReportRunner.run(PerfReportRequest(reportID: "sql.planAWR", sqlID: "ghkw1782vah43", format: .text), availability: nil, license: .all, in: s)
             #expect(s.last(containing: fn) != nil, "\(major)")
         }
         let s11 = PerfCaptureSession(major: 11)
         var q = PerfReportRequest(reportID: "sql.awr", sqlID: "ghkw1782vah43", format: .html)
         q.beginSnap = 1; q.endSnap = 2
-        _ = try? await PerfReportRunner.run(q, availability: nil, in: s11)
+        _ = try? await PerfReportRunner.run(q, availability: nil, license: .all, in: s11)
         #expect(s11.last(containing: "awr_sql_report")?.sql.contains("v$database") == true)
     }
 
@@ -131,11 +147,11 @@ struct PerfReportTests {
         var q = PerfReportRequest(reportID: "sql.monitor", sqlID: "ghkw1782vah43", format: .active)
         q.source = .sqlMonitor
         q.execution = .init(instance: 2, execID: "16777216", start: "2026-11-03 10:15:02", status: "DONE", elapsedSeconds: "3", sid: "12")
-        _ = try? await PerfReportRunner.run(q, availability: nil, in: s)
+        _ = try? await PerfReportRunner.run(q, availability: nil, license: .all, in: s)
         let m = try #require(s.last(containing: "report_sql_monitor("))
         #expect(m.binds.first { $0.name == "ty" }?.value == .text("ACTIVE") && m.binds.first { $0.name == "ex" }?.value == .text("16777216"))
         q.source = .reportRepository; q.storedReportID = "77"
-        _ = try? await PerfReportRunner.run(q, availability: nil, in: s)
+        _ = try? await PerfReportRunner.run(q, availability: nil, license: .all, in: s)
         #expect(s.last(containing: "report_repository_detail")?.binds.first { $0.name == "rid" }?.value == .text("77"))
     }
 
@@ -145,7 +161,7 @@ struct PerfReportTests {
         var q = PerfReportRequest(reportID: "sql.tuning", sqlID: "ghkw1782vah43", format: .text)
         q.source = .awr
         q.bindSet = availability().bindSets[0]
-        _ = try? await PerfReportRunner.run(q, availability: availability(), in: s)
+        _ = try? await PerfReportRunner.run(q, availability: availability(), license: .all, in: s)
         try await Task.sleep(for: .milliseconds(100))
         let create = try #require(s.last(containing: "create_tuning_task"))
         #expect(create.sql.contains("bind_list => l_binds") && create.sql.contains("dba_hist_sqlbind") && create.sql.contains("dba_hist_sqltext"))
@@ -157,16 +173,16 @@ struct PerfReportTests {
         let s2 = PerfCaptureSession()
         var q2 = PerfReportRequest(reportID: "sql.tuning", sqlID: "ghkw1782vah43", format: .text)
         q2.source = .cursorCache
-        _ = try? await PerfReportRunner.run(q2, availability: nil, in: s2)
+        _ = try? await PerfReportRunner.run(q2, availability: nil, license: .all, in: s2)
         #expect(s2.last(containing: "create_tuning_task")?.sql.contains("sql_id => :id, plan_hash_value") == true)
     }
 
     @Test("Raporty budowane w Pelikanie: historia AWR i bindy; wykrycie formatu")
     func local() async throws {
         let s = PerfCaptureSession()
-        let h = try await PerfReportRunner.run(PerfReportRequest(reportID: "sql.history", sqlID: "ghkw1782vah43", format: .html), availability: availability(), in: s)
+        let h = try await PerfReportRunner.run(PerfReportRequest(reportID: "sql.history", sqlID: "ghkw1782vah43", format: .html), availability: availability(), license: .all, in: s)
         #expect(h.format == .html && h.content.contains("<td class=\"n\">102</td>") && h.content.contains("456"))
-        let b = try await PerfReportRunner.run(PerfReportRequest(reportID: "sql.binds", sqlID: "ghkw1782vah43", format: .text), availability: availability(), in: s)
+        let b = try await PerfReportRunner.run(PerfReportRequest(reportID: "sql.binds", sqlID: "ghkw1782vah43", format: .text), availability: availability(), license: .all, in: s)
         #expect(b.format == .text && b.content.contains(":B1") && b.content.contains("42"))
         #expect(PerfReportRunner.detect("<html><body>x", requested: .active) == .active)
         // 19c: przeglądarka raportów ACTIVE z http — zawsze https (D220).

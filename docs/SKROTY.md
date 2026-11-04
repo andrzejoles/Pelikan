@@ -159,6 +159,18 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wstaw fragment kodu | `edit.insertSnippet` |  |  | Brak | SC-SNIP-001 |
 | Zapisz fragment kodu | `snippets.save` |  |  | Brak | SC-SNIP-001 |
 | Usuń fragment kodu | `snippets.remove` |  |  | Brak | SC-SNIP-001 |
+| Tabela › Kopiuj komórkę tabeli | `table.copyCell` |  |  | Brak | PD-UI-015 |
+| Tabela › Kopiuj wiersze tabeli | `table.copyRows` |  |  | Brak | PD-UI-015 |
+| Tabela › Kopiuj kolumnę tabeli | `table.copyColumn` |  |  | Brak | PD-UI-015 |
+| Tabela › Zaznacz kolumnę do kopii | `table.markColumn` |  |  | Brak | PD-UI-015 |
+| Tabela › Odznacz kolumny do kopii | `table.clearMarkedColumns` |  |  | Brak | PD-UI-015 |
+| Tabela › Kopiuj zaznaczone kolumny tabeli | `table.copyMarkedColumns` |  |  | Brak | PD-UI-015 |
+| Tabela › Kopiuj całą tabelę | `table.copyAll` |  |  | Brak | PD-UI-015 |
+| Tabela › Kopiuj nagłówki tabeli | `table.copyHeaders` |  |  | Brak | PD-UI-015 |
+| Tabela › Kopiuj tabele z nagłówkiem | `table.toggleCopyHeader` |  |  | Brak | PD-UI-015 |
+| Tabela › Filtruj tabelę wartością | `table.filterByValue` |  |  | Brak | PD-UI-015 |
+| Tabela › Wyczyść filtr tabeli | `table.clearFilter` |  |  | Brak | PD-UI-015 |
+| Tabela › Eksportuj tabelę… | `table.export` |  |  | Brak | PD-UI-015 |
 | Wynik › Kalendarz… | `grid.chooseDate` |  |  | Brak | PD-GRID-005 |
 | Wynik › Zaznacz blok komórek | `grid.selectBlock` |  |  | Brak | PD-GRID-007 |
 | Wynik › Zaznacz kolumnę | `grid.selectColumn` |  |  | Brak | PD-GRID-007 |

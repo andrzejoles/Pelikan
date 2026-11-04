@@ -292,7 +292,7 @@ struct SessionPlanView: View {
             q.source = .cursorCache
             q.child = child
             q.planFormat = planFormat
-            let out = try await PerfReportRunner.run(q, availability: nil, in: s)
+            let out = try await PerfReportRunner.run(q, availability: nil, license: .unlicensed, in: s)
             file = out.format == .active ? PerfReportPresenter.write(out) : nil
             output = out
         } catch {

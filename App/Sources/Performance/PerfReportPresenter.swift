@@ -83,7 +83,7 @@ struct PerfReportResultView: View {
 }
 
 /// Raport ACTIVE w oknie Pelikana (D219): WebKit z dostępem do sieci (skrypty przeglądarki raportów z serwerów Oracle)
-/// i do pliku raportu. Raport otwarty z pliku działa; zewnętrzna przeglądarka albo serwer HTTP kończy się
+/// i tylko do pliku tego raportu (nie do innych raportów w katalogu — skrypty są zdalne). Raport otwarty z pliku działa; zewnętrzna przeglądarka albo serwer HTTP kończy się
 /// „Błąd podczas pobierania danych” (przeglądarka raportów w ramce nie dostaje danych ze strony).
 struct ActiveReportView: NSViewRepresentable {
     let file: URL
@@ -91,15 +91,15 @@ struct ActiveReportView: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView {
         let web = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
         web.setAccessibilityLabel(L10n.tr("Raport interaktywny"))
-        web.loadFileURL(file, allowingReadAccessTo: file.deletingLastPathComponent())
+        web.loadFileURL(file, allowingReadAccessTo: file)
         return web
     }
 
     func updateNSView(_ web: WKWebView, context: Context) {}
 }
 
-/// Ostatnio zaznaczony w tabeli wiersz z SQL_ID/hash (D217) — dla komendy wołanej ze wstążki, menu albo skrótu, gdy
-/// fokus jest w tej tabeli.
+/// Wiersz z SQL_ID/hash tabeli z fokusem (D217) — dla komendy wołanej ze wstążki, menu albo skrótu. Tabela zapisuje
+/// cel przy zmianie zaznaczenia i przy przejęciu fokusu (tabela bez kolumny SQL zapisuje brak celu).
 @MainActor
 final class SQLTargetRegistry {
     static let shared = SQLTargetRegistry()

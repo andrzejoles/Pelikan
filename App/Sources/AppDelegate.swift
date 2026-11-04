@@ -849,6 +849,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    /// Tabela narzędzia z fokusem (AppKit) albo ostatnio używana tabela okna aktywnego (SwiftUI) — komendy `table.*`.
+    /// Siatka wyników SQL ma własne komendy `grid.*`.
+    func focusedTable() -> (any TableHandle)? {
+        let responder = NSApp.keyWindow?.firstResponder
+        if responder is GridTableView { return nil }
+        if let tv = responder as? NSTableView, let tools = AppKitTableTools.tools(for: tv) { return tools }
+        return TableFocus.shared.current()
+    }
+
     /// Zapytanie z elementu z fokusem: edytor (zaznaczenie, słowo, polecenie), siatka (wiersz, komórka), tabela narzędzia.
     func focusedSQLTarget() -> SQLReportTarget? {
         let responder = NSApp.keyWindow?.firstResponder

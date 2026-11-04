@@ -110,7 +110,16 @@ enum ProfilerCommands {
                                       summary: L10n.tr("Pokazuje raport zapisanego przebiegu profilera w karcie Profiler okna testu."), feature: "PD-OPT-005"),
                     validate: { $0.activeDocument?.kind == .test }) { ctx in
                 let d = try testDocument(ctx.workspace)
-                guard let run = ctx.arguments.int("run") else { throw CommandError.invalidArgument("run", L10n.tr("Podaj numer przebiegu")) }
+                // Ze wstążki bez argumentu — pytanie o numer przebiegu.
+                var run = ctx.arguments.int("run")
+                if run == nil, let ui = ctx.askingUI {
+                    guard let raw = await ui.askText(L10n.tr("Otwórz przebieg profilera"), message: L10n.tr("Numer przebiegu"), defaultValue: "") else {
+                        throw CommandError.cancelledByUser
+                    }
+                    guard let n = Int64(raw.trimmingCharacters(in: .whitespaces)) else { throw CommandError.invalidArgument("run", raw) }
+                    run = n
+                }
+                guard let run else { throw CommandError.missingArgument("run") }
                 let kind = ctx.arguments.string("kind").flatMap(ProfilerKind.init(rawValue:)) ?? d.profiler ?? .lines
                 d.profilerReport = try await Profiler.report(kind, run: Int(run), session: try await ctx.workspace.session(for: d))
                 return .ok

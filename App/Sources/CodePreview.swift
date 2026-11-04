@@ -40,7 +40,7 @@ struct CodePreview: View {
 
     private func openInSQLWindow() {
         guard let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
-        _ = ws.newDocument(.sql, text: shown)
+        ws.perform("file.new.sql", CommandArguments(["text": .string(shown)]))
         ToolWindowController.showMainWindow()
     }
 }

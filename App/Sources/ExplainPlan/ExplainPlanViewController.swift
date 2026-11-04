@@ -149,8 +149,11 @@ struct PlanPanel: View {
             } else {
                 // Rozwinięcie gałęzi w modelu okna (`planExpanded`) — komendy Rozwiń/Zwiń wszystko (PD-OPT-001).
                 let lines = filteredLines
-                let contents = planContents(lines ?? document.plan?.lines ?? [])
-                TableToolsBar(contents: contents, state: $tools, total: document.plan?.lines.count ?? 0)
+                // Wiersze w kolejności widoku (po filtrze i sortowaniu) — te same indeksy w menu i w kopii.
+                let shownLines = (lines ?? document.plan?.lines ?? []).sorted(by: sortPlan)
+                let view = self
+                let handle = SwiftUITableHandle({ view.planContents(view.filteredLines ?? view.document.plan?.lines ?? []) }, state: $tools)
+                TableToolsBar(handle: handle, state: $tools, total: document.plan?.lines.count ?? 0)
                 ScrollViewReader { proxy in
                     Table(of: PlanLine.self, selection: $selection, sortOrder: $sortPlan) {
                         TableColumnForEach(planColumns) { c in
@@ -168,18 +171,19 @@ struct PlanPanel: View {
                         }
                     }
                     .contextMenu(forSelectionType: PlanLine.ID.self) { ids in
-                        let rows = (lines ?? document.plan?.lines ?? []).indices.filter { ids.contains((lines ?? document.plan?.lines ?? [])[$0].id) }
-                        TableCopyMenu(contents: contents, state: $tools, rows: rows)
+                        let rows = shownLines.indices.filter { ids.contains(shownLines[$0].id) }
+                        TableCopyMenu(handle: handle, rows: rows)
                         if let r = rows.first {
                             Divider()
-                            TableValueFilterMenu(contents: contents, state: $tools, row: r)
+                            TableValueFilterMenu(handle: handle, row: r)
                         }
                         Divider()
-                        Menu(L10n.tr("Eksportuj")) { TableExportMenu(contents: contents) }
+                        Menu(L10n.tr("Eksportuj")) { TableExportMenu(handle: handle) }
                     }
                     // Krok zaznaczony nawigacją albo w Diagramie/Flame graph: rozwinięte gałęzie nad nim i przewinięcie do niego.
                     .onChange(of: selection, initial: true) { _, id in
                         guard let id else { return }
+                        TableFocus.shared.note(handle)
                         document.revealPlanLine(id)
                         DispatchQueue.main.async { proxy.scrollTo(id) }
                     }

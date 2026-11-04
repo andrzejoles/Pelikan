@@ -36,7 +36,21 @@ func BlockMenuItem(_ title: String, state: Bool = false, enabled: Bool = true, _
 /// menu kontekstowe (komórka, wiersze, kolumna, zaznaczone kolumny, cała tabela, filtr wartością, eksport)
 /// i pasek nad tabelą (szybki filtr, filtr kolumn, liczba wierszy, Kopiuj, Eksportuj).
 @MainActor
-final class AppKitTableTools: NSObject, NSMenuDelegate {
+final class AppKitTableTools: NSObject, NSMenuDelegate, TableHandle {
+    /// Narzędzia tabel AppKit po tabeli — cel komend `table.*`, gdy tabela ma fokus.
+    private static let byTable = NSMapTable<NSTableView, AppKitTableTools>.weakToWeakObjects()
+
+    static func tools(for table: NSTableView) -> AppKitTableTools? { byTable.object(forKey: table) }
+
+    var filter: TableFilter {
+        get { model.state.filter }
+        set { model.state.filter = newValue }
+    }
+    var markedColumns: [String] {
+        get { model.state.markedColumns }
+        set { model.state.markedColumns = newValue }
+    }
+
     let table: NSTableView
     let model = TableToolsModel()
     private let title: () -> String
@@ -61,6 +75,7 @@ final class AppKitTableTools: NSObject, NSMenuDelegate {
         }
         menu.delegate = self
         table.menu = menu
+        Self.byTable.setObject(self, forKey: table)
     }
 
     var columns: [(id: String, title: String)] {
@@ -101,11 +116,17 @@ final class AppKitTableTools: NSObject, NSMenuDelegate {
         for item in baseItems { menu.addItem(item) }
         if !baseItems.isEmpty { menu.addItem(.separator()) }
         let c = contents
-        let header = TableActions.copyHeader
+        let header = TableExport.copyHeader
         let row = table.clickedRow
         let colIndex = table.clickedColumn
         let column = colIndex >= 0 && colIndex < table.tableColumns.count ? table.tableColumns[colIndex] : nil
         let rows: [Int] = row < 0 ? c.selectedRows : (table.selectedRowIndexes.contains(row) ? c.selectedRows : [row])
+        func item(_ title: String, state: Bool = false, enabled: Bool = true, _ id: String, _ args: [String: JSONValue] = [:]) -> NSMenuItem {
+            BlockMenuItem(title, state: state, enabled: enabled) { [weak self] in
+                guard let self else { return }
+                TableActions.perform(self, id, args)
+            }
+        }
         // Raporty SQL z wiersza z kolumną SQL_ID/hash (D217).
         if let r = rows.first, let t = SQLIdentity.target(columns: c.columns.map(\.title), values: c.columns.map { c.cell(r, $0.id) }) {
             let target = SQLReportTarget(target: t, origin: L10n.tr("wiersz tabeli"))
@@ -113,51 +134,38 @@ final class AppKitTableTools: NSObject, NSMenuDelegate {
             menu.addItem(.separator())
         }
         if row >= 0, let column {
-            let id = column.identifier.rawValue
-            menu.addItem(BlockMenuItem(L10n.tr("Kopiuj komórkę")) { TableActions.put(c.cell(row, id)) })
+            menu.addItem(item(L10n.tr("Kopiuj komórkę"), "table.copyCell", ["row": .int(Int64(row + 1)), "column": .string(column.identifier.rawValue)]))
         }
         if !rows.isEmpty {
-            menu.addItem(BlockMenuItem(rows.count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(rows.count))")) {
-                TableActions.copy(c.data(rows: rows), header: header)
-            })
+            menu.addItem(item(rows.count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(rows.count))"),
+                              "table.copyRows", ["rows": TableActions.rowsArgument(rows)]))
         }
         if let column {
             let id = column.identifier.rawValue
-            menu.addItem(BlockMenuItem(L10n.tr("Kopiuj kolumnę „\(column.title)”")) {
-                TableActions.copy(c.data(rows: c.all, columns: [id]), header: header)
-            })
-            let marked = model.state.markedColumns.contains(id)
-            menu.addItem(BlockMenuItem(L10n.tr("Zaznacz kolumnę „\(column.title)” do kopii"), state: marked) { [model] in
-                model.state.markedColumns.removeAll { $0 == id }
-                if !marked { model.state.markedColumns.append(id) }
-            })
+            menu.addItem(item(L10n.tr("Kopiuj kolumnę „\(column.title)”"), "table.copyColumn", ["column": .string(id)]))
+            menu.addItem(item(L10n.tr("Zaznacz kolumnę „\(column.title)” do kopii"), state: markedColumns.contains(id), "table.markColumn", ["column": .string(id)]))
         }
-        let marked = model.state.markedColumns
-        menu.addItem(BlockMenuItem(L10n.tr("Kopiuj zaznaczone kolumny (\(marked.count))"), enabled: !marked.isEmpty) {
-            TableActions.copy(c.data(rows: c.all, columns: marked), header: header)
-        })
-        menu.addItem(BlockMenuItem(L10n.tr("Kopiuj całą tabelę")) { TableActions.copy(c.data(rows: c.all), header: header) })
-        menu.addItem(BlockMenuItem(L10n.tr("Kopiuj nagłówki")) { TableActions.put(c.columns.map(\.title).joined(separator: "\t")) })
-        menu.addItem(BlockMenuItem(L10n.tr("Kopiuj z nagłówkiem"), state: header) { TableActions.copyHeader = !header })
+        let marked = markedColumns
+        menu.addItem(item(L10n.tr("Kopiuj zaznaczone kolumny (\(marked.count))"), enabled: !marked.isEmpty, "table.copyMarkedColumns"))
+        menu.addItem(item(L10n.tr("Kopiuj całą tabelę"), "table.copyAll"))
+        menu.addItem(item(L10n.tr("Kopiuj nagłówki"), "table.copyHeaders"))
+        menu.addItem(item(L10n.tr("Kopiuj z nagłówkiem"), state: header, "table.toggleCopyHeader"))
         if row >= 0, let column {
             let id = column.identifier.rawValue
-            let value = c.cell(row, id)
             menu.addItem(.separator())
-            menu.addItem(BlockMenuItem(L10n.tr("Filtruj „\(column.title)”: tylko ta wartość")) { [model] in
-                model.state.filter.columns[id] = TableValueFilterMenu.condition(value, exclude: false)
-            })
-            menu.addItem(BlockMenuItem(L10n.tr("Filtruj „\(column.title)”: bez tej wartości")) { [model] in
-                model.state.filter.columns[id] = TableValueFilterMenu.condition(value, exclude: true)
-            })
+            menu.addItem(item(L10n.tr("Filtruj „\(column.title)”: tylko ta wartość"), "table.filterByValue",
+                              ["column": .string(id), "row": .int(Int64(row + 1)), "exclude": .bool(false)]))
+            menu.addItem(item(L10n.tr("Filtruj „\(column.title)”: bez tej wartości"), "table.filterByValue",
+                              ["column": .string(id), "row": .int(Int64(row + 1)), "exclude": .bool(true)]))
         }
         if model.state.filter.isActive {
-            menu.addItem(BlockMenuItem(L10n.tr("Wyczyść filtr")) { [model] in model.state.filter = TableFilter() })
+            menu.addItem(item(L10n.tr("Wyczyść filtr"), "table.clearFilter"))
         }
         menu.addItem(.separator())
         let export = NSMenuItem(title: L10n.tr("Eksportuj"), action: nil, keyEquivalent: "")
         let sub = NSMenu()
         for f in TableExport.formats {
-            sub.addItem(BlockMenuItem(f.displayName + "…") { TableActions.export(f, c.data(rows: c.all)) })
+            sub.addItem(item(f.displayName + "…", "table.export", ["format": .string(f.rawValue)]))
         }
         export.submenu = sub
         menu.addItem(export)
@@ -171,7 +179,7 @@ struct AppKitTableBar: View {
     var body: some View {
         let model = tools.model
         _ = model.revision
-        return TableToolsBar(contents: tools.contents, state: Binding(get: { model.state }, set: { model.state = $0 }), total: tools.total())
+        return TableToolsBar(handle: tools, state: Binding(get: { model.state }, set: { model.state = $0 }), total: tools.total())
             .padding(.horizontal, 4)
     }
 }

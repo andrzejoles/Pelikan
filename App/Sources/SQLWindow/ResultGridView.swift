@@ -636,30 +636,25 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     static let sqlReportsTag = 9217
     private let sqlMenuUpdater = GridSQLMenuUpdater()
 
-    /// SQL_ID albo hash z wiersza i kolumny widoku (komórka z SQL_ID ma pierwszeństwo, potem kolumny wiersza).
-    func sqlTarget(row: Int, column: Int?) -> SQLReportTarget? {
-        guard row >= 0, row < grid.rowCount else { return nil }
-        let names = grid.columns.map(\.name)
-        let values = grid.columns.indices.map { grid.value(row: row, column: $0).format(grid.format) }
-        if let c = column, c < values.count, let t = SQLIdentity.parse(values[c]) {
-            if case .sqlID = t { return SQLReportTarget(target: t, origin: "") }
-            if SQLIdentity.columnKind(names[c]) == .hash { return SQLReportTarget(target: t, origin: "") }
-        }
-        return SQLIdentity.target(columns: names, values: values).map { SQLReportTarget(target: $0, origin: "") }
+    /// Wiersz i kolumna menu kontekstowego: spod kursora, inaczej zaznaczenie.
+    private var menuCell: (row: Int?, column: Int?) {
+        (table.clickedRow >= 0 ? table.clickedRow : tab.selectedRows?.first,
+         dataColumn(atTableColumn: table.clickedColumn) ?? tab.currentColumn)
     }
 
     /// Aktualizacja pozycji raportów w menu: wykryty SQL_ID albo informacja o braku.
     func updateSQLMenuItem(_ menu: NSMenu) {
         guard let item = menu.item(withTag: Self.sqlReportsTag) else { return }
-        let target = sqlTarget(row: table.clickedRow >= 0 ? table.clickedRow : (tab.selectedRows?.first ?? -1),
-                               column: dataColumn(atTableColumn: table.clickedColumn))
+        let cell = menuCell
+        let target = SQLTargetFinder.fromGrid(tab, row: cell.row, column: cell.column)
         item.title = target.map { L10n.tr("Raporty dla \($0.label)…") } ?? L10n.tr("Raporty dla SQL_ID — brak SQL_ID i HASH_VALUE w wierszu")
         item.isEnabled = target != nil
     }
 
     @objc private func sqlReports(_ sender: NSMenuItem) {
+        let cell = menuCell
         adoptClickedCell()
-        guard let t = SQLTargetFinder.fromGrid(tab) else {
+        guard let t = SQLTargetFinder.fromGrid(tab, row: cell.row, column: cell.column) else {
             workspace.ui?.showError(L10n.tr("Wiersz nie zawiera SQL_ID ani HASH_VALUE (kolumna SQL_ID, PREV_SQL_ID, HASH_VALUE…, albo komórka z wartością SQL_ID)"))
             return
         }

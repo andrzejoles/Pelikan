@@ -187,7 +187,7 @@ enum AgentCommands {
                 guard let endpoint = s.endpoint else { throw LocalDocsError.badAddress(s.url) }
                 guard let q = ctx.arguments.string("query"), !q.trimmingCharacters(in: .whitespaces).isEmpty else { throw CommandError.missingArgument("query") }
                 let count = ctx.arguments.int("count").map { Int($0) } ?? 6
-                let found = try await LocalDocsClient(endpoint: endpoint).search(q, version: ctx.arguments.string("version") ?? s.version, count: count)
+                let found = try await LocalDocsClient.shared(for: endpoint).search(q, version: ctx.arguments.string("version") ?? s.version, count: count)
                 let value = JSONValue.array(found.map { f in
                     .object(["title": .string(f.title), "section": .string(f.section), "link": .string(f.link?.absoluteString ?? ""),
                              "chunk": .int(Int64(f.chunk)), "text": .string(f.text)])

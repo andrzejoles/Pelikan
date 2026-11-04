@@ -52,7 +52,7 @@ struct PerfReportDBTests {
             q.timeLimit = 15
             edit(&q)
             do {
-                let out = try await PerfReportRunner.run(q, availability: a, in: s)
+                let out = try await PerfReportRunner.run(q, availability: a, license: .all, in: s)
                 if out.content.count < 20 { failures.append("\(id): krótki wynik") }
             } catch { failures.append("\(id) [\(f.rawValue)]: \(error.localizedDescription)") }
         }

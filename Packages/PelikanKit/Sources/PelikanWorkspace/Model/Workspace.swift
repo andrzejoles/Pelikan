@@ -118,6 +118,8 @@ public protocol UIServices: AnyObject {
     func showPerfReport(_ reportID: String?, connection: UUID)
     /// Zapytanie z elementu z fokusem (wiersz albo komórka tabeli, edytor) — przed oknem aktywnym.
     func focusedSQLTarget() -> SQLReportTarget?
+    /// Tabela okna narzędzia z fokusem (ostatnio używana w oknie aktywnym) — dla komend `table.*` (D214).
+    func focusedTable() -> (any TableHandle)?
     /// Okno druku dla dokumentu HTML (PD-SQLW-016).
     func printHTML(title: String, html: String)
     /// Widoki dualności (SD-DV-001), moduły MLE (SD-MLE-001), podgląd przestrzenny (SD-DATA-001).
@@ -262,6 +264,7 @@ extension UIServices {
     public func showSQLReports(_ target: SQLReportTarget) {}
     public func showPerfReport(_ reportID: String?, connection: UUID) {}
     public func focusedSQLTarget() -> SQLReportTarget? { nil }
+    public func focusedTable() -> (any TableHandle)? { nil }
     public func printHTML(title: String, html: String) {}
     public func showDualityViews() {}
     public func showMLEModules() {}

@@ -35,11 +35,20 @@ struct DataColumn<Row>: Identifiable {
         self.init(title: title, id: id, text: text ?? { key($0).text }, key: key, content: nil)
     }
 
-    /// Kolumna z własnym widokiem komórki, sortowana po kluczu; tekst — podany albo z klucza.
-    init<K: SortKeyConvertible, V: View>(_ title: String, id: String? = nil, sortKey: @escaping (Row) -> K, text: ((Row) -> String)? = nil,
-                                         @ViewBuilder content: @escaping (Row) -> V) {
+    /// Kolumna z własnym widokiem komórki, sortowana po kluczu tekstowym albo całkowitym; tekst (kopia, eksport,
+    /// filtr) — podany albo z klucza (widok pokazuje wtedy ten sam tekst).
+    init<K: TextualSortKey, V: View>(_ title: String, id: String? = nil, sortKey: @escaping (Row) -> K, text: ((Row) -> String)? = nil,
+                                     @ViewBuilder content: @escaping (Row) -> V) {
         let key: (Row) -> SortKey = { sortKey($0).sortKey }
         self.init(title: title, id: id, text: text ?? { key($0).text }, key: key, content: { AnyView(content($0)) })
+    }
+
+    /// Kolumna z własnym widokiem i kluczem liczbowym, datą albo wartością logiczną: tekst wymagany — taki jak w widoku
+    /// (surowa wartość klucza różni się od pokazanej, np. 12.345678 wobec „12.35”).
+    init<K: SortKeyConvertible, V: View>(_ title: String, id: String? = nil, sortKey: @escaping (Row) -> K, text: @escaping (Row) -> String,
+                                         @ViewBuilder content: @escaping (Row) -> V) {
+        let key: (Row) -> SortKey = { sortKey($0).sortKey }
+        self.init(title: title, id: id, text: text, key: key, content: { AnyView(content($0)) })
     }
 
     /// Kolumna z własnym widokiem komórki i tekstem (sortowanie po tekście).
@@ -57,6 +66,19 @@ struct DataColumn<Row>: Identifiable {
         return c
     }
 }
+
+/// Klucze, których tekst jest tym, co pokazuje komórka (tekst, liczby całkowite).
+protocol TextualSortKey: SortKeyConvertible {}
+extension String: TextualSortKey {}
+extension Substring: TextualSortKey {}
+extension Int: TextualSortKey {}
+extension Int64: TextualSortKey {}
+extension Int32: TextualSortKey {}
+extension UInt64: TextualSortKey {}
+extension Binding: TextualSortKey where Value: TextualSortKey {}
+
+/// Tekst pola wyboru w kopii, eksporcie i filtrze tabeli.
+func checkText(_ on: Bool) -> String { on ? L10n.tr("tak") : L10n.tr("nie") }
 
 @resultBuilder
 enum DataColumnBuilder<Row> {
@@ -91,172 +113,156 @@ struct TableToolsState {
     var editingFilters = false
 }
 
-/// Wiersze i kolumny tabeli do kopii i eksportu (tekst komórek w kolejności widoku).
+/// Tabela SwiftUI jako cel komend `table.*` (D214): zawartość widoku i stan narzędzi (filtr, kolumny do kopii).
 @MainActor
-struct TableContents {
-    let title: String
-    let columns: [(id: String, title: String)]
-    /// Wiersze widoku (po filtrze i sortowaniu); `cell(wiersz, kolumna)` — tekst komórki.
-    let rowCount: Int
-    let cell: (Int, String) -> String
-    /// Indeksy wierszy widoku zaznaczonych w tabeli.
-    let selectedRows: [Int]
+final class SwiftUITableHandle: TableHandle {
+    private let provider: () -> TableContents
+    private let state: Binding<TableToolsState>
 
-    func data(rows: [Int], columns ids: [String]? = nil) -> ExportData {
-        let cols = ids.map { set in columns.filter { set.contains($0.id) } } ?? columns
-        return TableExport.data(title: title, columns: cols.map(\.title), rows: rows.map { r in cols.map { cell(r, $0.id) } })
+    init(_ provider: @escaping () -> TableContents, state: Binding<TableToolsState>) {
+        self.provider = provider
+        self.state = state
     }
 
-    var all: [Int] { Array(0..<rowCount) }
+    var contents: TableContents { provider() }
+    var filter: TableFilter {
+        get { state.wrappedValue.filter }
+        set { state.wrappedValue.filter = newValue }
+    }
+    var markedColumns: [String] {
+        get { state.wrappedValue.markedColumns }
+        set { state.wrappedValue.markedColumns = newValue }
+    }
 }
 
-/// Czynności kopiowania i eksportu (D214) — wspólne dla tabel SwiftUI i AppKit.
+/// Ostatnio używana tabela okna (fokus, zaznaczenie, menu) — cel komend `table.*` z palety, skrótu i makra.
+@MainActor
+final class TableFocus {
+    static let shared = TableFocus()
+    private var handle: (any TableHandle)?
+    private var window: Int?
+
+    func note(_ h: any TableHandle) {
+        handle = h
+        window = NSApp.keyWindow?.windowNumber
+    }
+
+    /// Tabela okna aktywnego (nil — ostatnio używana tabela jest w innym oknie).
+    func current() -> (any TableHandle)? {
+        guard let handle, window == NSApp.keyWindow?.windowNumber else { return nil }
+        return handle
+    }
+}
+
+/// Czynności tabel (D214): menu i pasek wywołują komendy `table.*` na tej tabeli.
 @MainActor
 enum TableActions {
-    static func copy(_ data: ExportData, header: Bool) {
-        let c = TableExport.clipboard(data, header: header)
-        put(c.text, html: c.html)
+    static func perform(_ handle: any TableHandle, _ id: String, _ args: [String: JSONValue] = [:]) {
+        TableFocus.shared.note(handle)
+        (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(args))
     }
 
-    static func put(_ text: String, html: String? = nil) {
-        if let ui = (NSApp.delegate as? AppDelegate) {
-            ui.copyToClipboard(text, html: html)
-        } else {
-            let pb = NSPasteboard.general
-            pb.clearContents()
-            pb.setString(text, forType: .string)
-            if let html { pb.setString(html, forType: .html) }
-        }
-    }
-
-    static func export(_ format: ExportFormat, _ data: ExportData) {
-        if AppDelegate.scriptSkipsDialog("tableExport") { return }
-        let panel = NSSavePanel()
-        let name = data.title.isEmpty ? L10n.tr("Tabela") : data.title
-        panel.nameFieldStringValue = name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-") + "." + format.fileExtension
-        panel.allowedContentTypes = [UTType(filenameExtension: format.fileExtension) ?? .data]
-        panel.canCreateDirectories = true
-        let bytes = TableExport.file(format, data)
-        let write: (NSApplication.ModalResponse) -> Void = { response in
-            guard response == .OK, let url = panel.url else { return }
-            do {
-                try bytes.write(to: url, options: .atomic)
-                Log.tools.info("Eksport tabeli: \(format.rawValue, privacy: .public), wierszy \(data.rows.count, privacy: .public)")
-            } catch {
-                NSAlert(error: error).runModal()
-            }
-        }
-        if let w = NSApp.keyWindow { panel.beginSheetModal(for: w, completionHandler: write) } else { write(panel.runModal()) }
-    }
+    /// Numery wierszy widoku od 1 dla argumentu `rows`.
+    static func rowsArgument(_ rows: [Int]) -> JSONValue { .string(rows.map { String($0 + 1) }.joined(separator: ",")) }
 
     /// Tytuł do nazwy pliku i arkusza: podany albo tytuł okna.
     static func title(_ given: String?) -> String {
         if let given, !given.isEmpty { return given }
         return NSApp.keyWindow?.title ?? L10n.tr("Tabela")
     }
-
-    static var copyHeader: Bool {
-        get { UserDefaults.standard.object(forKey: "tableCopyHeader") as? Bool ?? true }
-        set { UserDefaults.standard.set(newValue, forKey: "tableCopyHeader") }
-    }
 }
 
 /// Menu „Kopiuj” tabeli: komórka, wiersze, kolumny (pojedyncza i zaznaczone), cała tabela.
 struct TableCopyMenu: View {
-    let contents: TableContents
-    @Binding var state: TableToolsState
+    let handle: any TableHandle
     /// Wiersze, do których odnosi się menu (zaznaczone albo kliknięty wiersz).
     let rows: [Int]
 
     var body: some View {
-        let header = TableActions.copyHeader
+        let contents = handle.contents
+        let marked = handle.markedColumns
         if let r = rows.first {
             Menu(L10n.tr("Kopiuj komórkę")) {
                 ForEach(contents.columns, id: \.id) { c in
                     let v = contents.cell(r, c.id)
-                    Button("\(c.title): \(v.count > 40 ? String(v.prefix(40)) + "…" : v)") { TableActions.put(v) }
+                    Button("\(c.title): \(v.count > 40 ? String(v.prefix(40)) + "…" : v)") {
+                        TableActions.perform(handle, "table.copyCell", ["row": .int(Int64(r + 1)), "column": .string(c.id)])
+                    }
                 }
             }
             Button(rows.count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(rows.count))")) {
-                TableActions.copy(contents.data(rows: rows), header: header)
+                TableActions.perform(handle, "table.copyRows", ["rows": TableActions.rowsArgument(rows)])
             }
         }
         Menu(L10n.tr("Kopiuj kolumnę")) {
             ForEach(contents.columns, id: \.id) { c in
-                Button(c.title) { TableActions.copy(contents.data(rows: contents.all, columns: [c.id]), header: header) }
+                Button(c.title) { TableActions.perform(handle, "table.copyColumn", ["column": .string(c.id)]) }
             }
         }
         Menu(L10n.tr("Zaznacz kolumny do kopii")) {
             ForEach(contents.columns, id: \.id) { c in
-                Toggle(c.title, isOn: Binding(get: { state.markedColumns.contains(c.id) }, set: { on in
-                    state.markedColumns.removeAll { $0 == c.id }
-                    if on { state.markedColumns.append(c.id) }
+                Toggle(c.title, isOn: Binding(get: { marked.contains(c.id) }, set: { _ in
+                    TableActions.perform(handle, "table.markColumn", ["column": .string(c.id)])
                 }))
             }
-            if !state.markedColumns.isEmpty {
+            if !marked.isEmpty {
                 Divider()
-                Button(L10n.tr("Odznacz wszystkie")) { state.markedColumns = [] }
+                Button(L10n.tr("Odznacz wszystkie")) { TableActions.perform(handle, "table.clearMarkedColumns") }
             }
         }
-        Button(L10n.tr("Kopiuj zaznaczone kolumny (\(state.markedColumns.count))")) {
-            TableActions.copy(contents.data(rows: contents.all, columns: state.markedColumns), header: header)
-        }
-        .disabled(state.markedColumns.isEmpty)
-        if rows.count > 0, !state.markedColumns.isEmpty {
+        Button(L10n.tr("Kopiuj zaznaczone kolumny (\(marked.count))")) { TableActions.perform(handle, "table.copyMarkedColumns") }
+            .disabled(marked.isEmpty)
+        if rows.count > 0, !marked.isEmpty {
             Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) {
-                TableActions.copy(contents.data(rows: rows, columns: state.markedColumns), header: header)
+                TableActions.perform(handle, "table.copyMarkedColumns", ["rows": TableActions.rowsArgument(rows)])
             }
         }
-        Button(L10n.tr("Kopiuj całą tabelę")) { TableActions.copy(contents.data(rows: contents.all), header: header) }
-        Button(L10n.tr("Kopiuj nagłówki")) { TableActions.put(contents.columns.map(\.title).joined(separator: "\t")) }
+        Button(L10n.tr("Kopiuj całą tabelę")) { TableActions.perform(handle, "table.copyAll") }
+        Button(L10n.tr("Kopiuj nagłówki")) { TableActions.perform(handle, "table.copyHeaders") }
         Divider()
-        Toggle(L10n.tr("Kopiuj z nagłówkiem"), isOn: Binding(get: { TableActions.copyHeader }, set: { TableActions.copyHeader = $0 }))
+        Toggle(L10n.tr("Kopiuj z nagłówkiem"), isOn: Binding(get: { TableExport.copyHeader }, set: { _ in TableActions.perform(handle, "table.toggleCopyHeader") }))
     }
 }
 
 /// Menu „Eksportuj” tabeli (cała tabela po filtrze, w kolejności widoku).
 struct TableExportMenu: View {
-    let contents: TableContents
+    let handle: any TableHandle
 
     var body: some View {
         ForEach(TableExport.formats, id: \.self) { f in
-            Button(f.displayName + "…") { TableActions.export(f, contents.data(rows: contents.all)) }
+            Button(f.displayName + "…") { TableActions.perform(handle, "table.export", ["format": .string(f.rawValue)]) }
         }
     }
 }
 
 /// Filtr po wartości komórki z menu wiersza.
 struct TableValueFilterMenu: View {
-    let contents: TableContents
-    @Binding var state: TableToolsState
+    let handle: any TableHandle
     let row: Int
 
     var body: some View {
+        let columns = handle.contents.columns
         Menu(L10n.tr("Filtruj: tylko ta wartość")) {
-            ForEach(contents.columns, id: \.id) { c in
-                Button(c.title) { state.filter.columns[c.id] = Self.condition(contents.cell(row, c.id), exclude: false) }
-            }
+            ForEach(columns, id: \.id) { c in Button(c.title) { filter(c.id, exclude: false) } }
         }
         Menu(L10n.tr("Filtruj: bez tej wartości")) {
-            ForEach(contents.columns, id: \.id) { c in
-                Button(c.title) { state.filter.columns[c.id] = Self.condition(contents.cell(row, c.id), exclude: true) }
-            }
+            ForEach(columns, id: \.id) { c in Button(c.title) { filter(c.id, exclude: true) } }
         }
     }
 
-    static func condition(_ value: String, exclude: Bool) -> String {
-        if value.isEmpty { return exclude ? "is not null" : "is null" }
-        let v = value.contains("'") || value.hasPrefix(" ") || value.hasSuffix(" ") ? "'" + value.replacingOccurrences(of: "'", with: "''") + "'" : value
-        return (exclude ? "<> " : "= ") + v
+    private func filter(_ column: String, exclude: Bool) {
+        TableActions.perform(handle, "table.filterByValue", ["column": .string(column), "row": .int(Int64(row + 1)), "exclude": .bool(exclude)])
     }
 }
 
 /// Pasek narzędzi nad tabelą: szybki filtr, filtr kolumn, liczba wierszy, Kopiuj, Eksportuj. W wąskim panelu — same
 /// ikony (pełne nazwy w podpowiedziach).
 struct TableToolsBar: View {
-    let contents: TableContents
+    let handle: any TableHandle
     @Binding var state: TableToolsState
     let total: Int
+
+    private var contents: TableContents { handle.contents }
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
@@ -288,10 +294,10 @@ struct TableToolsBar: View {
             }
             .help(L10n.tr("Filtr wartości kolumn: wzorzec LIKE, porównanie liczb i dat"))
             .popover(isPresented: $state.editingFilters, arrowEdge: .bottom) {
-                TableFilterEditor(columns: contents.columns, state: $state)
+                TableFilterEditor(handle: handle, columns: contents.columns, state: $state)
             }
             if state.filter.isActive {
-                Button { state.filter = TableFilter() } label: {
+                Button { TableActions.perform(handle, "table.clearFilter") } label: {
                     if compact { Image(systemName: "xmark.circle") } else { Text(L10n.tr("Wyczyść filtr")) }
                 }
                 .help(L10n.tr("Wyczyść filtr"))
@@ -303,7 +309,7 @@ struct TableToolsBar: View {
                 .lineLimit(1)
                 .fixedSize()
             Menu {
-                TableCopyMenu(contents: contents, state: $state, rows: contents.selectedRows)
+                TableCopyMenu(handle: handle, rows: contents.selectedRows)
             } label: {
                 if compact { Image(systemName: "doc.on.doc") } else { Text(L10n.tr("Kopiuj")) }
             }
@@ -311,7 +317,7 @@ struct TableToolsBar: View {
             .fixedSize()
             .help(L10n.tr("Kopiuj"))
             Menu {
-                TableExportMenu(contents: contents)
+                TableExportMenu(handle: handle)
             } label: {
                 if compact { Image(systemName: "square.and.arrow.up") } else { Text(L10n.tr("Eksportuj")) }
             }
@@ -324,6 +330,7 @@ struct TableToolsBar: View {
 
 /// Okno filtra kolumn: wzorzec albo warunek dla każdej kolumny.
 struct TableFilterEditor: View {
+    let handle: any TableHandle
     let columns: [(id: String, title: String)]
     @Binding var state: TableToolsState
 
@@ -351,7 +358,7 @@ struct TableFilterEditor: View {
             }
             .frame(maxHeight: 360)
             HStack {
-                Button(L10n.tr("Wyczyść filtr")) { state.filter = TableFilter() }
+                Button(L10n.tr("Wyczyść filtr")) { TableActions.perform(handle, "table.clearFilter") }
                 Spacer()
                 Button(L10n.tr("Zamknij")) { state.editingFilters = false }.keyboardShortcut(.defaultAction)
             }
@@ -372,6 +379,8 @@ struct DataTable<Row: Identifiable>: View {
     let onViewRowsChange: (([Row.ID]) -> Void)?
     @State private var sort: [ColumnSort<Row>] = []
     @State private var tools = TableToolsState()
+    /// Fokus w tej tabeli — cel raportów SQL podaje tylko tabela z fokusem (inna tabela okna go zastępuje albo czyści).
+    @FocusState private var focused: Bool
     /// Połączenie tabeli narzędzia — raporty SQL z wiersza z kolumną SQL_ID/hash (D217).
     @Environment(\.reportConnection) private var reportConnection
 
@@ -408,6 +417,18 @@ struct DataTable<Row: Identifiable>: View {
             .map { SQLReportTarget(target: $0, origin: L10n.tr("zaznaczony wiersz tabeli"), connection: reportConnection) }
     }
 
+    /// Cel raportów z zaznaczonego wiersza (nil — tabela bez kolumny SQL albo bez zaznaczenia).
+    private func focusedTarget(_ shown: [Row], _ ids: Set<Row.ID>) -> SQLReportTarget? {
+        guard hasSQLColumn else { return nil }
+        return shown.first { ids.contains($0.id) }.flatMap(sqlTarget)
+    }
+
+    /// Uchwyt tabeli dla komend `table.*` (zawartość widoku liczona przy wywołaniu).
+    private func handle() -> SwiftUITableHandle {
+        let table = self
+        return SwiftUITableHandle({ table.contents(table.viewRows()) }, state: $tools)
+    }
+
     private func contents(_ shown: [Row]) -> TableContents {
         let byID = Dictionary(columns.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         let selected = selection.ids
@@ -419,9 +440,11 @@ struct DataTable<Row: Identifiable>: View {
     var body: some View {
         let shown = viewRows()
         let contents = contents(shown)
+        let handle = handle()
         VStack(spacing: 3) {
-            TableToolsBar(contents: contents, state: $tools, total: rows.count)
+            TableToolsBar(handle: handle, state: $tools, total: rows.count)
             table(shown)
+                .focused($focused)
                 .contextMenu(forSelectionType: Row.ID.self) { ids in
                     let idx = shown.indices.filter { ids.contains(shown[$0].id) }
                     if hasSQLColumn, let r = idx.first, let t = sqlTarget(shown[r]) {
@@ -432,29 +455,36 @@ struct DataTable<Row: Identifiable>: View {
                         rowMenu(ids)
                         Divider()
                     }
-                    TableCopyMenu(contents: contents, state: $tools, rows: idx)
+                    TableCopyMenu(handle: handle, rows: idx)
                     if let r = idx.first {
                         Divider()
-                        TableValueFilterMenu(contents: contents, state: $tools, row: r)
+                        TableValueFilterMenu(handle: handle, row: r)
                     }
-                    if tools.filter.isActive { Button(L10n.tr("Wyczyść filtr")) { tools.filter = TableFilter() } }
+                    if tools.filter.isActive { Button(L10n.tr("Wyczyść filtr")) { TableActions.perform(handle, "table.clearFilter") } }
                     Divider()
-                    Menu(L10n.tr("Eksportuj")) { TableExportMenu(contents: contents) }
+                    Menu(L10n.tr("Eksportuj")) { TableExportMenu(handle: handle) }
                 } primaryAction: { ids in
                     primaryAction?(ids)
                 }
                 .onCopyCommand {
                     let rows = contents.selectedRows
                     guard !rows.isEmpty else { return [] }
-                    let c = TableExport.clipboard(contents.data(rows: rows), header: TableActions.copyHeader)
+                    let c = TableExport.clipboard(contents.data(rows: rows), header: TableExport.copyHeader)
                     return [NSItemProvider(object: c.text as NSString)]
                 }
         }
         .onChange(of: shown.map(\.id), initial: true) { _, ids in onViewRowsChange?(ids) }
-        // Zaznaczony wiersz z SQL_ID — dla komendy „Raporty dla SQL_ID” ze wstążki i skrótu (D217).
+        // Zaznaczony wiersz z SQL_ID tabeli z fokusem — dla komendy „Raporty dla SQL_ID” ze wstążki i skrótu (D217).
+        // Fokus w tabeli bez kolumny SQL czyści cel; powrót do tabeli przywraca jej wiersz (także bez zmiany zaznaczenia).
         .onChange(of: selection.ids) { _, ids in
-            guard hasSQLColumn else { return }
-            SQLTargetRegistry.shared.note(shown.first { ids.contains($0.id) }.flatMap(sqlTarget))
+            guard focused else { return }
+            SQLTargetRegistry.shared.note(focusedTarget(shown, ids))
+            TableFocus.shared.note(handle)
+        }
+        .onChange(of: focused) { _, now in
+            guard now else { return }
+            SQLTargetRegistry.shared.note(focusedTarget(shown, selection.ids))
+            TableFocus.shared.note(handle)
         }
         // Inny zestaw kolumn (np. inne zapytanie w tej samej tabeli) — filtr i sortowanie dotyczyły starych kolumn.
         .onChange(of: columns.map { $0.id + "\u{1}" + $0.title }) {

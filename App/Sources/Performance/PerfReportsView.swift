@@ -20,6 +20,8 @@ final class PerfReportsModel {
     /// Pakiety raportów z EXECUTE dla użytkownika (D223) — raporty bazy bez uprawnienia są blokowane z poleceniem GRANT.
     var packages: Set<String>?
     var sessionUser = ""
+    /// Wersja serwera z sesji (wymagania `minMajor` także w oknie raportów bazy); nil — przed połączeniem.
+    var serverMajor: Int?
     var loading = false
     var running = false
     var message = ""
@@ -67,6 +69,7 @@ final class PerfReportsModel {
             snapshots = (try? await ManagementPacks.snapshots(in: s)) ?? []
             packages = await SQLProbe.accessiblePackages(in: s)
             sessionUser = s.info.sessionUser
+            serverMajor = s.info.server.major > 0 ? s.info.server.major : nil
             if case .sql(var t) = mode {
                 var sqlID: String
                 switch t.target {
@@ -113,11 +116,11 @@ final class PerfReportsModel {
     /// Raporty z informacją o dostępności (licencja, wersja, dane zapytania).
     var statuses: [(report: PerfReport, available: Bool, reason: String?)] {
         if let a = availability, mode != .global { return a.reports() }
-        let lic = license ?? .all
-        let major = availability?.major ?? 99
+        // Licencja nieznana (przed wczytaniem, anulowana deklaracja) — tylko raporty bez pakietów.
+        let lic = license ?? .unlicensed
+        let major = availability?.major ?? serverMajor ?? 99
         return reports.map { r in
-            if !lic.allows(r.need) { return (r, false, L10n.tr("Wymaga licencji \(r.need.displayName)")) }
-            if major < r.minMajor { return (r, false, L10n.tr("Wymaga Oracle \(r.minMajor) lub nowszej")) }
+            if let reason = lic.blockReason(r, major: major) { return (r, false, reason) }
             if let reason = PerfReportRunner.missingPrivilege(r.id, accessible: packages, user: sessionUser) { return (r, false, reason) }
             if r.parameters.contains(.snapshots), snapshots.count < 2 { return (r, false, L10n.tr("W AWR są mniej niż dwie migawki")) }
             return (r, true, nil)
@@ -136,7 +139,7 @@ final class PerfReportsModel {
             if s.contains(.ashBoth) { s.removeAll { $0 == .ashBoth }; s.insert(.ashBoth, at: 0) }
             return s
         }
-        let lic = license ?? .all
+        let lic = license ?? .unlicensed
         return r.sources.filter { lic.allows($0.need) }
     }
 
@@ -157,7 +160,7 @@ final class PerfReportsModel {
             if q.source == .awr, a.sources.contains(.cursorCache) == false { q.planHash = nil }
         } else {
             if snapshots.count >= 2 { q.beginSnap = snapshots[snapshots.count - 2].id; q.endSnap = snapshots.last!.id }
-            if snapshots.count >= 4, let b = q.beginSnap, let e = q.endSnap {
+            if r.parameters.contains(.snapshots2), snapshots.count >= 4, let b = q.beginSnap, let e = q.endSnap {
                 let len = e - b
                 q.endSnap2 = b; q.beginSnap2 = b - max(1, len)
                 // Porównanie: wcześniejszy okres jako bazowy.
@@ -178,7 +181,7 @@ final class PerfReportsModel {
         message = L10n.tr("Generowanie: \(r.title)…")
         do {
             let s = try await session()
-            let out = try await PerfReportRunner.run(request, availability: availability, in: s)
+            let out = try await PerfReportRunner.run(request, availability: availability, license: license ?? .unlicensed, in: s)
             Log.tools.info("Raport wydajności: \(r.id, privacy: .public), format \(out.format.rawValue, privacy: .public)")
             message = L10n.tr("Gotowe: \(out.title)")
             PerfReportPresenter.present(out)

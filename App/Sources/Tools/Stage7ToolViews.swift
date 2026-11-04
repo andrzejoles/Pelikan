@@ -266,8 +266,8 @@ struct CartView: View {
             DataTable(Binding.rows($cart.items), selection: .multi($selection)) {
                 DataColumn(L10n.tr("Obiekt"), sortKey: { i in "\(i.owner).\(i.name)" }) { $i in Text("\(i.owner).\(i.name)") }
                 DataColumn(L10n.tr("Typ"), sortKey: { i in i.type }) { $i in Text(i.type) }.width(110)
-                DataColumn("DDL", sortKey: { i in i.includeDDL }) { $i in Toggle("", isOn: $i.includeDDL).labelsHidden() }.width(40)
-                DataColumn(L10n.tr("Dane"), sortKey: { i in i.includeData }) { $i in Toggle("", isOn: $i.includeData).labelsHidden().disabled(i.type != "TABLE") }.width(44)
+                DataColumn("DDL", sortKey: { i in i.includeDDL }, text: { i in checkText(i.wrappedValue.includeDDL) }) { $i in Toggle("", isOn: $i.includeDDL).labelsHidden() }.width(40)
+                DataColumn(L10n.tr("Dane"), sortKey: { i in i.includeData }, text: { i in checkText(i.wrappedValue.includeData) }) { $i in Toggle("", isOn: $i.includeData).labelsHidden().disabled(i.type != "TABLE") }.width(44)
                 DataColumn("WHERE", sortKey: { i in i.whereClause }) { $i in TextField("", text: $i.whereClause).disabled(!i.includeData) }
             }
             HStack {

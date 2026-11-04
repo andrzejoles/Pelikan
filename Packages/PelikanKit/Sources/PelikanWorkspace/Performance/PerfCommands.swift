@@ -31,10 +31,15 @@ public enum SQLTargetFinder {
     /// Siatka wyniku: komórka bieżąca, gdy zawiera SQL_ID/hash (w kolumnie SQL_ID/hash albo wygląda jak SQL_ID), inaczej
     /// kolumna SQL_ID (potem hash) zaznaczonego wiersza.
     public static func fromGrid(_ tab: ResultTab) -> SQLReportTarget? {
-        guard let grid = tab.grid, let row = tab.selectedRows?.first, row < grid.rowCount else { return nil }
+        fromGrid(tab, row: tab.selectedRows?.first, column: tab.currentColumn)
+    }
+
+    /// Cel z podanego wiersza i kolumny siatki (menu kontekstowe: wiersz spod kursora, nie pierwszy zaznaczony).
+    public static func fromGrid(_ tab: ResultTab, row: Int?, column: Int?) -> SQLReportTarget? {
+        guard let grid = tab.grid, let row, row >= 0, row < grid.rowCount else { return nil }
         let names = grid.columns.map(\.name)
         let values = grid.columns.indices.map { grid.value(row: row, column: $0).format(grid.format) }
-        if let c = tab.currentColumn, c < values.count, let t = SQLIdentity.parse(values[c]) {
+        if let c = column, c >= 0, c < values.count, let t = SQLIdentity.parse(values[c]) {
             let kind = SQLIdentity.columnKind(names[c])
             if case .sqlID = t { return SQLReportTarget(target: t, origin: L10n.tr("komórka \(names[c]) wiersza \(row + 1)")) }
             if kind == .hash { return SQLReportTarget(target: t, origin: L10n.tr("komórka \(names[c]) wiersza \(row + 1)")) }

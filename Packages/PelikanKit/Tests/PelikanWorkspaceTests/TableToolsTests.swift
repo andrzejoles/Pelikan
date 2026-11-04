@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanSQL
 @testable import PelikanWorkspace
 import Testing
 
@@ -115,5 +116,105 @@ struct TableToolsTests {
         var c = DateComponents(year: 2026, month: 10, day: 3)
         c.calendar = Calendar(identifier: .gregorian)
         #expect(SortKey.date(c.date!).text == "2026-10-03")
+    }
+}
+
+/// Tabela testowa dla komend `table.*`.
+@MainActor
+final class FakeTableHandle: TableHandle {
+    var filter = TableFilter()
+    var markedColumns: [String] = []
+    let rows: [[String]]
+    var selected: [Int]
+    init(rows: [[String]], selected: [Int]) { self.rows = rows; self.selected = selected }
+    var contents: TableContents {
+        TableContents(title: "T", columns: [("a", "A"), ("b", "B")], rowCount: rows.count,
+                      cell: { [rows] r, id in rows[r][id == "a" ? 0 : 1] }, selectedRows: selected)
+    }
+}
+
+@MainActor
+final class TableUI: UIServices {
+    var clipboard: String?
+    var saved: (name: String, ext: String, data: Data)?
+    var table: (any TableHandle)?
+    func focusedTable() -> (any TableHandle)? { table }
+    func clipboardText() -> String? { nil }
+    func copyToClipboard(_ text: String, html: String?) { clipboard = text }
+    func showError(_ message: String) {}
+    func showCommandPalette() {}
+    func ask(_ title: String, message: String, buttons: [String]) async -> Int? { 0 }
+    func showConnectionEditor(connectionID: UUID?) {}
+    func showLogon() {}
+    func askVariables(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]? { [:] }
+    func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool { saved = (suggestedName, fileExtension, data); return true }
+    func showLargeDataEditor(_ model: LargeDataModel) {}
+    func chooseFilesToOpen() async -> [URL] { [] }
+    func askText(_ title: String, message: String, defaultValue: String) async -> String? { nil }
+    func showFindReplace() {}
+    func showObjectInfo(title: String, columns: [String], rows: [[String]]) {}
+    func showClientMissingHelp(_ message: String) {}
+    func showRecallStatement() {}
+    func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? { nil }
+}
+
+@Suite("Narzędzia tabel: poprawki z przeglądu kodu (D224)")
+struct TableToolsReviewTests {
+    @Test("Data z ułamkami sekund: „tylko ta wartość” z tekstu do sekundy trafia")
+    func dateSeconds() throws {
+        var c = DateComponents(year: 2026, month: 11, day: 4, hour: 12, minute: 0, second: 1)
+        c.calendar = Calendar(identifier: .gregorian)
+        let d = try #require(c.date).addingTimeInterval(0.734)
+        let f = try #require(ValueFilter.parse("= 2026-11-04 12:00:01"))
+        #expect(f.matches(text: "2026-11-04 12:00:01", key: .date(d)))
+        #expect(!ValueFilter.parse("<> 2026-11-04 12:00:01")!.matches(text: "2026-11-04 12:00:01", key: .date(d)))
+    }
+
+    @Test("Szybki filtr: podkreślenie nie wyłącza szukania fragmentu, % — wzorzec całej wartości")
+    func quickUnderscore() {
+        func hit(_ q: String, _ text: String) -> Bool { TableFilter(quick: q).compiled().matches(all: ["x"]) { _ in (text, text.sortKey) } }
+        #expect(hit("dba_us", "DBA_USERS"))
+        #expect(hit("sql_id", "PREV_SQL_ID"))
+        #expect(!hit("abc%", "xabc"))
+        #expect(hit("abc%", "ABCD"))
+    }
+
+    @Test("Eksport: zera wiodące i długie identyfikatory zostają tekstem")
+    func exportNumbers() {
+        #expect(TableExport.isNumber("12.35") && TableExport.isNumber("-0.5") && TableExport.isNumber("0") && TableExport.isNumber(".5"))
+        #expect(!TableExport.isNumber("0012") && !TableExport.isNumber("123456789012345678") && !TableExport.isNumber("-") && !TableExport.isNumber(""))
+        #expect(TableExport.isNumber("123456789012345"))
+        let d = TableExport.data(title: "", columns: ["kod"], rows: [["0012"], ["0100"]])
+        #expect(d.columns[0].type == .varchar2)
+    }
+
+    @Test("Komendy table.*: komórka, wiersze, kolumny zaznaczone, filtr wartością, eksport; bez tabeli — niedostępne")
+    @MainActor func commands() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let ui = TableUI()
+        ws.ui = ui
+        #expect(ws.registry.command("table.copyAll")?.validate?(ws) == false)
+        let t = FakeTableHandle(rows: [["1", "x"], ["2", "y"], ["3", "z"]], selected: [1])
+        ui.table = t
+        func run(_ id: String, _ args: [String: JSONValue] = [:]) async throws {
+            _ = try await ws.registry.command(CommandID(rawValue: id))!.run(CommandContext(workspace: ws, invoker: .user, arguments: CommandArguments(args)))
+        }
+        try await run("table.copyCell", ["column": "B"])
+        #expect(ui.clipboard == "y")
+        let header = TableExport.copyHeader
+        defer { TableExport.copyHeader = header }
+        TableExport.copyHeader = false
+        try await run("table.copyRows", ["rows": "1,3"])
+        #expect(ui.clipboard == "1\tx\n3\tz")
+        try await run("table.markColumn", ["column": "b"])
+        try await run("table.copyMarkedColumns")
+        #expect(ui.clipboard == "x\ny\nz")
+        try await run("table.filterByValue", ["column": "a", "exclude": true])
+        #expect(t.filter.columns["a"] == "<> 2")
+        try await run("table.clearFilter")
+        #expect(!t.filter.isActive)
+        try await run("table.export", ["format": "csv"])
+        #expect(ui.saved?.ext == "csv")
+        await #expect(throws: CommandError.self) { try await run("table.copyRows", ["rows": "9"]) }
     }
 }

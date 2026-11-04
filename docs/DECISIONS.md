@@ -3617,3 +3617,26 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
 - **Raport sesji i Real-Time ADDM tylko w XML:** aktywny raport sesji przeglądarka Oracle odrzuca („Not a sfx file”),
   także z SID aktywnej sesji; aktywna wersja Real-Time ADDM przez DBMS_REPORT.FORMAT_REPORT kończy się stroną 404 na
   serwerze Oracle, a formaty HTML i tekst — ORA-13972 (tak jak raport planu, D221).
+
+### D224 · 2026-11-04 — Code review zmian D214–D223: poprawki
+
+**Zlecenie właściciela:** dogłębny code review zmian od #133 do #142, poprawki i kolejne przeglądy aż do braku uwag.
+
+- **Licencja i wersja bazy sprawdzane przy wykonaniu raportu** (`PerfReportRunner.run(…, license:)`, `PerfLicense.blockReason`):
+  raport albo źródło spoza licencji i raport z nowszej wersji Oracle nie wywołują bazy. Licencja nieznana (przed
+  wczytaniem, anulowana deklaracja) — tylko raporty bez pakietów. Okno raportów bazy bierze wersję z sesji. Domyślny
+  drugi okres tylko w raportach porównania.
+- **Cel raportów SQL:** menu siatki z wiersza spod kursora (jedna logika `SQLTargetFinder.fromGrid(_:row:column:)`);
+  w tabelach narzędzi cel podaje tabela z fokusem (zmiana fokusu go zastępuje albo czyści).
+- **Filtr tabel:** daty porównywane do sekundy (jak tekst w tabeli), podkreślenie w szybkim filtrze nie wyłącza szukania
+  fragmentu (tylko `%` — wzorzec całej wartości), wzorce LIKE kompilowane raz na filtr (`LikePattern`).
+- **Tekst kolumn = to, co widać:** kolumna z własnym widokiem i kluczem liczbowym, datą albo wartością logiczną musi
+  podać tekst (kopia, eksport, filtr); pola wyboru — „tak”/„nie”.
+- **Eksport:** zera wiodące i liczby dłuższe niż 15 cyfr zostają tekstem (bez straty w xlsx i JSON).
+- **Czynności tabel jako komendy** (`table.*`: komórka, wiersze, kolumna, kolumny zaznaczone, cała tabela, nagłówki,
+  nagłówek przy kopii, filtr wartością, wyczyszczenie filtra, eksport) — menu i pasek tabel je wywołują; „Otwórz
+  w oknie SQL” przez `file.new.sql` z parametrem `text`.
+- **Dokumentacja lokalna:** jeden klient MCP na adres (sesja używana ponownie, po 404 — nowa), wynik nieaktualnego
+  wyszukiwania albo sekcji pomijany; wersja z argumentu agenta w dzienniku tylko jako znana wartość.
+- **Raport ACTIVE:** WebKit z dostępem tylko do pliku tego raportu (skrypty raportu są zdalne).
+- Przy okazji: „Otwórz przebieg profilera” bez numeru pyta o niego (wykryte testem wstążki).

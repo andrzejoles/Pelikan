@@ -93,9 +93,16 @@ public enum PerfReportRunner {
         return .text
     }
 
-    public static func run(_ q: PerfReportRequest, availability: SQLAvailability?, in s: any DatabaseSession) async throws -> PerfReportOutput {
+    /// Wykonanie raportu. Licencja i wersja bazy sprawdzane tutaj (nie tylko w oknie): raport albo źródło z pakietu
+    /// spoza licencji nie wywołuje Oracle.
+    public static func run(_ q: PerfReportRequest, availability: SQLAvailability?, license: PerfLicense,
+                           in s: any DatabaseSession) async throws -> PerfReportOutput {
         guard let report = PerfReportCatalog.report(q.reportID) else { throw CommandError.invalidArgument("report", q.reportID) }
         let major = s.info.server.major > 0 ? s.info.server.major : 19
+        if let reason = license.blockReason(report, major: major) { throw CommandError.notAvailable(reason) }
+        if let src = q.source, !license.allows(src.need) {
+            throw CommandError.notAvailable(L10n.tr("Źródło „\(src.displayName)” wymaga licencji \(src.need.displayName)"))
+        }
         let dbid = SQLProbe.dbid(major)
         for p in packages(q.reportID) { try await ManagementPacks.requireExecute(p, in: s, report: report.title) }
         let id = q.sqlID ?? ""
