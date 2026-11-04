@@ -2,6 +2,12 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.20.3 — plan bez formatu Active
+
+- **Plan wykonania** (karta sesji i raport „Plan z pamięci kursorów”) jako HTML, tekst albo XML. Format Active usunięty —
+  Oracle nie udostępnia już przeglądarki aktywnego raportu planu (strona 404 z serwera Oracle). Interaktywny widok
+  wykonania dają raporty SQL Monitor i SQL Detail (przycisk „Raporty dla SQL_ID…”).
+
 ## 1.20.2 — raporty ACTIVE z baz Oracle 19c, plan i kursory w oknie sesji
 
 - **Raporty ACTIVE z baz 19c wyświetlają się poprawnie** (w oknie Pelikana, po zapisie i w przeglądarce). Oracle 19c
