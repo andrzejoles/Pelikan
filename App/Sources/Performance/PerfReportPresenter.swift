@@ -2,9 +2,10 @@ import AppKit
 import PelikanWorkspace
 import SwiftUI
 import UniformTypeIdentifiers
+import WebKit
 
-/// Pokazanie wyniku raportu (D217): ACTIVE — plik w katalogu tymczasowym otwierany w przeglądarce (skrypty raportu
-/// pobierane z serwerów Oracle), HTML — podgląd w oknie, tekst i XML — tekst czcionką kodu; zawsze zapis do pliku.
+/// Pokazanie wyniku raportu (D217, D219): ACTIVE — w oknie Pelikana z pliku w katalogu tymczasowym (skrypty raportu
+/// z serwerów Oracle), HTML — podgląd w oknie, tekst i XML — tekst czcionką kodu; zawsze zapis do pliku.
 @MainActor
 enum PerfReportPresenter {
     static var directory: URL {
@@ -25,7 +26,6 @@ enum PerfReportPresenter {
 
     static func present(_ out: PerfReportOutput) {
         let file = write(out)
-        if out.format == .active, let file, !AppDelegate.scriptSkipsDialog("perfReportBrowser") { NSWorkspace.shared.open(file) }
         ToolWindowController.show(key: "perfResult-" + UUID().uuidString, title: out.title, size: NSSize(width: 980, height: 700)) {
             PerfReportResultView(output: out, file: file)
         }
@@ -52,13 +52,11 @@ struct PerfReportResultView: View {
             }
             switch output.format {
             case .active:
-                VStack(alignment: .leading, spacing: 6) {
-                    Label(L10n.tr("Raport interaktywny (ACTIVE) otwarto w przeglądarce — pobiera skrypty z serwerów Oracle, więc wymaga internetu przy oglądaniu."),
-                          systemImage: "safari").fixedSize(horizontal: false, vertical: true)
-                    if let file { Text(file.path).font(.code).foregroundStyle(.secondary).textSelection(.enabled) }
-                    Spacer()
+                if let file {
+                    ActiveReportView(file: file)
+                } else {
+                    Text(L10n.tr("Nie udało się zapisać raportu do pliku tymczasowego")).foregroundStyle(.orange)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             case .html:
                 HTMLPreview(html: output.content)
             case .text, .xml:
@@ -82,6 +80,22 @@ struct PerfReportResultView: View {
         }
         if let w = NSApp.keyWindow { p.beginSheetModal(for: w, completionHandler: write) } else { write(p.runModal()) }
     }
+}
+
+/// Raport ACTIVE w oknie Pelikana (D219): WebKit z dostępem do sieci (skrypty przeglądarki raportów z serwerów Oracle)
+/// i do pliku raportu. Raport otwarty z pliku działa; zewnętrzna przeglądarka albo serwer HTTP kończy się
+/// „Błąd podczas pobierania danych” (przeglądarka raportów w ramce nie dostaje danych ze strony).
+struct ActiveReportView: NSViewRepresentable {
+    let file: URL
+
+    func makeNSView(context: Context) -> WKWebView {
+        let web = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
+        web.setAccessibilityLabel(L10n.tr("Raport interaktywny"))
+        web.loadFileURL(file, allowingReadAccessTo: file.deletingLastPathComponent())
+        return web
+    }
+
+    func updateNSView(_ web: WKWebView, context: Context) {}
 }
 
 /// Ostatnio zaznaczony w tabeli wiersz z SQL_ID/hash (D217) — dla komendy wołanej ze wstążki, menu albo skrótu, gdy

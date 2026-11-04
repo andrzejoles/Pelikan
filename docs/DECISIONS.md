@@ -3536,3 +3536,17 @@ kod SQL, PL/SQL (tak jak Narzędzia › Sesje) [mają mieć] opcje kolorowania s
   (zapamiętane). Użyty w: Sesje (bieżące SQL i inne szczegóły tekstowe), raporty SQL (tekst zapytania), Autotrace
   (polecenie), Query Builder (SQL), proste edytory obiektów (podgląd SQL), refaktoryzacja (DDL zmiany), zgoda agenta
   (polecenia — bez otwierania w oknie SQL).
+
+### D219 · 2026-11-04 — Raport ACTIVE w oknie Pelikana
+
+**Zgłoszenie właściciela:** raporty ACTIVE otwierane w przeglądarce (Safari, Chrome na macOS) pokazują „Błąd podczas
+pobierania danych. Nie można pobrać danych…”; na Windowsie te same raporty działały.
+
+Raport ACTIVE to strona, która ładuje z serwera Oracle przeglądarkę raportów (ramka) i przekazuje jej dane raportu
+osadzone w pliku. Sprawdzone tym samym raportem z bazy testowej: WebKit z pliku (`loadFileURL`) — raport działa
+w całości; ten sam plik przez lokalny serwer HTTP — „Błąd podczas pobierania danych”; Chrome na macOS z pliku — bez
+danych. To nie ustawienie macOS, tylko zasady przeglądarek dla plików lokalnych (w Safari obejście: Programowanie ›
+Wyłącz ograniczenia plików lokalnych).
+
+- Raport ACTIVE wyświetla się w oknie Pelikana: WebKit z dostępem do sieci i do pliku raportu w katalogu tymczasowym;
+  bez automatycznego otwierania przeglądarki. „Otwórz w przeglądarce” i „Zapisz…” zostają.

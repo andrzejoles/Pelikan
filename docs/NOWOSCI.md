@@ -2,6 +2,12 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.20.1 — raporty ACTIVE w oknie Pelikana
+
+- **Raporty ACTIVE (SQL Monitor, SQL Detail, Performance Hub…) wyświetlają się w oknie Pelikana.** W przeglądarkach na
+  macOS (Safari, Chrome) raport otwarty z pliku kończył się komunikatem „Błąd podczas pobierania danych”; w oknie
+  Pelikana działa w całości. „Otwórz w przeglądarce” i „Zapisz…” zostają.
+
 ## 1.20.0 — raporty wydajności dla SQL_ID z zaznaczenia, menu i karta Wydajność, podgląd kodu z kolorowaniem
 
 Zmiany z wersji 1.19.0–1.20.0 (bez osobnych wydań), wydane razem.

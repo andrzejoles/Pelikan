@@ -46677,6 +46677,34 @@
         }
       }
     },
+    "Nie udało się zapisać raportu do pliku tymczasowego" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not save the report to a temporary file"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bericht konnte nicht in eine temporäre Datei gespeichert werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo guardar el informe en un archivo temporal"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося зберегти звіт у тимчасовий файл"
+          }
+        }
+      }
+    },
     "Nie wiadomo, czy ten commit jest na UAT (brak commita remote)" : {
       "localizations" : {
         "en" : {
@@ -78401,30 +78429,30 @@
         }
       }
     },
-    "Raport ACTIVE pobiera przy oglądaniu skrypty z serwerów Oracle — otwiera się w przeglądarce; bez internetu wybierz HTML, tekst albo XML." : {
+    "Raport ACTIVE pobiera przy oglądaniu skrypty z serwerów Oracle — wyświetla się w oknie Pelikana (wymaga internetu); bez internetu wybierz HTML, tekst albo XML." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An ACTIVE report downloads scripts from Oracle servers when viewed — it opens in the browser; without internet choose HTML, text or XML."
+            "value" : "An ACTIVE report downloads scripts from Oracle servers when viewed — it is shown in a Pelikan window (needs internet); without internet choose HTML, text or XML."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ein ACTIVE-Bericht lädt beim Ansehen Skripte von Oracle-Servern — er wird im Browser geöffnet; ohne Internet HTML, Text oder XML wählen."
+            "value" : "Ein ACTIVE-Bericht lädt beim Ansehen Skripte von Oracle-Servern — er wird in einem Pelikan-Fenster angezeigt (braucht Internet); ohne Internet HTML, Text oder XML wählen."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Un informe ACTIVE descarga scripts de servidores de Oracle al verlo — se abre en el navegador; sin internet elige HTML, texto o XML."
+            "value" : "Un informe ACTIVE descarga scripts de servidores de Oracle al verlo — se muestra en una ventana de Pelikan (necesita internet); sin internet elige HTML, texto o XML."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Звіт ACTIVE під час перегляду завантажує скрипти із серверів Oracle — відкривається в браузері; без інтернету виберіть HTML, текст або XML."
+            "value" : "Звіт ACTIVE під час перегляду завантажує скрипти із серверів Oracle — показується у вікні Pelikan (потрібен інтернет); без інтернету виберіть HTML, текст або XML."
           }
         }
       }
@@ -78793,30 +78821,30 @@
         }
       }
     },
-    "Raport interaktywny (ACTIVE) otwarto w przeglądarce — pobiera skrypty z serwerów Oracle, więc wymaga internetu przy oglądaniu." : {
+    "Raport interaktywny" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The interactive (ACTIVE) report was opened in the browser — it downloads scripts from Oracle servers, so it needs internet when viewed."
+            "value" : "Interactive report"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der interaktive Bericht (ACTIVE) wurde im Browser geöffnet — er lädt Skripte von Oracle-Servern und braucht beim Ansehen Internet."
+            "value" : "Interaktiver Bericht"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El informe interactivo (ACTIVE) se abrió en el navegador — descarga scripts de servidores de Oracle, por lo que necesita internet al verlo."
+            "value" : "Informe interactivo"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Інтерактивний звіт (ACTIVE) відкрито в браузері — він завантажує скрипти із серверів Oracle, тож потребує інтернету під час перегляду."
+            "value" : "Інтерактивний звіт"
           }
         }
       }

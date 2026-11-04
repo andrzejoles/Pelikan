@@ -133,7 +133,7 @@ public struct PerfReport: Sendable, Identifiable, Hashable {
 
 /// Katalog raportów Oracle Diagnostics/Tuning Pack i bliskich (materiał właściciela, D217).
 public enum PerfReportCatalog {
-    static let activeNote = L10n.tr("Raport ACTIVE pobiera przy oglądaniu skrypty z serwerów Oracle — otwiera się w przeglądarce; bez internetu wybierz HTML, tekst albo XML.")
+    static let activeNote = L10n.tr("Raport ACTIVE pobiera przy oglądaniu skrypty z serwerów Oracle — wyświetla się w oknie Pelikana (wymaga internetu); bez internetu wybierz HTML, tekst albo XML.")
 
     public static let sqlReports: [PerfReport] = [
         PerfReport("sql.planCursor", L10n.tr("Plan z pamięci kursorów"), group: L10n.tr("Plan"), scope: .sql, need: .none, formats: [.text],
