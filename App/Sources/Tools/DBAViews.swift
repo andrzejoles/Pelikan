@@ -152,8 +152,8 @@ struct InstanceViewerView: View {
                 DataTable(s.topSQL) {
                     DataColumn("SQL_ID", sortKey: { t in t.sqlID }) { t in Text(t.sqlID).font(.code) }.width(min: 90, ideal: 110)
                     DataColumn(L10n.tr("Wykonania"), sortKey: { t in t.executions }) { t in Text("\(t.executions)").monospacedDigit() }.width(min: 50, ideal: 80)
-                    DataColumn(L10n.tr("Czas s"), sortKey: { t in t.elapsedSeconds }, text: { t in String(format: "%.2f", t.elapsedSeconds) }) { t in Text(String(format: "%.2f", t.elapsedSeconds)).monospacedDigit() }.width(min: 45, ideal: 70)
-                    DataColumn("CPU s", sortKey: { t in t.cpuSeconds }, text: { t in String(format: "%.2f", t.cpuSeconds) }) { t in Text(String(format: "%.2f", t.cpuSeconds)).monospacedDigit() }.width(min: 45, ideal: 70)
+                    DataColumn.digits(L10n.tr("Czas s"), sortKey: { t in t.elapsedSeconds }, text: { t in String(format: "%.2f", t.elapsedSeconds) }).width(min: 45, ideal: 70)
+                    DataColumn.digits("CPU s", sortKey: { t in t.cpuSeconds }, text: { t in String(format: "%.2f", t.cpuSeconds) }).width(min: 45, ideal: 70)
                     DataColumn(L10n.tr("Bufory"), sortKey: { t in t.bufferGets }) { t in Text("\(t.bufferGets)").monospacedDigit() }.width(min: 50, ideal: 90)
                     DataColumn("SQL", sortKey: { t in t.text }) { t in Text(t.text).lineLimit(1) }
                 }

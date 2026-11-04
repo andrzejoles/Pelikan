@@ -28,8 +28,8 @@ public struct TableContents {
     public var all: [Int] { Array(0..<rowCount) }
 }
 
-/// Tabela narzędzia, na której działają komendy `table.*` (D214): wskazana argumentem `table` (menu i pasek tabeli)
-/// albo tabela z fokusem (`UIServices.focusedTable()` — paleta, skrót, makro).
+/// Tabela narzędzia, na której działają komendy `table.*` (D214): cel wywołania z menu i paska tabeli
+/// (`CommandContext.target`) albo tabela z fokusem (`UIServices.focusedTable()` — paleta, skrót, makro).
 @MainActor
 public protocol TableHandle: AnyObject {
     var contents: TableContents { get }
@@ -38,32 +38,13 @@ public protocol TableHandle: AnyObject {
     var markedColumns: [String] { get set }
     /// Tabela nadal istnieje (migawka z menu po zamknięciu okna — nie).
     var isAvailable: Bool { get }
+    /// Wiersze, których dotyczyła pozycja menu, zniknęły przed jej wyborem (tabela odświeżona).
+    var menuRowsGone: Bool { get }
 }
 
 extension TableHandle {
     public var isAvailable: Bool { true }
-}
-
-/// Tabele widoczne w oknach po identyfikatorze (klucz wewnętrzny `__table` komend z menu i paska tabeli — nie trafia
-/// do makr). Identyfikator to UUID nadany obiektowi (adres po zwolnieniu tabeli może trafić do innej); słabe odwołania.
-@MainActor
-public enum TableRegistry {
-    public static let key = "__table"
-    /// Znacznik menu: wierszy, których dotyczyła pozycja, już nie ma (tabela odświeżona).
-    public static let goneKey = "__rowsGone"
-    private final class Entry { weak var handle: (any TableHandle)?; let id: String; init(_ h: any TableHandle) { handle = h; id = UUID().uuidString } }
-    private static var entries: [Entry] = []
-
-    public static func id(for handle: any TableHandle) -> String {
-        entries.removeAll { $0.handle == nil }
-        if let e = entries.first(where: { $0.handle === handle }) { return e.id }
-        let e = Entry(handle)
-        entries.append(e)
-        return e.id
-    }
-
-    public static func handle(_ id: String) -> (any TableHandle)? { entries.first { $0.id == id }?.handle }
-
+    public var menuRowsGone: Bool { false }
 }
 
 extension TableExport {
@@ -82,8 +63,8 @@ extension TableExport {
 }
 
 /// Komendy tabel okien narzędzi (D214): kopiowanie komórki, wierszy, kolumn i całej tabeli, eksport, filtr wartością.
-/// Menu i pasek tabel wywołują te komendy; są też w menu Edycja › Tabela, palecie, skrótach i makrach. Agent: Brak —
-/// dotyczą okna z fokusem.
+/// Menu i pasek tabel wywołują te komendy; są też w menu Edycja › Tabela, palecie i skrótach (makra nagrywają te, które
+/// zmieniają stan tabeli — filtr, kolumny do kopii; kopie jak w siatce nie). Agent: Brak — dotyczą okna z fokusem.
 @MainActor
 enum TableCommands {
     static let submenu = L10n.tr("Tabela")
@@ -92,10 +73,10 @@ enum TableCommands {
     static let columnParam = CommandParameter("column", .string, L10n.tr("Kolumna: identyfikator albo tytuł (bez argumentu — wybór z listy)"))
 
     static func handle(_ ctx: CommandContext) throws -> any TableHandle {
-        // Wskazana tabela (menu, makro) — jej brak to błąd, nie zamiana na tabelę z fokusem.
-        if let id = ctx.arguments.string(TableRegistry.key) {
-            guard let h = TableRegistry.handle(id), h.isAvailable else { throw CommandError.notAvailable(L10n.tr("Tabeli z menu już nie ma (okno zamknięte)")) }
-            if ctx.arguments.bool(TableRegistry.goneKey) == true { throw CommandError.notAvailable(L10n.tr("Wierszy z menu nie ma już w tabeli (odświeżona)")) }
+        // Tabela z menu (cel wywołania) — jej brak to błąd, nie zamiana na tabelę z fokusem.
+        if let target = ctx.target {
+            guard let h = target as? any TableHandle, h.isAvailable else { throw CommandError.notAvailable(L10n.tr("Tabeli z menu już nie ma (okno zamknięte)")) }
+            if h.menuRowsGone { throw CommandError.notAvailable(L10n.tr("Wierszy z menu nie ma już w tabeli (odświeżona)")) }
             return h
         }
         guard let h = ctx.ui?.focusedTable() else { throw CommandError.notAvailable(L10n.tr("Brak tabeli okna narzędzia z fokusem")) }
@@ -158,7 +139,7 @@ enum TableCommands {
         Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .edit, submenu: submenu,
                                   parameters: parameters,
                                   agent: .none, effect: effect, summary: summary, feature: "PD-UI-015"),
-                validate: needsTable ? hasTable : nil, state: state, targetKeys: [TableRegistry.key], run: run)
+                validate: needsTable ? hasTable : nil, state: state, run: run)
     }
 
     static var all: [Command] {
@@ -169,7 +150,7 @@ enum TableCommands {
                 let r = try row(ctx, c)
                 let col = try await column(ctx, c)
                 ctx.ui?.copyToClipboard(c.cell(r, col), html: nil)
-                return CommandResult(resolvedArguments: resolved(ctx, ["column": .string(col)]))
+                return .ok
             },
             command("table.copyRows", L10n.tr("Kopiuj wiersze tabeli"), L10n.tr("Kopiuje zaznaczone wiersze tabeli (tekst z tabulatorami i HTML)."),
                     parameters: [rowsParam]) { ctx in
@@ -181,10 +162,7 @@ enum TableCommands {
             command("table.copyColumn", L10n.tr("Kopiuj kolumnę tabeli"), L10n.tr("Kopiuje całą kolumnę tabeli (wiersze widoku)."),
                     parameters: [columnParam]) { ctx in
                 let c = try handle(ctx).contents
-                let col = try await column(ctx, c)
-                var r = put(ctx, c.data(rows: c.all, columns: [col]), header: TableExport.copyHeader)
-                r.resolvedArguments = resolved(ctx, ["column": .string(col)])
-                return r
+                return put(ctx, c.data(rows: c.all, columns: [try await column(ctx, c)]), header: TableExport.copyHeader)
             },
             command("table.markColumn", L10n.tr("Zaznacz kolumnę do kopii"), L10n.tr("Dodaje kolumnę do kolumn kopiowanych razem albo ją z nich usuwa."),
                     parameters: [columnParam], effect: .uiState) { ctx in

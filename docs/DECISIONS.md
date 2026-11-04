@@ -3639,28 +3639,30 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
 - **Dokumentacja lokalna:** jeden klient MCP na adres (sesja używana ponownie, po 404 — nowa), wynik nieaktualnego
   wyszukiwania albo sekcji pomijany; wersja z argumentu agenta w dzienniku tylko jako znana wartość.
 - **Raport ACTIVE:** WebKit z dostępem tylko do pliku tego raportu (skrypty raportu są zdalne).
-- Przy okazji: „Otwórz przebieg profilera” bez numeru pyta o niego (wykryte testem wstążki).
-- **Tabela komendy (rundy 2–8):** menu i pasek tabeli wskazują swoją tabelę kluczem wewnętrznym `__table` — migawką
-  tabeli z chwili wyboru pozycji (rejestr `TableRegistry` z UUID, słabe odwołania); komenda deklaruje ten klucz jako
-  swój cel (`Command.targetKeys`), więc walidacja „tabela z fokusem” jej nie blokuje; klucze `__…` nie trafiają do
-  makr (odtworzenie działa na tabeli z fokusem), a kolumna i format wybrane w oknie pytania — trafiają. Paleta, skrót
-  i makro: tabela z fokusem w oknie bieżącym (pod paletą — w oknie, nad którym ją otwarto). Tabele AppKit rejestrują
-  swój `NSTableView` przy utworzeniu, SwiftUI — przy zdobyciu fokusu (widok z fokusem to ich tabela; bez szukania po
-  geometrii); sonda w tle zapisuje tylko okno tabeli. Uchwyt tabeli SwiftUI trzyma wartości tabeli, nie widok (bez
-  cyklu), i liczy wiersze przy wywołaniu (bieżący filtr i sortowanie). Menu kontekstowe wskazuje wiersze
-  identyfikatorami; wiersze, które zniknęły, i zamknięta tabela — komunikat (znacznik wewnętrzny, nie wartość umowna
-  w argumentach). Menu tabel AppKit nie zmienia zaznaczenia. Pusty identyfikator kolumny (kolumna bez tytułu) jest
-  kolumną. „Kopiuj z nagłówkiem” — ustawienie, dostępne bez tabeli. ⌘C w tabeli to systemowe Edycja › Kopiuj (jak
-  w polach tekstowych i siatce — zawartość od razu); w menu tabeli i palecie — komenda „Kopiuj wiersze tabeli”. Kopia,
-  eksport i licznik planu — wiersze jak na ekranie (zwinięte gałęzie pominięte).
+- Przy okazji: „Otwórz przebieg profilera” bez numeru pyta o niego (wykryte testem wstążki); wpisany numer trafia do makra.
+- **Tabela komendy (rundy 2–9):** menu i pasek tabeli przekazują swoją tabelę jako typowany cel wywołania
+  (`CommandContext.target`, `Workspace.perform/invoke(…, target:)`) — poza argumentami, więc nie trafia do makr ani
+  historii, a walidacja „tabela z fokusem” go nie blokuje. Czynności na wierszach (komórka, wiersze, filtr wartością)
+  dostają migawkę tabeli: w SwiftUI z chwili wyboru pozycji (wiersze po identyfikatorach), w AppKit z chwili otwarcia
+  menu; pozostałe działają na żywej tabeli (bez kopiowania wierszy). Wiersze menu, które zniknęły (choćby część),
+  i zamknięta tabela — komunikat. Paleta, skrót i makro: tabela z fokusem w oknie bieżącym (pod paletą — w oknie, nad
+  którym ją otwarto). Tabele AppKit rejestrują swój `NSTableView` przy utworzeniu, SwiftUI — przy zdobyciu fokusu (bez
+  szukania po geometrii); sonda w tle zapisuje okno tabeli. Uchwyt tabeli SwiftUI trzyma wartości tabeli, nie widok,
+  i liczy wiersze przy wywołaniu. Makra nagrywają komendy zmieniające stan tabeli (filtr, kolumny do kopii) z kolumną
+  wybraną w oknie pytania; kopie — jak w siatce — nie. Menu tabel AppKit nie zmienia zaznaczenia. Pusty identyfikator
+  kolumny (kolumna bez tytułu) jest kolumną. „Kopiuj z nagłówkiem” — ustawienie, dostępne bez tabeli. ⌘C w tabeli to
+  systemowe Edycja › Kopiuj (zawartość od razu); w menu tabeli i palecie — „Kopiuj wiersze tabeli”. Kolumny liczbowe
+  i czasowe mają jedno formatowanie dla komórki i kopii (`DataColumn.digits`). Kopia, eksport i licznik planu — wiersze
+  jak na ekranie (zwinięte gałęzie pominięte).
 - Komendy `table.*` w menu Edycja › Tabela i w palecie (poza wstążką — działają w oknach narzędzi). Liczba w filtrze
   porównywana z liczbą pokazaną w komórce (także z jednostką czasu, rozmiaru albo procentem: „12.3%”, „1.2 s”; kody
   jak „19c” to tekst); data z dokładnością, z jaką ją wpisano (dzień, minuta, sekunda); tekst kolumn całkowitych bez przejścia przez Double. Zapis pliku (arkusz)
   w oknie, z którego go wywołano; nazwa pliku z tytułu okna tabeli.
 - Klient MCP inicjuje sesję raz także przy równoczesnych wywołaniach; ponowienie po odpowiedzi 4xx na żądanie z sesją, jeden raz na sesję
   (równoczesne wywołania dołączają do nowej); okno dokumentacji pomija wyniki starszych żądań po numerze żądania.
-  Wzorce LIKE: filtr siatki kompiluje je raz na filtrowanie, filtr tabel — z pamięci wzorców. „Kopiuj” i „Otwórz
-  online” w oknie dokumentacji to komendy (`help.localDocsCopy`, `help.localDocsOpenOnline`).
+  Wzorce LIKE: filtr siatki kompiluje je raz na filtrowanie, filtr tabel — z pamięci wzorców. Okno dokumentacji
+  trzyma wyniki, zaznaczenie i sekcję w modelu; „Kopiuj”, „Cała sekcja”, „Otwórz online” i „Dokumentacja online” to
+  komendy (`help.localDocsCopy`, `help.localDocsSection`, `help.localDocsOpenOnline`, `help.localDocsSearchOnline`).
 - Okno raportów po anulowaniu deklaracji licencji działa dalej z raportami bez pakietów. `file.new.sql` przyjmuje
   tekst (opis komendy o tym mówi; tekst od agenta idzie przez `agent.openEditor` — polityka zgody i dziennik zmian); pozostałe
   `file.new.*` — bez parametru. Okno zapisu eksportu tabeli nad oknem tej tabeli; pozostałe zapisy — jak dotąd.

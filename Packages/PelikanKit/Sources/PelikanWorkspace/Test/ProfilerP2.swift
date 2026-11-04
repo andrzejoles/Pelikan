@@ -105,24 +105,27 @@ enum ProfilerCommands {
                                      value: .array(runs.map { .object(["run": .int(Int64($0.run)), "date": .string($0.date), "comment": .string($0.comment)]) }))
             },
             Command(CommandDescriptor(id: "test.profilerOpenRun", title: L10n.tr("Otwórz przebieg profilera…"), category: .debug,
-                                      parameters: [CommandParameter("run", .integer, required: true, L10n.tr("Numer przebiegu")), kindParam],
+                                      parameters: [CommandParameter("run", .integer, L10n.tr("Numer przebiegu (bez argumentu — pytanie)")), kindParam],
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Pokazuje raport zapisanego przebiegu profilera w karcie Profiler okna testu."), feature: "PD-OPT-005"),
                     validate: { $0.activeDocument?.kind == .test }) { ctx in
                 let d = try testDocument(ctx.workspace)
                 // Ze wstążki bez argumentu — pytanie o numer przebiegu.
                 var run = ctx.arguments.int("run")
+                var asked = false
                 if run == nil, let ui = ctx.askingUI {
                     guard let raw = await ui.askText(L10n.tr("Otwórz przebieg profilera"), message: L10n.tr("Numer przebiegu"), defaultValue: "") else {
                         throw CommandError.cancelledByUser
                     }
                     guard let n = Int64(raw.trimmingCharacters(in: .whitespaces)) else { throw CommandError.invalidArgument("run", raw) }
                     run = n
+                    asked = true
                 }
                 guard let run else { throw CommandError.missingArgument("run") }
                 let kind = ctx.arguments.string("kind").flatMap(ProfilerKind.init(rawValue:)) ?? d.profiler ?? .lines
                 d.profilerReport = try await Profiler.report(kind, run: Int(run), session: try await ctx.workspace.session(for: d))
-                return .ok
+                // Numer wpisany w oknie pytania — do makra (odtworzenie nie pyta ponownie).
+                return CommandResult(resolvedArguments: asked ? CommandArguments(["run": .int(run)]) : nil)
             },
         ]
     }

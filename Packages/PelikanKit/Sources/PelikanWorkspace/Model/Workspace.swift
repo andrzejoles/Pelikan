@@ -124,6 +124,9 @@ public protocol UIServices: AnyObject {
     func focusedTable() -> (any TableHandle)?
     /// Fragment wybrany w oknie dokumentacji lokalnej (tekst — fragment albo cała sekcja, adres online) — D216.
     func localDocsFragment() -> (text: String, link: URL?)?
+    /// Okno dokumentacji lokalnej: cała sekcja wybranego fragmentu albo z powrotem sam fragment; zapytanie okna.
+    func localDocsToggleSection() async
+    func localDocsQuery() -> String?
     /// Okno druku dla dokumentu HTML (PD-SQLW-016).
     func printHTML(title: String, html: String)
     /// Widoki dualności (SD-DV-001), moduły MLE (SD-MLE-001), podgląd przestrzenny (SD-DATA-001).
@@ -270,6 +273,8 @@ extension UIServices {
     public func focusedSQLTarget() -> SQLReportTarget? { nil }
     public func focusedTable() -> (any TableHandle)? { nil }
     public func localDocsFragment() -> (text: String, link: URL?)? { nil }
+    public func localDocsToggleSection() async {}
+    public func localDocsQuery() -> String? { nil }
     public func saveFile(suggestedName: String, fileExtension: String, data: Data, table: any TableHandle) async -> Bool {
         await saveFile(suggestedName: suggestedName, fileExtension: fileExtension, data: data)
     }
@@ -861,16 +866,17 @@ public final class Workspace {
 
     /// Jedyny punkt wywołania komendy — menu, skróty, paleta, linia poleceń i agent.
     @discardableResult
-    public func invoke(_ id: CommandID, _ arguments: CommandArguments = .empty, invoker: Invoker = .user) async throws -> CommandResult {
+    public func invoke(_ id: CommandID, _ arguments: CommandArguments = .empty, invoker: Invoker = .user,
+                       target: AnyObject? = nil) async throws -> CommandResult {
         guard let command = registry.command(id) else { throw CommandError.unknownCommand(id) }
         // Stan menu obowiązuje wszystkich wywołujących (także agenta): komenda wyłączona nie wykonuje się. Komenda
-        // wywołana z argumentami (np. obiekt wskazany nazwą zamiast zaznaczenia) sama sprawdza swój cel. Klucze
-        // wewnętrzne („__…”, np. znacznik run_command) nie są argumentami — nie wyłączają sprawdzenia.
-        let explicit = arguments.values.keys.contains { !$0.hasPrefix("__") || command.targetKeys.contains($0) }
+        // wywołana z argumentami (np. obiekt wskazany nazwą zamiast zaznaczenia) albo z celem z interfejsu (`target`)
+        // sama sprawdza swój cel. Klucze wewnętrzne („__…”, np. znacznik run_command) nie są argumentami.
+        let explicit = target != nil || arguments.values.keys.contains { !$0.hasPrefix("__") }
         if !explicit, let validate = command.validate, !validate(self) {
             throw CommandError.notAvailable(L10n.tr("„\(command.descriptor.title)” jest teraz niedostępne"))
         }
-        var context = CommandContext(workspace: self, invoker: invoker, arguments: arguments)
+        var context = CommandContext(workspace: self, invoker: invoker, arguments: arguments, target: target)
         let started = Date()
         let clock = ContinuousClock.now
         do {
@@ -913,10 +919,10 @@ public final class Workspace {
 
     /// Wywołanie z interfejsu: błędy pokazywane użytkownikowi zamiast rzucane. Zadanie — gdy trzeba poczekać na koniec.
     @discardableResult
-    public func perform(_ id: CommandID, _ arguments: CommandArguments = .empty) -> Task<Void, Never> {
+    public func perform(_ id: CommandID, _ arguments: CommandArguments = .empty, target: AnyObject? = nil) -> Task<Void, Never> {
         Task {
             do {
-                try await invoke(id, arguments)
+                try await invoke(id, arguments, target: target)
             } catch CommandError.cancelledByUser {
             } catch DatabaseError.clientMissing(let message) {
                 ui?.showClientMissingHelp(message)

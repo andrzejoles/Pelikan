@@ -30,7 +30,11 @@ public enum BuiltinCommands {
             let text = kind == .sql ? ctx.arguments.string("text") ?? "" : ""
             // Tekst od agenta — przez agent.openEditor (zmiana edytora: polityka zgody i dziennik zmian agenta).
             if !text.isEmpty, ctx.invoker.isAgent {
-                return try await ctx.workspace.invoke("agent.openEditor", CommandArguments(["kind": "sql", "text": .string(text)]), invoker: ctx.invoker)
+                let r = try await ctx.workspace.invoke("agent.openEditor", CommandArguments(["kind": "sql", "text": .string(text)]), invoker: ctx.invoker)
+                // Wynik jak zwykłego file.new.* (`document`), z oknem agenta obok.
+                var value: [String: JSONValue] = ["document": .string(ctx.workspace.activeDocument?.id.description ?? "")]
+                if case .object(let o)? = r.value { value.merge(o) { a, _ in a } }
+                return CommandResult(message: r.message, value: .object(value))
             }
             let doc = ctx.workspace.newDocument(kind, text: text)
             return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
@@ -955,6 +959,28 @@ public enum BuiltinCommands {
                 guard let f = ctx.ui?.localDocsFragment() else { throw CommandError.notAvailable(L10n.tr("Wybierz fragment dokumentacji")) }
                 ctx.ui?.copyToClipboard(f.text, html: nil)
                 return .ok
+            },
+            Command(CommandDescriptor(id: "help.localDocsSection", title: L10n.tr("Cała sekcja dokumentacji"), category: .help,
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Pokazuje całą sekcję fragmentu wybranego w oknie dokumentacji lokalnej (składnia, parametry, uwagi) albo z powrotem sam fragment."),
+                                      inMenu: false, feature: "PD-DOC-002"),
+                    validate: { ws in ws.ui?.localDocsFragment() != nil }) { ctx in
+                guard ctx.ui?.localDocsFragment() != nil else { throw CommandError.notAvailable(L10n.tr("Wybierz fragment dokumentacji")) }
+                await ctx.ui?.localDocsToggleSection()
+                return .ok
+            },
+            Command(CommandDescriptor(id: "help.localDocsSearchOnline", title: L10n.tr("Szukaj w dokumentacji online"), category: .help,
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Szuka słów z okna dokumentacji lokalnej na docs.oracle.com (wybrana wersja Oracle)."),
+                                      inMenu: false, feature: "PD-DOC-002"),
+                    validate: { ws in !(ws.ui?.localDocsQuery() ?? "").trimmingCharacters(in: .whitespaces).isEmpty }) { ctx in
+                let q = (ctx.ui?.localDocsQuery() ?? "").trimmingCharacters(in: .whitespaces)
+                let parts = q.split(separator: " ").map(String.init)
+                guard !q.isEmpty, let url = OracleDocs.url(for: parts.first ?? q, next: parts.dropFirst().first, release: ctx.workspace.settings.oracleDocsRelease) else {
+                    throw CommandError.notAvailable(L10n.tr("Wpisz szukane słowa"))
+                }
+                ctx.ui?.openURL(url)
+                return CommandResult(value: .string(url.absoluteString))
             },
             Command(CommandDescriptor(id: "help.localDocsOpenOnline", title: L10n.tr("Otwórz fragment dokumentacji online"), category: .help,
                                       agent: .none, effect: .external,

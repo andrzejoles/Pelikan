@@ -11341,6 +11341,34 @@
         }
       }
     },
+    "Cała sekcja dokumentacji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whole Documentation Section"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ganzer Dokumentationsabschnitt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sección completa de la documentación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увесь розділ документації"
+          }
+        }
+      }
+    },
     "Całe słowa" : {
       "localizations" : {
         "en" : {
@@ -51661,6 +51689,34 @@
         }
       }
     },
+    "Numer przebiegu (bez argumentu — pytanie)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run number (without argument — prompt)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laufnummer (ohne Argument — Abfrage)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número de ejecución (sin argumento — pregunta)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Номер запуску (без аргументу — запит)"
+          }
+        }
+      }
+    },
     "Numer przebiegu do wczytania" : {
       "localizations" : {
         "en" : {
@@ -66749,6 +66805,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Blendet versteckte Dateien und Verzeichnisse im File Browser ein oder aus."
+          }
+        }
+      }
+    },
+    "Pokazuje całą sekcję fragmentu wybranego w oknie dokumentacji lokalnej (składnia, parametry, uwagi) albo z powrotem sam fragment." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the whole section of the fragment selected in the local documentation window (syntax, parameters, notes), or back to the fragment only."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt den ganzen Abschnitt des im Fenster der lokalen Dokumentation ausgewählten Ausschnitts (Syntax, Parameter, Hinweise) oder wieder nur den Ausschnitt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra la sección completa del fragmento seleccionado en la ventana de documentación local (sintaxis, parámetros, notas) o vuelve solo al fragmento."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує весь розділ фрагмента, вибраного у вікні локальної документації (синтаксис, параметри, примітки), або знову лише фрагмент."
           }
         }
       }
@@ -89013,6 +89097,34 @@
         }
       }
     },
+    "Szuka słów z okna dokumentacji lokalnej na docs.oracle.com (wybrana wersja Oracle)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searches docs.oracle.com for the words from the local documentation window (selected Oracle version)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sucht die Wörter aus dem Fenster der lokalen Dokumentation auf docs.oracle.com (ausgewählte Oracle-Version)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Busca las palabras de la ventana de documentación local en docs.oracle.com (versión de Oracle seleccionada)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукає слова з вікна локальної документації на docs.oracle.com (вибрана версія Oracle)."
+          }
+        }
+      }
+    },
     "Szuka tekstu w bieżącym edytorze, we wszystkich edytorach albo w plikach skryptów w katalogach; lista wyników przenosi do miejsca." : {
       "localizations" : {
         "en" : {
@@ -89345,6 +89457,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Шукати в документації Oracle (англійською, напр. DBMS_SCHEDULER.CREATE_JOB repeat_interval)"
+          }
+        }
+      }
+    },
+    "Szukaj w dokumentacji online" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Documentation Online"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentation online durchsuchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar en la documentación en línea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукати в документації онлайн"
           }
         }
       }
@@ -105725,6 +105865,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Befehlsnamen eingeben …"
+          }
+        }
+      }
+    },
+    "Wpisz szukane słowa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter search words"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suchbegriffe eingeben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escriba las palabras que busca"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть слова для пошуку"
           }
         }
       }

@@ -421,7 +421,7 @@ struct DeployHistoryView: View {
         VSplitView {
             VStack(alignment: .leading) {
                 DataTable(model.history.records, selection: .single($selection)) {
-                    DataColumn(L10n.tr("Kiedy"), sortKey: { r in r.started }, text: { r in r.started.formatted(date: .numeric, time: .shortened) }) { r in Text(r.started.formatted(date: .numeric, time: .shortened)) }.width(130)
+                    DataColumn.digits(L10n.tr("Kiedy"), sortKey: { r in r.started }, text: { r in r.started.formatted(date: .numeric, time: .shortened) }).width(130)
                     DataColumn(L10n.tr("Cel"), sortKey: { r in "\(r.targetName) · \(r.environment.rawValue)" }) { r in Text("\(r.targetName) · \(r.environment.rawValue)").foregroundStyle(r.environment.color) }
                     DataColumn(L10n.tr("Rodzaj"), sortKey: { r in r.kind == .deploy ? L10n.tr("wdrożenie") : L10n.tr("wycofanie") }) { r in Text(r.kind == .deploy ? L10n.tr("wdrożenie") : L10n.tr("wycofanie")) }.width(90)
                     DataColumn(L10n.tr("Kto"), text: { $0.owner })

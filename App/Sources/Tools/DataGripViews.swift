@@ -119,7 +119,7 @@ struct LocalHistoryView: View {
                 DataTable(list, selection: .single($selection), primaryAction: { ids in
                     if let id = ids.first { run("file.localHistoryCompare", id) }
                 }) {
-                    DataColumn(L10n.tr("Czas"), sortKey: { (e: LocalHistoryEntry) in e.date }, text: { (e: LocalHistoryEntry) in e.date.formatted(.dateTime.year().month().day().hour().minute().second()) }) { (e: LocalHistoryEntry) in Text(e.date, format: .dateTime.year().month().day().hour().minute().second()) }
+                    DataColumn.digits(L10n.tr("Czas"), sortKey: { (e: LocalHistoryEntry) in e.date }, text: { (e: LocalHistoryEntry) in e.date.formatted(.dateTime.year().month().day().hour().minute().second()) })
                         .width(min: 130, ideal: 150)
                     DataColumn(L10n.tr("Zdarzenie"), sortKey: { (e: LocalHistoryEntry) in e.label }) { (e: LocalHistoryEntry) in Text(e.label) }.width(min: 80, ideal: 120)
                 }

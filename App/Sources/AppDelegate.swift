@@ -853,6 +853,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     func focusedTable() -> (any TableHandle)? { TableFocus.current() }
 
     func localDocsFragment() -> (text: String, link: URL?)? { LocalDocsModel.shared.fragment }
+    func localDocsToggleSection() async { await LocalDocsModel.shared.toggleSection(settings: workspace.settings.localDocs) }
+    func localDocsQuery() -> String? { LocalDocsModel.shared.query }
 
     /// Zapytanie z elementu z fokusem: siatka (wiersz, komórka), edytor (zaznaczenie, słowo, polecenie), tabela
     /// narzędzia. Paleta komend (panel) nie zabiera celu oknu pod nią.

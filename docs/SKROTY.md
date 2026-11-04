@@ -684,6 +684,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Dokumentacja Oracle… | `help.oracleManuals` |  |  | Brak | PD-DOC-001 |
 | Dokumentacja Oracle (lokalna)… | `help.localDocs` |  |  | Brak | PD-DOC-002 |
 | Kopiuj fragment dokumentacji | `help.localDocsCopy` |  |  | Brak | PD-DOC-002 |
+| Cała sekcja dokumentacji | `help.localDocsSection` |  |  | Brak | PD-DOC-002 |
+| Szukaj w dokumentacji online | `help.localDocsSearchOnline` |  |  | Brak | PD-DOC-002 |
 | Otwórz fragment dokumentacji online | `help.localDocsOpenOnline` |  |  | Brak | PD-DOC-002 |
 | Dziennik aplikacji | `help.log` |  |  | Brak | PL-INFRA-011 |
 | Zgłoś problem… | `help.reportProblem` |  |  | Brak | PL-INFRA-013 |

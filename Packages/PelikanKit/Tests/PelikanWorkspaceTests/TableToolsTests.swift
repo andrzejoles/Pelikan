@@ -122,6 +122,8 @@ struct TableToolsTests {
 /// Tabela testowa dla komend `table.*`.
 @MainActor
 final class FakeTableHandle: TableHandle {
+    var gone = false
+    var menuRowsGone: Bool { gone }
     var filter = TableFilter()
     var markedColumns: [String] = []
     let rows: [[String]]
@@ -231,8 +233,8 @@ struct TableToolsReviewTests {
         #expect(ws.registry.command("table.copyAll")?.validate?(ws) == false)
         let t = FakeTableHandle(rows: [["1", "x"], ["2", "y"], ["3", "z"]], selected: [1])
         ui.table = t
-        func run(_ id: String, _ args: [String: JSONValue] = [:]) async throws {
-            _ = try await ws.registry.command(CommandID(rawValue: id))!.run(CommandContext(workspace: ws, invoker: .user, arguments: CommandArguments(args)))
+        func run(_ id: String, _ args: [String: JSONValue] = [:], target: AnyObject? = nil) async throws {
+            _ = try await ws.registry.command(CommandID(rawValue: id))!.run(CommandContext(workspace: ws, invoker: .user, arguments: CommandArguments(args), target: target))
         }
         try await run("table.copyCell", ["column": "B"])
         #expect(ui.clipboard == "y")
@@ -265,19 +267,23 @@ struct TableToolsReviewTests {
         // Menu tabeli wskazuje ją identyfikatorem — działa na niej, choć fokus ma inna tabela; bez tabeli — przełącznik nagłówka.
         let other = FakeTableHandle(rows: [["9", "q"]], selected: [0])
         ui.table = other
-        try await run("table.copyCell", ["column": "b", "row": 2, "__table": .string(TableRegistry.id(for: t))])
+        try await run("table.copyCell", ["column": "b", "row": 2], target: t)
         #expect(ui.clipboard == "y")
         // Wiersze menu, których już nie ma, i zamknięta tabela — błąd zamiast zaznaczenia albo innej tabeli.
         await #expect(throws: CommandError.self) { try await run("table.copyRows", ["rows": ""]) }
         await #expect(throws: CommandError.self) { try await run("table.copyCell", ["column": "a", "row": 0]) }
-        await #expect(throws: CommandError.self) { try await run("table.copyAll", ["__table": "nie-ma-takiej"]) }
-        try await run("table.copyMarkedColumns", ["selected": true, "__table": .string(TableRegistry.id(for: t))])
+        await #expect(throws: CommandError.self) { try await run("table.copyAll", target: NSObject()) }
+        try await run("table.copyMarkedColumns", ["selected": true], target: t)
         // Znacznik menu „wiersze zniknęły” — komunikat; wartości umowne w publicznych argumentach to zwykły błąd argumentu.
-        await #expect(throws: CommandError.self) { try await run("table.copyRows", ["__table": .string(TableRegistry.id(for: t)), "__rowsGone": true]) }
+        t.gone = true
+        await #expect(throws: CommandError.self) { try await run("table.copyRows", target: t) }
+        t.gone = false
         #expect(ui.clipboard == "y")
         // Kolumna podana argumentem — nic do uzupełnienia w makrze.
-        let r = try await ws.registry.command("table.copyColumn")!.run(CommandContext(workspace: ws, invoker: .user, arguments: CommandArguments(["column": "a", "__table": .string(TableRegistry.id(for: t))])))
+        // Filtr z kolumną wybraną argumentem — nic do uzupełnienia w makrze.
+        let r = try await ws.registry.command("table.filterByValue")!.run(CommandContext(workspace: ws, invoker: .user, arguments: CommandArguments(["column": "a", "row": 1]), target: t))
         #expect(r.resolvedArguments == nil)
+        try await run("table.clearFilter", target: t)
         ui.table = nil
         let before = TableExport.copyHeader
         try await run("table.toggleCopyHeader")

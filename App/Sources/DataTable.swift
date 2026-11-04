@@ -51,6 +51,13 @@ struct DataColumn<Row>: Identifiable {
         self.init(title: title, id: id, text: text, key: key, content: { AnyView(content($0)) })
     }
 
+    /// Kolumna sortowana po kluczu, z tekstem pokazanym cyframi o stałej szerokości (liczby, czasy) — jedno
+    /// formatowanie dla komórki, kopii, eksportu i filtra.
+    static func digits<K: SortKeyConvertible>(_ title: String, id: String? = nil, sortKey: @escaping (Row) -> K, text: @escaping (Row) -> String) -> Self {
+        let key: (Row) -> SortKey = { sortKey($0).sortKey }
+        return Self(title: title, id: id, text: text, key: key, content: { AnyView(Text(text($0)).monospacedDigit()) })
+    }
+
     /// Kolumna z własnym widokiem komórki i tekstem (sortowanie po tekście).
     init<V: View>(_ title: String, id: String? = nil, text: @escaping (Row) -> String, @ViewBuilder content: @escaping (Row) -> V) {
         self.init(title: title, id: id, text: text, key: { text($0).sortKey }, content: { AnyView(content($0)) })
@@ -167,18 +174,25 @@ final class FrozenTable: TableHandle {
     }
     func indexes(of ids: [AnyHashable]) -> [Int] { indexer(ids) }
 
-    /// Argument wierszy menu: brak — wiersze równe zaznaczeniu; wiersze, których już nie ma — znacznik wewnętrzny
-    /// (komenda zgłasza, że zniknęły; publiczne `rows` nie niesie wartości umownych).
-    func rowsArgument(_ ids: [AnyHashable]) -> [String: JSONValue] {
+    /// Wiersze pozycji menu zniknęły (choćby część) — komenda to zgłasza.
+    private(set) var menuRowsGone = false
+
+    /// Indeksy wierszy menu; brak któregoś — `menuRowsGone`.
+    func menuRows(_ ids: [AnyHashable]) -> [Int] {
         let rows = indexes(of: ids)
-        if rows.isEmpty { return [TableRegistry.goneKey: .bool(true)] }
+        if rows.count < Set(ids).count { menuRowsGone = true }
+        return rows
+    }
+
+    /// Argument wierszy menu: brak — wiersze równe zaznaczeniu (komenda bierze zaznaczenie).
+    func rowsArgument(_ ids: [AnyHashable]) -> [String: JSONValue] {
+        let rows = menuRows(ids)
         return rows == contents.selectedRows ? [:] : ["rows": .string(rows.map { String($0 + 1) }.joined(separator: ","))]
     }
 
-    /// Argument wiersza menu (numer od 1) albo znacznik, że wiersza już nie ma.
+    /// Argument wiersza menu (numer od 1).
     func rowArgument(_ ids: [AnyHashable]) -> [String: JSONValue] {
-        guard let r = indexes(of: ids).first else { return [TableRegistry.goneKey: .bool(true)] }
-        return ["row": .int(Int64(r + 1))]
+        menuRows(ids).first.map { ["row": .int(Int64($0 + 1))] } ?? [:]
     }
 }
 
@@ -286,20 +300,19 @@ struct TableWindowProbe: NSViewRepresentable {
 @MainActor
 enum TableActions {
     /// Komenda na migawce tabeli; `args` liczone z tej migawki (wiersze menu po identyfikatorach).
-    static func perform(_ handle: any FocusTable, _ id: String, _ args: (FrozenTable) -> [String: JSONValue] = { _ in [:] }) {
-        guard let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
+    /// Komenda na wierszach z menu: na migawce tabeli z chwili wyboru pozycji (`args` z tej migawki — wiersze po
+    /// identyfikatorach). Cel przekazany jako `CommandContext.target`, poza argumentami (nie trafia do makr).
+    static func performOnRows(_ handle: any FocusTable, _ id: String, _ args: (FrozenTable) -> [String: JSONValue]) {
         let frozen = FrozenTable(handle)
-        var a = args(frozen)
-        a[TableRegistry.key] = .string(TableRegistry.id(for: frozen))
-        let task = ws.perform(CommandID(rawValue: id), CommandArguments(a))
-        // Migawka żyje do końca komendy (rejestr trzyma ją słabo).
-        Task { @MainActor in
-            await task.value
-            withExtendedLifetime(frozen) {}
-        }
+        let a = args(frozen)
+        (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(a), target: frozen)
     }
 
-    static func perform(_ handle: any FocusTable, _ id: String, _ args: [String: JSONValue]) { perform(handle, id) { _ in args } }
+    /// Komenda na tej tabeli bez czytania wierszy w chwili kliknięcia (filtr, kolumny do kopii, cała tabela, eksport) —
+    /// bez migawki.
+    static func perform(_ handle: any FocusTable, _ id: String, _ args: [String: JSONValue] = [:]) {
+        (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(args), target: handle)
+    }
 
     /// Tytuł do nazwy pliku i arkusza: podany albo tytuł okna tabeli.
     static func title(_ given: String?, window: NSWindow?) -> String {
@@ -334,7 +347,7 @@ struct TableCopyMenu: View {
 
     /// Komenda z wierszami menu kontekstowego (indeksy z migawki w chwili wyboru pozycji).
     private func runRows(_ id: String, _ extra: [String: JSONValue] = [:], cell: Bool = false) {
-        TableActions.perform(handle, id) { f in
+        TableActions.performOnRows(handle, id) { f in
             guard case .context(let ids, _, _) = rows else { return extra }
             return extra.merging(cell ? f.rowArgument(ids) : f.rowsArgument(ids)) { a, _ in a }
         }
@@ -377,8 +390,8 @@ struct TableCopyMenu: View {
             case .context(let ids, _, _):
                 Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) {
                     // Zawsze wiersze menu (bez argumentu komenda kopiowałaby wszystkie).
-                    TableActions.perform(handle, "table.copyMarkedColumns") { f in
-                        ["rows": .string(f.indexes(of: ids).map { String($0 + 1) }.joined(separator: ","))]
+                    TableActions.performOnRows(handle, "table.copyMarkedColumns") { f in
+                        ["rows": .string(f.menuRows(ids).map { String($0 + 1) }.joined(separator: ","))]
                     }
                 }
             case .selection:
@@ -420,7 +433,7 @@ struct TableValueFilterMenu: View {
     }
 
     private func filter(_ column: String, exclude: Bool) {
-        TableActions.perform(handle, "table.filterByValue") { f in
+        TableActions.performOnRows(handle, "table.filterByValue") { f in
             f.rowArgument([rowID]).merging(["column": .string(column), "exclude": .bool(exclude)]) { a, _ in a }
         }
     }

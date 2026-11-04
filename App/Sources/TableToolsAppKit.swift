@@ -42,9 +42,10 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     /// Migawka: tekst komórek przepisany w chwili wyboru pozycji menu (tabela może się przeładować przed komendą).
     func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) {
         let c = contents
-        let cells = (0..<c.rowCount).map { r in Dictionary(c.columns.map { ($0.id, c.cell(r, $0.id)) }, uniquingKeysWith: { a, _ in a }) }
+        let index = Dictionary(c.columns.enumerated().map { ($0.element.id, $0.offset) }, uniquingKeysWith: { a, _ in a })
+        let cells = (0..<c.rowCount).map { r in c.columns.map { c.cell(r, $0.id) } }
         let frozen = TableContents(title: c.title, columns: c.columns, rowCount: c.rowCount,
-                                   cell: { r, id in r < cells.count ? cells[r][id] ?? "" : "" }, selectedRows: c.selectedRows)
+                                   cell: { r, id in r < cells.count ? index[id].map { cells[r][$0] } ?? "" : "" }, selectedRows: c.selectedRows)
         let count = c.rowCount
         return (frozen, { ids in ids.compactMap { $0 as? Int }.filter { $0 < count } })
     }
@@ -140,38 +141,39 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         let colIndex = table.clickedColumn
         let column = colIndex >= 0 && colIndex < table.tableColumns.count ? table.tableColumns[colIndex] : nil
         let rows: [Int] = row < 0 ? c.selectedRows : (table.selectedRowIndexes.contains(row) ? c.selectedRows : [row])
-        // Wiersz spod kursora liczony w chwili wyboru pozycji (bez zmiany zaznaczenia — zaznaczenie bywa nawigacją,
-        // np. wybór pliku dziennika); tylko komendy wierszy dostają go w argumencie.
-        func item(_ title: String, state: Bool = false, enabled: Bool = true, _ id: String,
-                  _ args: @escaping (Int?) -> [String: JSONValue] = { _ in [:] }) -> NSMenuItem {
+        // Czynności bez wierszy — na tej tabeli (cel wywołania); czynności na wierszu spod kursora — na migawce z chwili
+        // otwarcia menu (to, co widział użytkownik; tabela może się przeładować, zanim wybierze pozycję). Menu nie
+        // zmienia zaznaczenia (zaznaczenie bywa nawigacją, np. wybór pliku dziennika).
+        func item(_ title: String, state: Bool = false, enabled: Bool = true, _ id: String, _ args: [String: JSONValue] = [:]) -> NSMenuItem {
             BlockMenuItem(title, state: state, enabled: enabled) { [weak self] in
                 guard let self else { return }
-                // Wiersz spod kursora i migawka tabeli w tej samej chwili (wybór pozycji menu).
-                let clicked = self.table.clickedRow >= 0 && self.table.clickedRow < self.table.numberOfRows ? self.table.clickedRow : nil
-                TableActions.perform(self, id) { _ in args(clicked) }
+                TableActions.perform(self, id, args)
             }
         }
-        func rowArg(_ r: Int?) -> [String: JSONValue] { r.map { ["row": .int(Int64($0 + 1))] } ?? [:] }
+        let frozen = row >= 0 || !rows.isEmpty ? FrozenTable(self) : nil
+        func rowItem(_ title: String, _ id: String, _ args: [String: JSONValue]) -> NSMenuItem {
+            BlockMenuItem(title) { [weak self] in
+                guard self != nil, let frozen else { return }
+                (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(args), target: frozen)
+            }
+        }
         // Raporty SQL z wiersza z kolumną SQL_ID/hash (D217).
         if let r = rows.first, let target = sqlTarget(row: r, in: c) {
             menu.addItem(BlockMenuItem(L10n.tr("Raporty dla \(target.label)…")) { SQLReportLauncher.open(target) })
             menu.addItem(.separator())
         }
         if row >= 0, let column {
-            let id = column.identifier.rawValue
-            menu.addItem(item(L10n.tr("Kopiuj komórkę"), "table.copyCell") { rowArg($0).merging(["column": .string(id)]) { a, _ in a } })
+            menu.addItem(rowItem(L10n.tr("Kopiuj komórkę"), "table.copyCell", ["row": .int(Int64(row + 1)), "column": .string(column.identifier.rawValue)]))
         }
         if !rows.isEmpty {
-            menu.addItem(item(rows.count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(rows.count))"), "table.copyRows") { [weak self] r in
-                // Wiersz spod kursora poza zaznaczeniem — tylko on; inaczej zaznaczenie.
-                guard let self, let r, !self.table.selectedRowIndexes.contains(r) else { return [:] }
-                return ["rows": .string(String(r + 1))]
-            })
+            // Wiersz spod kursora poza zaznaczeniem — tylko on; inaczej zaznaczenie.
+            let args: [String: JSONValue] = row >= 0 && !table.selectedRowIndexes.contains(row) ? ["rows": .string(String(row + 1))] : [:]
+            menu.addItem(rowItem(rows.count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(rows.count))"), "table.copyRows", args))
         }
         if let column {
             let id = column.identifier.rawValue
-            menu.addItem(item(L10n.tr("Kopiuj kolumnę „\(column.title)”"), "table.copyColumn") { _ in ["column": .string(id)] })
-            menu.addItem(item(L10n.tr("Zaznacz kolumnę „\(column.title)” do kopii"), state: markedColumns.contains(id), "table.markColumn") { _ in ["column": .string(id)] })
+            menu.addItem(item(L10n.tr("Kopiuj kolumnę „\(column.title)”"), "table.copyColumn", ["column": .string(id)]))
+            menu.addItem(item(L10n.tr("Zaznacz kolumnę „\(column.title)” do kopii"), state: markedColumns.contains(id), "table.markColumn", ["column": .string(id)]))
         }
         let marked = markedColumns
         menu.addItem(item(L10n.tr("Kopiuj zaznaczone kolumny (\(marked.count))"), enabled: !marked.isEmpty, "table.copyMarkedColumns"))
@@ -181,12 +183,10 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         if row >= 0, let column {
             let id = column.identifier.rawValue
             menu.addItem(.separator())
-            menu.addItem(item(L10n.tr("Filtruj „\(column.title)”: tylko ta wartość"), "table.filterByValue") {
-                rowArg($0).merging(["column": .string(id), "exclude": .bool(false)]) { a, _ in a }
-            })
-            menu.addItem(item(L10n.tr("Filtruj „\(column.title)”: bez tej wartości"), "table.filterByValue") {
-                rowArg($0).merging(["column": .string(id), "exclude": .bool(true)]) { a, _ in a }
-            })
+            menu.addItem(rowItem(L10n.tr("Filtruj „\(column.title)”: tylko ta wartość"), "table.filterByValue",
+                                 ["row": .int(Int64(row + 1)), "column": .string(id), "exclude": .bool(false)]))
+            menu.addItem(rowItem(L10n.tr("Filtruj „\(column.title)”: bez tej wartości"), "table.filterByValue",
+                                 ["row": .int(Int64(row + 1)), "column": .string(id), "exclude": .bool(true)]))
         }
         if model.state.filter.isActive {
             menu.addItem(item(L10n.tr("Wyczyść filtr"), "table.clearFilter"))
@@ -195,7 +195,7 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         let export = NSMenuItem(title: L10n.tr("Eksportuj"), action: nil, keyEquivalent: "")
         let sub = NSMenu()
         for f in TableExport.formats {
-            sub.addItem(item(f.displayName + "…", "table.export") { _ in ["format": .string(f.rawValue)] })
+            sub.addItem(item(f.displayName + "…", "table.export", ["format": .string(f.rawValue)]))
         }
         export.submenu = sub
         menu.addItem(export)
