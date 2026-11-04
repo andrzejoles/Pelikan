@@ -7057,6 +7057,34 @@
         }
       }
     },
+    "Bieżące zapytanie %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current statement %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuelle Anweisung %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sentencia actual %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поточний запит %@"
+          }
+        }
+      }
+    },
     "Bieżący edytor" : {
       "localizations" : {
         "en" : {
@@ -68769,6 +68797,34 @@
         }
       }
     },
+    "Poprzednie zapytanie %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous statement %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorherige Anweisung %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sentencia anterior %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередній запит %@"
+          }
+        }
+      }
+    },
     "Port" : {
       "localizations" : {
         "en" : {
@@ -78793,6 +78849,34 @@
         }
       }
     },
+    "Raport do zaznaczenia (np. sql.monitor)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report to select (e.g. sql.monitor)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu markierender Bericht (z. B. sql.monitor)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informe a seleccionar (p. ej. sql.monitor)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіт для вибору (напр. sql.monitor)"
+          }
+        }
+      }
+    },
     "Raport dodany do menu" : {
       "localizations" : {
         "en" : {
@@ -84165,6 +84249,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Agentensitzung rückgängig gemacht"
+          }
+        }
+      }
+    },
+    "Sesja nie ma bieżącego ani poprzedniego zapytania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The session has no current or previous statement"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Sitzung hat keine aktuelle oder vorherige Anweisung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sesión no tiene sentencia actual ni anterior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сесія не має поточного чи попереднього запиту"
           }
         }
       }
@@ -95925,6 +96037,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lokalen Job ausführen"
+          }
+        }
+      }
+    },
+    "Uruchom zaznaczony raport od razu (wartości domyślne)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run the selected report right away (default values)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markierten Bericht sofort ausführen (Standardwerte)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecutar el informe seleccionado de inmediato (valores por defecto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Одразу запустити вибраний звіт (типові значення)"
           }
         }
       }
@@ -131569,6 +131709,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "вікно з'єднання, недоступного для агента"
+          }
+        }
+      }
+    },
+    "okno sesji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sessions window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzungsfenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ventana de sesiones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "вікно сесій"
           }
         }
       }

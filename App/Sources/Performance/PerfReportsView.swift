@@ -25,7 +25,11 @@ final class PerfReportsModel {
     /// Wpisany SQL_ID albo hash (zmiana zapytania w oknie).
     var input = ""
 
-    init(workspace: Workspace, connection: UUID, mode: Mode, report: String? = nil) {
+    /// Uruchomienie zaznaczonego raportu po wczytaniu (parametr `run` komendy).
+    private var runAfterLoad = false
+
+    init(workspace: Workspace, connection: UUID, mode: Mode, report: String? = nil, run: Bool = false) {
+        runAfterLoad = run
         self.workspace = workspace
         self.connection = connection
         self.mode = mode
@@ -88,6 +92,11 @@ final class PerfReportsModel {
             }
             if selected == nil { selected = statuses.first { $0.available }?.report ?? reports.first }
             if let r = selected { select(r) }
+            if runAfterLoad, let r = selected, status(r).available {
+                runAfterLoad = false
+                loading = false
+                await run()
+            }
         } catch is CancellationError {
         } catch CommandError.cancelledByUser {
             message = L10n.tr("Anulowano — bez deklaracji licencji dostępne są tylko raporty bez pakietów")

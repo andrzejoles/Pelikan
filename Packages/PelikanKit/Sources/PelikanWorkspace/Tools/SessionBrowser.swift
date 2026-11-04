@@ -23,6 +23,25 @@ public struct SessionQueries: Sendable, Codable, Hashable {
         self.filters = filters; self.details = details; self.actions = actions
     }
 
+    /// Otwarte kursory z informacją, który sesja wykonuje teraz (SQL_ID bieżący) i który ostatnio (PREV_SQL_ID) — D220.
+    public static let openCursors = """
+        select oc.sql_id, case when oc.sql_id = s.sql_id then 'TAK' when oc.sql_id = s.prev_sql_id then 'ostatni' end wykonywany,
+               oc.sql_text, oc.cursor_type, to_char(oc.last_sql_active_time, 'YYYY-MM-DD HH24:MI:SS') last_sql_active_time
+          from v$open_cursor oc join v$session s on s.saddr = oc.saddr
+         where oc.sid = :sid
+         order by case when oc.sql_id = s.sql_id then 0 when oc.sql_id = s.prev_sql_id then 1 else 2 end, oc.last_sql_active_time desc nulls last
+        """
+
+    /// Zapytania z ustawień zapisanych przez starsze wersje: domyślne „Otwarte kursory” bez kolumny wykonywania zamieniane
+    /// na nowe (zmienione przez użytkownika zostają).
+    public func migrated() -> SessionQueries {
+        var q = self
+        for i in q.details.indices where q.details[i].sql == "select sql_id, sql_text, cursor_type from v$open_cursor where sid = :sid" {
+            q.details[i].sql = Self.openCursors
+        }
+        return q
+    }
+
     public static var standard: SessionQueries {
         SessionQueries(
             filters: [
@@ -33,7 +52,7 @@ public struct SessionQueries: Sendable, Codable, Hashable {
             ],
             details: [
                 Item(name: L10n.tr("Bieżące SQL"), sql: "/* concatenate */ select t.sql_text from v$sqltext_with_newlines t join v$session s on s.sql_address = t.address and s.sql_hash_value = t.hash_value where s.sid = :sid order by t.piece"),
-                Item(name: L10n.tr("Otwarte kursory"), sql: "select sql_id, sql_text, cursor_type from v$open_cursor where sid = :sid"),
+                Item(name: L10n.tr("Otwarte kursory"), sql: SessionQueries.openCursors),
                 Item(name: L10n.tr("Blokady"), sql: "select type, id1, id2, lmode, request, ctime, block from v$lock where sid = :sid"),
                 Item(name: L10n.tr("Statystyki"), sql: "select n.name, s.value from v$sesstat s join v$statname n on n.statistic# = s.statistic# where s.sid = :sid and s.value <> 0 order by n.name"),
                 Item(name: L10n.tr("Oczekiwanie"), sql: "select event, wait_class, state, seconds_in_wait, p1text, p1, p2text, p2 from v$session_wait where sid = :sid"),
@@ -57,14 +76,14 @@ public struct SessionRow: Sendable, Hashable, Identifiable {
 public enum SessionBrowser {
     /// Kolumny listy (V$SESSION) — bez danych logowania aplikacji; `osuser`/`machine` są dla administratora bazy.
     public static let columns = ["SID", "SERIAL#", "USERNAME", "STATUS", "OSUSER", "MACHINE", "PROGRAM", "MODULE", "ACTION", "CLIENT_INFO",
-                                 "SQL_ID", "EVENT", "SECONDS_IN_WAIT", "LOGON_TIME", "TYPE"]
+                                 "SQL_ID", "PREV_SQL_ID", "EVENT", "SECONDS_IN_WAIT", "LOGON_TIME", "TYPE"]
 
     public static func list(filter: String, in s: any DatabaseSession) async throws -> [SessionRow] {
         let condition = filter.trimmingCharacters(in: .whitespacesAndNewlines)
         // Warunek pochodzi z definicji użytkownika — tylko wyrażenie WHERE, bez średników i kilku poleceń.
         guard !condition.contains(";") else { throw CommandError.invalidArgument("filter", L10n.tr("warunek filtra bez średnika")) }
         let (cols, rows) = try await s.queryAll("""
-            select sid, serial#, username, status, osuser, machine, program, module, action, client_info, sql_id, event, seconds_in_wait,
+            select sid, serial#, username, status, osuser, machine, program, module, action, client_info, sql_id, prev_sql_id, sql_child_number, prev_child_number, event, seconds_in_wait,
                    to_char(logon_time, 'YYYY-MM-DD HH24:MI:SS') logon_time, type
               from v$session \(condition.isEmpty ? "" : "where " + condition) order by sid
             """, limit: 10_000)

@@ -447,7 +447,7 @@ public struct Settings: Sendable, Codable, Hashable {
         logLevel = v(.logLevel, logLevel)
         logIncludeNames = v(.logIncludeNames, logIncludeNames)
         standardQueries = v(.standardQueries, standardQueries)
-        sessionQueries = v(.sessionQueries, sessionQueries)
+        sessionQueries = v(.sessionQueries, sessionQueries).migrated()
         schedulerReports = v(.schedulerReports, schedulerReports)
         userTools = v(.userTools, userTools)
     }
