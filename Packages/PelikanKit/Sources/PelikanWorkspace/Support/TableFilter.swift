@@ -50,8 +50,11 @@ public struct ValueFilter: Sendable, Hashable {
         if lower.hasPrefix("not like ") { return ValueFilter(condition: .like(rest(after: 9), negated: true), text: t) }
         if lower.hasPrefix("like ") { return ValueFilter(condition: .like(rest(after: 5), negated: false), text: t) }
         for (prefix, op) in [(">=", Op.ge), ("<=", .le), ("<>", .ne), ("!=", .ne), ("=", .eq), (">", .gt), ("<", .lt)] where t.hasPrefix(prefix) {
-            let v = rest(after: prefix.count)
-            return ValueFilter(condition: v.isEmpty ? (op == .eq ? .isNull : .notNull) : .compare(op, value(v)), text: t)
+            let raw = String(t.dropFirst(prefix.count)).trimmingCharacters(in: .whitespaces)
+            let v = unquote(raw)
+            // W apostrofach — tekst dosłownie (jak w SQL): „= '1,234'” porównuje tekst komórki, nie liczbę.
+            let quoted = raw.count >= 2 && raw.hasPrefix("'") && raw.hasSuffix("'")
+            return ValueFilter(condition: v.isEmpty ? (op == .eq ? .isNull : .notNull) : .compare(op, quoted ? .text(v) : value(v)), text: t)
         }
         return ValueFilter(condition: .like(unquote(t), negated: false), text: t)
     }
@@ -138,6 +141,8 @@ public struct ValueFilter: Sendable, Hashable {
         func order<T: Comparable>(_ a: T, _ b: T) -> ComparisonResult { a < b ? .orderedAscending : a > b ? .orderedDescending : .orderedSame }
         switch v {
         case .number(let n):
+            // Klucz liczbowy i tekst bez części ułamkowej — wprost klucz (bez parsowania tekstu przy każdym wierszu).
+            if case .number(let x) = key, !text.contains("."), !text.contains(",") { return order(x, n) }
             return cellNumber(text: text, key: key).map { order($0, n) }
         case .date(let d, let precision):
             var cell: Date?

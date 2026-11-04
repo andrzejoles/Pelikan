@@ -142,7 +142,8 @@ enum PerfCommands {
             return SQLReportTarget(target: .hash(UInt32(h)), origin: L10n.tr("parametr komendy"))
         }
         if let t = ctx.ui?.focusedSQLTarget() { return t }
-        if let t = SQLTargetFinder.fromWorkspace(ctx.workspace) { return t }
+        // Fokus w tabeli bez SQL_ID w zaznaczonym wierszu — pytanie, nie polecenie z edytora w tle.
+        if ctx.ui?.focusIsInTable() != true, let t = SQLTargetFinder.fromWorkspace(ctx.workspace) { return t }
         guard let ui = ctx.ui, let raw = await ui.askText(L10n.tr("Raporty dla SQL"), message: L10n.tr("SQL_ID albo HASH_VALUE zapytania"), defaultValue: "") else {
             throw CommandError.cancelledByUser
         }

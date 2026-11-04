@@ -56,8 +56,10 @@ extension TableExport {
         if value.isEmpty { return exclude ? "is not null" : "is null" }
         // W cudzysłowach, gdy tekst ma apostrof albo białe znaki na brzegach (spacja, tabulator, nowa linia, twarda spacja) —
         // parser filtra je obcina, a warunek ma trafić w tę samą komórkę.
+        // Przecinek („1,234” — separator tysięcy albo dziesiętny): porównanie tekstu komórki, nie liczby z niejednoznacznego
+        // zapisu.
         let edges = value.trimmingCharacters(in: .whitespacesAndNewlines) != value
-        let v = value.contains("'") || edges ? "'" + value.replacingOccurrences(of: "'", with: "''") + "'" : value
+        let v = value.contains("'") || value.contains(",") || edges ? "'" + value.replacingOccurrences(of: "'", with: "''") + "'" : value
         return (exclude ? "<> " : "= ") + v
     }
 }

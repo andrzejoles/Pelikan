@@ -41,15 +41,17 @@ func BlockMenuItem(_ title: String, state: Bool = false, enabled: Bool = true, _
 final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     var window: NSWindow? { table.window }
 
-    /// Migawka z chwili otwarcia menu: tekst wiersza spod kursora (czynności na nim dostają go w argumencie);
-    /// zaznaczenie jako indeksy — bez przepisywania wielu wierszy przy każdym prawym kliknięciu.
+    /// Migawka w chwili wyboru pozycji menu: tekst wierszy, których dotyczy czynność (zaznaczone i spod kursora) —
+    /// komenda startuje później (zadanie), a tabela może się w tym czasie przeładować.
     func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) {
         let c = contents
-        let clicked = table.clickedRow
-        let row = clicked >= 0 && clicked < c.rowCount
-            ? Dictionary(c.columns.map { ($0.id, c.cell(clicked, $0.id)) }, uniquingKeysWith: { a, _ in a }) : [:]
+        var wanted = Set(c.selectedRows)
+        if table.clickedRow >= 0 { wanted.insert(table.clickedRow) }
+        let cells = Dictionary(uniqueKeysWithValues: wanted.filter { $0 < c.rowCount }.map { r in
+            (r, Dictionary(c.columns.map { ($0.id, c.cell(r, $0.id)) }, uniquingKeysWith: { a, _ in a }))
+        })
         let frozen = TableContents(title: c.title, columns: c.columns, rowCount: c.rowCount,
-                                   cell: { r, id in r == clicked ? row[id] ?? "" : c.cell(r, id) }, selectedRows: c.selectedRows)
+                                   cell: { r, id in cells[r]?[id] ?? "" }, selectedRows: c.selectedRows)
         let count = c.rowCount
         // Identyfikatory wierszy tabel AppKit to ich indeksy.
         return (frozen, { ids in ids.compactMap { $0 as? Int }.filter { $0 < count } })
@@ -149,27 +151,27 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         let colIndex = table.clickedColumn
         let column = colIndex >= 0 && colIndex < table.tableColumns.count ? table.tableColumns[colIndex] : nil
         let rows: [Int] = row < 0 ? c.selectedRows : (table.selectedRowIndexes.contains(row) ? c.selectedRows : [row])
-        // Czynności bez wierszy — na tej tabeli (cel wywołania); czynności na wierszu spod kursora — na migawce z chwili
-        // otwarcia menu (to, co widział użytkownik; tabela może się przeładować, zanim wybierze pozycję). Menu nie
-        // zmienia zaznaczenia (zaznaczenie bywa nawigacją, np. wybór pliku dziennika).
+        // Czynności bez wierszy — na tej tabeli (cel wywołania); czynności na wierszach — na migawce z chwili wyboru
+        // pozycji, o ile tabela nie przeładowała się od otwarcia menu. Menu nie zmienia zaznaczenia (zaznaczenie bywa
+        // nawigacją, np. wybór pliku dziennika).
         func item(_ title: String, state: Bool = false, enabled: Bool = true, _ id: String, _ args: [String: JSONValue] = [:]) -> NSMenuItem {
             BlockMenuItem(title, state: state, enabled: enabled) { [weak self] in
                 guard let self else { return }
                 TableActions.perform(self, id, args)
             }
         }
-        let frozen = row >= 0 || !rows.isEmpty ? FrozenTable(self) : nil
         // Przeładowanie tabeli po otwarciu menu przesuwa wiersze (zaznaczenie i numery to indeksy) — komunikat zamiast
         // czynności na innych wierszach.
         let reloadsAtOpen = model.reloads
         func rowItem(_ title: String, _ id: String, _ args: [String: JSONValue]) -> NSMenuItem {
             BlockMenuItem(title) { [weak self] in
-                guard let self, let frozen else { return }
+                guard let self else { return }
                 guard self.model.reloads == reloadsAtOpen else {
                     (NSApp.delegate as? AppDelegate)?.showError(L10n.tr("Wierszy z menu nie ma już w tabeli (odświeżona)"))
                     return
                 }
-                (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(args), target: frozen)
+                // Migawka teraz, synchronicznie z wyborem pozycji — komenda (zadanie) działa na tych wierszach.
+                TableActions.performOnRows(FrozenTable(self), id) { _ in args }
             }
         }
         // Raporty SQL z wiersza z kolumną SQL_ID/hash (D217).

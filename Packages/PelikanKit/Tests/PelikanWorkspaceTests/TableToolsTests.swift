@@ -210,6 +210,9 @@ struct TableToolsReviewTests {
         #expect(!ValueFilter.parse("< 1")!.matches(text: "1.2 s", key: .number(1.2)))
         #expect(ValueFilter.parse("> 1000")!.matches(text: "1,234", key: .number(1234)))
         #expect(ValueFilter.parse("= 1234")!.matches(text: "1,234", key: .number(1234)))
+        // „Tylko ta wartość” z przecinkiem — tekst dosłownie (apostrofy), trafia w tę samą komórkę.
+        #expect(ValueFilter.parse(TableExport.condition("1,234", exclude: false))!.matches(text: "1,234", key: .number(1234)))
+        #expect(!ValueFilter.parse(TableExport.condition("1,234", exclude: true))!.matches(text: "1,234", key: .number(1234)))
         // Ta sama wartość dla wszystkich porównań: „= 12.35” i „>= 12.35” trafiają razem.
         #expect(ValueFilter.parse("= 12.35")!.matches(text: "12.35", key: .number(12.345678)))
         #expect(ValueFilter.parse(">= 12.35")!.matches(text: "12.35", key: .number(12.345678)))

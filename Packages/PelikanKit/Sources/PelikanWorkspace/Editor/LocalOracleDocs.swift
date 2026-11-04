@@ -96,8 +96,9 @@ public actor LocalDocsClient {
     public static func shared(for endpoint: URL) -> LocalDocsClient {
         clients.withLock { c in
             if let existing = c[endpoint] { return existing }
+            // Jeden klient — dla bieżącego adresu (zmiana adresu w ustawieniach zwalnia poprzedniego klienta i jego sesję).
             let new = LocalDocsClient(endpoint: endpoint)
-            c[endpoint] = new
+            c = [endpoint: new]
             return new
         }
     }

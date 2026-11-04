@@ -16,6 +16,8 @@ final class LocalDocsModel {
     var versionInitialized = false
     /// Okno widoczne — komendy okna („Kopiuj”, „Cała sekcja”, „Otwórz online”) działają tylko na tym, co widać.
     var isOpen = false
+    /// Ostatnie wykonane zlecenie — ponowne pokazanie okna (przeniesienie narzędzia) nie powtarza wyszukiwania.
+    var handledRequest = -1
     var results: [DocFragment] = []
     var selection: DocFragment.ID? {
         didSet { if selection != oldValue { detail = nil } }
@@ -130,7 +132,9 @@ struct LocalDocsView: View {
                 model.version = settings.version
                 model.versionInitialized = true
             }
-            // Wykonanie zlecenia komendy (F1, „Szukaj”, paleta) — samo wyszukiwanie.
+            // Wykonanie zlecenia komendy (F1, „Szukaj”, paleta) — samo wyszukiwanie, raz na zlecenie.
+            guard model.handledRequest != model.request else { return }
+            model.handledRequest = model.request
             if !model.query.trimmingCharacters(in: .whitespaces).isEmpty { await model.search(settings: settings) }
         }
     }

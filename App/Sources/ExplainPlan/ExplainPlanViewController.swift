@@ -85,14 +85,15 @@ struct PlanPanel: View {
 
     private var planColumnValues: [PlanColumn] { planColumns.map { ($0.id, $0.title, $0.text, $0.key) } }
 
-    /// Wiersze tabeli planu do kopii, eksportu i licznika: z filtrem — pasujące kroki posortowane; bez filtra — cały plan
-    /// w kolejności drzewa (rodzeństwo posortowane jak na ekranie), także kroki w gałęziach zwiniętych — eksport nie
-    /// gubi kroków. Numery `rows` komend liczą się w tej kolejności; menu wskazuje wiersze identyfikatorami.
-    static func planRows(_ plan: ExplainPlanResult?, filtered: [PlanLine]?, sort: [ColumnSort<PlanLine>]) -> [PlanLine] {
+    /// Wiersze tabeli planu tak jak na ekranie (kopia, eksport, numery `rows` komend): z filtrem — pasujące kroki
+    /// posortowane; bez filtra — drzewo (rodzeństwo posortowane, dzieci tylko gałęzi rozwiniętych). Pasek pokazuje
+    /// „Wierszy: x z y”, gdy część kroków jest zwinięta (eksport całego planu — po „Rozwiń wszystkie gałęzie”).
+    static func planRows(_ plan: ExplainPlanResult?, filtered: [PlanLine]?, expanded: Set<Int>, sort: [ColumnSort<PlanLine>]) -> [PlanLine] {
         if let filtered { return filtered.sorted(by: sort) }
         var out: [PlanLine] = []
         func add(_ l: PlanLine) {
             out.append(l)
+            guard expanded.contains(l.id) else { return }
             (l.children ?? []).sorted(by: sort).forEach(add)
         }
         (plan?.roots ?? []).sorted(by: sort).forEach(add)
@@ -101,12 +102,8 @@ struct PlanPanel: View {
 
     /// Kroki spełniające filtr; nil — filtr pusty.
     static func filtered(_ plan: ExplainPlanResult?, columns: [PlanColumn], filter: TableFilter) -> [PlanLine]? {
-        let f = filter.compiled()
-        guard !f.isEmpty else { return nil }
-        let ids = columns.map(\.id)
-        return (plan?.lines ?? []).filter { l in
-            f.matches(all: ids) { id in columns.first { $0.id == id }.map { ($0.text(l), $0.key(l)) } ?? ("", .none) }
-        }
+        guard filter.isActive else { return nil }
+        return filterRows(plan?.lines ?? [], columns: columns.map { ($0.id, $0.text, $0.key) }, filter: filter)
     }
 
     static func contents(_ shown: [PlanLine], columns cols: [PlanColumn], selected: PlanLine.ID?) -> TableContents {
@@ -172,7 +169,7 @@ struct PlanPanel: View {
             } else {
                 // Rozwinięcie gałęzi w modelu okna (`planExpanded`) — komendy Rozwiń/Zwiń wszystko (PD-OPT-001).
                 let lines = filteredLines
-                let shownLines = Self.planRows(document.plan, filtered: lines, sort: sortPlan)
+                let shownLines = Self.planRows(document.plan, filtered: lines, expanded: document.planExpanded, sort: sortPlan)
                 let cols = planColumnValues
                 let contents = Self.contents(shownLines, columns: cols, selected: selection)
                 let handle = tableHandle
@@ -181,7 +178,7 @@ struct PlanPanel: View {
                 let (doc, toolsState, sortState, selectionState) = (document, $tools, $sortPlan, $selection)
                 let _ = handle.update(rows: {
                                           Self.planRows(doc.plan, filtered: Self.filtered(doc.plan, columns: cols, filter: toolsState.wrappedValue.filter),
-                                                        sort: sortState.wrappedValue)
+                                                        expanded: doc.planExpanded, sort: sortState.wrappedValue)
                                       },
                                       contents: { Self.contents($0, columns: cols, selected: selectionState.wrappedValue) },
                                       sqlTarget: { _ in nil }, state: $tools)

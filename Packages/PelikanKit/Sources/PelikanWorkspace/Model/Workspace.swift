@@ -120,6 +120,8 @@ public protocol UIServices: AnyObject {
     func showPerfReport(_ reportID: String?, connection: UUID)
     /// Zapytanie z elementu z fokusem (wiersz albo komórka tabeli, edytor) — przed oknem aktywnym.
     func focusedSQLTarget() -> SQLReportTarget?
+    /// Fokus w tabeli okna (siatka albo tabela narzędzia) — cel SQL tylko z jej wiersza.
+    func focusIsInTable() -> Bool
     /// Tabela okna narzędzia z fokusem (ostatnio używana w oknie aktywnym) — dla komend `table.*` (D214).
     func focusedTable() -> (any TableHandle)?
     /// Fragment wybrany w oknie dokumentacji lokalnej (tekst — fragment albo cała sekcja, adres online) — D216.
@@ -271,6 +273,7 @@ extension UIServices {
     public func showSQLReports(_ target: SQLReportTarget) {}
     public func showPerfReport(_ reportID: String?, connection: UUID) {}
     public func focusedSQLTarget() -> SQLReportTarget? { nil }
+    public func focusIsInTable() -> Bool { false }
     public func focusedTable() -> (any TableHandle)? { nil }
     public func localDocsFragment() -> (text: String, link: URL?)? { nil }
     public func localDocsToggleSection() async {}

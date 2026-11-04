@@ -142,6 +142,15 @@ extension SQLReportTarget {
     }
 }
 
+/// Wiersze spełniające filtr tabeli (kolumny: identyfikator, tekst, klucz) — wspólne dla `DataTable` i tabeli planu.
+func filterRows<Row>(_ rows: [Row], columns: [(id: String, text: (Row) -> String, key: (Row) -> SortKey)], filter: TableFilter) -> [Row] {
+    let f = filter.compiled()
+    guard !f.isEmpty else { return rows }
+    let ids = columns.map(\.id)
+    let byID = Dictionary(columns.map { ($0.id, ($0.text, $0.key)) }, uniquingKeysWith: { a, _ in a })
+    return rows.filter { r in f.matches(all: ids) { id in byID[id].map { ($0.0(r), $0.1(r)) } ?? ("", .none) } }
+}
+
 /// Tabela okna jako cel komend `table.*` (D214) i źródło SQL_ID dla „Raporty dla SQL_ID” (D217).
 @MainActor
 protocol FocusTable: TableHandle {
@@ -251,16 +260,34 @@ final class SwiftUITableHandle: FocusTable, ObservableObject {
     }
 
     /// Tabela zdobyła fokus: widok z fokusem okna to jej NSTableView — rejestracja bez szukania po geometrii.
-    /// Fokus zdobyty, zanim sonda zapisała okno — rejestracja po jego zapisaniu.
+    /// Sonda w tle tabeli (jej ramka — sprawdzenie, że widok z fokusem to ta tabela).
+    weak var probe: NSView?
+    /// Fokus zdobyty, a widok z fokusem jeszcze nie jest tabelą (okno bez sondy, fokus w trakcie przejścia) — ponowienie.
     private var pendingFocus = false
-    func focusedPending() {
-        if pendingFocus { pendingFocus = false; focused() }
-    }
+
+    func focusedPending() { if pendingFocus { focused() } }
 
     func focused() {
-        guard window != nil else { pendingFocus = true; return }
-        guard let window, let tv = window.firstResponder as? NSTableView, !(tv is GridTableView) else { return }
+        pendingFocus = true
+        guard let window, let probe, let tv = window.firstResponder as? NSTableView, !(tv is GridTableView) else {
+            // Kolejna próba po bieżącym zdarzeniu (fokus przechodzi na tabelę po zmianie stanu SwiftUI).
+            DispatchQueue.main.async { [weak self] in self?.retryFocus() }
+            return
+        }
+        // Widok z fokusem musi leżeć w ramce tej tabeli (inna tabela okna nie zostanie przypisana temu uchwytowi).
+        let outer = tv.enclosingScrollView ?? tv
+        let mine = probe.convert(probe.bounds, to: nil)
+        guard outer.convert(outer.bounds, to: nil).intersects(mine) else { pendingFocus = false; return }
+        pendingFocus = false
         TableFocus.registerSwiftUI(tv, self)
+    }
+
+    private var retries = 0
+    private func retryFocus() {
+        guard pendingFocus, retries < 3 else { retries = 0; return }
+        retries += 1
+        focused()
+        if !pendingFocus { retries = 0 }
     }
 }
 
@@ -326,6 +353,7 @@ struct TableWindowProbe: NSViewRepresentable {
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
             handle?.window = window
+            handle?.probe = self
             handle?.focusedPending()
         }
     }
@@ -339,6 +367,7 @@ struct TableWindowProbe: NSViewRepresentable {
     func updateNSView(_ p: Probe, context: Context) {
         p.handle = handle
         if handle.window == nil { handle.window = p.window }
+        if handle.probe == nil { handle.probe = p }
     }
 }
 
@@ -531,7 +560,8 @@ struct TableToolsBar: View {
                 .help(L10n.tr("Wyczyść filtr"))
             }
             Spacer(minLength: 2)
-            Text(state.filter.isActive ? (compact ? "\(contents.rowCount)/\(total)" : L10n.tr("Wierszy: \(contents.rowCount) z \(total)"))
+            // „x z y”, gdy widok ma mniej wierszy niż tabela (filtr, zwinięte gałęzie planu) — kopia i eksport obejmują x.
+            Text(state.filter.isActive || contents.rowCount != total ? (compact ? "\(contents.rowCount)/\(total)" : L10n.tr("Wierszy: \(contents.rowCount) z \(total)"))
                  : (compact ? "\(total)" : L10n.tr("Wierszy: \(total)")))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -629,13 +659,7 @@ struct DataTable<Row: Identifiable>: View {
 
     /// Wiersze widoku: filtr i sortowanie (także dla komend wywołanych przed przerysowaniem — makro, kilka komend z rzędu).
     static func viewRows(_ rows: [Row], columns: [DataColumn<Row>], filter: TableFilter, sort: [ColumnSort<Row>]) -> [Row] {
-        let f = filter.compiled()
-        let ids = columns.map(\.id)
-        let byID = Dictionary(columns.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        let filtered = f.isEmpty ? rows : rows.filter { r in
-            f.matches(all: ids) { id in byID[id].map { ($0.text(r), $0.key(r)) } ?? ("", .none) }
-        }
-        return filtered.sorted(by: sort)
+        filterRows(rows, columns: columns.map { ($0.id, $0.text, $0.key) }, filter: filter).sorted(by: sort)
     }
 
     /// Wartości tabeli dla uchwytu (bez widoku — uchwyt w `@State` nie może trzymać widoku, który trzyma uchwyt).

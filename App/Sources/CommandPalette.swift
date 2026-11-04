@@ -101,7 +101,7 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
         // Okno, nad którym otwarto paletę, wraca jako okno z fokusem przed wykonaniem — każda komenda (tabela z fokusem,
         // SQL_ID z zaznaczenia) widzi to samo, co przy sprawdzaniu dostępności.
         panel.orderOut(nil)
-        TableFocus.paletteHost?.makeKeyAndOrderFront(nil)
+        if let host = TableFocus.paletteHost, host.isVisible, !host.isMiniaturized { host.makeKey() }
         workspace.perform(items[row].id)
     }
 

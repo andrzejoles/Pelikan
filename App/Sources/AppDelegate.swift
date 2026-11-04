@@ -852,9 +852,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     /// Tabela okna narzędzia, której dotyczą komendy `table.*` (D214). Siatka wyników SQL ma własne komendy `grid.*`.
     func focusedTable() -> (any TableHandle)? { TableFocus.current() }
 
+    func focusIsInTable() -> Bool {
+        guard let tv = TableFocus.contextWindow?.firstResponder as? NSTableView else { return false }
+        return !(tv is GridTableView)
+    }
+
     func localDocsFragment() -> (text: String, link: URL?)? { LocalDocsModel.shared.fragment }
     func localDocsToggleSection() async { await LocalDocsModel.shared.toggleSection(settings: workspace.settings.localDocs) }
-    func localDocsQuery() -> String? { LocalDocsModel.shared.query }
+    func localDocsQuery() -> String? { LocalDocsModel.shared.isOpen ? LocalDocsModel.shared.query : nil }
 
     /// Zapytanie z elementu z fokusem: siatka (wiersz, komórka), edytor (zaznaczenie, słowo, polecenie), tabela
     /// narzędzia. Paleta komend (panel) nie zabiera celu oknu pod nią.

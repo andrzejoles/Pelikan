@@ -63,6 +63,9 @@ final class PerfReportsModel {
         defer { loading = false }
         message = ""
         cancelledLicense = false
+        // Licencja i uprawnienia z tego wczytania (błąd połączenia przy ponownym — raporty niedostępne z tym błędem).
+        license = nil
+        packages = nil
         do {
             let s = try await session()
             // Anulowana deklaracja licencji: dalej tylko raporty bez pakietów (wersja, uprawnienia, zaznaczenie — jak zwykle).

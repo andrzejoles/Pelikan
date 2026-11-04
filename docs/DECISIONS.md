@@ -3652,9 +3652,11 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   odtworzenie działa tak samo w każdej kolejności i tabeli), zaznaczenie kolumny jako stan docelowy (nie przełączenie),
   kolumnę wybraną w oknie pytania; kopie — jak w siatce — nie. Kolumna w makrze to jej pozycja „#n” (tytuły zależą od języka).
   Migawka menu z chwili jego otwarcia (etykiety i czynność na tych samych danych; SwiftUI — z wierszy już
-  policzonych przy rysowaniu, AppKit — wiersz spod kursora i zaznaczenie jako indeksy; przeładowanie tabeli AppKit po
-  otwarciu menu — komunikat zamiast czynności na przesuniętych wierszach). Kolumny czynności (przyciski) nie trafiają do kopii, eksportu ani filtra.
-  Paleta przed wykonaniem komendy oddaje fokus oknu, nad którym ją otwarto (każda komenda widzi to,
+  policzonych przy rysowaniu, AppKit — tekst wierszy czynności w chwili wyboru pozycji; przeładowanie tabeli AppKit po
+  otwarciu menu — komunikat zamiast czynności na przesuniętych wierszach). Tabela SwiftUI rejestruje się, gdy widok
+  z fokusem leży w jej ramce (z ponowieniem, gdy fokus jeszcze przechodzi). „Raporty dla SQL_ID” z fokusem w tabeli
+  bez SQL_ID pyta o zapytanie (nie bierze polecenia z edytora w tle). Kolumny czynności (przyciski) nie trafiają do kopii, eksportu ani filtra.
+  Paleta przed wykonaniem komendy oddaje fokus (bez przestawiania okien) oknu, nad którym ją otwarto (każda komenda widzi to,
   co przy sprawdzaniu dostępności). Rejestracja tabeli SwiftUI — wspólny
   modyfikator `registersTable` (`DataTable`, plan). Menu tabel AppKit nie zmienia zaznaczenia. Pusty identyfikator
   kolumny (kolumna bez tytułu) jest kolumną. „Kopiuj z nagłówkiem” — ustawienie, dostępne bez tabeli. ⌘C w tabeli to
@@ -3664,13 +3666,13 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
 - Komendy `table.*` w menu Edycja › Tabela i w palecie (poza wstążką — działają w oknach narzędzi). Liczba w filtrze
   — jedna wartość komórki dla wszystkich porównań (`=`, `<`, between): liczba pokazana w tekście, gdy zgadza się
   z kluczem z dokładnością do wyświetlonych cyfr („12.35” przy 12.345678), inaczej klucz („450 ms” obok „1.2 s”, „1,234”);
-  kolumny procentu i postępu mają klucz w skali pokazanej; kody jak „19c” to tekst; „tylko ta wartość” ujmuje w cudzysłowy wartości
-  z białymi znakami na brzegach; data z dokładnością, z jaką ją wpisano (dzień, minuta, sekunda); tekst kolumn całkowitych bez przejścia przez Double. Zapis pliku (arkusz)
+  kolumny procentu i postępu mają klucz w skali pokazanej; kody jak „19c” to tekst; „tylko ta wartość” ujmuje w apostrofy wartości
+  z białymi znakami na brzegach, apostrofem albo przecinkiem — wartość w apostrofach to tekst dosłownie (jak w SQL); data z dokładnością, z jaką ją wpisano (dzień, minuta, sekunda); tekst kolumn całkowitych bez przejścia przez Double. Zapis pliku (arkusz)
   w oknie, z którego go wywołano; nazwa pliku z tytułu okna tabeli.
 - Klient MCP inicjuje sesję raz także przy równoczesnych wywołaniach (wywołanie czekające na unieważnioną sesję czeka
   na nową; sesja tylko z udanej odpowiedzi na initialize); wyszukiwanie z okna to komenda `help.localDocs`
-  (wersja wybrana w oknie zostaje; zamknięcie okna w trakcie nie czyści wyników; komendy okna — tylko przy otwartym
-  oknie); ponowienie po odpowiedzi 4xx na żądanie z sesją, jeden raz na sesję
+  (wersja wybrana w oknie zostaje; ponowne pokazanie okna nie powtarza wyszukiwania; zamknięcie okna w trakcie nie
+  czyści wyników; komendy okna — tylko przy otwartym oknie); jeden klient MCP — dla bieżącego adresu; ponowienie po odpowiedzi 4xx na żądanie z sesją, jeden raz na sesję
   (równoczesne wywołania dołączają do nowej); okno dokumentacji pomija wyniki starszych żądań po numerze żądania.
   Wzorce LIKE: filtr siatki kompiluje je raz na filtrowanie, filtr tabel — z pamięci wzorców. Okno dokumentacji
   trzyma wyniki, zaznaczenie i sekcję w modelu; „Kopiuj”, „Cała sekcja”, „Otwórz online” i „Dokumentacja online” to
