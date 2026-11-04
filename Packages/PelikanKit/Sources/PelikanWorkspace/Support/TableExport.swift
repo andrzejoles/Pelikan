@@ -38,9 +38,8 @@ public enum TableExport {
         // Część przed wykładnikiem musi mieć cyfrę („E1”, „e5” to kody, nie liczby).
         let mantissa = s.prefix { $0 != "e" && $0 != "E" }
         guard mantissa.contains(where: \.isNumber) else { return false }
-        let digits = mantissa.filter(\.isNumber).drop { $0 == "0" }
-        // Do 15 cyfr znaczących — więcej Excel i JSON zaokrągliłyby (arkusz xlsx stosuje tę samą regułę per komórka).
-        return digits.count <= 15
+        // Do 15 cyfr znaczących — więcej Excel i JSON zaokrągliłyby (ta sama reguła co arkusz xlsx per komórka).
+        return ResultExporter.significantDigits(s) <= 15
     }
 
     /// Plik eksportu w formacie.

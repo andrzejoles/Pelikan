@@ -201,6 +201,8 @@ struct InstanceViewerView: View {
             Text(L10n.tr("Czas pracy: \(uptime(s.uptime)) · sesje: \(s.sessionsTotal.map(String.init) ?? "—"), aktywne: \(s.sessionsActive.map(String.init) ?? "—")")).font(.uiSecondary)
         }
         .lineLimit(2)
+        // Stała szerokość opisu — wybór układu nagłówka nie skacze przy odświeżaniu (liczby sesji, czas pracy).
+        .frame(width: 320, alignment: .leading)
     }
 
     private var refreshControls: some View {

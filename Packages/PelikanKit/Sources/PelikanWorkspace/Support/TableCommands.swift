@@ -62,12 +62,9 @@ extension TableExport {
         if value.isEmpty { return exclude ? "is not null" : "is null" }
         // W cudzysłowach, gdy tekst ma apostrof albo białe znaki na brzegach (spacja, tabulator, nowa linia, twarda spacja) —
         // parser filtra je obcina, a warunek ma trafić w tę samą komórkę.
-        // Przecinek („1,234” — separator tysięcy albo dziesiętny): porównanie tekstu komórki, nie liczby z niejednoznacznego
-        // zapisu.
-        // Kody z zerami wiodącymi i liczby ponad 15 cyfr („0012”, sygnatury) — też tekst (liczba zgubiłaby różnice).
-        let edges = value.trimmingCharacters(in: .whitespacesAndNewlines) != value
-        let lossy = CellOrder.number(value) != nil && !TableExport.isNumber(value)
-        let v = value.contains("'") || value.contains(",") || edges || lossy ? "'" + value.replacingOccurrences(of: "'", with: "''") + "'" : value
+        // Zawsze tekst w apostrofach — dokładnie ta wartość, jaką widać w komórce (bez interpretacji jako liczba: „19.10”
+        // ≠ „19.1”, „0012” ≠ „12”, „1,234”, sygnatury, białe znaki na brzegach).
+        let v = "'" + value.replacingOccurrences(of: "'", with: "''") + "'"
         return (exclude ? "<> " : "= ") + v
     }
 }
@@ -185,8 +182,12 @@ enum TableCommands {
                     parameters: [columnParam]) { ctx in
                 let h = try handle(ctx)
                 let live = h.contents
-                let col = try await column(ctx, live)
-                let c = h.stableContents(live, rows: nil, columns: [col])
+                // Tekst zamrożony przed oknem wyboru kolumny (tabela może się w tym czasie przeładować): podana kolumna —
+                // tylko ona, wybór z listy — wszystkie.
+                let given = ctx.arguments.string("column") != nil ? [try await column(ctx, live)] : nil
+                let c = h.stableContents(live, rows: nil, columns: given)
+                let col: String
+                if let first = given?.first { col = first } else { col = try await column(ctx, c) }
                 return put(ctx, c.data(rows: c.all, columns: [col]), header: TableExport.copyHeader)
             },
             command("table.markColumn", L10n.tr("Zaznacz kolumnę do kopii"), L10n.tr("Dodaje kolumnę do kolumn kopiowanych razem albo ją z nich usuwa."),

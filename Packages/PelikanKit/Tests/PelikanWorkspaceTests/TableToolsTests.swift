@@ -227,6 +227,11 @@ struct TableToolsReviewTests {
         #expect(!ValueFilter.parse(TableExport.condition("0012", exclude: false))!.matches(text: "12", key: .text("12")))
         #expect(ValueFilter.parse(TableExport.condition("0012", exclude: false))!.matches(text: "0012", key: .text("0012")))
         #expect(!ValueFilter.parse("= 'EMP2'")!.matches(text: "EMP02", key: .text("EMP02")))
+        // „Tylko ta wartość” — zawsze tekst dosłownie: „19.10” ≠ „19.1”; =, <, between zgodne dla tekstu.
+        #expect(!ValueFilter.parse(TableExport.condition("19.10", exclude: false))!.matches(text: "19.1", key: .text("19.1")))
+        #expect(!ValueFilter.parse("between 'EMP02' and 'EMP02'")!.matches(text: "EMP2", key: .text("EMP2")))
+        // Komórka bez klucza, ale z opisem (kolumna postępu) — nie jest pusta.
+        #expect(ValueFilter.parse(TableExport.condition("Łączenie…", exclude: false))!.matches(text: "Łączenie…", key: .none))
         #expect(TableExport.isNumber("5."))
         // Liczba z zerami po przecinku (16 znaków, 8 cyfr znaczących) — liczba; kolumna zostaje liczbowa.
         #expect(TableExport.isNumber("-0.0000012345678"))
@@ -275,7 +280,7 @@ struct TableToolsReviewTests {
         try await run("table.copyMarkedColumns")
         #expect(ui.clipboard == "x\ny\nz")
         try await run("table.filterByValue", ["column": "a", "exclude": true])
-        #expect(t.filter.columns["a"] == "<> 2")
+        #expect(t.filter.columns["a"] == "<> '2'")
         try await run("table.clearFilter")
         #expect(!t.filter.isActive)
         try await run("table.export", ["format": "csv"])
@@ -309,7 +314,7 @@ struct TableToolsReviewTests {
         let r = try await ws.registry.command("table.filterByValue")!.run(CommandContext(workspace: ws, invoker: .user, arguments: CommandArguments(["column": "a", "row": 1]), target: t))
         #expect(r.resolvedArguments?.string("value") == "1")
         try await run("table.filterByValue", ["column": "b", "value": "q", "row": 99], target: t)
-        #expect(t.filter.columns["b"] == "= q")
+        #expect(t.filter.columns["b"] == "= 'q'")
         // Zaznaczenie kolumny w makrze — stan docelowy.
         try await run("table.markColumn", ["column": "a", "marked": true], target: t)
         try await run("table.markColumn", ["column": "a", "marked": true], target: t)

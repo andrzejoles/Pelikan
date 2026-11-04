@@ -96,6 +96,16 @@ extension Int32: TextualSortKey { var cellText: String { String(self) } }
 extension UInt64: TextualSortKey { var cellText: String { String(self) } }
 extension Binding: TextualSortKey where Value: TextualSortKey { var cellText: String { wrappedValue.cellText } }
 
+extension DataColumn {
+    /// Kolumna pola wyboru w tabeli edytowalnej: przełącznik, klucz sortowania i tekst „tak”/„nie” z jednej ścieżki.
+    static func check<T>(_ title: String, _ key: WritableKeyPath<T, Bool>, disabled: @escaping (T) -> Bool = { _ in false }) -> Self
+        where Row == Binding<T> {
+        Self(title, sortKey: { (r: Binding<T>) in r.wrappedValue[keyPath: key] }, text: { (r: Binding<T>) in checkText(r.wrappedValue[keyPath: key]) }) { (r: Binding<T>) in
+            Toggle("", isOn: r[dynamicMember: key]).labelsHidden().disabled(disabled(r.wrappedValue))
+        }
+    }
+}
+
 /// Tekst pola wyboru w kopii, eksporcie i filtrze tabeli.
 func checkText(_ on: Bool) -> String { on ? L10n.tr("tak") : L10n.tr("nie") }
 
@@ -305,6 +315,13 @@ struct TableWindowProbe: NSViewRepresentable {
     final class Probe: NSView {
         weak var handle: SwiftUITableHandle?
         private var observation: NSKeyValueObservation?
+
+        /// Po pierwszym układzie (ramka niezerowa) — tabela mogła mieć fokus już przy wstawieniu sondy.
+        override func setFrameSize(_ newSize: NSSize) {
+            let wasEmpty = bounds.width <= 1 || bounds.height <= 1
+            super.setFrameSize(newSize)
+            if wasEmpty, newSize.width > 1, newSize.height > 1 { responderChanged(window?.firstResponder) }
+        }
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()

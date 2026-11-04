@@ -102,7 +102,8 @@ public struct ValueFilter: Sendable, Hashable {
         // Pusta: brak klucza albo pusty tekst przy kluczu tekstowym (liczba i data mają wartość także bez tekstu).
         let isEmpty: Bool = {
             switch key {
-            case .none: return true
+            // Bez klucza: pusta, gdy pusty jest też tekst (komórka z samym opisem, np. „Łączenie…” w kolumnie postępu).
+            case .none: return text.isEmpty
             case .text: return text.isEmpty
             default: return false
             }
@@ -114,11 +115,7 @@ public struct ValueFilter: Sendable, Hashable {
             let hit = !isEmpty && (compiled ?? LikePattern.cached(p)).matches(text)
             return negated ? !hit && !isEmpty : hit
         case .compare(let op, let v):
-            // Równość tekstu (wartość w apostrofach) — dokładnie, bez wielkości liter („EMP2” ≠ „EMP02”); porządek —
-            // naturalny (cyfry wg wartości).
-            let r: ComparisonResult?
-            if case .text(let s) = v, op == .eq || op == .ne { r = isEmpty ? nil : text.caseInsensitiveCompare(s) } else { r = isEmpty ? nil : Self.compare(text: text, key: key, v) }
-            guard let r else { return false }
+            guard !isEmpty, let r = Self.compare(text: text, key: key, v) else { return false }
             switch op {
             case .eq: return r == .orderedSame
             case .ne: return r != .orderedSame
@@ -171,7 +168,9 @@ public struct ValueFilter: Sendable, Hashable {
                 return order(cell.timeIntervalSinceReferenceDate.rounded(.down), d.timeIntervalSinceReferenceDate.rounded(.down))
             }
         case .text(let s):
-            return text.compare(s, options: [.caseInsensitive, .numeric])
+            // Tekst (w apostrofach albo nieliczbowy) — dosłownie, bez wielkości liter, tak samo dla =, <, between
+            // („EMP2” ≠ „EMP02”).
+            return text.caseInsensitiveCompare(s)
         }
     }
 }

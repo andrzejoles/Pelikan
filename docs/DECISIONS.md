@@ -3720,3 +3720,10 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   jedną odpowiedź (`FocusedSQL`: cel, tabela SQL bez zaznaczenia, brak) zamiast dwóch metod; przełącznik kolumny do
   kopii ustawia stan (`marked`). Weta odrzucone: walidacja z celem w `validate` zamiast `acceptsTarget` (ergonomia
   równa) i leniwa migawka menu AppKit (decyzja rundy 16 — to, co widział użytkownik).
+- Runda 19: „Filtruj: tylko ta wartość / bez tej wartości” zawsze zapisuje wartość komórki jako tekst w apostrofach
+  (dokładnie to, co widać — koniec heurystyk liczb: „19.10” ≠ „19.1”, „0012” ≠ „12”); tekst w apostrofach porównywany
+  dosłownie (bez wielkości liter) tak samo dla =, <, between. Komórka bez klucza, ale z opisem, nie jest pusta.
+  „Kopiuj kolumnę” zamraża tekst przed oknem wyboru kolumny; tabela SwiftUI z fokusem już przy wstawieniu rejestruje
+  się po pierwszym układzie; opis instancji o stałej szerokości (układ nagłówka nie skacze przy odświeżaniu); kolumny
+  pól wyboru z jednej fabryki (`DataColumn.check`). Weto wobec palety (kontekst okna w wywołaniu) i `stableContents`
+  odrzucone — bez zysku informacji ani ergonomii.

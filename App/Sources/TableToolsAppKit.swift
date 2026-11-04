@@ -45,14 +45,13 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     /// przeładować. Jedno miejsce dla migawki menu i komend z palety, skrótu i paska.
     func frozenContents(rows: Set<Int>?, columns: [String]?) -> TableContents {
         let c = contents
-        let wanted = rows ?? Set(0..<c.rowCount)
-        let ids = columns.map(Set.init)
-        let cols = c.columns.filter { ids?.contains($0.id) ?? true }
-        let cells = Dictionary(uniqueKeysWithValues: wanted.filter { $0 < c.rowCount }.map { r in
-            (r, Dictionary(cols.map { ($0.id, c.cell(r, $0.id)) }, uniquingKeysWith: { a, _ in a }))
-        })
+        let wanted = (rows ?? Set(0..<c.rowCount)).filter { $0 < c.rowCount }
+        let cols = columns.map { ids in c.columns.filter { ids.contains($0.id) } } ?? c.columns
+        let position = Dictionary(cols.enumerated().map { ($0.element.id, $0.offset) }, uniquingKeysWith: { a, _ in a })
+        // Tekst wierszy jako tablice w kolejności kolumn (bez słownika na każdy wiersz).
+        let cells = Dictionary(uniqueKeysWithValues: wanted.map { r in (r, cols.map { c.cell(r, $0.id) }) })
         return TableContents(title: c.title, columns: c.columns, rowCount: c.rowCount,
-                             cell: { r, id in cells[r]?[id] ?? "" }, selectedRows: c.selectedRows)
+                             cell: { r, id in position[id].flatMap { cells[r]?[$0] } ?? "" }, selectedRows: c.selectedRows)
     }
 
     /// Migawka menu z chwili jego otwarcia: zaznaczone wiersze i wiersz spod kursora (to, co widział użytkownik).

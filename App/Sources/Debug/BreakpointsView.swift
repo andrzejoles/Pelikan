@@ -11,7 +11,7 @@ struct BreakpointsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             DataTable(Binding.rows($workspace.breakpoints)) {
-                DataColumn(L10n.tr("Włączony"), sortKey: { b in b.enabled }, text: { b in checkText(b.wrappedValue.enabled) }) { $b in Toggle("", isOn: $b.enabled).labelsHidden() }.width(60)
+                DataColumn.check(L10n.tr("Włączony"), \.enabled).width(60)
                 DataColumn(L10n.tr("Miejsce"), sortKey: { b in place(b.wrappedValue) }) { $b in
                     HStack(spacing: 4) {
                         if workspace.unappliedBreakpoints.contains(b.id) {
