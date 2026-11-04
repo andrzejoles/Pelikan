@@ -887,7 +887,7 @@ public final class Workspace {
             if invoker.isAgent {
                 // Agent bez bramki uprawnień (serwer agentów nie działa) nie wykonuje niczego.
                 guard let gate = agentGate else { throw AgentDenial.sessionClosed }
-                context = CommandContext(workspace: self, invoker: invoker, arguments: try await gate.authorize(command, context: context))
+                context = CommandContext(workspace: self, invoker: invoker, arguments: try await gate.authorize(command, context: context), target: target)
             }
             let result = if let s = invoker.agentSessionID, AgentChanges.serializedCommands.contains(id) {
                 try await agentSerialized(s) { try await command.run(context) }

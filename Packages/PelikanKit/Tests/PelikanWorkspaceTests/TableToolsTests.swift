@@ -227,6 +227,9 @@ struct TableToolsReviewTests {
         #expect(!ValueFilter.parse(TableExport.condition("0012", exclude: false))!.matches(text: "12", key: .text("12")))
         #expect(ValueFilter.parse(TableExport.condition("0012", exclude: false))!.matches(text: "0012", key: .text("0012")))
         #expect(!ValueFilter.parse("= 'EMP2'")!.matches(text: "EMP02", key: .text("EMP02")))
+        // „Tylko ta wartość” z wielkością liter („Emp” ≠ „EMP”); wpisany tekst bez apostrofów — bez wielkości liter.
+        #expect(!ValueFilter.parse(TableExport.condition("Emp", exclude: false))!.matches(text: "EMP", key: .text("EMP")))
+        #expect(ValueFilter.parse("= active")!.matches(text: "ACTIVE", key: .text("ACTIVE")))
         // „Tylko ta wartość” — zawsze tekst dosłownie: „19.10” ≠ „19.1”; =, <, between zgodne dla tekstu.
         #expect(!ValueFilter.parse(TableExport.condition("19.10", exclude: false))!.matches(text: "19.1", key: .text("19.1")))
         #expect(!ValueFilter.parse("between 'EMP02' and 'EMP02'")!.matches(text: "EMP2", key: .text("EMP2")))

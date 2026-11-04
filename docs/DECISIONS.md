@@ -3727,3 +3727,8 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   się po pierwszym układzie; opis instancji o stałej szerokości (układ nagłówka nie skacze przy odświeżaniu); kolumny
   pól wyboru z jednej fabryki (`DataColumn.check`). Weto wobec palety (kontekst okna w wywołaniu) i `stableContents`
   odrzucone — bez zysku informacji ani ergonomii.
+- Przegląd na poziomie medium (właściciel: „poprawiaj tylko to, co istotne”): wartość w apostrofach („tylko ta
+  wartość”) porównywana dokładnie, z wielkością liter („Emp” ≠ „EMP” — nazwy Oracle w cudzysłowach); tekst wpisany bez
+  apostrofów i wzorce LIKE — bez wielkości liter, jak dotąd. Cel komendy zachowany także w ścieżce agenta; „Zaznacz
+  kolumnę do kopii” w menu AppKit ustawia stan z chwili otwarcia menu. Pominięte jako nieistotne: wyścig „Całej
+  sekcji” w makrach, koszt migawki menu przy zaznaczeniu wszystkiego, zapasowa kompilacja wzorca w filtrze siatki.

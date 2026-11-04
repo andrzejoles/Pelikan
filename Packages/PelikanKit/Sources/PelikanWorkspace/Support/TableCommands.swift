@@ -60,10 +60,8 @@ extension TableExport {
     /// Warunek filtra „tylko ta wartość” / „bez tej wartości” dla tekstu komórki.
     public static func condition(_ value: String, exclude: Bool) -> String {
         if value.isEmpty { return exclude ? "is not null" : "is null" }
-        // W cudzysłowach, gdy tekst ma apostrof albo białe znaki na brzegach (spacja, tabulator, nowa linia, twarda spacja) —
-        // parser filtra je obcina, a warunek ma trafić w tę samą komórkę.
         // Zawsze tekst w apostrofach — dokładnie ta wartość, jaką widać w komórce (bez interpretacji jako liczba: „19.10”
-        // ≠ „19.1”, „0012” ≠ „12”, „1,234”, sygnatury, białe znaki na brzegach).
+        // ≠ „19.1”, „0012” ≠ „12”, „1,234”, sygnatury; z wielkością liter: „Emp” ≠ „EMP”; białe znaki na brzegach).
         let v = "'" + value.replacingOccurrences(of: "'", with: "''") + "'"
         return (exclude ? "<> " : "= ") + v
     }

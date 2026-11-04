@@ -197,7 +197,10 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         if let column {
             let id = column.identifier.rawValue
             menu.addItem(item(L10n.tr("Kopiuj kolumnę „\(column.title)”"), "table.copyColumn", ["column": .string(id)]))
-            menu.addItem(item(L10n.tr("Zaznacz kolumnę „\(column.title)” do kopii"), state: markedColumns.contains(id), "table.markColumn", ["column": .string(id)]))
+            // Stan docelowy z chwili otwarcia menu (nie przełączenie względem stanu w chwili kliknięcia).
+            let marked = markedColumns.contains(id)
+            menu.addItem(item(L10n.tr("Zaznacz kolumnę „\(column.title)” do kopii"), state: marked, "table.markColumn",
+                              ["column": .string(id), "marked": .bool(!marked)]))
         }
         let marked = markedColumns
         menu.addItem(item(L10n.tr("Kopiuj zaznaczone kolumny (\(marked.count))"), enabled: !marked.isEmpty, "table.copyMarkedColumns"))

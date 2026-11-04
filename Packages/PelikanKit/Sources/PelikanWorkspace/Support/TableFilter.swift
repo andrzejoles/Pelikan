@@ -13,6 +13,8 @@ public struct ValueFilter: Sendable, Hashable {
         /// dokładnością („= 2026-11-04 12:00” obejmuje całą minutę).
         case date(Date, precision: DatePrecision)
         case text(String)
+        /// Tekst w apostrofach — dokładnie, z wielkością liter („tylko ta wartość” z menu).
+        case exact(String)
     }
 
     public enum DatePrecision: Sendable, Hashable { case day, minute, second }
@@ -46,7 +48,7 @@ public struct ValueFilter: Sendable, Hashable {
                 func bound(_ raw: String) -> Value? {
                     let v = unquote(raw)
                     guard !v.isEmpty else { return nil }
-                    return raw.count >= 2 && raw.hasPrefix("'") && raw.hasSuffix("'") ? .text(v) : value(v)
+                    return raw.count >= 2 && raw.hasPrefix("'") && raw.hasSuffix("'") ? .exact(v) : value(v)
                 }
                 if let a = bound(body[..<r.lowerBound].trimmingCharacters(in: .whitespaces)),
                    let b = bound(body[r.upperBound...].trimmingCharacters(in: .whitespaces)) {
@@ -61,7 +63,7 @@ public struct ValueFilter: Sendable, Hashable {
             let v = unquote(raw)
             // W apostrofach — tekst dosłownie (jak w SQL): „= '1,234'” porównuje tekst komórki, nie liczbę.
             let quoted = raw.count >= 2 && raw.hasPrefix("'") && raw.hasSuffix("'")
-            return ValueFilter(condition: v.isEmpty ? (op == .eq ? .isNull : .notNull) : .compare(op, quoted ? .text(v) : value(v)), text: t)
+            return ValueFilter(condition: v.isEmpty ? (op == .eq ? .isNull : .notNull) : .compare(op, quoted ? .exact(v) : value(v)), text: t)
         }
         return ValueFilter(condition: .like(unquote(t), negated: false), text: t)
     }
@@ -168,9 +170,11 @@ public struct ValueFilter: Sendable, Hashable {
                 return order(cell.timeIntervalSinceReferenceDate.rounded(.down), d.timeIntervalSinceReferenceDate.rounded(.down))
             }
         case .text(let s):
-            // Tekst (w apostrofach albo nieliczbowy) — dosłownie, bez wielkości liter, tak samo dla =, <, between
-            // („EMP2” ≠ „EMP02”).
+            // Tekst wpisany bez apostrofów — bez wielkości liter (jak wzorce LIKE), dosłownie dla =, <, between.
             return text.caseInsensitiveCompare(s)
+        case .exact(let s):
+            // W apostrofach — dokładnie, z wielkością liter (nazwy Oracle w cudzysłowach: „Emp” ≠ „EMP”; „EMP2” ≠ „EMP02”).
+            return text.compare(s)
         }
     }
 }
