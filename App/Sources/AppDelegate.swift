@@ -1170,9 +1170,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {
+        guard let window = mainWindow?.window else { return false }
+        return await saveFile(suggestedName: suggestedName, fileExtension: fileExtension, data: data, window: window)
+    }
+
+    /// Eksport tabeli: arkusz nad oknem tej tabeli (okno narzędzia przed oknem głównym), inaczej nad oknem głównym.
+    func saveFile(suggestedName: String, fileExtension: String, data: Data, table: any TableHandle) async -> Bool {
+        guard let window = TableFocus.window(for: table) ?? mainWindow?.window else { return false }
+        return await saveFile(suggestedName: suggestedName, fileExtension: fileExtension, data: data, window: window)
+    }
+
+    private func saveFile(suggestedName: String, fileExtension: String, data: Data, window: NSWindow) async -> Bool {
         if Self.scriptSkipsDialog("saveFile") { return false }
-        // Okno, z którego wywołano zapis (np. okno narzędzia przed głównym) — inaczej arkusz byłby niewidoczny.
-        guard let window = TableFocus.actionWindow ?? TableFocus.contextWindow ?? mainWindow?.window else { return false }
         let panel = NSSavePanel()
         panel.nameFieldStringValue = suggestedName.replacingOccurrences(of: "/", with: "-") + "." + fileExtension
         panel.allowedContentTypes = [UTType(filenameExtension: fileExtension) ?? .data]

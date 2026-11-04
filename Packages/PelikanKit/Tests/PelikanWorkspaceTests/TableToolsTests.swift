@@ -199,6 +199,8 @@ struct TableToolsReviewTests {
         #expect(ValueFilter.parse("> 10")!.matches(text: "12.3%", key: .number(0.123)))
         #expect(ValueFilter.parse("> 50")!.matches(text: "75%", key: .number(0.75)))
         #expect(ValueFilter.parse("< 2")!.matches(text: "1.2 s", key: .number(1_200_000_000)))
+        // Kody z literami (wersje, klasy) nie są liczbami z jednostką.
+        #expect(!ValueFilter.parse("= 19")!.matches(text: "19c", key: .text("19c")))
     }
 
     @Test("Eksport: zera wiodące i długie identyfikatory zostają tekstem")
@@ -246,6 +248,10 @@ struct TableToolsReviewTests {
         #expect(ui.clipboard == "błąd")
         #expect(ws.registry.command("file.new.sql")?.descriptor.parameters.map(\.name) == ["text"])
         #expect(ws.registry.command("file.new.program")?.descriptor.parameters.isEmpty == true)
+        // Agent nie wpisuje tekstu przez file.new.sql (tylko agent.openEditor — zgoda i dziennik zmian).
+        await #expect(throws: (any Error).self) {
+            _ = try await ws.registry.command("file.new.sql")!.run(CommandContext(workspace: ws, invoker: .agent(sessionID: "s", agentName: "test"), arguments: CommandArguments(["text": "delete from emp"])))
+        }
         // Menu tabeli wskazuje ją identyfikatorem — działa na niej, choć fokus ma inna tabela; bez tabeli — przełącznik nagłówka.
         let other = FakeTableHandle(rows: [["9", "q"]], selected: [0])
         ui.table = other

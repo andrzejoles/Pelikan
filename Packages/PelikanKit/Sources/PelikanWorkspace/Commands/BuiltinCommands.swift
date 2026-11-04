@@ -27,7 +27,12 @@ public enum BuiltinCommands {
                 : L10n.tr("Otwiera nowe puste okno: \(kind.displayName)."),
             feature: feature
         )) { ctx in
-            let doc = ctx.workspace.newDocument(kind, text: kind == .sql ? ctx.arguments.string("text") ?? "" : "")
+            let text = kind == .sql ? ctx.arguments.string("text") ?? "" : ""
+            // Agent wpisuje tekst do okna przez agent.openEditor (zmiana edytora: zgoda i dziennik zmian agenta).
+            if !text.isEmpty, ctx.invoker.isAgent {
+                throw AgentDenial.permissionDenied(L10n.tr("tekst nowego okna agent podaje przez agent.openEditor"))
+            }
+            let doc = ctx.workspace.newDocument(kind, text: text)
             return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
         }
     }

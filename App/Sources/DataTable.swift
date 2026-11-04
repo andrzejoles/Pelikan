@@ -134,6 +134,44 @@ protocol FocusTable: TableHandle {
     var tableView: NSTableView? { get }
     /// Bieżące indeksy wierszy widoku o tych identyfikatorach (menu kontekstowe — wiersze mogły się przesunąć).
     func indexes(of ids: [AnyHashable]) -> [Int]
+    /// Zawartość i indeksy liczone raz (migawka do komendy z menu).
+    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int])
+}
+
+/// Migawka tabeli z chwili wyboru pozycji menu (D224): komenda z menu działa na tych wierszach, które widział
+/// użytkownik — także gdy tabela odświeży się przed jej startem; widok liczony raz na czynność. Filtr i kolumny do kopii
+/// zmieniają stan żywej tabeli.
+@MainActor
+final class FrozenTable: TableHandle {
+    let contents: TableContents
+    private let indexer: ([AnyHashable]) -> [Int]
+    private weak var base: (any FocusTable)?
+
+    init(_ base: any FocusTable) {
+        self.base = base
+        let snap = base.snapshot()
+        contents = snap.contents
+        indexer = snap.indexes
+    }
+
+    var filter: TableFilter {
+        get { base?.filter ?? TableFilter() }
+        set { base?.filter = newValue }
+    }
+    var markedColumns: [String] {
+        get { base?.markedColumns ?? [] }
+        set { base?.markedColumns = newValue }
+    }
+    func indexes(of ids: [AnyHashable]) -> [Int] { indexer(ids) }
+
+    /// Argument wierszy menu: brak — wiersze równe zaznaczeniu; pusta lista — wiersze zniknęły (komenda to zgłosi).
+    func rowsArgument(_ ids: [AnyHashable]) -> [String: JSONValue] {
+        let rows = indexes(of: ids)
+        return !rows.isEmpty && rows == contents.selectedRows ? [:] : ["rows": .string(rows.map { String($0 + 1) }.joined(separator: ","))]
+    }
+
+    /// Argument wiersza menu (numer od 1; 0 — wiersza już nie ma).
+    func rowArgument(_ ids: [AnyHashable]) -> [String: JSONValue] { ["row": .int(Int64((indexes(of: ids).first ?? -1) + 1))] }
 }
 
 /// Tabela SwiftUI: jeden obiekt na widok (`@State`), odświeżany przy każdym rysowaniu — komenda wywołana później
@@ -147,11 +185,17 @@ final class SwiftUITableHandle: FocusTable {
     private var state: Binding<TableToolsState>?
     weak var tableView: NSTableView?
 
-    func update(contents: @escaping () -> TableContents, sqlTarget: @escaping () -> SQLReportTarget?, state: Binding<TableToolsState>,
-                indexes: @escaping ([AnyHashable]) -> [Int]) {
-        provider = contents
-        target = sqlTarget
-        indexer = indexes
+    /// `rows` — wiersze widoku liczone przy wywołaniu (bieżący filtr i sortowanie), `contents` i `sqlTarget` — z tych
+    /// wierszy; migawka liczy je raz.
+    func update<Row: Identifiable>(rows: @escaping () -> [Row], contents: @escaping ([Row]) -> TableContents,
+                                   sqlTarget: @escaping ([Row]) -> SQLReportTarget?, state: Binding<TableToolsState>) {
+        provider = { contents(rows()) }
+        target = { sqlTarget(rows()) }
+        indexer = { ids in Self.indexer(rows())(ids) }
+        snapshotter = {
+            let shown = rows()
+            return (contents(shown), Self.indexer(shown))
+        }
         self.state = state
     }
 
@@ -167,6 +211,11 @@ final class SwiftUITableHandle: FocusTable {
     }
 
     func indexes(of ids: [AnyHashable]) -> [Int] { indexer(ids) }
+
+    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) { snapshotter() }
+    private var snapshotter: () -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) = {
+        (TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []), { _ in [] })
+    }
 
     /// Indeksy wierszy widoku o identyfikatorach (liczone przy wyborze pozycji menu).
     static func indexer<Row: Identifiable>(_ shown: [Row]) -> ([AnyHashable]) -> [Int] {
@@ -186,11 +235,24 @@ enum TableFocus {
     static let probes = NSHashTable<TableViewLocator.Probe>.weakObjects()
     /// Okno, nad którym otwarto paletę komend (jej czynności dotyczą tego okna).
     static weak var paletteHost: NSWindow?
-    /// Okno tabeli, z której menu trwa komenda (arkusz zapisu nad nim).
-    static weak var actionWindow: NSWindow?
+    /// Okna tabel komend z menu w toku (po migawce) — arkusz zapisu eksportu nad oknem tej tabeli.
+    static var exportWindows: [ObjectIdentifier: NSWindow] = [:]
+    /// Widok z fokusem, dla którego szukanie tabeli już zawiodło (walidacja menu i palety woła `current()` często).
+    private static weak var missed: NSTableView?
+
+    static func window(for table: any TableHandle) -> NSWindow? {
+        exportWindows[ObjectIdentifier(table)] ?? (table as? any FocusTable)?.tableView?.window
+    }
+
+    static func unregister(_ table: NSTableView, _ handle: AnyObject) {
+        if tables.object(forKey: table) === handle { tables.removeObject(forKey: table) }
+    }
     static weak var palette: NSWindow?
 
-    static func register(_ table: NSTableView, _ handle: any FocusTable) { tables.setObject(handle, forKey: table) }
+    static func register(_ table: NSTableView, _ handle: any FocusTable) {
+        tables.setObject(handle, forKey: table)
+        if missed === table { missed = nil }
+    }
 
     /// Okno czynności: okno z fokusem, a gdy fokus ma paleta komend — okno, nad którym ją otwarto.
     static var contextWindow: NSWindow? {
@@ -202,7 +264,10 @@ enum TableFocus {
     static func current() -> (any FocusTable)? {
         guard let window = contextWindow, let tv = window.firstResponder as? NSTableView, !(tv is GridTableView) else { return nil }
         if let h = tables.object(forKey: tv) as? any FocusTable { return h }
-        // Tabela jeszcze niezarejestrowana (np. pokazana z ukrytej karty doku bez przerysowania) — szukanie teraz.
+        // Tabela jeszcze niezarejestrowana (np. pokazana z ukrytej karty doku bez przerysowania) — szukanie raz na
+        // widok z fokusem (nie przy każdym sprawdzeniu menu i palety).
+        guard missed !== tv else { return nil }
+        missed = tv
         for p in probes.allObjects where p.window === window { p.locate() }
         return tables.object(forKey: tv) as? any FocusTable
     }
@@ -254,11 +319,13 @@ struct TableViewLocator: NSViewRepresentable {
             return (i.width * i.height) / max(1, u.width * u.height)
         }
 
+        /// Tabela pod tabelą SwiftUI: najbliższy przodek sondy, którego poddrzewo ma widoczną tabelę o ramce prawie
+        /// równej ramce sondy (tło `.background` leży obok tabeli w tym samym kontenerze); widoki ukryte (nieaktywne
+        /// narzędzia doku) pomijane. Brak tabeli — rejestracja usuwana.
         func locate() {
-            guard let handle, let window, let root = window.contentView, !isHiddenOrHasHiddenAncestor else { return }
+            guard let handle, window != nil, !isHiddenOrHasHiddenAncestor else { return }
             let mine = convert(bounds, to: nil)
             guard mine.width > 0, mine.height > 0 else { return }
-            // Zarejestrowana tabela nadal w tym miejscu (ta sama ramka, widoczna) — bez ponownego szukania.
             if let tv = handle.tableView, tv.window === window, !tv.isHiddenOrHasHiddenAncestor, Self.score(tv, mine) > 0.8 { return }
             var best: (NSTableView, CGFloat)?
             func walk(_ v: NSView) {
@@ -269,7 +336,12 @@ struct TableViewLocator: NSViewRepresentable {
                 }
                 v.subviews.forEach(walk)
             }
-            walk(root)
+            var ancestor = superview
+            while let a = ancestor, best == nil {
+                walk(a)
+                ancestor = a.superview
+            }
+            if let old = handle.tableView, old !== best?.0 { TableFocus.unregister(old, handle) }
             guard let tv = best?.0 else {
                 handle.tableView = nil
                 return
@@ -295,25 +367,23 @@ struct TableViewLocator: NSViewRepresentable {
 /// działają na niej niezależnie od fokusu i okna kluczowego.
 @MainActor
 enum TableActions {
-    static func perform(_ handle: any FocusTable, _ id: String, _ args: [String: JSONValue] = [:]) {
+    /// Komenda na migawce tabeli; `args` liczone z tej migawki (wiersze menu po identyfikatorach).
+    static func perform(_ handle: any FocusTable, _ id: String, _ args: (FrozenTable) -> [String: JSONValue] = { _ in [:] }) {
         guard let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
-        var a = args
-        a[TableRegistry.key] = .string(TableRegistry.id(for: handle))
-        TableRegistry.begin()
-        TableFocus.actionWindow = handle.tableView?.window
+        let frozen = FrozenTable(handle)
+        var a = args(frozen)
+        a[TableRegistry.key] = .string(TableRegistry.id(for: frozen))
+        TableFocus.exportWindows[ObjectIdentifier(frozen)] = handle.tableView?.window
         let task = ws.perform(CommandID(rawValue: id), CommandArguments(a))
+        // Migawka żyje do końca komendy (rejestr trzyma ją słabo).
         Task { @MainActor in
             await task.value
-            TableRegistry.end()
-            if TableRegistry.pending == 0 { TableFocus.actionWindow = nil }
+            TableFocus.exportWindows[ObjectIdentifier(frozen)] = nil
+            withExtendedLifetime(frozen) {}
         }
     }
 
-    /// Argument `rows` (numery od 1) tylko, gdy wiersze menu różnią się od zaznaczenia (inaczej komenda bierze
-    /// zaznaczenie); wiersze, których już nie ma — pusta lista (komenda zgłasza, że zniknęły).
-    static func rowsArguments(_ rows: [Int], _ handle: any FocusTable) -> [String: JSONValue] {
-        !rows.isEmpty && rows == handle.contents.selectedRows ? [:] : ["rows": .string(rows.map { String($0 + 1) }.joined(separator: ","))]
-    }
+    static func perform(_ handle: any FocusTable, _ id: String, _ args: [String: JSONValue]) { perform(handle, id) { _ in args } }
 
     /// Tytuł do nazwy pliku i arkusza: podany albo tytuł okna tabeli.
     static func title(_ given: String?, window: NSWindow?) -> String {
@@ -328,6 +398,12 @@ enum TableActions {
 enum TableMenuRows {
     case context(ids: [AnyHashable], count: Int, first: Int)
     case selection
+
+    /// Menu kontekstowe: wiersze o identyfikatorach `ids` w wierszach widoku; klik poza wierszami — jak pasek.
+    static func from<Row: Identifiable>(_ ids: Set<Row.ID>, shown: [Row]) -> TableMenuRows {
+        let idx = shown.indices.filter { ids.contains(shown[$0].id) }
+        return idx.isEmpty ? .selection : .context(ids: idx.map { AnyHashable(shown[$0].id) }, count: idx.count, first: idx[0])
+    }
 }
 
 /// Menu „Kopiuj” tabeli: komórka, wiersze, kolumny (pojedyncza i zaznaczone), cała tabela.
@@ -340,17 +416,12 @@ struct TableCopyMenu: View {
 
     private func run(_ id: String, _ args: [String: JSONValue] = [:]) { TableActions.perform(handle, id, args) }
 
-    /// Argumenty wierszy z menu kontekstowego w chwili wyboru pozycji.
-    private func rowArgs() -> [String: JSONValue] {
-        guard case .context(let ids, _, _) = rows else { return [:] }
-        return TableActions.rowsArguments(handle.indexes(of: ids), handle)
-    }
-
-    private func cellArgs(_ column: String) -> [String: JSONValue] {
-        var a: [String: JSONValue] = ["column": .string(column)]
-        // Wiersz menu, którego już nie ma — 0 (komenda zgłasza, że zniknął).
-        if case .context(let ids, _, _) = rows { a["row"] = .int(Int64((handle.indexes(of: ids).first ?? -1) + 1)) }
-        return a
+    /// Komenda z wierszami menu kontekstowego (indeksy z migawki w chwili wyboru pozycji).
+    private func runRows(_ id: String, _ extra: [String: JSONValue] = [:], cell: Bool = false) {
+        TableActions.perform(handle, id) { f in
+            guard case .context(let ids, _, _) = rows else { return extra }
+            return extra.merging(cell ? f.rowArgument(ids) : f.rowsArgument(ids)) { a, _ in a }
+        }
     }
 
     var body: some View {
@@ -359,10 +430,10 @@ struct TableCopyMenu: View {
             Menu(L10n.tr("Kopiuj komórkę")) {
                 ForEach(contents.columns, id: \.id) { c in
                     let v = first < contents.rowCount ? contents.cell(first, c.id) : ""
-                    Button("\(c.title): \(v.count > 40 ? String(v.prefix(40)) + "…" : v)") { run("table.copyCell", cellArgs(c.id)) }
+                    Button("\(c.title): \(v.count > 40 ? String(v.prefix(40)) + "…" : v)") { runRows("table.copyCell", ["column": .string(c.id)], cell: true) }
                 }
             }
-            Button(count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(count))")) { run("table.copyRows", rowArgs()) }
+            Button(count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(count))")) { runRows("table.copyRows") }
         case .selection:
             Menu(L10n.tr("Kopiuj komórkę")) {
                 ForEach(contents.columns, id: \.id) { c in Button(c.title) { run("table.copyCell", ["column": .string(c.id)]) } }
@@ -389,7 +460,10 @@ struct TableCopyMenu: View {
             switch rows {
             case .context(let ids, _, _):
                 Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) {
-                    run("table.copyMarkedColumns", ["rows": .string(handle.indexes(of: ids).map { String($0 + 1) }.joined(separator: ","))])
+                    // Zawsze wiersze menu (bez argumentu komenda kopiowałaby wszystkie).
+                    TableActions.perform(handle, "table.copyMarkedColumns") { f in
+                        ["rows": .string(f.indexes(of: ids).map { String($0 + 1) }.joined(separator: ","))]
+                    }
                 }
             case .selection:
                 Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) { run("table.copyMarkedColumns", ["selected": .bool(true)]) }
@@ -430,9 +504,9 @@ struct TableValueFilterMenu: View {
     }
 
     private func filter(_ column: String, exclude: Bool) {
-        // Wiersz, którego już nie ma — 0 (komenda zgłasza, że zniknął; jak pozostałe pozycje menu).
-        let r = handle.indexes(of: [rowID]).first ?? -1
-        TableActions.perform(handle, "table.filterByValue", ["column": .string(column), "row": .int(Int64(r + 1)), "exclude": .bool(exclude)])
+        TableActions.perform(handle, "table.filterByValue") { f in
+            f.rowArgument([rowID]).merging(["column": .string(column), "exclude": .bool(exclude)]) { a, _ in a }
+        }
     }
 }
 
@@ -625,14 +699,13 @@ struct DataTable<Row: Identifiable>: View {
 
     var body: some View {
         let shown = viewRows()
-        // Uchwyt widzi wiersze z tego rysowania (komendy wywołane później — bieżące dane, bez ponownego filtrowania).
         let snapshot = Self.snapshot(columns: columns, title: title, connection: reportConnection, selection: selection, handle: handle)
         let contents = snapshot.contents(shown)
-        // Komenda liczy wiersze z bieżącego filtra i sortowania (stan narzędzi mógł się zmienić bez przerysowania).
+        // Komendy liczą wiersze widoku przy wywołaniu z bieżącego filtra i sortowania (stan narzędzi mógł się zmienić bez
+        // przerysowania — makro, kilka komend z rzędu). Domknięcia trzymają wartości tabeli, nie widok.
         let (all, cols, toolsState, sortState) = (rows, columns, $tools, $sort)
-        let live = { Self.viewRows(all, columns: cols, filter: toolsState.wrappedValue.filter, sort: sortState.wrappedValue) }
-        let _ = handle.update(contents: { snapshot.contents(live()) }, sqlTarget: { snapshot.sqlTarget(live()) }, state: $tools,
-                              indexes: { ids in SwiftUITableHandle.indexer(live())(ids) })
+        let _ = handle.update(rows: { Self.viewRows(all, columns: cols, filter: toolsState.wrappedValue.filter, sort: sortState.wrappedValue) },
+                              contents: snapshot.contents, sqlTarget: snapshot.sqlTarget, state: $tools)
         VStack(spacing: 3) {
             TableToolsBar(contents: contents, handle: handle, state: $tools, total: rows.count)
             table(shown)
@@ -642,11 +715,10 @@ struct DataTable<Row: Identifiable>: View {
                 } primaryAction: { ids in
                     primaryAction?(ids)
                 }
+                // ⌘C — komenda „Kopiuj wiersze tabeli” (jak menu; historia wywołań, makra).
                 .onCopyCommand {
-                    let rows = contents.selectedRows
-                    guard !rows.isEmpty else { return [] }
-                    let c = TableExport.clipboard(contents.data(rows: rows), header: TableExport.copyHeader)
-                    return [NSItemProvider(object: c.text as NSString)]
+                    if !contents.selectedRows.isEmpty { TableActions.perform(handle, "table.copyRows") }
+                    return []
                 }
         }
         .onChange(of: shown.map(\.id), initial: true) { _, ids in onViewRowsChange?(ids) }
@@ -669,8 +741,7 @@ struct DataTable<Row: Identifiable>: View {
             Divider()
         }
         // Klik poza wierszami — menu jak na pasku (zaznaczenie w chwili komendy).
-        TableCopyMenu(contents: contents, handle: handle, marked: tools.markedColumns,
-                      rows: idx.isEmpty ? .selection : .context(ids: idx.map { AnyHashable(shown[$0].id) }, count: idx.count, first: idx[0]))
+        TableCopyMenu(contents: contents, handle: handle, marked: tools.markedColumns, rows: .from(ids, shown: shown))
         if let r = idx.first {
             Divider()
             TableValueFilterMenu(columns: contents.columns, handle: handle, rowID: AnyHashable(shown[r].id))

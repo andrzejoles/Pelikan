@@ -115,7 +115,9 @@ public struct ValueFilter: Sendable, Hashable {
         }
     }
 
-    private static let unitRE = try! NSRegularExpression(pattern: #"^\s*([-+]?[0-9][0-9 \u00A0.,]*)\s*(%|[A-Za-zµ]{1,3})?\s*$"#)
+    /// Liczba z jednostką czasu, rozmiaru albo procentem (kody jak „19c”, „11g” nie są liczbami).
+    private static let unitRE = try! NSRegularExpression(pattern: #"^\s*([-+]?[0-9][0-9 \u00A0.,]*)\s*(%|ns|µs|us|ms|s|min|h|B|KB|MB|GB|TB)\s*$"#,
+                                                         options: [.caseInsensitive])
 
     /// Liczba pokazana w komórce, także z jednostką albo procentem („12.3%”, „1.2 s”, „45 ms”) — filtr porównuje z tym,
     /// co widać, a nie z kluczem w innej skali (ułamek, nanosekundy).

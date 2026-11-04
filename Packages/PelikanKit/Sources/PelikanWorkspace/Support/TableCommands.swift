@@ -45,8 +45,6 @@ public enum TableRegistry {
     public static let key = "__table"
     private final class Entry { weak var handle: (any TableHandle)?; let id: String; init(_ h: any TableHandle) { handle = h; id = UUID().uuidString } }
     private static var entries: [Entry] = []
-    /// Komendy z menu tabeli w toku — walidacja komendy (klucz wewnętrzny jej nie wyłącza) uznaje tabelę za dostępną.
-    public private(set) static var pending = 0
 
     public static func id(for handle: any TableHandle) -> String {
         entries.removeAll { $0.handle == nil }
@@ -58,8 +56,6 @@ public enum TableRegistry {
 
     public static func handle(_ id: String) -> (any TableHandle)? { entries.first { $0.id == id }?.handle }
 
-    public static func begin() { pending += 1 }
-    public static func end() { pending = max(0, pending - 1) }
 }
 
 extension TableExport {
@@ -97,7 +93,7 @@ enum TableCommands {
         return h
     }
 
-    static func hasTable(_ ws: Workspace) -> Bool { TableRegistry.pending > 0 || ws.ui?.focusedTable() != nil }
+    static func hasTable(_ ws: Workspace) -> Bool { ws.ui?.focusedTable() != nil }
 
     /// Wiersze z argumentu `rows` (numery od 1) albo zaznaczone.
     static func rows(_ ctx: CommandContext, _ c: TableContents) throws -> [Int] {
@@ -229,7 +225,8 @@ enum TableCommands {
                     L10n.tr("Zapisuje wszystkie wiersze widoku tabeli do pliku: tekst, CSV, Excel, JSON, XML, HTML albo TSV."),
                     parameters: [CommandParameter("format", .string, L10n.tr("Format (bez argumentu — wybór z listy)"), allowed: TableExport.formats.map(\.rawValue))],
                     effect: .external) { ctx in
-                let c = try handle(ctx).contents
+                let table = try handle(ctx)
+                let c = table.contents
                 let format: ExportFormat
                 if let raw = ctx.arguments.string("format") {
                     guard let f = TableExport.formats.first(where: { $0.rawValue == raw }) else { throw CommandError.invalidArgument("format", raw) }
@@ -241,7 +238,8 @@ enum TableCommands {
                 }
                 let data = c.data(rows: c.all)
                 let name = (c.title.isEmpty ? L10n.tr("Tabela") : c.title).replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
-                guard await ctx.ui?.saveFile(suggestedName: name, fileExtension: format.fileExtension, data: TableExport.file(format, data)) == true else { return .ok }
+                guard await ctx.ui?.saveFile(suggestedName: name, fileExtension: format.fileExtension, data: TableExport.file(format, data), table: table) == true
+                else { return .ok }
                 Log.tools.info("Eksport tabeli: \(format.rawValue, privacy: .public), wierszy \(data.rows.count, privacy: .public)")
                 return CommandResult(message: L10n.tr("Zapisano wierszy: \(data.rows.count)"))
             },

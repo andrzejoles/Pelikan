@@ -42,6 +42,16 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     /// Identyfikatory wierszy tabel AppKit to ich indeksy w widoku.
     func indexes(of ids: [AnyHashable]) -> [Int] { ids.compactMap { $0 as? Int }.filter { $0 < table.numberOfRows } }
 
+    /// Migawka: tekst komórek przepisany w chwili wyboru pozycji menu (tabela może się przeładować przed komendą).
+    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) {
+        let c = contents
+        let cells = (0..<c.rowCount).map { r in Dictionary(c.columns.map { ($0.id, c.cell(r, $0.id)) }, uniquingKeysWith: { a, _ in a }) }
+        let frozen = TableContents(title: c.title, columns: c.columns, rowCount: c.rowCount,
+                                   cell: { r, id in r < cells.count ? cells[r][id] ?? "" : "" }, selectedRows: c.selectedRows)
+        let count = c.rowCount
+        return (frozen, { ids in ids.compactMap { $0 as? Int }.filter { $0 < count } })
+    }
+
     var filter: TableFilter {
         get { model.state.filter }
         set { model.state.filter = newValue }
@@ -139,8 +149,9 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
                   _ args: @escaping (Int?) -> [String: JSONValue] = { _ in [:] }) -> NSMenuItem {
             BlockMenuItem(title, state: state, enabled: enabled) { [weak self] in
                 guard let self else { return }
+                // Wiersz spod kursora i migawka tabeli w tej samej chwili (wybór pozycji menu).
                 let clicked = self.table.clickedRow >= 0 && self.table.clickedRow < self.table.numberOfRows ? self.table.clickedRow : nil
-                TableActions.perform(self, id, args(clicked))
+                TableActions.perform(self, id) { _ in args(clicked) }
             }
         }
         func rowArg(_ r: Int?) -> [String: JSONValue] { r.map { ["row": .int(Int64($0 + 1))] } ?? [:] }

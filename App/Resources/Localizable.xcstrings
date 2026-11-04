@@ -135241,6 +135241,34 @@
         }
       }
     },
+    "tekst nowego okna agent podaje przez agent.openEditor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the agent provides the text of a new window through agent.openEditor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "den Text eines neuen Fensters übergibt der Agent über agent.openEditor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "el agente indica el texto de una ventana nueva mediante agent.openEditor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "текст нового вікна агент передає через agent.openEditor"
+          }
+        }
+      }
+    },
     "teraz niedostępne" : {
       "localizations" : {
         "en" : {
