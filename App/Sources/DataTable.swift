@@ -153,9 +153,9 @@ protocol FocusTable: TableHandle {
     func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int])
 }
 
-/// Migawka tabeli z chwili wyboru pozycji menu (D224): komenda z menu działa na tych wierszach, które widział
-/// użytkownik — także gdy tabela odświeży się przed jej startem; widok liczony raz na czynność. Filtr i kolumny do kopii
-/// zmieniają stan żywej tabeli.
+/// Migawka tabeli z chwili otwarcia menu (D224): etykiety menu i komenda działają na tych wierszach, które widział
+/// użytkownik — także gdy tabela odświeży się przed wyborem pozycji. Filtr i kolumny do kopii zmieniają stan żywej
+/// tabeli.
 @MainActor
 final class FrozenTable: FocusTable {
     let contents: TableContents
@@ -163,12 +163,17 @@ final class FrozenTable: FocusTable {
     private weak var base: (any FocusTable)?
     weak var window: NSWindow?
 
-    init(_ base: any FocusTable) {
+    convenience init(_ base: any FocusTable) {
+        let snap = base.snapshot()
+        self.init(base, contents: snap.contents, indexes: snap.indexes)
+    }
+
+    /// Migawka z zawartości już policzonej przy rysowaniu (menu kontekstowe — bez ponownego filtrowania i sortowania).
+    init(_ base: any FocusTable, contents: TableContents, indexes: @escaping ([AnyHashable]) -> [Int]) {
         self.base = base
         window = base.window
-        let snap = base.snapshot()
-        contents = snap.contents
-        indexer = snap.indexes
+        self.contents = contents
+        indexer = indexes
     }
 
     /// Tabela zamknięta przed startem komendy — komenda to zgłasza (zapis filtra nie miałby skutku).
@@ -186,25 +191,17 @@ final class FrozenTable: FocusTable {
     }
     func indexes(of ids: [AnyHashable]) -> [Int] { indexer(ids) }
 
-    /// Wiersze pozycji menu zniknęły (choćby część) — komenda to zgłasza.
-    private(set) var menuRowsGone = false
-
-    /// Indeksy wierszy menu; brak któregoś — `menuRowsGone`.
-    func menuRows(_ ids: [AnyHashable]) -> [Int] {
-        let rows = indexes(of: ids)
-        if rows.count < Set(ids).count { menuRowsGone = true }
-        return rows
-    }
+    /// Numery wierszy menu od 1 (migawka z chwili otwarcia menu zawiera te wiersze).
+    func rowNumbers(_ ids: [AnyHashable]) -> String { indexes(of: ids).map { String($0 + 1) }.joined(separator: ",") }
 
     /// Argument wierszy menu: brak — wiersze równe zaznaczeniu (komenda bierze zaznaczenie).
     func rowsArgument(_ ids: [AnyHashable]) -> [String: JSONValue] {
-        let rows = menuRows(ids)
-        return rows == contents.selectedRows ? [:] : ["rows": .string(rows.map { String($0 + 1) }.joined(separator: ","))]
+        indexes(of: ids) == contents.selectedRows ? [:] : ["rows": .string(rowNumbers(ids))]
     }
 
     /// Argument wiersza menu (numer od 1).
     func rowArgument(_ ids: [AnyHashable]) -> [String: JSONValue] {
-        menuRows(ids).first.map { ["row": .int(Int64($0 + 1))] } ?? [:]
+        indexes(of: ids).first.map { ["row": .int(Int64($0 + 1))] } ?? [:]
     }
 }
 
@@ -214,7 +211,6 @@ final class FrozenTable: FocusTable {
 @MainActor
 final class SwiftUITableHandle: FocusTable, ObservableObject {
     /// Każde liczone osobno przy wywołaniu z bieżącymi wierszami widoku (filtr i sortowanie) — tylko to, czego trzeba.
-    private var contentsNow: () -> TableContents = { TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []) }
     private var targetNow: () -> SQLReportTarget? = { nil }
     private var snapshotNow: () -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) = {
         (TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []), { _ in [] })
@@ -226,21 +222,25 @@ final class SwiftUITableHandle: FocusTable, ObservableObject {
     /// `rows` — wiersze widoku liczone przy wywołaniu (bieżący filtr i sortowanie); zawartość i cel SQL z nich.
     func update<Row: Identifiable>(rows: @escaping () -> [Row], contents: @escaping ([Row]) -> TableContents,
                                    sqlTarget: @escaping ([Row]) -> SQLReportTarget?, state: Binding<TableToolsState>) {
-        contentsNow = { contents(rows()) }
         targetNow = { sqlTarget(rows()) }
         snapshotNow = {
             let shown = rows()
-            return (contents(shown), { ids in
-                let set = Set(ids)
-                return shown.indices.filter { set.contains(AnyHashable(shown[$0].id)) }
-            })
+            return (contents(shown), Self.indexer(shown))
         }
         self.state = state
     }
 
-    var contents: TableContents { contentsNow() }
+    var contents: TableContents { snapshotNow().contents }
     var sqlTarget: SQLReportTarget? { targetNow() }
     func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) { snapshotNow() }
+
+    /// Indeksy wierszy o identyfikatorach w wierszach widoku.
+    static func indexer<Row: Identifiable>(_ shown: [Row]) -> ([AnyHashable]) -> [Int] {
+        { ids in
+            let set = Set(ids)
+            return shown.indices.filter { set.contains(AnyHashable(shown[$0].id)) }
+        }
+    }
     var filter: TableFilter {
         get { state?.wrappedValue.filter ?? TableFilter() }
         set { state?.wrappedValue.filter = newValue }
@@ -346,10 +346,10 @@ struct TableWindowProbe: NSViewRepresentable {
 /// działają na niej niezależnie od fokusu i okna kluczowego.
 @MainActor
 enum TableActions {
-    /// Komenda na wierszach z menu: na migawce tabeli z chwili wyboru pozycji (`args` z tej migawki — wiersze po
-    /// identyfikatorach). Cel przekazany jako `CommandContext.target`, poza argumentami (nie trafia do makr).
+    /// Komenda na wierszach z menu: na migawce tabeli (`args` z niej — wiersze po identyfikatorach). Cel przekazany jako
+    /// `CommandContext.target`, poza argumentami (nie trafia do makr).
     static func performOnRows(_ handle: any FocusTable, _ id: String, _ args: (FrozenTable) -> [String: JSONValue]) {
-        // Menu kontekstowe tabeli SwiftUI przekazuje migawkę z chwili otwarcia (etykiety i czynność — te same dane).
+        // Menu kontekstowe przekazuje migawkę z chwili otwarcia (etykiety i czynność — te same dane).
         let frozen = (handle as? FrozenTable) ?? FrozenTable(handle)
         let a = args(frozen)
         (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(a), target: frozen)
@@ -437,9 +437,7 @@ struct TableCopyMenu: View {
             case .context(let ids, _, _):
                 Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) {
                     // Zawsze wiersze menu (bez argumentu komenda kopiowałaby wszystkie).
-                    TableActions.performOnRows(handle, "table.copyMarkedColumns") { f in
-                        ["rows": .string(f.menuRows(ids).map { String($0 + 1) }.joined(separator: ","))]
-                    }
+                    TableActions.performOnRows(handle, "table.copyMarkedColumns") { f in ["rows": .string(f.rowNumbers(ids))] }
                 }
             case .selection:
                 Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) { run("table.copyMarkedColumns", ["selected": .bool(true)]) }
@@ -688,7 +686,7 @@ struct DataTable<Row: Identifiable>: View {
             table(shown)
                 .registersTable(handle)
                 .contextMenu(forSelectionType: Row.ID.self) { ids in
-                    rowMenuContent(ids, shown: shown, contents: contents, snapshot: snapshot)
+                    rowMenuContent(ids, shown: shown, snapshot: snapshot)
                 } primaryAction: { ids in
                     primaryAction?(ids)
                 }
@@ -710,7 +708,7 @@ struct DataTable<Row: Identifiable>: View {
     }
 
     /// Menu wiersza: raporty SQL, menu właściciela tabeli, kopia, filtr wartością, eksport.
-    @ViewBuilder private func rowMenuContent(_ ids: Set<Row.ID>, shown: [Row], contents: TableContents, snapshot: Snapshot) -> some View {
+    @ViewBuilder private func rowMenuContent(_ ids: Set<Row.ID>, shown: [Row], snapshot: Snapshot) -> some View {
         let idx = shown.indices.filter { ids.contains(shown[$0].id) }
         if let r = idx.first, let t = snapshot.sqlTarget(row: shown[r]) {
             Button(L10n.tr("Raporty dla \(t.label)…")) { SQLReportLauncher.open(t) }
@@ -722,7 +720,7 @@ struct DataTable<Row: Identifiable>: View {
         }
         // Migawka z chwili otwarcia menu: etykiety („Kolumna: wartość”) i czynność na tych samych danych, także gdy tabela
         // odświeży się przed wyborem pozycji. Klik poza wierszami — menu jak na pasku (zaznaczenie w chwili komendy).
-        let frozen = FrozenTable(handle)
+        let frozen = FrozenTable(handle, contents: snapshot.contents(shown), indexes: SwiftUITableHandle.indexer(shown))
         TableCopyMenu(contents: frozen.contents, handle: frozen, marked: tools.markedColumns, rows: .from(ids, shown: shown))
         if let r = idx.first {
             Divider()

@@ -1187,7 +1187,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private func saveFile(suggestedName: String, fileExtension: String, data: Data, window: NSWindow) async -> Bool {
         if Self.scriptSkipsDialog("saveFile") { return false }
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = suggestedName.replacingOccurrences(of: "/", with: "-") + "." + fileExtension
+        // Nazwa bez znaków niedozwolonych w nazwach plików macOS („/” i „:” — jedno miejsce dla wszystkich zapisów).
+        panel.nameFieldStringValue = suggestedName.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-") + "." + fileExtension
         panel.allowedContentTypes = [UTType(filenameExtension: fileExtension) ?? .data]
         panel.canCreateDirectories = true
         let response = await panel.beginSheetModal(for: window)

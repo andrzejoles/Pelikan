@@ -38,13 +38,10 @@ public protocol TableHandle: AnyObject {
     var markedColumns: [String] { get set }
     /// Tabela nadal istnieje (migawka z menu po zamknięciu okna — nie).
     var isAvailable: Bool { get }
-    /// Wiersze, których dotyczyła pozycja menu, zniknęły przed jej wyborem (tabela odświeżona).
-    var menuRowsGone: Bool { get }
 }
 
 extension TableHandle {
     public var isAvailable: Bool { true }
-    public var menuRowsGone: Bool { false }
 }
 
 extension TableExport {
@@ -79,7 +76,6 @@ enum TableCommands {
         // Tabela z menu (cel wywołania) — jej brak to błąd, nie zamiana na tabelę z fokusem.
         if let target = ctx.target {
             guard let h = target as? any TableHandle, h.isAvailable else { throw CommandError.notAvailable(L10n.tr("Tabeli z menu już nie ma (okno zamknięte)")) }
-            if h.menuRowsGone { throw CommandError.notAvailable(L10n.tr("Wierszy z menu nie ma już w tabeli (odświeżona)")) }
             return h
         }
         guard let h = ctx.ui?.focusedTable() else { throw CommandError.notAvailable(L10n.tr("Brak tabeli okna narzędzia z fokusem")) }
@@ -172,12 +168,13 @@ enum TableCommands {
                     parameters: [columnParam, CommandParameter("marked", .boolean, L10n.tr("Zaznaczona (domyślnie — przełączenie)"))],
                     effect: .uiState) { ctx in
                 let h = try handle(ctx)
-                let id = try await column(ctx, h.contents)
+                let c = h.contents
+                let id = try await column(ctx, c)
                 // `marked` — stan docelowy (makro odtwarza stan, nie przełączenie); bez niego — przełączenie.
                 let mark = ctx.arguments.bool("marked") ?? !h.markedColumns.contains(id)
                 h.markedColumns.removeAll { $0 == id }
                 if mark { h.markedColumns.append(id) }
-                return CommandResult(resolvedArguments: CommandArguments(["column": columnArgument(id, h.contents), "marked": .bool(mark)]))
+                return CommandResult(resolvedArguments: CommandArguments(["column": columnArgument(id, c), "marked": .bool(mark)]))
             },
             command("table.clearMarkedColumns", L10n.tr("Odznacz kolumny do kopii"), L10n.tr("Usuwa zaznaczenie wszystkich kolumn do kopii."),
                     effect: .uiState) { ctx in
@@ -241,7 +238,7 @@ enum TableCommands {
                     throw CommandError.missingArgument("format")
                 }
                 let data = c.data(rows: c.all)
-                let name = (c.title.isEmpty ? L10n.tr("Tabela") : c.title).replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
+                let name = c.title.isEmpty ? L10n.tr("Tabela") : c.title
                 guard await ctx.ui?.saveFile(suggestedName: name, fileExtension: format.fileExtension, data: TableExport.file(format, data), table: table) == true
                 else { return .ok }
                 Log.tools.info("Eksport tabeli: \(format.rawValue, privacy: .public), wierszy \(data.rows.count, privacy: .public)")

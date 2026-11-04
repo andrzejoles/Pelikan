@@ -104,6 +104,10 @@ public enum PerfReportRunner {
         if let src = q.source ?? report.sources.first, !license.allows(report.need(for: src)) {
             throw CommandError.notAvailable(L10n.tr("Źródło „\(src.displayName)” wymaga licencji \(report.need(for: src).displayName)"))
         }
+        // Bindy z AWR (doradcy czytają DBA_HIST_SQLBIND i DBA_HIST_SQLTEXT) — Diagnostics Pack niezależnie od źródła.
+        if let set = q.bindSet, case .awr = set.origin, !license.allows(.diagnostics) {
+            throw CommandError.notAvailable(L10n.tr("Bindy z AWR wymagają licencji \(PerfReport.Need.diagnostics.displayName)"))
+        }
         let dbid = SQLProbe.dbid(major)
         for p in packages(q.reportID) { try await ManagementPacks.requireExecute(p, in: s, report: report.title) }
         let id = q.sqlID ?? ""

@@ -12,6 +12,10 @@ final class LocalDocsModel {
     /// Zmienia się przy każdym zleceniu wyszukiwania z zewnątrz (F1, komenda).
     var request = 0
     var version = "19c"
+    /// Wersja ustawiona z ustawień raz (przy pierwszym otwarciu); potem wybór w oknie — także przy wyszukiwaniu z F1.
+    var versionInitialized = false
+    /// Okno widoczne — komendy okna („Kopiuj”, „Cała sekcja”, „Otwórz online”) działają tylko na tym, co widać.
+    var isOpen = false
     var results: [DocFragment] = []
     var selection: DocFragment.ID? {
         didSet { if selection != oldValue { detail = nil } }
@@ -27,7 +31,7 @@ final class LocalDocsModel {
     var busy: Bool { pending > 0 }
     var selected: DocFragment? { results.first { $0.id == selection } }
     /// Wybrany fragment (tekst fragmentu albo całej sekcji, adres online).
-    var fragment: (text: String, link: URL?)? { selected.map { (detail ?? $0.text, $0.link) } }
+    var fragment: (text: String, link: URL?)? { isOpen ? selected.map { (detail ?? $0.text, $0.link) } : nil }
 
     func search(_ q: String) {
         query = q
@@ -50,7 +54,8 @@ final class LocalDocsModel {
             selection = results.first?.id
             message = results.isEmpty ? L10n.tr("Nic nie znaleziono") : L10n.tr("Fragmentów: \(results.count)")
         } catch {
-            guard request == searchRequest else { return }
+            // Zamknięcie okna w trakcie (anulowane zadanie) to nie błąd serwera — wyniki zostają.
+            guard request == searchRequest, !Task.isCancelled else { return }
             results = []
             selection = nil
             message = error.localizedDescription + " " + L10n.tr("Dokumentacja online działa bez serwera (przycisk obok).")
@@ -118,8 +123,13 @@ struct LocalDocsView: View {
         }
         .padding(10)
         .frame(minWidth: 320, minHeight: 380)
+        .onAppear { model.isOpen = true }
+        .onDisappear { model.isOpen = false }
         .task(id: model.request) {
-            model.version = settings.version
+            if !model.versionInitialized {
+                model.version = settings.version
+                model.versionInitialized = true
+            }
             // Wykonanie zlecenia komendy (F1, „Szukaj”, paleta) — samo wyszukiwanie.
             if !model.query.trimmingCharacters(in: .whitespaces).isEmpty { await model.search(settings: settings) }
         }
@@ -164,8 +174,8 @@ struct LocalDocsView: View {
                 }
                 // Przyciski w wąskim panelu w dwóch wierszach (bez ucinania „Otwórz online”).
                 ViewThatFits(in: .horizontal) {
-                    HStack { sectionButtons(f); Spacer(); openButton(f) }
-                    VStack(alignment: .leading, spacing: 4) { HStack { sectionButtons(f) }; openButton(f) }
+                    HStack { sectionButtons(); Spacer(); openButton(f) }
+                    VStack(alignment: .leading, spacing: 4) { HStack { sectionButtons() }; openButton(f) }
                 }
             } else {
                 Text(model.results.isEmpty ? L10n.tr("Wpisz szukane słowa albo naciśnij F1 na słowie w edytorze.") : L10n.tr("Wybierz fragment"))
@@ -174,7 +184,7 @@ struct LocalDocsView: View {
         }
     }
 
-    @ViewBuilder private func sectionButtons(_ f: DocFragment) -> some View {
+    @ViewBuilder private func sectionButtons() -> some View {
         Button(model.detail == nil ? L10n.tr("Cała sekcja") : L10n.tr("Tylko fragment")) {
             workspace.perform("help.localDocsSection")
         }

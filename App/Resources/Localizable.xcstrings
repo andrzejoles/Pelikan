@@ -7393,6 +7393,34 @@
         }
       }
     },
+    "Bindy z AWR wymagają licencji %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds from AWR require the %@ license"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binds aus AWR erfordern die Lizenz %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los binds de AWR requieren la licencia %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бінди з AWR потребують ліцензії %@"
+          }
+        }
+      }
+    },
     "Bindy: %@ zestaw(y)" : {
       "localizations" : {
         "en" : {

@@ -122,8 +122,6 @@ struct TableToolsTests {
 /// Tabela testowa dla komend `table.*`.
 @MainActor
 final class FakeTableHandle: TableHandle {
-    var gone = false
-    var menuRowsGone: Bool { gone }
     var filter = TableFilter()
     var markedColumns: [String] = []
     let rows: [[String]]
@@ -211,6 +209,11 @@ struct TableToolsReviewTests {
         #expect(ValueFilter.parse("< 1")!.matches(text: "450 ms", key: .number(0.45)))
         #expect(!ValueFilter.parse("< 1")!.matches(text: "1.2 s", key: .number(1.2)))
         #expect(ValueFilter.parse("> 1000")!.matches(text: "1,234", key: .number(1234)))
+        #expect(ValueFilter.parse("= 1234")!.matches(text: "1,234", key: .number(1234)))
+        // Ta sama wartość dla wszystkich porównań: „= 12.35” i „>= 12.35” trafiają razem.
+        #expect(ValueFilter.parse("= 12.35")!.matches(text: "12.35", key: .number(12.345678)))
+        #expect(ValueFilter.parse(">= 12.35")!.matches(text: "12.35", key: .number(12.345678)))
+        #expect(ValueFilter.parse("between 12.35 and 13")!.matches(text: "12.35", key: .number(12.345678)))
         // Wartość z białymi znakami na brzegach — „tylko ta wartość” trafia w tę samą komórkę.
         #expect(ValueFilter.parse(TableExport.condition("abc\n", exclude: false))!.matches(text: "abc\n", key: .text("abc\n")))
         #expect(!ValueFilter.parse("= 19")!.matches(text: "19c", key: .text("19c")))
@@ -276,9 +279,6 @@ struct TableToolsReviewTests {
         await #expect(throws: CommandError.self) { try await run("table.copyAll", target: NSObject()) }
         try await run("table.copyMarkedColumns", ["selected": true], target: t)
         // Znacznik menu „wiersze zniknęły” — komunikat; wartości umowne w publicznych argumentach to zwykły błąd argumentu.
-        t.gone = true
-        await #expect(throws: CommandError.self) { try await run("table.copyRows", target: t) }
-        t.gone = false
         #expect(ui.clipboard == "y")
         // Kolumna podana argumentem — nic do uzupełnienia w makrze.
         // Filtr z menu — do makra wartość, nie numer wiersza; odtworzenie z wartością nie czyta wierszy.

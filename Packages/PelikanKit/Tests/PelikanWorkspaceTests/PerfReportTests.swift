@@ -106,6 +106,10 @@ struct PerfReportTests {
         q = PerfReportRequest(reportID: "sql.planCursor", sqlID: "ghkw1782vah43", format: .text)
         q.source = .awr
         await #expect(throws: CommandError.self) { _ = try await PerfReportRunner.run(q, availability: nil, license: .unlicensed, in: s19) }
+        // Bindy z AWR dla doradcy — Diagnostics Pack także przy źródle bez licencji.
+        q = PerfReportRequest(reportID: "sql.repair", sqlID: "ghkw1782vah43", format: .text)
+        q.bindSet = .init(origin: .awr(snapID: 1, instance: 1), captured: "", binds: [])
+        await #expect(throws: CommandError.self) { _ = try await PerfReportRunner.run(q, availability: nil, license: .unlicensed, in: s19) }
         // Raport z jedynym źródłem AWR — bez licencji zablokowany także bez wybranego źródła.
         q = PerfReportRequest(reportID: "sql.planAWR", sqlID: "ghkw1782vah43", format: .text)
         await #expect(throws: CommandError.self) { _ = try await PerfReportRunner.run(q, availability: nil, license: .unlicensed, in: s19) }

@@ -3623,7 +3623,7 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
 **Zlecenie właściciela:** dogłębny code review zmian od #133 do #142, poprawki i kolejne przeglądy aż do braku uwag.
 
 - **Licencja i wersja bazy sprawdzane przy wykonaniu raportu** (`PerfReportRunner.run(…, license:)`, `PerfLicense.blockReason`):
-  raport albo źródło (podane albo pierwsze raportu) spoza licencji i raport z nowszej wersji Oracle nie wywołują bazy. Licencja nieznana (przed
+  raport, źródło (podane albo pierwsze raportu) i bindy z AWR dla doradców spoza licencji i raport z nowszej wersji Oracle nie wywołują bazy. Licencja nieznana (przed
   wczytaniem, anulowana deklaracja) — tylko raporty bez pakietów. Okno raportów bazy bierze wersję z sesji. Domyślny
   drugi okres tylko w raportach porównania.
 - **Cel raportów SQL:** menu siatki z wiersza spod kursora (jedna logika `SQLTargetFinder.fromGrid(_:row:column:)`);
@@ -3651,22 +3651,26 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   i liczy wiersze przy wywołaniu. Makra nagrywają komendy zmieniające stan tabeli: filtr z wartością (nie numerem wiersza —
   odtworzenie działa tak samo w każdej kolejności i tabeli), zaznaczenie kolumny jako stan docelowy (nie przełączenie),
   kolumnę wybraną w oknie pytania; kopie — jak w siatce — nie. Kolumna w makrze to jej pozycja „#n” (tytuły zależą od języka).
-  Migawka menu: SwiftUI — z chwili otwarcia menu (etykiety i czynność na tych samych danych); AppKit — wiersz spod
-  kursora i zaznaczenie jako indeksy. Kolumny czynności (przyciski) nie trafiają do kopii, eksportu ani filtra.
-  Paleta ustala tabelę pod sobą przed zamknięciem i przekazuje ją jako cel. Rejestracja tabeli SwiftUI — wspólny
+  Migawka menu z chwili jego otwarcia (etykiety i czynność na tych samych danych; SwiftUI — z wierszy już
+  policzonych przy rysowaniu, AppKit — wiersz spod kursora i zaznaczenie jako indeksy; przeładowanie tabeli AppKit po
+  otwarciu menu — komunikat zamiast czynności na przesuniętych wierszach). Kolumny czynności (przyciski) nie trafiają do kopii, eksportu ani filtra.
+  Paleta przed wykonaniem komendy oddaje fokus oknu, nad którym ją otwarto (każda komenda widzi to,
+  co przy sprawdzaniu dostępności). Rejestracja tabeli SwiftUI — wspólny
   modyfikator `registersTable` (`DataTable`, plan). Menu tabel AppKit nie zmienia zaznaczenia. Pusty identyfikator
   kolumny (kolumna bez tytułu) jest kolumną. „Kopiuj z nagłówkiem” — ustawienie, dostępne bez tabeli. ⌘C w tabeli to
   systemowe Edycja › Kopiuj (zawartość od razu); w menu tabeli i palecie — „Kopiuj wiersze tabeli”. Kolumny liczbowe
   i czasowe mają jedno formatowanie dla komórki i kopii (`DataColumn.digits`). Kopia, eksport i licznik planu — wiersze
   jak na ekranie (zwinięte gałęzie pominięte).
 - Komendy `table.*` w menu Edycja › Tabela i w palecie (poza wstążką — działają w oknach narzędzi). Liczba w filtrze
-  — równość (`=`, `<>`) z liczbą pokazaną w komórce (tekst to sama liczba: „= 12.35” trafia przy kluczu 12.345678),
-  porządek (`<`, `>`, between) z kluczem kolumny (jednolita skala, także „450 ms” obok „1.2 s”); kolumny procentu
-  i postępu mają klucz w skali pokazanej; kody jak „19c” to tekst; „tylko ta wartość” ujmuje w cudzysłowy wartości
+  — jedna wartość komórki dla wszystkich porównań (`=`, `<`, between): liczba pokazana w tekście, gdy zgadza się
+  z kluczem z dokładnością do wyświetlonych cyfr („12.35” przy 12.345678), inaczej klucz („450 ms” obok „1.2 s”, „1,234”);
+  kolumny procentu i postępu mają klucz w skali pokazanej; kody jak „19c” to tekst; „tylko ta wartość” ujmuje w cudzysłowy wartości
   z białymi znakami na brzegach; data z dokładnością, z jaką ją wpisano (dzień, minuta, sekunda); tekst kolumn całkowitych bez przejścia przez Double. Zapis pliku (arkusz)
   w oknie, z którego go wywołano; nazwa pliku z tytułu okna tabeli.
 - Klient MCP inicjuje sesję raz także przy równoczesnych wywołaniach (wywołanie czekające na unieważnioną sesję czeka
-  na nową; sesja tylko z udanej odpowiedzi na initialize); wyszukiwanie z okna to komenda `help.localDocs`; ponowienie po odpowiedzi 4xx na żądanie z sesją, jeden raz na sesję
+  na nową; sesja tylko z udanej odpowiedzi na initialize); wyszukiwanie z okna to komenda `help.localDocs`
+  (wersja wybrana w oknie zostaje; zamknięcie okna w trakcie nie czyści wyników; komendy okna — tylko przy otwartym
+  oknie); ponowienie po odpowiedzi 4xx na żądanie z sesją, jeden raz na sesję
   (równoczesne wywołania dołączają do nowej); okno dokumentacji pomija wyniki starszych żądań po numerze żądania.
   Wzorce LIKE: filtr siatki kompiluje je raz na filtrowanie, filtr tabel — z pamięci wzorców. Okno dokumentacji
   trzyma wyniki, zaznaczenie i sekcję w modelu; „Kopiuj”, „Cała sekcja”, „Otwórz online” i „Dokumentacja online” to

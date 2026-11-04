@@ -10,6 +10,8 @@ final class TableToolsModel {
     }
     /// Zmienia się po każdym przeładowaniu wierszy — pasek odświeża liczbę wierszy.
     var revision = 0
+    /// Przeładowania wierszy (nie zmiany zaznaczenia) — menu wykrywa przesunięcie wierszy po otwarciu.
+    @ObservationIgnored var reloads = 0
     @ObservationIgnored var onFilterChange: (() -> Void)?
 }
 
@@ -119,7 +121,10 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     }
 
     /// Po przeładowaniu tabeli — liczba wierszy na pasku.
-    func reloaded() { model.revision += 1 }
+    func reloaded() {
+        model.revision += 1
+        model.reloads += 1
+    }
 
     /// Pasek narzędzi nad widokiem przewijania tabeli.
     func wrap(_ scroll: NSView) -> NSView {
@@ -154,9 +159,16 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
             }
         }
         let frozen = row >= 0 || !rows.isEmpty ? FrozenTable(self) : nil
+        // Przeładowanie tabeli po otwarciu menu przesuwa wiersze (zaznaczenie i numery to indeksy) — komunikat zamiast
+        // czynności na innych wierszach.
+        let reloadsAtOpen = model.reloads
         func rowItem(_ title: String, _ id: String, _ args: [String: JSONValue]) -> NSMenuItem {
             BlockMenuItem(title) { [weak self] in
-                guard self != nil, let frozen else { return }
+                guard let self, let frozen else { return }
+                guard self.model.reloads == reloadsAtOpen else {
+                    (NSApp.delegate as? AppDelegate)?.showError(L10n.tr("Wierszy z menu nie ma już w tabeli (odświeżona)"))
+                    return
+                }
                 (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(args), target: frozen)
             }
         }

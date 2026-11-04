@@ -85,15 +85,14 @@ struct PlanPanel: View {
 
     private var planColumnValues: [PlanColumn] { planColumns.map { ($0.id, $0.title, $0.text, $0.key) } }
 
-    /// Wiersze tabeli planu tak jak na ekranie: z filtrem — pasujące kroki posortowane; bez filtra — drzewo (rodzeństwo
-    /// posortowane, dzieci tylko gałęzi rozwiniętych). Te same wiersze w menu, kopii, eksporcie, liczniku paska
-    /// i numerach `rows` komend.
-    static func planRows(_ plan: ExplainPlanResult?, filtered: [PlanLine]?, expanded: Set<Int>, sort: [ColumnSort<PlanLine>]) -> [PlanLine] {
+    /// Wiersze tabeli planu do kopii, eksportu i licznika: z filtrem — pasujące kroki posortowane; bez filtra — cały plan
+    /// w kolejności drzewa (rodzeństwo posortowane jak na ekranie), także kroki w gałęziach zwiniętych — eksport nie
+    /// gubi kroków. Numery `rows` komend liczą się w tej kolejności; menu wskazuje wiersze identyfikatorami.
+    static func planRows(_ plan: ExplainPlanResult?, filtered: [PlanLine]?, sort: [ColumnSort<PlanLine>]) -> [PlanLine] {
         if let filtered { return filtered.sorted(by: sort) }
         var out: [PlanLine] = []
         func add(_ l: PlanLine) {
             out.append(l)
-            guard expanded.contains(l.id) else { return }
             (l.children ?? []).sorted(by: sort).forEach(add)
         }
         (plan?.roots ?? []).sorted(by: sort).forEach(add)
@@ -173,7 +172,7 @@ struct PlanPanel: View {
             } else {
                 // Rozwinięcie gałęzi w modelu okna (`planExpanded`) — komendy Rozwiń/Zwiń wszystko (PD-OPT-001).
                 let lines = filteredLines
-                let shownLines = Self.planRows(document.plan, filtered: lines, expanded: document.planExpanded, sort: sortPlan)
+                let shownLines = Self.planRows(document.plan, filtered: lines, sort: sortPlan)
                 let cols = planColumnValues
                 let contents = Self.contents(shownLines, columns: cols, selected: selection)
                 let handle = tableHandle
@@ -182,11 +181,11 @@ struct PlanPanel: View {
                 let (doc, toolsState, sortState, selectionState) = (document, $tools, $sortPlan, $selection)
                 let _ = handle.update(rows: {
                                           Self.planRows(doc.plan, filtered: Self.filtered(doc.plan, columns: cols, filter: toolsState.wrappedValue.filter),
-                                                        expanded: doc.planExpanded, sort: sortState.wrappedValue)
+                                                        sort: sortState.wrappedValue)
                                       },
                                       contents: { Self.contents($0, columns: cols, selected: selectionState.wrappedValue) },
                                       sqlTarget: { _ in nil }, state: $tools)
-                TableToolsBar(contents: contents, handle: handle, state: $tools, total: lines == nil ? shownLines.count : document.plan?.lines.count ?? 0)
+                TableToolsBar(contents: contents, handle: handle, state: $tools, total: document.plan?.lines.count ?? 0)
                 ScrollViewReader { proxy in
                     Table(of: PlanLine.self, selection: $selection, sortOrder: $sortPlan) {
                         TableColumnForEach(planColumns) { c in
@@ -205,10 +204,12 @@ struct PlanPanel: View {
                     }
                     .registersTable(handle)
                     .contextMenu(forSelectionType: PlanLine.ID.self) { ids in
-                        TableCopyMenu(contents: contents, handle: handle, marked: tools.markedColumns, rows: .from(ids, shown: shownLines))
+                        // Migawka z chwili otwarcia menu (jak w DataTable).
+                        let frozen = FrozenTable(handle, contents: contents, indexes: SwiftUITableHandle.indexer(shownLines))
+                        TableCopyMenu(contents: contents, handle: frozen, marked: tools.markedColumns, rows: .from(ids, shown: shownLines))
                         if let id = ids.first {
                             Divider()
-                            TableValueFilterMenu(columns: contents.columns, handle: handle, rowID: AnyHashable(id))
+                            TableValueFilterMenu(columns: contents.columns, handle: frozen, rowID: AnyHashable(id))
                         }
                         Divider()
                         Menu(L10n.tr("Eksportuj")) { TableExportMenu(handle: handle) }
