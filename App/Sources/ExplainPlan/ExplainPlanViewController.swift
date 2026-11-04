@@ -49,9 +49,8 @@ struct PlanPanel: View {
     @State private var sortPlan: [ColumnSort<PlanLine>] = []
     /// Filtr, kopiowanie i eksport kroków planu (D214).
     @State private var tools = TableToolsState()
-    /// Cel komend `table.*` (D214) — zapis przy fokusie i zaznaczeniu wiersza przez użytkownika.
+    /// Cel komend `table.*` (D214) — rejestrowany z widokiem NSTableView tabeli planu.
     @State private var tableHandle = SwiftUITableHandle()
-    @FocusState private var tableFocused: Bool
     @Bindable var document: PelikanWorkspace.Document
     let workspace: Workspace
     @State private var selection: PlanLine.ID?
@@ -156,7 +155,7 @@ struct PlanPanel: View {
                 let shownLines = (lines ?? document.plan?.lines ?? []).sorted(by: sortPlan)
                 let contents = planContents(lines ?? document.plan?.lines ?? [])
                 let handle = tableHandle
-                let _ = handle.update(contents: { contents }, sqlTarget: { nil }, state: $tools)
+                let _ = handle.update(contents: { contents }, sqlTarget: { nil }, state: $tools, ids: shownLines.map { AnyHashable($0.id) })
                 TableToolsBar(contents: contents, handle: handle, state: $tools, total: document.plan?.lines.count ?? 0)
                 ScrollViewReader { proxy in
                     Table(of: PlanLine.self, selection: $selection, sortOrder: $sortPlan) {
@@ -174,15 +173,15 @@ struct PlanPanel: View {
                             ForEach((document.plan?.roots ?? []).sorted(by: sortPlan)) { PlanTreeRows(line: $0, expanded: $document.planExpanded, sort: sortPlan) }
                         }
                     }
-                    .focused($tableFocused)
-                    .onChange(of: tableFocused) { _, now in if now { TableFocus.shared.note(handle) } }
-                    .onChange(of: selection) { if tableFocused { TableFocus.shared.note(handle) } }
+                    .background(TableViewLocator(handle: handle))
+                    .onDisappear { handle.clear() }
                     .contextMenu(forSelectionType: PlanLine.ID.self) { ids in
                         let rows = shownLines.indices.filter { ids.contains(shownLines[$0].id) }
-                        TableCopyMenu(contents: contents, handle: handle, marked: tools.markedColumns, rows: rows)
+                        TableCopyMenu(contents: contents, handle: handle, marked: tools.markedColumns,
+                                      rows: .context(ids: rows.map { AnyHashable(shownLines[$0].id) }, count: rows.count, first: rows.first ?? 0))
                         if let r = rows.first {
                             Divider()
-                            TableValueFilterMenu(columns: contents.columns, handle: handle, row: r)
+                            TableValueFilterMenu(columns: contents.columns, handle: handle, rowID: AnyHashable(shownLines[r].id))
                         }
                         Divider()
                         Menu(L10n.tr("Eksportuj")) { TableExportMenu(handle: handle) }

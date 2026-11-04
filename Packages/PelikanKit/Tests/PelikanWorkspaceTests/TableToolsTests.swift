@@ -134,6 +134,15 @@ final class FakeTableHandle: TableHandle {
 }
 
 @MainActor
+final class EmptyColumnTable: TableHandle {
+    var filter = TableFilter()
+    var markedColumns: [String] = []
+    var contents: TableContents {
+        TableContents(title: "T", columns: [("", ""), ("m", "Problem")], rowCount: 1, cell: { _, id in id.isEmpty ? "błąd" : "x" }, selectedRows: [])
+    }
+}
+
+@MainActor
 final class TableUI: UIServices {
     var clipboard: String?
     var saved: (name: String, ext: String, data: Data)?
@@ -226,5 +235,12 @@ struct TableToolsReviewTests {
         try await run("table.export", ["format": "csv"])
         #expect(ui.saved?.ext == "csv")
         await #expect(throws: CommandError.self) { try await run("table.copyRows", ["rows": "9"]) }
+        // Kolumna bez tytułu (pusty identyfikator) — od razu, bez pytania o kolumnę.
+        let icons = EmptyColumnTable()
+        ui.table = icons
+        try await run("table.copyCell", ["column": "", "row": 1])
+        #expect(ui.clipboard == "błąd")
+        #expect(ws.registry.command("file.new.sql")?.descriptor.parameters.map(\.name) == ["text"])
+        #expect(ws.registry.command("file.new.program")?.descriptor.parameters.isEmpty == true)
     }
 }

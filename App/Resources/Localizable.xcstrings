@@ -22121,30 +22121,30 @@
         }
       }
     },
-    "Filtr (LIKE: abc%%, a_c)" : {
+    "Filtr (fragment; LIKE: abc%%)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Filter (LIKE: abc%%, a_c)"
+            "value" : "Filter (fragment; LIKE: abc%%)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Filter (LIKE: abc%%, a_c)"
+            "value" : "Filter (Teiltext; LIKE: abc%%)"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Filtro (LIKE: abc%%, a_c)"
+            "value" : "Filtro (fragmento; LIKE: abc%%)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Фільтр (LIKE: abc%%, a_c)"
+            "value" : "Фільтр (фрагмент; LIKE: abc%%)"
           }
         }
       }
@@ -37797,6 +37797,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Копіювати позначені стовпці вибраних рядків"
+          }
+        }
+      }
+    },
+    "Kopiuj zaznaczone wiersze" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Selected Rows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgewählte Zeilen kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar filas seleccionadas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати виділені рядки"
           }
         }
       }
@@ -58573,6 +58601,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffnet eine SQL*Plus-Konsole mit einem dem Test Window entsprechenden Skript (VARIABLE, Werte, Block, PRINT)."
+          }
+        }
+      }
+    },
+    "Otwiera nowe okno SQL — puste albo z podanym tekstem." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a new SQL window — empty or with the given text."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet ein neues SQL-Fenster — leer oder mit dem angegebenen Text."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre una nueva ventana SQL, vacía o con el texto indicado."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває нове вікно SQL — порожнє або з указаним текстом."
           }
         }
       }
@@ -104553,30 +104609,30 @@
         }
       }
     },
-    "Wiersze, w których dowolna kolumna pasuje do wzorca (bez wielkości liter; bez %% i _ — fragment tekstu)." : {
+    "Wiersze, w których dowolna kolumna zawiera tekst (bez wielkości liter; _ — jeden dowolny znak). Z %% — wzorzec LIKE całej wartości (abc%% — zaczyna się od abc)." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rows in which any column matches the pattern (case-insensitive; without %% and _ — part of the text)."
+            "value" : "Rows in which any column contains the text (case-insensitive; _ — any single character). With %% — a LIKE pattern for the whole value (abc%% — starts with abc)."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zeilen, in denen eine beliebige Spalte zum Muster passt (ohne Groß-/Kleinschreibung; ohne %% und _ — Textteil)."
+            "value" : "Zeilen, in denen eine beliebige Spalte den Text enthält (ohne Groß-/Kleinschreibung; _ — ein beliebiges Zeichen). Mit %% — LIKE-Muster für den ganzen Wert (abc%% — beginnt mit abc)."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Filas en las que cualquier columna coincide con el patrón (sin distinguir mayúsculas; sin %% ni _ — parte del texto)."
+            "value" : "Filas en las que cualquier columna contiene el texto (sin distinguir mayúsculas; _ — un carácter cualquiera). Con %% — patrón LIKE de todo el valor (abc%% — empieza por abc)."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Рядки, у яких будь-який стовпець відповідає шаблону (без урахування регістру; без %% і _ — частина тексту)."
+            "value" : "Рядки, у яких будь-який стовпець містить текст (без урахування регістру; _ — будь-який один символ). З %% — шаблон LIKE для всього значення (abc%% — починається з abc)."
           }
         }
       }

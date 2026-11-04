@@ -128,12 +128,17 @@ public actor LocalDocsClient {
     }
 
     private func callTool(_ name: String, _ arguments: [String: Any]) async throws -> String {
+        try await ensureInitialized()
+        let used = session
         do {
             return try await callToolOnce(name, arguments)
-        } catch LocalDocsError.http(let code) where (400..<500).contains(code) && session != nil {
-            // Sesja wygasła albo serwer uruchomiono ponownie (404, niektóre serwery — 400) — nowa sesja i jedno ponowienie.
-            session = nil
-            initialization = nil
+        } catch LocalDocsError.http(404) where used != nil {
+            // Sesja wygasła albo serwer uruchomiono ponownie (MCP: 404 dla nieznanej sesji) — nowa sesja i jedno
+            // ponowienie. Sesję kasuje tylko pierwsze wywołanie, które ją zobaczyło; równoczesne dołączają do nowej.
+            if session == used {
+                session = nil
+                initialization = nil
+            }
             return try await callToolOnce(name, arguments)
         }
     }
@@ -151,7 +156,7 @@ public actor LocalDocsClient {
         }
         initialization = task
         do { try await task.value } catch {
-            initialization = nil
+            if initialization == task { initialization = nil }
             throw error
         }
     }

@@ -20,12 +20,14 @@ public enum BuiltinCommands {
                                     agent: AgentAccess = .none, feature: String) -> Command {
         Command(CommandDescriptor(
             id: CommandID(rawValue: id), title: title, category: .file, submenu: L10n.tr("Nowy"), pd: pd, mac: mac,
-            parameters: [CommandParameter("text", .sql, L10n.tr("Początkowy tekst okna (domyślnie puste)"))],
+            parameters: kind == .sql ? [CommandParameter("text", .sql, L10n.tr("Początkowy tekst okna (domyślnie puste)"))] : [],
             agent: agent, effect: .uiState,
-            summary: kind == .command ? L10n.tr("Otwiera nową, pustą konsolę SQL*Plus.") : L10n.tr("Otwiera nowe puste okno: \(kind.displayName)."),
+            summary: kind == .command ? L10n.tr("Otwiera nową, pustą konsolę SQL*Plus.")
+                : kind == .sql ? L10n.tr("Otwiera nowe okno SQL — puste albo z podanym tekstem.")
+                : L10n.tr("Otwiera nowe puste okno: \(kind.displayName)."),
             feature: feature
         )) { ctx in
-            let doc = ctx.workspace.newDocument(kind, text: ctx.arguments.string("text") ?? "")
+            let doc = ctx.workspace.newDocument(kind, text: kind == .sql ? ctx.arguments.string("text") ?? "" : "")
             return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
         }
     }

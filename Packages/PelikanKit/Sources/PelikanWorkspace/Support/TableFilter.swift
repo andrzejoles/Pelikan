@@ -97,7 +97,7 @@ public struct ValueFilter: Sendable, Hashable {
         case .isNull: return isEmpty
         case .notNull: return !isEmpty
         case .like(let p, let negated):
-            let hit = !isEmpty && (compiled ?? LikePattern(p)).matches(text)
+            let hit = !isEmpty && (compiled ?? LikePattern.cached(p)).matches(text)
             return negated ? !hit && !isEmpty : hit
         case .compare(let op, let v):
             guard !isEmpty, let r = Self.compare(text: text, key: key, v) else { return false }
@@ -158,10 +158,10 @@ public struct TableFilter: Sendable, Hashable {
         let pattern = q.isEmpty ? nil : (q.contains("%") ? q : "%\(q)%")
         let filters = columns.compactMapValues(ValueFilter.parse)
         return Compiled(columns: filters.mapValues { f in
-                            if case .like(let p, _) = f.condition { return (f, LikePattern(p)) }
+                            if case .like(let p, _) = f.condition { return (f, LikePattern.cached(p)) }
                             return (f, nil)
                         },
-                        quick: pattern.map(LikePattern.init))
+                        quick: pattern.map(LikePattern.cached))
     }
 
     public struct Compiled: Sendable {

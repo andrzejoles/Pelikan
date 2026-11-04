@@ -37,10 +37,10 @@ func BlockMenuItem(_ title: String, state: Bool = false, enabled: Bool = true, _
 /// i pasek nad tabelą (szybki filtr, filtr kolumn, liczba wierszy, Kopiuj, Eksportuj).
 @MainActor
 final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
-    /// Narzędzia tabel AppKit po tabeli — cel komend `table.*`, gdy tabela ma fokus.
-    private static let byTable = NSMapTable<NSTableView, AppKitTableTools>.weakToWeakObjects()
+    var tableView: NSTableView? { table }
 
-    static func tools(for table: NSTableView) -> AppKitTableTools? { byTable.object(forKey: table) }
+    /// Identyfikatory wierszy tabel AppKit to ich indeksy w widoku.
+    func indexes(of ids: [AnyHashable]) -> [Int] { ids.compactMap { $0 as? Int }.filter { $0 < table.numberOfRows } }
 
     var filter: TableFilter {
         get { model.state.filter }
@@ -82,7 +82,7 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         }
         menu.delegate = self
         table.menu = menu
-        Self.byTable.setObject(self, forKey: table)
+        TableFocus.register(table, self)
     }
 
     var columns: [(id: String, title: String)] {
@@ -90,7 +90,7 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     }
 
     var contents: TableContents {
-        TableContents(title: TableActions.title(title()), columns: columns, rowCount: table.numberOfRows, cell: cell,
+        TableContents(title: TableActions.title(title(), window: table.window), columns: columns, rowCount: table.numberOfRows, cell: cell,
                       selectedRows: Array(table.selectedRowIndexes))
     }
 
@@ -128,12 +128,20 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         let colIndex = table.clickedColumn
         let column = colIndex >= 0 && colIndex < table.tableColumns.count ? table.tableColumns[colIndex] : nil
         let rows: [Int] = row < 0 ? c.selectedRows : (table.selectedRowIndexes.contains(row) ? c.selectedRows : [row])
-        func item(_ title: String, state: Bool = false, enabled: Bool = true, _ id: String, _ args: [String: JSONValue] = [:]) -> NSMenuItem {
+        // Wiersz spod kursora w chwili wyboru pozycji: dołączany do zaznaczenia (jak w siatce wyników), więc komendy
+        // biorą zaznaczenie z tej chwili — bez indeksów sprzed ewentualnego przeładowania tabeli.
+        func item(_ title: String, state: Bool = false, enabled: Bool = true, _ id: String,
+                  _ args: @escaping (Int?) -> [String: JSONValue] = { _ in [:] }) -> NSMenuItem {
             BlockMenuItem(title, state: state, enabled: enabled) { [weak self] in
                 guard let self else { return }
-                TableActions.perform(self, id, args)
+                let clicked = self.table.clickedRow >= 0 && self.table.clickedRow < self.table.numberOfRows ? self.table.clickedRow : nil
+                if let clicked, !self.table.selectedRowIndexes.contains(clicked) {
+                    self.table.selectRowIndexes([clicked], byExtendingSelection: false)
+                }
+                TableActions.perform(self, id, args(clicked))
             }
         }
+        func rowArg(_ r: Int?) -> [String: JSONValue] { r.map { ["row": .int(Int64($0 + 1))] } ?? [:] }
         // Raporty SQL z wiersza z kolumną SQL_ID/hash (D217).
         if let r = rows.first, let t = SQLIdentity.target(columns: c.columns.map(\.title), values: c.columns.map { c.cell(r, $0.id) }) {
             let target = SQLReportTarget(target: t, origin: L10n.tr("wiersz tabeli"))
@@ -141,16 +149,16 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
             menu.addItem(.separator())
         }
         if row >= 0, let column {
-            menu.addItem(item(L10n.tr("Kopiuj komórkę"), "table.copyCell", ["row": .int(Int64(row + 1)), "column": .string(column.identifier.rawValue)]))
+            let id = column.identifier.rawValue
+            menu.addItem(item(L10n.tr("Kopiuj komórkę"), "table.copyCell") { rowArg($0).merging(["column": .string(id)]) { a, _ in a } })
         }
         if !rows.isEmpty {
-            menu.addItem(item(rows.count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(rows.count))"),
-                              "table.copyRows", ["rows": TableActions.rowsArgument(rows)]))
+            menu.addItem(item(rows.count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(rows.count))"), "table.copyRows"))
         }
         if let column {
             let id = column.identifier.rawValue
-            menu.addItem(item(L10n.tr("Kopiuj kolumnę „\(column.title)”"), "table.copyColumn", ["column": .string(id)]))
-            menu.addItem(item(L10n.tr("Zaznacz kolumnę „\(column.title)” do kopii"), state: markedColumns.contains(id), "table.markColumn", ["column": .string(id)]))
+            menu.addItem(item(L10n.tr("Kopiuj kolumnę „\(column.title)”"), "table.copyColumn") { _ in ["column": .string(id)] })
+            menu.addItem(item(L10n.tr("Zaznacz kolumnę „\(column.title)” do kopii"), state: markedColumns.contains(id), "table.markColumn") { _ in ["column": .string(id)] })
         }
         let marked = markedColumns
         menu.addItem(item(L10n.tr("Kopiuj zaznaczone kolumny (\(marked.count))"), enabled: !marked.isEmpty, "table.copyMarkedColumns"))
@@ -160,10 +168,12 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         if row >= 0, let column {
             let id = column.identifier.rawValue
             menu.addItem(.separator())
-            menu.addItem(item(L10n.tr("Filtruj „\(column.title)”: tylko ta wartość"), "table.filterByValue",
-                              ["column": .string(id), "row": .int(Int64(row + 1)), "exclude": .bool(false)]))
-            menu.addItem(item(L10n.tr("Filtruj „\(column.title)”: bez tej wartości"), "table.filterByValue",
-                              ["column": .string(id), "row": .int(Int64(row + 1)), "exclude": .bool(true)]))
+            menu.addItem(item(L10n.tr("Filtruj „\(column.title)”: tylko ta wartość"), "table.filterByValue") {
+                rowArg($0).merging(["column": .string(id), "exclude": .bool(false)]) { a, _ in a }
+            })
+            menu.addItem(item(L10n.tr("Filtruj „\(column.title)”: bez tej wartości"), "table.filterByValue") {
+                rowArg($0).merging(["column": .string(id), "exclude": .bool(true)]) { a, _ in a }
+            })
         }
         if model.state.filter.isActive {
             menu.addItem(item(L10n.tr("Wyczyść filtr"), "table.clearFilter"))
@@ -172,7 +182,7 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         let export = NSMenuItem(title: L10n.tr("Eksportuj"), action: nil, keyEquivalent: "")
         let sub = NSMenu()
         for f in TableExport.formats {
-            sub.addItem(item(f.displayName + "…", "table.export", ["format": .string(f.rawValue)]))
+            sub.addItem(item(f.displayName + "…", "table.export") { _ in ["format": .string(f.rawValue)] })
         }
         export.submenu = sub
         menu.addItem(export)

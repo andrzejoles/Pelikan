@@ -9,8 +9,8 @@ import Testing
 final class FakeDocsServer: URLProtocol {
     nonisolated(unsafe) static var requests: [[String: Any]] = []
     nonisolated(unsafe) static var sessionHeaders: [String?] = []
-    /// Następne tools/call z identyfikatorem sesji dostaje 404 (sesja wygasła po restarcie serwera).
-    nonisolated(unsafe) static var expireSession = false
+    /// Tyle następnych tools/call z identyfikatorem sesji dostaje 404 (sesja wygasła po restarcie serwera).
+    nonisolated(unsafe) static var expireSession = 0
     static let lock = NSLock()
 
     override class func canInit(with request: URLRequest) -> Bool { request.url?.host == "127.0.0.1" }
@@ -30,8 +30,8 @@ final class FakeDocsServer: URLProtocol {
         }
         let id = json["id"] as? Int
         let expired = Self.lock.withLock {
-            guard Self.expireSession, json["method"] as? String == "tools/call", request.value(forHTTPHeaderField: "Mcp-Session-Id") != nil else { return false }
-            Self.expireSession = false
+            guard Self.expireSession > 0, json["method"] as? String == "tools/call", request.value(forHTTPHeaderField: "Mcp-Session-Id") != nil else { return false }
+            Self.expireSession -= 1
             return true
         }
         if expired {
@@ -144,7 +144,7 @@ struct LocalDocsTests {
 
     @Test("Klient (D224): równoczesne pierwsze wywołania — jedna inicjalizacja; wygasła sesja (404) — nowa sesja i ponowienie")
     func clientSession() async throws {
-        FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.sessionHeaders = []; FakeDocsServer.expireSession = false }
+        FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.sessionHeaders = []; FakeDocsServer.expireSession = 0 }
         let cfg = URLSessionConfiguration.ephemeral
         cfg.protocolClasses = [FakeDocsServer.self]
         let c = LocalDocsClient(endpoint: URL(string: "http://127.0.0.1:8765/mcp")!, urlSession: URLSession(configuration: cfg))
@@ -153,11 +153,19 @@ struct LocalDocsTests {
         _ = try await (a, b)
         var methods = FakeDocsServer.lock.withLock { FakeDocsServer.requests.map { $0["method"] as? String } }
         #expect(methods.filter { $0 == "initialize" }.count == 1)
-        FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.expireSession = true }
+        FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.expireSession = 1 }
         let found = try await c.search("NVL", version: "19c")
         #expect(found.map(\.chunk) == [299800])
         methods = FakeDocsServer.lock.withLock { FakeDocsServer.requests.map { $0["method"] as? String } }
         #expect(methods == ["tools/call", "initialize", "notifications/initialized", "tools/call"])
+        // Dwa równoczesne wywołania dostają 404 — jedna nowa sesja, oba kończą się wynikiem.
+        FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.expireSession = 2 }
+        async let x = c.search("NVL", version: "19c")
+        async let y = c.search("DECODE", version: "19c")
+        let both = try await (x, y)
+        #expect(both.0.count == 1 && both.1.count == 1)
+        methods = FakeDocsServer.lock.withLock { FakeDocsServer.requests.map { $0["method"] as? String } }
+        #expect(methods.filter { $0 == "initialize" }.count == 1)
         #expect(LocalDocsClient.shared(for: URL(string: "http://127.0.0.1:1/mcp")!) === LocalDocsClient.shared(for: URL(string: "http://127.0.0.1:1/mcp")!))
     }
 }

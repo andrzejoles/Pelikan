@@ -850,7 +850,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     /// Tabela okna narzędzia, której dotyczą komendy `table.*` (D214). Siatka wyników SQL ma własne komendy `grid.*`.
-    func focusedTable() -> (any TableHandle)? { TableFocus.shared.current() }
+    func focusedTable() -> (any TableHandle)? { TableFocus.current() }
 
     /// Zapytanie z elementu z fokusem: siatka (wiersz, komórka), edytor (zaznaczenie, słowo, polecenie), tabela
     /// narzędzia. Paleta komend (panel) nie zabiera celu oknu pod nią.
@@ -864,7 +864,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         if let tv = responder as? NSTextView, !tv.isFieldEditor, window === mainWindow?.window, let doc = workspace.activeDocument {
             return SQLTargetFinder.fromEditor(doc)
         }
-        if responder is NSTableView { return TableFocus.shared.current()?.sqlTarget }
+        if responder is NSTableView { return TableFocus.current()?.sqlTarget }
         return nil
     }
 

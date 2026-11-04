@@ -3640,11 +3640,18 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   wyszukiwania albo sekcji pomijany; wersja z argumentu agenta w dzienniku tylko jako znana wartość.
 - **Raport ACTIVE:** WebKit z dostępem tylko do pliku tego raportu (skrypty raportu są zdalne).
 - Przy okazji: „Otwórz przebieg profilera” bez numeru pyta o niego (wykryte testem wstążki).
-- **Druga runda przeglądu:** jeden mechanizm tabeli bieżącej (`TableFocus`) dla komend `table.*` i „Raporty dla
-  SQL_ID” — komenda z menu albo paska działa na swojej tabeli (nawet gdy fokus ma inna), skrót i paleta — na tabeli
-  z fokusem okna pod paletą; uchwyt tabeli SwiftUI jest obiektem widoku odświeżanym przy rysowaniu (bieżące wiersze),
-  zapisywany tylko przy działaniu użytkownika. Komendy `table.*` w menu Edycja › Tabela i w palecie (poza wstążką —
-  działają w oknach narzędzi). Liczba w filtrze porównywana z liczbą pokazaną w komórce; tekst kolumn całkowitych bez
-  przejścia przez Double. Zapis pliku (arkusz) w oknie, z którego go wywołano. Klient MCP inicjuje sesję raz także
-  przy równoczesnych wywołaniach, po 4xx dla starej sesji — nowa; okno dokumentacji pomija wyniki starszych żądań po
-  numerze żądania. Wzorce LIKE filtra siatki z pamięci wzorców.
+- **Tabela bieżąca (rundy 2–3):** komendy `table.*` i „Raporty dla SQL_ID” działają na tabeli z fokusem w oknie
+  bieżącym (pod paletą — w oknie pod nią). Każda tabela (AppKit i SwiftUI) jest zarejestrowana z własnym widokiem
+  `NSTableView` (SwiftUI — `TableViewLocator` po ramce tabeli), bez globalnego stanu „ostatniej tabeli”; menu i pasek
+  tabeli najpierw dają jej fokus. Uchwyt tabeli SwiftUI jest obiektem widoku odświeżanym przy rysowaniu (bieżące
+  wiersze), czyszczonym po zniknięciu widoku. Menu kontekstowe wskazuje wiersze identyfikatorami — indeksy liczone
+  przy wyborze pozycji; argument `rows` tylko, gdy wiersze różnią się od zaznaczenia; menu tabel AppKit dołącza wiersz
+  spod kursora do zaznaczenia. Pusty identyfikator kolumny (kolumna bez tytułu) jest kolumną, nie brakiem argumentu.
+- Komendy `table.*` w menu Edycja › Tabela i w palecie (poza wstążką — działają w oknach narzędzi). Liczba w filtrze
+  porównywana z liczbą pokazaną w komórce; tekst kolumn całkowitych bez przejścia przez Double. Zapis pliku (arkusz)
+  w oknie, z którego go wywołano; nazwa pliku z tytułu okna tabeli.
+- Klient MCP inicjuje sesję raz także przy równoczesnych wywołaniach; ponowienie tylko po 404 i tylko raz na sesję
+  (równoczesne wywołania dołączają do nowej); okno dokumentacji pomija wyniki starszych żądań po numerze żądania.
+  Wzorce LIKE z pamięci wzorców (filtr siatki i tabel).
+- Okno raportów po anulowaniu deklaracji licencji działa dalej z raportami bez pakietów. `file.new.sql` przyjmuje
+  tekst (opis komendy o tym mówi); pozostałe `file.new.*` — bez parametru.

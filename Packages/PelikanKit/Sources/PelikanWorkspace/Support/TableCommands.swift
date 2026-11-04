@@ -93,8 +93,10 @@ enum TableCommands {
 
     /// Kolumna z argumentu `column` (identyfikator albo tytuł, bez wielkości liter); bez argumentu — wybór z listy.
     static func column(_ ctx: CommandContext, _ c: TableContents) async throws -> String {
-        if let raw = ctx.arguments.string("column"), !raw.isEmpty {
-            guard let col = c.columns.first(where: { $0.id == raw }) ?? c.columns.first(where: { $0.title.caseInsensitiveCompare(raw) == .orderedSame })
+        // Pusty identyfikator to też kolumna (kolumny bez tytułu, np. ikona ważności) — brak argumentu ≠ "".
+        if let raw = ctx.arguments.string("column") {
+            guard let col = c.columns.first(where: { $0.id == raw })
+                    ?? (raw.isEmpty ? nil : c.columns.first(where: { $0.title.caseInsensitiveCompare(raw) == .orderedSame }))
             else { throw CommandError.invalidArgument("column", raw) }
             return col.id
         }

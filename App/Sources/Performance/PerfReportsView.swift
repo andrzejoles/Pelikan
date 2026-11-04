@@ -30,6 +30,9 @@ final class PerfReportsModel {
     /// Wpisany SQL_ID albo hash (zmiana zapytania w oknie).
     var input = ""
 
+    /// Pytanie o licencje anulowane — okno działa z raportami bez pakietów.
+    private var cancelledLicense = false
+
     /// Uruchomienie zaznaczonego raportu po wczytaniu (parametr `run` komendy).
     private var runAfterLoad = false
 
@@ -61,7 +64,14 @@ final class PerfReportsModel {
         message = ""
         do {
             let s = try await session()
-            let lic = try await ManagementPacks.license(connection: connection, session: s, in: workspace, invoker: .user, ask: true)
+            // Anulowana deklaracja licencji: dalej tylko raporty bez pakietów (wersja, uprawnienia, zaznaczenie — jak zwykle).
+            let lic: PerfLicense
+            do {
+                lic = try await ManagementPacks.license(connection: connection, session: s, in: workspace, invoker: .user, ask: true)
+            } catch CommandError.cancelledByUser {
+                lic = .unlicensed
+                cancelledLicense = true
+            }
             license = lic
             if let r = try? await s.queryAll("select to_char(sysdate, 'YYYY-MM-DD HH24:MI:SS'), to_char(sysdate - 1/24, 'YYYY-MM-DD HH24:MI:SS') from dual", limit: 1).1.first {
                 dbNow = r[0].displayText ?? ""; dbHourAgo = r[1].displayText ?? ""
@@ -98,6 +108,9 @@ final class PerfReportsModel {
                     message = L10n.tr("Zapytania \(sqlID) nie ma już w pamięci kursorów, aktywnych sesjach\(lic.diagnostics ? L10n.tr(", ASH, AWR") : "")\(lic.allows(.tuning) ? L10n.tr(" ani SQL Monitor") : "") — raporty nie mają danych. Sprawdź SQL_ID albo połączenie (\(connectionName)).")
                 }
             }
+            if cancelledLicense, message.isEmpty {
+                message = L10n.tr("Anulowano — bez deklaracji licencji dostępne są tylko raporty bez pakietów")
+            }
             if selected == nil { selected = statuses.first { $0.available }?.report ?? reports.first }
             if let r = selected { select(r) }
             if runAfterLoad, let r = selected, status(r).available {
@@ -106,8 +119,6 @@ final class PerfReportsModel {
                 await run()
             }
         } catch is CancellationError {
-        } catch CommandError.cancelledByUser {
-            message = L10n.tr("Anulowano — bez deklaracji licencji dostępne są tylko raporty bez pakietów")
         } catch {
             message = error.localizedDescription
         }
