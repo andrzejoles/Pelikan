@@ -115,6 +115,16 @@ struct TableToolsState {
     var editingFilters = false
 }
 
+extension SQLReportTarget {
+    /// Zapytanie z wiersza tabeli: kolumna SQL_ID, potem hash; nazwa kolumny — tytuł, a gdy nie pasuje — identyfikator
+    /// (jedna reguła dla tabel SwiftUI i AppKit, menu wiersza i skrótu).
+    static func fromTableRow(columns: [(id: String, title: String)], values: [String], connection: UUID?, origin: String) -> SQLReportTarget? {
+        let names = columns.map { SQLIdentity.columnKind($0.title) != nil ? $0.title : $0.id }
+        guard names.contains(where: { SQLIdentity.columnKind($0) != nil }) else { return nil }
+        return SQLIdentity.target(columns: names, values: values).map { SQLReportTarget(target: $0, origin: origin, connection: connection) }
+    }
+}
+
 /// Tabela okna jako cel komend `table.*` (D214) i źródło SQL_ID dla „Raporty dla SQL_ID” (D217).
 @MainActor
 protocol FocusTable: TableHandle {
@@ -172,18 +182,28 @@ final class SwiftUITableHandle: FocusTable {
 @MainActor
 enum TableFocus {
     private static let tables = NSMapTable<NSTableView, AnyObject>.weakToWeakObjects()
+    /// Sondy tabel SwiftUI — ponowne szukanie, gdy tabela z fokusem nie jest jeszcze zarejestrowana.
+    static let probes = NSHashTable<TableViewLocator.Probe>.weakObjects()
+    /// Okno, nad którym otwarto paletę komend (jej czynności dotyczą tego okna).
+    static weak var paletteHost: NSWindow?
+    /// Okno tabeli, z której menu trwa komenda (arkusz zapisu nad nim).
+    static weak var actionWindow: NSWindow?
+    static weak var palette: NSWindow?
 
     static func register(_ table: NSTableView, _ handle: any FocusTable) { tables.setObject(handle, forKey: table) }
 
-    /// Okno czynności: okno z fokusem, a gdy fokus ma panel (paleta komend) — okno główne pod nim.
+    /// Okno czynności: okno z fokusem, a gdy fokus ma paleta komend — okno, nad którym ją otwarto.
     static var contextWindow: NSWindow? {
-        if let k = NSApp.keyWindow, !(k is NSPanel) { return k }
-        return NSApp.mainWindow ?? NSApp.keyWindow
+        if let k = NSApp.keyWindow, let palette, k === palette { return paletteHost ?? NSApp.mainWindow }
+        return NSApp.keyWindow ?? NSApp.mainWindow
     }
 
     /// Tabela z fokusem w oknie bieżącym (siatka wyników SQL ma własne komendy `grid.*`).
     static func current() -> (any FocusTable)? {
-        guard let tv = contextWindow?.firstResponder as? NSTableView, !(tv is GridTableView) else { return nil }
+        guard let window = contextWindow, let tv = window.firstResponder as? NSTableView, !(tv is GridTableView) else { return nil }
+        if let h = tables.object(forKey: tv) as? any FocusTable { return h }
+        // Tabela jeszcze niezarejestrowana (np. pokazana z ukrytej karty doku bez przerysowania) — szukanie teraz.
+        for p in probes.allObjects where p.window === window { p.locate() }
         return tables.object(forKey: tv) as? any FocusTable
     }
 }
@@ -196,6 +216,13 @@ struct TableViewLocator: NSViewRepresentable {
         var handle: SwiftUITableHandle?
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
+            TableFocus.probes.add(self)
+            schedule()
+        }
+
+        /// Karta doku odkryta (także przez odkrycie przodka) — tabela mogła dopiero teraz dostać ramkę.
+        override func viewDidUnhide() {
+            super.viewDidUnhide()
             schedule()
         }
 
@@ -269,9 +296,17 @@ struct TableViewLocator: NSViewRepresentable {
 @MainActor
 enum TableActions {
     static func perform(_ handle: any FocusTable, _ id: String, _ args: [String: JSONValue] = [:]) {
+        guard let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
         var a = args
-        a["table"] = .string(TableRegistry.id(for: handle))
-        (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(a))
+        a[TableRegistry.key] = .string(TableRegistry.id(for: handle))
+        TableRegistry.begin()
+        TableFocus.actionWindow = handle.tableView?.window
+        let task = ws.perform(CommandID(rawValue: id), CommandArguments(a))
+        Task { @MainActor in
+            await task.value
+            TableRegistry.end()
+            if TableRegistry.pending == 0 { TableFocus.actionWindow = nil }
+        }
     }
 
     /// Argument `rows` (numery od 1) tylko, gdy wiersze menu różnią się od zaznaczenia (inaczej komenda bierze
@@ -395,7 +430,8 @@ struct TableValueFilterMenu: View {
     }
 
     private func filter(_ column: String, exclude: Bool) {
-        guard let r = handle.indexes(of: [rowID]).first else { return }
+        // Wiersz, którego już nie ma — 0 (komenda zgłasza, że zniknął; jak pozostałe pozycje menu).
+        let r = handle.indexes(of: [rowID]).first ?? -1
         TableActions.perform(handle, "table.filterByValue", ["column": .string(column), "row": .int(Int64(r + 1)), "exclude": .bool(exclude)])
     }
 }
@@ -541,8 +577,11 @@ struct DataTable<Row: Identifiable>: View {
         self.columns = columns()
     }
 
-    private func viewRows() -> [Row] {
-        let f = tools.filter.compiled()
+    private func viewRows() -> [Row] { Self.viewRows(rows, columns: columns, filter: tools.filter, sort: sort) }
+
+    /// Wiersze widoku: filtr i sortowanie (także dla komend wywołanych przed przerysowaniem — makro, kilka komend z rzędu).
+    static func viewRows(_ rows: [Row], columns: [DataColumn<Row>], filter: TableFilter, sort: [ColumnSort<Row>]) -> [Row] {
+        let f = filter.compiled()
         let ids = columns.map(\.id)
         let byID = Dictionary(columns.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         let filtered = f.isEmpty ? rows : rows.filter { r in
@@ -567,15 +606,10 @@ struct DataTable<Row: Identifiable>: View {
                                  selectedRows: selected.isEmpty ? [] : shown.indices.filter { selected.contains(shown[$0].id) })
         }
 
-        /// Nazwy kolumn do rozpoznania SQL_ID/hash (tytuł, a gdy nie pasuje — identyfikator).
-        var names: [String] { texts.map { SQLIdentity.columnKind($0.title) != nil ? $0.title : $0.id } }
-        var hasSQLColumn: Bool { names.contains { SQLIdentity.columnKind($0) != nil } }
-
         /// Zapytanie z wiersza (kolumna SQL_ID, potem hash) — menu wiersza, skrót, wstążka (jedna reguła).
         func sqlTarget(row: Row) -> SQLReportTarget? {
-            guard hasSQLColumn else { return nil }
-            return SQLIdentity.target(columns: names, values: texts.map { $0.text(row) })
-                .map { SQLReportTarget(target: $0, origin: L10n.tr("zaznaczony wiersz tabeli"), connection: connection) }
+            SQLReportTarget.fromTableRow(columns: texts.map { ($0.id, $0.title) }, values: texts.map { $0.text(row) },
+                                         connection: connection, origin: L10n.tr("zaznaczony wiersz tabeli"))
         }
 
         func sqlTarget(_ shown: [Row]) -> SQLReportTarget? {
@@ -594,8 +628,11 @@ struct DataTable<Row: Identifiable>: View {
         // Uchwyt widzi wiersze z tego rysowania (komendy wywołane później — bieżące dane, bez ponownego filtrowania).
         let snapshot = Self.snapshot(columns: columns, title: title, connection: reportConnection, selection: selection, handle: handle)
         let contents = snapshot.contents(shown)
-        let _ = handle.update(contents: { snapshot.contents(shown) }, sqlTarget: { snapshot.sqlTarget(shown) }, state: $tools,
-                              indexes: SwiftUITableHandle.indexer(shown))
+        // Komenda liczy wiersze z bieżącego filtra i sortowania (stan narzędzi mógł się zmienić bez przerysowania).
+        let (all, cols, toolsState, sortState) = (rows, columns, $tools, $sort)
+        let live = { Self.viewRows(all, columns: cols, filter: toolsState.wrappedValue.filter, sort: sortState.wrappedValue) }
+        let _ = handle.update(contents: { snapshot.contents(live()) }, sqlTarget: { snapshot.sqlTarget(live()) }, state: $tools,
+                              indexes: { ids in SwiftUITableHandle.indexer(live())(ids) })
         VStack(spacing: 3) {
             TableToolsBar(contents: contents, handle: handle, state: $tools, total: rows.count)
             table(shown)

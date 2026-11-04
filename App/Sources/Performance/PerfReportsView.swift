@@ -128,8 +128,11 @@ final class PerfReportsModel {
     /// Raporty z informacją o dostępności (licencja, wersja, dane zapytania).
     var statuses: [(report: PerfReport, available: Bool, reason: String?)] {
         if let a = availability, mode != .global { return a.reports() }
-        // Licencja nieznana (przed wczytaniem, anulowana deklaracja) — tylko raporty bez pakietów.
-        let lic = license ?? .unlicensed
+        // Licencja jeszcze nieznana: wczytywanie albo błąd połączenia — powód z komunikatu, nie z licencji.
+        guard let lic = license else {
+            let reason = loading ? L10n.tr("Wczytywanie…") : (message.isEmpty ? nil : message)
+            return reports.map { ($0, false, reason) }
+        }
         let major = availability?.major ?? serverMajor ?? 99
         return reports.map { r in
             if let reason = lic.blockReason(r, major: major) { return (r, false, reason) }

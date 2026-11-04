@@ -48,6 +48,9 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
     }
 
     func show(relativeTo window: NSWindow?) {
+        // Czynności z palety dotyczą okna pod nią (tabela z fokusem, raporty dla SQL_ID).
+        TableFocus.palette = panel
+        TableFocus.paletteHost = NSApp.keyWindow === panel ? TableFocus.paletteHost : NSApp.keyWindow
         search.stringValue = ""
         filter()
         if let frame = window?.frame {

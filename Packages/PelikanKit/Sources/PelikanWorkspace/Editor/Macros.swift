@@ -89,7 +89,9 @@ extension Workspace {
     func recordMacroInvocation(_ record: CommandInvocationRecord, resolved: CommandArguments? = nil) {
         guard let r = macroRecorder, !isPlayingMacro, record.invoker == .user, case .success = record.outcome, !Self.isMacroCommand(record.command),
               let c = registry.command(record.command), [.modifiesEditor, .uiState].contains(c.descriptor.effect) else { return }
-        let arguments = resolved.map { CommandArguments(record.arguments.values.merging($0.values) { $1 }) } ?? record.arguments
+        var arguments = resolved.map { CommandArguments(record.arguments.values.merging($0.values) { $1 }) } ?? record.arguments
+        // Klucze wewnętrzne („__…”, np. tabela z menu) dotyczą tylko tego wywołania — odtworzenie działa na bieżącym celu.
+        arguments = CommandArguments(arguments.values.filter { !$0.key.hasPrefix("__") })
         r.record(.command(record.command, arguments))
     }
 

@@ -37,50 +37,26 @@ struct LocalDocsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                TextField(L10n.tr("Szukaj w dokumentacji Oracle (po angielsku, np. DBMS_SCHEDULER.CREATE_JOB repeat_interval)"), text: $model.query)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit { Task { await search() } }
-                Picker(L10n.tr("Wersja"), selection: $version) {
-                    ForEach(LocalDocsSettings.versions, id: \.self) { v in Text(v == "all" ? L10n.tr("wszystkie") : v).tag(v) }
-                }
-                .fixedSize()
-                Button(L10n.tr("Szukaj")) { Task { await search() } }
-                    .disabled(model.query.trimmingCharacters(in: .whitespaces).isEmpty || busy)
-                if busy { ProgressView().controlSize(.small) }
-            }
-            HSplitView {
-                List(results, selection: $selection) { f in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(f.heading).lineLimit(2)
-                        Text(f.title).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(1)
-                    }
-                    .tag(f.id)
-                }
-                .frame(minWidth: 170, idealWidth: 260)
+            // Wąski panel doku: wersja i „Szukaj” pod polem; wyniki nad treścią fragmentu.
+            ViewThatFits(in: .horizontal) {
+                HStack { queryField; searchControls }
                 VStack(alignment: .leading, spacing: 4) {
-                    if let f = selected {
-                        Text(f.section).font(.uiSecondary).foregroundStyle(.secondary).textSelection(.enabled).lineLimit(3)
-                        ScrollView {
-                            DocText(text: detail ?? f.text).frame(maxWidth: .infinity, alignment: .leading).padding(.trailing, 6)
-                        }
-                        HStack {
-                            Button(detail == nil ? L10n.tr("Cała sekcja") : L10n.tr("Tylko fragment")) {
-                                if detail == nil { Task { await loadSection(f) } } else { detail = nil }
-                            }
-                            Button(L10n.tr("Kopiuj")) { DocsClipboard.put(detail ?? f.text) }
-                            Spacer()
-                            if let link = f.link {
-                                Button(L10n.tr("Otwórz online")) { NSWorkspace.shared.open(link) }
-                                    .help(link.absoluteString)
-                            }
-                        }
-                    } else {
-                        Text(results.isEmpty ? L10n.tr("Wpisz szukane słowa albo naciśnij F1 na słowie w edytorze.") : L10n.tr("Wybierz fragment"))
-                            .foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+                    queryField
+                    HStack { searchControls; Spacer() }
+                }
+            }
+            GeometryReader { g in
+                if g.size.width < 560 {
+                    VSplitView {
+                        resultList.frame(minHeight: 120, idealHeight: 180)
+                        detailPane.frame(minHeight: 160)
+                    }
+                } else {
+                    HSplitView {
+                        resultList.frame(minWidth: 170, idealWidth: 260)
+                        detailPane.frame(minWidth: 240)
                     }
                 }
-                .frame(minWidth: 240)
             }
             HStack {
                 Text(message).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(2).textSelection(.enabled)
@@ -91,12 +67,75 @@ struct LocalDocsView: View {
             }
         }
         .padding(10)
-        .frame(minWidth: 440, minHeight: 380)
+        .frame(minWidth: 320, minHeight: 380)
         .task(id: model.request) {
             version = settings.version
             if !model.query.trimmingCharacters(in: .whitespaces).isEmpty { await search() }
         }
         .onChange(of: selection) { detail = nil }
+    }
+
+    private var queryField: some View {
+        TextField(L10n.tr("Szukaj w dokumentacji Oracle (po angielsku, np. DBMS_SCHEDULER.CREATE_JOB repeat_interval)"), text: $model.query)
+            .textFieldStyle(.roundedBorder)
+            .frame(minWidth: 200)
+            .onSubmit { Task { await search() } }
+    }
+
+    private var searchControls: some View {
+        HStack {
+            Picker(L10n.tr("Wersja"), selection: $version) {
+                ForEach(LocalDocsSettings.versions, id: \.self) { v in Text(v == "all" ? L10n.tr("wszystkie") : v).tag(v) }
+            }
+            .fixedSize()
+            Button(L10n.tr("Szukaj")) { Task { await search() } }
+                .disabled(model.query.trimmingCharacters(in: .whitespaces).isEmpty || busy)
+            if busy { ProgressView().controlSize(.small) }
+        }
+        .fixedSize()
+    }
+
+    private var resultList: some View {
+        List(results, selection: $selection) { f in
+            VStack(alignment: .leading, spacing: 2) {
+                Text(f.heading).lineLimit(2)
+                Text(f.title).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(1)
+            }
+            .tag(f.id)
+        }
+    }
+
+    private var detailPane: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let f = selected {
+                Text(f.section).font(.uiSecondary).foregroundStyle(.secondary).textSelection(.enabled).lineLimit(3)
+                ScrollView {
+                    DocText(text: detail ?? f.text).frame(maxWidth: .infinity, alignment: .leading).padding(.trailing, 6)
+                }
+                // Przyciski w wąskim panelu w dwóch wierszach (bez ucinania „Otwórz online”).
+                ViewThatFits(in: .horizontal) {
+                    HStack { sectionButtons(f); Spacer(); openButton(f) }
+                    VStack(alignment: .leading, spacing: 4) { HStack { sectionButtons(f) }; openButton(f) }
+                }
+            } else {
+                Text(results.isEmpty ? L10n.tr("Wpisz szukane słowa albo naciśnij F1 na słowie w edytorze.") : L10n.tr("Wybierz fragment"))
+                    .foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+    }
+
+    @ViewBuilder private func sectionButtons(_ f: DocFragment) -> some View {
+        Button(detail == nil ? L10n.tr("Cała sekcja") : L10n.tr("Tylko fragment")) {
+            if detail == nil { Task { await loadSection(f) } } else { detail = nil }
+        }
+        Button(L10n.tr("Kopiuj")) { DocsClipboard.put(detail ?? f.text) }
+    }
+
+    @ViewBuilder private func openButton(_ f: DocFragment) -> some View {
+        if let link = f.link {
+            Button(L10n.tr("Otwórz online")) { NSWorkspace.shared.open(link) }
+                .help(link.absoluteString)
+        }
     }
 
     private func search() async {

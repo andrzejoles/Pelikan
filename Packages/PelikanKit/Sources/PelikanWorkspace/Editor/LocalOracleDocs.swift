@@ -146,8 +146,13 @@ public actor LocalDocsClient {
         }
     }
 
-    /// Odpowiedź 4xx na żądanie z sesją: serwery różnie odpowiadają na nieznaną sesję (404 wg MCP, 400, 401, 410…),
-    /// więc każdy taki kod daje jedną próbę z nową sesją; ponowny błąd idzie do wywołującego jako `LocalDocsError`.
+    /// Odrzucona sesja: 404 (MCP: nieznana sesja) albo inny kod 4xx z komunikatem o sesji („No valid session ID”).
+    /// Inne błędy 4xx (argumenty, autoryzacja pośrednika) nie kasują sesji wspólnej dla okna, F1 i agenta.
+    static func sessionRejected(_ code: Int, _ body: String) -> Bool {
+        code == 404 || ((400..<500).contains(code) && body.range(of: "session", options: .caseInsensitive) != nil)
+    }
+
+    /// Odrzucona sesja daje jedną próbę z nową sesją; ponowny błąd idzie do wywołującego jako `LocalDocsError`.
     private struct SessionExpired: Error {
         let session: String
         let error: LocalDocsError
@@ -178,7 +183,7 @@ public actor LocalDocsClient {
         let result: [String: Any]
         do {
             result = try await rpc("tools/call", ["name": name, "arguments": arguments])
-        } catch LocalDocsError.http(let code, let body) where used != nil && (400..<500).contains(code) {
+        } catch LocalDocsError.http(let code, let body) where used != nil && Self.sessionRejected(code, body) {
             throw SessionExpired(session: used!, error: .http(code, body))
         }
         let content = (result["content"] as? [[String: Any]]) ?? []

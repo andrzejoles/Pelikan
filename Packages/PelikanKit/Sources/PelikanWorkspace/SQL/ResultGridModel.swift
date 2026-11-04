@@ -99,7 +99,10 @@ public final class ResultGridModel {
         let cols = columns
         let data = rows
         let fmt = format
-        let visible = filter.map { f in data.indices.filter { f.matches(data[$0], columns: cols, format: fmt) } } ?? Array(data.indices)
+        let visible = filter.map { f in
+            let likes = f.likePatterns()
+            return data.indices.filter { f.matches(data[$0], columns: cols, format: fmt, likes: likes) }
+        } ?? Array(data.indices)
         guard !keys.isEmpty else { order = visible; return }
         // Sortowanie stabilne: przy równych kluczach kolejność z bazy.
         order = visible.sorted { a, b in

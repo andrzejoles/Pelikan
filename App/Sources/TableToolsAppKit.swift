@@ -57,8 +57,7 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
 
     /// Zapytanie z wiersza widoku — menu wiersza i skrót (jedna reguła).
     func sqlTarget(row r: Int, in c: TableContents) -> SQLReportTarget? {
-        SQLIdentity.target(columns: c.columns.map(\.title), values: c.columns.map { c.cell(r, $0.id) })
-            .map { SQLReportTarget(target: $0, origin: L10n.tr("wiersz tabeli")) }
+        SQLReportTarget.fromTableRow(columns: c.columns, values: c.columns.map { c.cell(r, $0.id) }, connection: nil, origin: L10n.tr("wiersz tabeli"))
     }
 
     let table: NSTableView

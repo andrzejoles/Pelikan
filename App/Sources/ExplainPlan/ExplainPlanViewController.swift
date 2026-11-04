@@ -77,37 +77,40 @@ struct PlanPanel: View {
     }
 
     /// Kroki planu spełniające filtr; nil — filtr pusty (widok drzewa).
-    private var filteredLines: [PlanLine]? {
-        let f = tools.filter.compiled()
-        guard !f.isEmpty else { return nil }
-        let cols = planColumns
-        let ids = cols.map(\.id)
-        return (document.plan?.lines ?? []).filter { l in
-            f.matches(all: ids) { id in cols.first { $0.id == id }.map { ($0.text(l), $0.key(l)) } ?? ("", .none) }
-        }
-    }
+    private var filteredLines: [PlanLine]? { Self.filtered(document.plan, columns: planColumns, filter: tools.filter) }
 
-    /// Wiersze drzewa planu w kolejności ekranu: korzenie i rodzeństwo posortowane, dzieci tylko gałęzi rozwiniętych.
-    private func visibleTreeLines() -> [PlanLine] {
+    /// Wiersze tabeli planu do kopii i eksportu: z filtrem — pasujące kroki posortowane; bez filtra — wszystkie kroki
+    /// w kolejności drzewa (rodzeństwo posortowane jak na ekranie, także gałęzie zwinięte — eksport to cały plan,
+    /// licznik paska zgadza się z kopią).
+    static func planRows(_ plan: ExplainPlanResult?, filtered: [PlanLine]?, sort: [ColumnSort<PlanLine>]) -> [PlanLine] {
+        if let filtered { return filtered.sorted(by: sort) }
         var out: [PlanLine] = []
         func add(_ l: PlanLine) {
             out.append(l)
-            guard let children = l.children, document.planExpanded.contains(l.id) else { return }
-            children.sorted(by: sortPlan).forEach(add)
+            (l.children ?? []).sorted(by: sort).forEach(add)
         }
-        (document.plan?.roots ?? []).sorted(by: sortPlan).forEach(add)
+        (plan?.roots ?? []).sorted(by: sort).forEach(add)
         return out
     }
 
-    /// Zawartość tabeli planu (wiersze w kolejności ekranu): domknięcie komórek trzyma tylko teksty kolumn (nie widok
-    /// z uchwytem w `@State`).
-    private func planContents(_ shown: [PlanLine]) -> TableContents {
-        let cols = planColumns
+    /// Kroki spełniające filtr; nil — filtr pusty.
+    static func filtered(_ plan: ExplainPlanResult?, columns: [DataColumn<PlanLine>], filter: TableFilter) -> [PlanLine]? {
+        let f = filter.compiled()
+        guard !f.isEmpty else { return nil }
+        let ids = columns.map(\.id)
+        return (plan?.lines ?? []).filter { l in
+            f.matches(all: ids) { id in columns.first { $0.id == id }.map { ($0.text(l), $0.key(l)) } ?? ("", .none) }
+        }
+    }
+
+    /// Zawartość tabeli planu: domknięcie komórek trzyma tylko teksty kolumn (nie widok z uchwytem w `@State`).
+    static func contents(_ shown: [PlanLine], columns cols: [DataColumn<PlanLine>], selected: PlanLine.ID?) -> TableContents {
         let texts = Dictionary(cols.map { ($0.id, $0.text) }, uniquingKeysWith: { a, _ in a })
         return TableContents(title: L10n.tr("Plan wykonania"), columns: cols.map { ($0.id, $0.title) }, rowCount: shown.count,
                              cell: { r, id in r < shown.count ? texts[id]?(shown[r]) ?? "" : "" },
-                             selectedRows: shown.indices.filter { shown[$0].id == selection })
+                             selectedRows: shown.indices.filter { shown[$0].id == selected })
     }
+
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -167,10 +170,14 @@ struct PlanPanel: View {
                 let lines = filteredLines
                 // Wiersze tak jak na ekranie: z filtrem — płaska lista posortowana; bez filtra — drzewo (rodzeństwo
                 // posortowane, zwinięte gałęzie pominięte). Te same wiersze w menu, kopii, eksporcie i liczniku paska.
-                let shownLines = lines.map { $0.sorted(by: sortPlan) } ?? visibleTreeLines()
-                let contents = planContents(shownLines)
+                let shownLines = Self.planRows(document.plan, filtered: lines, sort: sortPlan)
+                let contents = Self.contents(shownLines, columns: planColumns, selected: selection)
                 let handle = tableHandle
-                let _ = handle.update(contents: { contents }, sqlTarget: { nil }, state: $tools, indexes: SwiftUITableHandle.indexer(shownLines))
+                // Komendy liczą wiersze z bieżącego filtra i sortowania (makro, kilka komend bez przerysowania).
+                let (doc, cols, toolsState, sortState, selected) = (document, planColumns, $tools, $sortPlan, selection)
+                let live = { Self.planRows(doc.plan, filtered: Self.filtered(doc.plan, columns: cols, filter: toolsState.wrappedValue.filter), sort: sortState.wrappedValue) }
+                let _ = handle.update(contents: { Self.contents(live(), columns: cols, selected: selected) }, sqlTarget: { nil }, state: $tools,
+                                      indexes: { ids in SwiftUITableHandle.indexer(live())(ids) })
                 TableToolsBar(contents: contents, handle: handle, state: $tools, total: document.plan?.lines.count ?? 0)
                 ScrollViewReader { proxy in
                     Table(of: PlanLine.self, selection: $selection, sortOrder: $sortPlan) {

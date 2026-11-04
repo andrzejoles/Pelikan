@@ -148,8 +148,16 @@ public struct GridFilter: Sendable, Hashable {
     /// Wzorzec z pamięci podręcznej — filtr siatki sprawdza nim każdy wiersz (bez kompilowania przy każdej komórce).
     nonisolated static func like(_ s: String, _ pattern: String) -> Bool { LikePattern.cached(pattern).matches(s) }
 
-    /// Czy wiersz spełnia filtr (wartości porównywane jako liczby, gdy obie są liczbami; inaczej jako tekst).
-    public func matches(_ row: [OracleValue], columns: [ColumnInfo], format: ValueFormat) -> Bool {
+    /// Wzorce LIKE warunków skompilowane raz dla całego filtrowania (bez wyszukiwania w pamięci przy każdej komórce).
+    public func likePatterns() -> [String: LikePattern] {
+        var out: [String: LikePattern] = [:]
+        for g in groups { for c in g where c.op == .like || c.op == .notLike { out[c.value] = out[c.value] ?? LikePattern(c.value) } }
+        return out
+    }
+
+    /// Czy wiersz spełnia filtr (wartości porównywane jako liczby, gdy obie są liczbami; inaczej jako tekst);
+    /// `likes` — wzorce z `likePatterns()` (wiele wierszy), inaczej z pamięci wzorców.
+    public func matches(_ row: [OracleValue], columns: [ColumnInfo], format: ValueFormat, likes: [String: LikePattern]? = nil) -> Bool {
         groups.contains { group in
             group.allSatisfy { c in
                 guard let idx = columns.firstIndex(where: { $0.name == c.column }), idx < row.count else { return false }
@@ -163,8 +171,8 @@ public struct GridFilter: Sendable, Hashable {
                 if isNull { return false }
                 let s = v.format(format)
                 switch c.op {
-                case .like: return Self.like(s, c.value)
-                case .notLike: return !Self.like(s, c.value)
+                case .like: return (likes?[c.value] ?? LikePattern.cached(c.value)).matches(s)
+                case .notLike: return !(likes?[c.value] ?? LikePattern.cached(c.value)).matches(s)
                 default: break
                 }
                 let cmp: ComparisonResult

@@ -54,7 +54,8 @@ struct SQLMonitorView: View {
             }
         }
         .padding(10)
-        .frame(minWidth: 860, minHeight: 420)
+        // Wąski panel doku: tabela przewija kolumny sama, pasek tabeli (Kopiuj, Eksportuj) widoczny.
+        .frame(minWidth: 360, minHeight: 420)
         .environment(\.reportConnection, connection)
 
         .toolTask(id: 0) { await reload() }

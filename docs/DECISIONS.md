@@ -3640,8 +3640,9 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   wyszukiwania albo sekcji pomijany; wersja z argumentu agenta w dzienniku tylko jako znana wartość.
 - **Raport ACTIVE:** WebKit z dostępem tylko do pliku tego raportu (skrypty raportu są zdalne).
 - Przy okazji: „Otwórz przebieg profilera” bez numeru pyta o niego (wykryte testem wstążki).
-- **Tabela komendy (rundy 2–4):** menu i pasek tabeli wskazują swoją tabelę argumentem `table` (rejestr tabel
-  `TableRegistry`, słabe odwołania) — komenda działa na niej niezależnie od fokusu i okna kluczowego. Paleta, skrót
+- **Tabela komendy (rundy 2–6):** menu i pasek tabeli wskazują swoją tabelę kluczem wewnętrznym `__table` (rejestr
+  tabel `TableRegistry` z UUID, słabe odwołania; klucze `__…` nie trafiają do makr — odtworzenie działa na tabeli
+  z fokusem) — komenda działa na niej niezależnie od fokusu i okna kluczowego. Paleta, skrót
   i makro — tabela z fokusem w oknie bieżącym (pod paletą — w oknie pod nią), wyszukiwana po widoku `NSTableView`
   (SwiftUI — `TableViewLocator`: tabela o ramce najbliższej ramce tabeli, bez widoków ukrytych). Uchwyt tabeli
   SwiftUI jest obiektem widoku odświeżanym przy rysowaniu i trzyma tylko wartości tabeli (bez cyklu z widokiem).
@@ -3659,3 +3660,10 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   Wzorce LIKE z pamięci wzorców (filtr siatki i tabel).
 - Okno raportów po anulowaniu deklaracji licencji działa dalej z raportami bez pakietów. `file.new.sql` przyjmuje
   tekst (opis komendy o tym mówi); pozostałe `file.new.*` — bez parametru.
+- **Przegląd ergonomii (zrzuty w tle):** narzędzia z tej serii w wąskim panelu doku nie mieszczą się w nim
+  (minimalna szerokość 860–900 pt — dok przewijał je w poziomie, pasek tabeli z „Kopiuj” i „Eksportuj” był poza
+  widokiem). Instance Viewer (nagłówek w wierszach, wykresy jeden pod drugim, elastyczne kolumny Top SQL), Sesje
+  (połączenie i filtr, odświeżanie, czynności — w wierszach, w najwęższym panelu menu „Sesja”; karty szczegółów jako
+  lista), SQL Monitor i dokumentacja lokalna (wyniki nad treścią, przyciski w dwóch wierszach) dopasowują układ do
+  szerokości; minimum 340–360 pt. Okno raportów przy błędzie połączenia pokazuje ten błąd zamiast „wymaga licencji”.
+  Paleta komend zapamiętuje okno, nad którym ją otwarto (cel czynności), a arkusz zapisu otwiera się nad oknem tabeli.

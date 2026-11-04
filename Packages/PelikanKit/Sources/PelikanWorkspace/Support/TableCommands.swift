@@ -38,25 +38,28 @@ public protocol TableHandle: AnyObject {
     var markedColumns: [String] { get set }
 }
 
-/// Tabele widoczne w oknach po identyfikatorze (argument `table` komend z menu i paska tabeli). Słabe odwołania —
-/// zamknięta tabela znika z rejestru.
+/// Tabele widoczne w oknach po identyfikatorze (klucz wewnętrzny `__table` komend z menu i paska tabeli — nie trafia
+/// do makr). Identyfikator to UUID nadany obiektowi (adres po zwolnieniu tabeli może trafić do innej); słabe odwołania.
 @MainActor
 public enum TableRegistry {
-    private final class Weak { weak var handle: (any TableHandle)?; init(_ h: any TableHandle) { handle = h } }
-    private static var tables: [String: Weak] = [:]
+    public static let key = "__table"
+    private final class Entry { weak var handle: (any TableHandle)?; let id: String; init(_ h: any TableHandle) { handle = h; id = UUID().uuidString } }
+    private static var entries: [Entry] = []
+    /// Komendy z menu tabeli w toku — walidacja komendy (klucz wewnętrzny jej nie wyłącza) uznaje tabelę za dostępną.
+    public private(set) static var pending = 0
 
-    /// Identyfikator tabeli (ten sam przez cały czas życia obiektu).
     public static func id(for handle: any TableHandle) -> String {
-        // Adres obiektu — jednoznaczny dla żywych tabel (rejestr trzyma je słabo i sprawdza tożsamość).
-        let id = String(UInt(bitPattern: ObjectIdentifier(handle)), radix: 36)
-        if tables[id]?.handle !== handle {
-            tables = tables.filter { $0.value.handle != nil }
-            tables[id] = Weak(handle)
-        }
-        return id
+        entries.removeAll { $0.handle == nil }
+        if let e = entries.first(where: { $0.handle === handle }) { return e.id }
+        let e = Entry(handle)
+        entries.append(e)
+        return e.id
     }
 
-    public static func handle(_ id: String) -> (any TableHandle)? { tables[id]?.handle }
+    public static func handle(_ id: String) -> (any TableHandle)? { entries.first { $0.id == id }?.handle }
+
+    public static func begin() { pending += 1 }
+    public static func end() { pending = max(0, pending - 1) }
 }
 
 extension TableExport {
@@ -84,11 +87,9 @@ enum TableCommands {
     static let rowsParam = CommandParameter("rows", .string, L10n.tr("Numery wierszy widoku od 1, po przecinku (domyślnie zaznaczone)"))
     static let columnParam = CommandParameter("column", .string, L10n.tr("Kolumna: identyfikator albo tytuł (bez argumentu — wybór z listy)"))
 
-    static let tableParam = CommandParameter("table", .string, L10n.tr("Tabela (menu tabeli; domyślnie tabela z fokusem)"))
-
     static func handle(_ ctx: CommandContext) throws -> any TableHandle {
         // Wskazana tabela (menu, makro) — jej brak to błąd, nie zamiana na tabelę z fokusem.
-        if let id = ctx.arguments.string("table") {
+        if let id = ctx.arguments.string(TableRegistry.key) {
             guard let h = TableRegistry.handle(id) else { throw CommandError.notAvailable(L10n.tr("Tabeli z menu już nie ma (okno zamknięte)")) }
             return h
         }
@@ -96,7 +97,7 @@ enum TableCommands {
         return h
     }
 
-    static func hasTable(_ ws: Workspace) -> Bool { ws.ui?.focusedTable() != nil }
+    static func hasTable(_ ws: Workspace) -> Bool { TableRegistry.pending > 0 || ws.ui?.focusedTable() != nil }
 
     /// Wiersze z argumentu `rows` (numery od 1) albo zaznaczone.
     static func rows(_ ctx: CommandContext, _ c: TableContents) throws -> [Int] {
@@ -146,7 +147,7 @@ enum TableCommands {
     static func command(_ id: String, _ title: String, _ summary: String, parameters: [CommandParameter] = [], effect: CommandEffect = .none,
                         state: StateHandler? = nil, needsTable: Bool = true, run: @escaping CommandHandler) -> Command {
         Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .edit, submenu: submenu,
-                                  parameters: needsTable ? parameters + [tableParam] : parameters,
+                                  parameters: parameters,
                                   agent: .none, effect: effect, summary: summary, feature: "PD-UI-015"),
                 validate: needsTable ? hasTable : nil, state: state, run: run)
     }

@@ -249,13 +249,13 @@ struct TableToolsReviewTests {
         // Menu tabeli wskazuje ją identyfikatorem — działa na niej, choć fokus ma inna tabela; bez tabeli — przełącznik nagłówka.
         let other = FakeTableHandle(rows: [["9", "q"]], selected: [0])
         ui.table = other
-        try await run("table.copyCell", ["column": "b", "row": 2, "table": .string(TableRegistry.id(for: t))])
+        try await run("table.copyCell", ["column": "b", "row": 2, "__table": .string(TableRegistry.id(for: t))])
         #expect(ui.clipboard == "y")
         // Wiersze menu, których już nie ma, i zamknięta tabela — błąd zamiast zaznaczenia albo innej tabeli.
         await #expect(throws: CommandError.self) { try await run("table.copyRows", ["rows": ""]) }
         await #expect(throws: CommandError.self) { try await run("table.copyCell", ["column": "a", "row": 0]) }
-        await #expect(throws: CommandError.self) { try await run("table.copyAll", ["table": "nie-ma-takiej"]) }
-        try await run("table.copyMarkedColumns", ["selected": true, "table": .string(TableRegistry.id(for: t))])
+        await #expect(throws: CommandError.self) { try await run("table.copyAll", ["__table": "nie-ma-takiej"]) }
+        try await run("table.copyMarkedColumns", ["selected": true, "__table": .string(TableRegistry.id(for: t))])
         #expect(ui.clipboard == "y")
         ui.table = nil
         let before = TableExport.copyHeader

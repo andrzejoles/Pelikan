@@ -120,19 +120,27 @@ struct InstanceViewerView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                ToolConnectionPicker(workspace: workspace, connection: $connection)
-                if let s = snap {
-                    VStack(alignment: .leading) {
-                        Text("\(s.instanceName ?? "—") · \(s.status ?? "") · \(s.databaseRole ?? "") · \(s.logMode ?? "")").font(.uiHeadline)
-                        Text(s.version ?? "").font(.uiSecondary).foregroundStyle(.secondary)
-                        Text(L10n.tr("Czas pracy: \(uptime(s.uptime)) · sesje: \(s.sessionsTotal.map(String.init) ?? "—"), aktywne: \(s.sessionsActive.map(String.init) ?? "—")")).font(.uiSecondary)
-                    }
+            // Szeroko: połączenie, opis instancji i odświeżanie w jednym wierszu; w wąskim panelu doku — opis pod spodem.
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    ToolConnectionPicker(workspace: workspace, connection: $connection)
+                    if let s = snap { instanceInfo(s) }
+                    Spacer()
+                    refreshControls
                 }
-                Spacer()
-                Toggle(L10n.tr("Odświeżaj co"), isOn: $auto).toggleStyle(.checkbox)
-                Stepper("\(Int(interval)) s", value: $interval, in: 2...120).fixedSize()
-                Button { Task { await refresh() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        ToolConnectionPicker(workspace: workspace, connection: $connection)
+                        Spacer(minLength: 4)
+                        refreshControls
+                    }
+                    if let s = snap { instanceInfo(s) }
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    ToolConnectionPicker(workspace: workspace, connection: $connection)
+                    refreshControls
+                    if let s = snap { instanceInfo(s) }
+                }
             }
             if let s = snap {
                 // Wykresy obok siebie, w wąskim panelu jeden pod drugim (D222).
@@ -142,11 +150,11 @@ struct InstanceViewerView: View {
                 }
                 Text(L10n.tr("Najdroższe SQL (czas)")).font(.uiSecondary.bold())
                 DataTable(s.topSQL) {
-                    DataColumn("SQL_ID", sortKey: { t in t.sqlID }) { t in Text(t.sqlID).font(.code) }.width(110)
-                    DataColumn(L10n.tr("Wykonania"), sortKey: { t in t.executions }) { t in Text("\(t.executions)").monospacedDigit() }.width(80)
-                    DataColumn(L10n.tr("Czas s"), sortKey: { t in t.elapsedSeconds }, text: { t in String(format: "%.2f", t.elapsedSeconds) }) { t in Text(String(format: "%.2f", t.elapsedSeconds)).monospacedDigit() }.width(70)
-                    DataColumn("CPU s", sortKey: { t in t.cpuSeconds }, text: { t in String(format: "%.2f", t.cpuSeconds) }) { t in Text(String(format: "%.2f", t.cpuSeconds)).monospacedDigit() }.width(70)
-                    DataColumn(L10n.tr("Bufory"), sortKey: { t in t.bufferGets }) { t in Text("\(t.bufferGets)").monospacedDigit() }.width(90)
+                    DataColumn("SQL_ID", sortKey: { t in t.sqlID }) { t in Text(t.sqlID).font(.code) }.width(min: 90, ideal: 110)
+                    DataColumn(L10n.tr("Wykonania"), sortKey: { t in t.executions }) { t in Text("\(t.executions)").monospacedDigit() }.width(min: 50, ideal: 80)
+                    DataColumn(L10n.tr("Czas s"), sortKey: { t in t.elapsedSeconds }, text: { t in String(format: "%.2f", t.elapsedSeconds) }) { t in Text(String(format: "%.2f", t.elapsedSeconds)).monospacedDigit() }.width(min: 45, ideal: 70)
+                    DataColumn("CPU s", sortKey: { t in t.cpuSeconds }, text: { t in String(format: "%.2f", t.cpuSeconds) }) { t in Text(String(format: "%.2f", t.cpuSeconds)).monospacedDigit() }.width(min: 45, ideal: 70)
+                    DataColumn(L10n.tr("Bufory"), sortKey: { t in t.bufferGets }) { t in Text("\(t.bufferGets)").monospacedDigit() }.width(min: 50, ideal: 90)
                     DataColumn("SQL", sortKey: { t in t.text }) { t in Text(t.text).lineLimit(1) }
                 }
                 ForEach(s.unavailable, id: \.self) { Text($0).font(.uiSecondary).foregroundStyle(.orange) }
@@ -157,7 +165,7 @@ struct InstanceViewerView: View {
             }
         }
         .padding(10)
-        .frame(minWidth: 860, minHeight: 560)
+        .frame(minWidth: 360, minHeight: 560)
         .environment(\.reportConnection, connection)
         .onChange(of: connection) { snap = nil; Task { await refresh() } }
         .task(id: auto ? interval : 0) {
@@ -169,16 +177,34 @@ struct InstanceViewerView: View {
         }
     }
 
+    private func instanceInfo(_ s: InstanceSnapshot) -> some View {
+        VStack(alignment: .leading) {
+            Text("\(s.instanceName ?? "—") · \(s.status ?? "") · \(s.databaseRole ?? "") · \(s.logMode ?? "")").font(.uiHeadline)
+            Text(s.version ?? "").font(.uiSecondary).foregroundStyle(.secondary)
+            Text(L10n.tr("Czas pracy: \(uptime(s.uptime)) · sesje: \(s.sessionsTotal.map(String.init) ?? "—"), aktywne: \(s.sessionsActive.map(String.init) ?? "—")")).font(.uiSecondary)
+        }
+        .lineLimit(2)
+    }
+
+    private var refreshControls: some View {
+        HStack(spacing: 6) {
+            Toggle(L10n.tr("Odświeżaj co"), isOn: $auto).toggleStyle(.checkbox)
+            Stepper("\(Int(interval)) s", value: $interval, in: 2...120).fixedSize()
+            Button { Task { await refresh() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
+        }
+        .fixedSize()
+    }
+
     /// Oczekiwania (przyrost od poprzedniego odświeżenia) i pule SGA.
     @ViewBuilder private func charts(_ s: InstanceSnapshot) -> some View {
         InstanceBarChart(title: L10n.tr("Oczekiwania (s/s, bez Idle)"),
                          items: s.waitClasses.map { BarItem(name: $0.name, value: $0.rate ?? 0) },
                          format: { String(format: "%.2f", $0) }, empty: L10n.tr("Przyrost oczekiwań po następnym odświeżeniu"))
-            .frame(minWidth: 320)
+            .frame(minWidth: 300)
         InstanceBarChart(title: L10n.tr("SGA (MB)") + (s.pgaAllocatedMB.map { " · PGA \($0) MB" } ?? ""),
                          items: s.sga.prefix(8).map { BarItem(name: $0.0, value: $0.1) },
                          format: { String(format: "%.0f", $0) }, empty: "")
-            .frame(minWidth: 320)
+            .frame(minWidth: 300)
     }
 
     private func refresh() async {

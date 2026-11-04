@@ -25,26 +25,78 @@ struct SessionBrowserView: View {
     private var queries: SessionQueries { workspace.settings.sessionQueries }
     private var selected: SessionRow? { rows.first { $0.id == selection } }
 
+    @ViewBuilder private var sourceControls: some View {
+        ToolConnectionPicker(workspace: workspace, connection: $connection)
+        Picker(L10n.tr("Filtr"), selection: $filter) {
+            ForEach(queries.filters) { Text($0.name).tag($0.sql) }
+        }
+        .frame(minWidth: 120, maxWidth: 260)
+    }
+
+    private var refreshControls: some View {
+        HStack(spacing: 6) {
+            Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
+            Toggle(L10n.tr("Odświeżaj co"), isOn: $autoRefresh).toggleStyle(.checkbox)
+            Stepper("\(Int(interval)) s", value: $interval, in: 2...300, step: 1).fixedSize()
+        }
+        .fixedSize()
+    }
+
+    private var detailPicker: some View {
+        Picker("", selection: $detailName) {
+            ForEach(queries.details) { Text($0.name).tag($0.name) }
+            Text(Self.planTab).tag(Self.planTab)
+        }
+        .labelsHidden()
+    }
+
+    /// Czynności sesji w jednym menu (wąski panel doku).
+    private var sessionMenu: some View {
+        Menu(L10n.tr("Sesja")) {
+            Button(L10n.tr("Zakończ sesję (Kill)")) { kill(immediate: false) }
+            Button(L10n.tr("Zakończ natychmiast")) { kill(immediate: true) }
+            if !queries.actions.isEmpty {
+                Divider()
+                ForEach(queries.actions) { a in Button(a.name) { perform(a) } }
+            }
+        }
+        .fixedSize()
+        .disabled(selected == nil)
+    }
+
+    private var sessionActions: some View {
+        HStack(spacing: 6) {
+            Button(L10n.tr("Zakończ sesję (Kill)")) { kill(immediate: false) }.disabled(selected == nil)
+            Button(L10n.tr("Zakończ natychmiast")) { kill(immediate: true) }.disabled(selected == nil)
+            Menu(L10n.tr("Akcje")) {
+                ForEach(queries.actions) { a in Button(a.name) { perform(a) } }
+            }
+            .fixedSize()
+            .disabled(selected == nil)
+            Button(L10n.tr("Zapytania…")) { editing = true }
+        }
+        .fixedSize()
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                ToolConnectionPicker(workspace: workspace, connection: $connection)
-                Picker(L10n.tr("Filtr"), selection: $filter) {
-                    ForEach(queries.filters) { Text($0.name).tag($0.sql) }
+            // Szeroko — jeden wiersz; w wąskim panelu doku — połączenie i filtr, odświeżanie, czynności w osobnych wierszach.
+            ViewThatFits(in: .horizontal) {
+                HStack { sourceControls; refreshControls; Spacer(); sessionActions }
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack { sourceControls; refreshControls }
+                    HStack { sessionActions; Spacer() }
                 }
-                .frame(maxWidth: 260)
-                Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
-                Toggle(L10n.tr("Odświeżaj co"), isOn: $autoRefresh).toggleStyle(.checkbox)
-                Stepper("\(Int(interval)) s", value: $interval, in: 2...300, step: 1).fixedSize()
-                Spacer()
-                Button(L10n.tr("Zakończ sesję (Kill)")) { kill(immediate: false) }.disabled(selected == nil)
-                Button(L10n.tr("Zakończ natychmiast")) { kill(immediate: true) }.disabled(selected == nil)
-                Menu(L10n.tr("Akcje")) {
-                    ForEach(queries.actions) { a in Button(a.name) { perform(a) } }
+                VStack(alignment: .leading, spacing: 4) {
+                    sourceControls
+                    HStack { refreshControls; Spacer() }
+                    HStack { sessionActions; Spacer() }
                 }
-                .fixedSize()
-                .disabled(selected == nil)
-                Button(L10n.tr("Zapytania…")) { editing = true }
+                VStack(alignment: .leading, spacing: 4) {
+                    sourceControls
+                    HStack { refreshControls; Spacer() }
+                    HStack { sessionMenu; Button(L10n.tr("Zapytania…")) { editing = true }; Spacer() }
+                }
             }
             VSplitView {
                 DataTable(rows, title: L10n.tr("Sesje"), selection: .single($selection)) {
@@ -54,12 +106,11 @@ struct SessionBrowserView: View {
                 }
                 .frame(minHeight: 160)
                 VStack(alignment: .leading, spacing: 4) {
-                    Picker("", selection: $detailName) {
-                        ForEach(queries.details) { Text($0.name).tag($0.name) }
-                        Text(Self.planTab).tag(Self.planTab)
+                    // Karty szczegółów: segmenty, a w wąskim panelu doku — lista rozwijana.
+                    ViewThatFits(in: .horizontal) {
+                        detailPicker.pickerStyle(.segmented)
+                        detailPicker.pickerStyle(.menu).fixedSize()
                     }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
                     detailView
                 }
                 .frame(minHeight: 120)
@@ -67,7 +118,7 @@ struct SessionBrowserView: View {
             Text(message).font(.uiSecondary).foregroundStyle(.secondary)
         }
         .padding(10)
-        .frame(minWidth: 900, minHeight: 520)
+        .frame(minWidth: 340, minHeight: 520)
         .environment(\.reportConnection, connection)
 
         .toolTask(id: 0) {
