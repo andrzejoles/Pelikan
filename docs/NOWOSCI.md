@@ -2,7 +2,9 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## Następna wersja
+## 1.20.0 — raporty wydajności dla SQL_ID z zaznaczenia, menu i karta Wydajność, podgląd kodu z kolorowaniem
+
+Zmiany z wersji 1.19.0–1.20.0 (bez osobnych wydań), wydane razem.
 
 - **Raporty dla SQL_ID z zaznaczenia (Wydajność › Raporty dla SQL_ID, ⌃⌘R, menu kontekstowe):** SQL_ID albo hash Pelikan
   bierze sam — z zaznaczonego wiersza albo komórki siatki, wiersza tabeli (sesje, SQL Monitor, Top SQL…), słowa pod
