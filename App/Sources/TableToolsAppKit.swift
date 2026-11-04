@@ -50,12 +50,15 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         get { model.state.markedColumns }
         set { model.state.markedColumns = newValue }
     }
+    @objc private func selectionChanged(_ note: Notification) { model.revision += 1 }
+
     /// Zapytanie z pierwszego zaznaczonego wiersza (kolumna SQL_ID albo hash).
-    var sqlTarget: SQLReportTarget? {
-        let c = contents
-        guard let r = c.selectedRows.first,
-              let t = SQLIdentity.target(columns: c.columns.map(\.title), values: c.columns.map { c.cell(r, $0.id) }) else { return nil }
-        return SQLReportTarget(target: t, origin: L10n.tr("wiersz tabeli"))
+    var sqlTarget: SQLReportTarget? { contents.selectedRows.first.flatMap { sqlTarget(row: $0, in: contents) } }
+
+    /// Zapytanie z wiersza widoku — menu wiersza i skrót (jedna reguła).
+    func sqlTarget(row r: Int, in c: TableContents) -> SQLReportTarget? {
+        SQLIdentity.target(columns: c.columns.map(\.title), values: c.columns.map { c.cell(r, $0.id) })
+            .map { SQLReportTarget(target: $0, origin: L10n.tr("wiersz tabeli")) }
     }
 
     let table: NSTableView
@@ -66,7 +69,6 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     /// Tekst komórki wiersza widoku (po filtrze i sortowaniu) w kolumnie o identyfikatorze.
     private let cell: (Int, String) -> String
     private var baseItems: [NSMenuItem] = []
-    private var selectionObserver: (any NSObjectProtocol)?
 
     init(table: NSTableView, title: @escaping () -> String, total: @escaping () -> Int, cell: @escaping (Int, String) -> String,
          onFilterChange: @escaping () -> Void) {
@@ -84,10 +86,9 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         menu.delegate = self
         table.menu = menu
         TableFocus.register(table, self)
-        // Pasek nad tabelą (liczba i pozycje „zaznaczone”) po każdej zmianie zaznaczenia.
-        selectionObserver = NotificationCenter.default.addObserver(forName: NSTableView.selectionDidChangeNotification, object: table, queue: .main) {
-            [weak self] _ in MainActor.assumeIsolated { self?.model.revision += 1 }
-        }
+        // Pasek nad tabelą (liczba i pozycje „zaznaczone”) po każdej zmianie zaznaczenia; obserwator z selektorem
+        // wyrejestrowuje się sam przy zwolnieniu obiektu.
+        NotificationCenter.default.addObserver(self, selector: #selector(selectionChanged), name: NSTableView.selectionDidChangeNotification, object: table)
     }
 
     var columns: [(id: String, title: String)] {
@@ -145,8 +146,7 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         }
         func rowArg(_ r: Int?) -> [String: JSONValue] { r.map { ["row": .int(Int64($0 + 1))] } ?? [:] }
         // Raporty SQL z wiersza z kolumną SQL_ID/hash (D217).
-        if let r = rows.first, let t = SQLIdentity.target(columns: c.columns.map(\.title), values: c.columns.map { c.cell(r, $0.id) }) {
-            let target = SQLReportTarget(target: t, origin: L10n.tr("wiersz tabeli"))
+        if let r = rows.first, let target = sqlTarget(row: r, in: c) {
             menu.addItem(BlockMenuItem(L10n.tr("Raporty dla \(target.label)…")) { SQLReportLauncher.open(target) })
             menu.addItem(.separator())
         }

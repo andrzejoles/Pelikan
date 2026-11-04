@@ -638,8 +638,10 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
 
     /// Wiersz i kolumna menu kontekstowego: spod kursora, inaczej zaznaczenie.
     private var menuCell: (row: Int?, column: Int?) {
-        (table.clickedRow >= 0 ? table.clickedRow : tab.selectedRows?.first,
-         dataColumn(atTableColumn: table.clickedColumn) ?? tab.currentColumn)
+        // Kliknięcie myszą: dokładnie ta komórka (kolumna numerów wierszy — bez komórki, SQL_ID z kolumn wiersza);
+        // menu z klawiatury — zaznaczenie i bieżąca komórka.
+        table.clickedRow >= 0 ? (table.clickedRow, dataColumn(atTableColumn: table.clickedColumn))
+            : (tab.selectedRows?.first, tab.currentColumn)
     }
 
     /// Aktualizacja pozycji raportów w menu: wykryty SQL_ID albo informacja o braku.

@@ -148,6 +148,7 @@ struct LocalDocsTests {
     @Test("Klient (D224): równoczesne pierwsze wywołania — jedna inicjalizacja; wygasła sesja (404) — nowa sesja i ponowienie")
     func clientSession() async throws {
         FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.sessionHeaders = []; FakeDocsServer.expireSession = 0 }
+        defer { FakeDocsServer.lock.withLock { FakeDocsServer.expiredStatus = 404; FakeDocsServer.expireSession = 0 } }
         let cfg = URLSessionConfiguration.ephemeral
         cfg.protocolClasses = [FakeDocsServer.self]
         let c = LocalDocsClient(endpoint: URL(string: "http://127.0.0.1:8765/mcp")!, urlSession: URLSession(configuration: cfg))
@@ -169,9 +170,8 @@ struct LocalDocsTests {
         #expect(both.0.count == 1 && both.1.count == 1)
         methods = FakeDocsServer.lock.withLock { FakeDocsServer.requests.map { $0["method"] as? String } }
         #expect(methods.filter { $0 == "initialize" }.count == 1)
-        // Serwer odpowiadający 400 „No valid session ID” — też nowa sesja.
+        // Serwer odpowiadający na starą sesję innym kodem 4xx (400) — też nowa sesja.
         FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.expireSession = 1; FakeDocsServer.expiredStatus = 400 }
-        defer { FakeDocsServer.lock.withLock { FakeDocsServer.expiredStatus = 404 } }
         #expect(try await c.search("NVL", version: "19c").count == 1)
         #expect(LocalDocsClient.shared(for: URL(string: "http://127.0.0.1:1/mcp")!) === LocalDocsClient.shared(for: URL(string: "http://127.0.0.1:1/mcp")!))
     }

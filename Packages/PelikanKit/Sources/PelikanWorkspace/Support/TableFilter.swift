@@ -115,6 +115,17 @@ public struct ValueFilter: Sendable, Hashable {
         }
     }
 
+    private static let unitRE = try! NSRegularExpression(pattern: #"^\s*([-+]?[0-9][0-9 \u00A0.,]*)\s*(%|[A-Za-zµ]{1,3})?\s*$"#)
+
+    /// Liczba pokazana w komórce, także z jednostką albo procentem („12.3%”, „1.2 s”, „45 ms”) — filtr porównuje z tym,
+    /// co widać, a nie z kluczem w innej skali (ułamek, nanosekundy).
+    static func shownNumber(_ text: String) -> Double? {
+        if let n = CellOrder.number(text) { return n }
+        let ns = text as NSString
+        guard text.count < 40, let m = unitRE.firstMatch(in: text, range: NSRange(location: 0, length: ns.length)) else { return nil }
+        return CellOrder.number(ns.substring(with: m.range(at: 1)).trimmingCharacters(in: .whitespaces))
+    }
+
     /// Porównanie wartości komórki z wartością filtra (komórka względem filtra); nil — wartości nieporównywalne
     /// (np. liczba w filtrze, tekst w komórce).
     static func compare(text: String, key: SortKey, _ v: Value) -> ComparisonResult? {
@@ -123,7 +134,7 @@ public struct ValueFilter: Sendable, Hashable {
         case .number(let n):
             // Najpierw liczba z tekstu pokazanego w tabeli (np. „12.35” przy kluczu 12.345678) — filtr „tylko ta
             // wartość” i wpisane „= 12.35” trafiają w to, co widać; klucz, gdy tekst nie jest liczbą.
-            if let shown = CellOrder.number(text) { return order(shown, n) }
+            if let shown = Self.shownNumber(text) { return order(shown, n) }
             if case .number(let x) = key { return order(x, n) }
             return nil
         case .date(let d, let dayOnly):

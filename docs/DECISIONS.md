@@ -3648,10 +3648,13 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   Menu kontekstowe wskazuje wiersze identyfikatorami (indeksy liczone przy wyborze pozycji); klik poza wierszami —
   pozycje jak na pasku. Menu tabel AppKit nie zmienia zaznaczenia (wiersz spod kursora w argumencie). Pusty
   identyfikator kolumny (kolumna bez tytułu) jest kolumną. „Kopiuj z nagłówkiem” — ustawienie, dostępne bez tabeli.
+  Wskazana tabela, której już nie ma, albo wiersze menu, które zniknęły — błąd, nie zamiana na inną tabelę lub
+  zaznaczenie. Lokalizator ponawia szukanie po zmianie rozmiaru i sprawdza, czy zarejestrowana tabela nadal jest
+  w miejscu tabeli SwiftUI. Kopia planu w kolejności drzewa na ekranie (zwinięte gałęzie pominięte).
 - Komendy `table.*` w menu Edycja › Tabela i w palecie (poza wstążką — działają w oknach narzędzi). Liczba w filtrze
-  porównywana z liczbą pokazaną w komórce; tekst kolumn całkowitych bez przejścia przez Double. Zapis pliku (arkusz)
+  porównywana z liczbą pokazaną w komórce (także z jednostką albo procentem: „12.3%”, „1.2 s”); tekst kolumn całkowitych bez przejścia przez Double. Zapis pliku (arkusz)
   w oknie, z którego go wywołano; nazwa pliku z tytułu okna tabeli.
-- Klient MCP inicjuje sesję raz także przy równoczesnych wywołaniach; ponowienie po 404 (albo 400 o sesji) i tylko raz na sesję
+- Klient MCP inicjuje sesję raz także przy równoczesnych wywołaniach; ponowienie po odpowiedzi 4xx na żądanie z sesją, jeden raz na sesję
   (równoczesne wywołania dołączają do nowej); okno dokumentacji pomija wyniki starszych żądań po numerze żądania.
   Wzorce LIKE z pamięci wzorców (filtr siatki i tabel).
 - Okno raportów po anulowaniu deklaracji licencji działa dalej z raportami bez pakietów. `file.new.sql` przyjmuje

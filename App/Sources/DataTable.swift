@@ -196,33 +196,57 @@ struct TableViewLocator: NSViewRepresentable {
         var handle: SwiftUITableHandle?
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
-            DispatchQueue.main.async { [weak self] in self?.locate() }
+            schedule()
+        }
+
+        /// Ramka ustalona po pierwszym układzie (pierwsze szukanie bywa przy ramce zerowej) i każda zmiana rozmiaru.
+        override func setFrameSize(_ newSize: NSSize) {
+            super.setFrameSize(newSize)
+            schedule()
+        }
+
+        private var scheduled = false
+        func schedule() {
+            guard !scheduled else { return }
+            scheduled = true
+            DispatchQueue.main.async { [weak self] in
+                self?.scheduled = false
+                self?.locate()
+            }
         }
 
         /// Tabela o ramce najbliższej ramce sondy (stosunek części wspólnej do sumy — tabela obejmująca sondę nie
         /// remisuje z właściwą); widoki ukryte (np. nieaktywne narzędzia doku) pomijane.
+        /// Zgodność ramek tabeli i sondy: część wspólna do sumy (1 — ta sama ramka).
+        static func score(_ tv: NSTableView, _ mine: NSRect) -> CGFloat {
+            let outer = tv.enclosingScrollView ?? tv
+            let frame = outer.convert(outer.bounds, to: nil)
+            let i = frame.intersection(mine)
+            guard !i.isNull else { return 0 }
+            let u = frame.union(mine)
+            return (i.width * i.height) / max(1, u.width * u.height)
+        }
+
         func locate() {
             guard let handle, let window, let root = window.contentView, !isHiddenOrHasHiddenAncestor else { return }
-            if let tv = handle.tableView, tv.window === window, !tv.isHiddenOrHasHiddenAncestor { return }
             let mine = convert(bounds, to: nil)
             guard mine.width > 0, mine.height > 0 else { return }
+            // Zarejestrowana tabela nadal w tym miejscu (ta sama ramka, widoczna) — bez ponownego szukania.
+            if let tv = handle.tableView, tv.window === window, !tv.isHiddenOrHasHiddenAncestor, Self.score(tv, mine) > 0.8 { return }
             var best: (NSTableView, CGFloat)?
             func walk(_ v: NSView) {
                 guard !v.isHidden else { return }
                 if let tv = v as? NSTableView, !(tv is GridTableView) {
-                    let outer = tv.enclosingScrollView ?? tv
-                    let frame = outer.convert(outer.bounds, to: nil)
-                    let i = frame.intersection(mine)
-                    if !i.isNull {
-                        let u = frame.union(mine)
-                        let score = (i.width * i.height) / max(1, u.width * u.height)
-                        if score > (best?.1 ?? 0.5) { best = (tv, score) }
-                    }
+                    let score = Self.score(tv, mine)
+                    if score > (best?.1 ?? 0.8) { best = (tv, score) }
                 }
                 v.subviews.forEach(walk)
             }
             walk(root)
-            guard let tv = best?.0 else { return }
+            guard let tv = best?.0 else {
+                handle.tableView = nil
+                return
+            }
             handle.tableView = tv
             TableFocus.register(tv, handle)
         }
@@ -236,7 +260,7 @@ struct TableViewLocator: NSViewRepresentable {
 
     func updateNSView(_ p: Probe, context: Context) {
         p.handle = handle
-        DispatchQueue.main.async { p.locate() }
+        p.schedule()
     }
 }
 
@@ -250,9 +274,10 @@ enum TableActions {
         (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(a))
     }
 
-    /// Argument `rows` (numery od 1) tylko, gdy wiersze menu różnią się od zaznaczenia (inaczej komenda bierze zaznaczenie).
+    /// Argument `rows` (numery od 1) tylko, gdy wiersze menu różnią się od zaznaczenia (inaczej komenda bierze
+    /// zaznaczenie); wiersze, których już nie ma — pusta lista (komenda zgłasza, że zniknęły).
     static func rowsArguments(_ rows: [Int], _ handle: any FocusTable) -> [String: JSONValue] {
-        rows == handle.contents.selectedRows ? [:] : ["rows": .string(rows.map { String($0 + 1) }.joined(separator: ","))]
+        !rows.isEmpty && rows == handle.contents.selectedRows ? [:] : ["rows": .string(rows.map { String($0 + 1) }.joined(separator: ","))]
     }
 
     /// Tytuł do nazwy pliku i arkusza: podany albo tytuł okna tabeli.
@@ -288,7 +313,8 @@ struct TableCopyMenu: View {
 
     private func cellArgs(_ column: String) -> [String: JSONValue] {
         var a: [String: JSONValue] = ["column": .string(column)]
-        if case .context(let ids, _, _) = rows, let r = handle.indexes(of: ids).first { a["row"] = .int(Int64(r + 1)) }
+        // Wiersz menu, którego już nie ma — 0 (komenda zgłasza, że zniknął).
+        if case .context(let ids, _, _) = rows { a["row"] = .int(Int64((handle.indexes(of: ids).first ?? -1) + 1)) }
         return a
     }
 
@@ -324,11 +350,15 @@ struct TableCopyMenu: View {
         }
         Button(L10n.tr("Kopiuj zaznaczone kolumny (\(marked.count))")) { run("table.copyMarkedColumns") }
             .disabled(marked.isEmpty)
-        if case .context = rows, !marked.isEmpty {
-            Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) {
-                // Bez argumentu wierszy komenda kopiuje wszystkie — tu zawsze wiersze menu.
-                let ids: [AnyHashable] = { if case .context(let ids, _, _) = rows { return ids }; return [] }()
-                run("table.copyMarkedColumns", ["rows": .string(handle.indexes(of: ids).map { String($0 + 1) }.joined(separator: ","))])
+        if !marked.isEmpty {
+            switch rows {
+            case .context(let ids, _, _):
+                Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) {
+                    run("table.copyMarkedColumns", ["rows": .string(handle.indexes(of: ids).map { String($0 + 1) }.joined(separator: ","))])
+                }
+            case .selection:
+                Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) { run("table.copyMarkedColumns", ["selected": .bool(true)]) }
+                    .disabled(contents.selectedRows.isEmpty)
             }
         }
         Button(L10n.tr("Kopiuj całą tabelę")) { run("table.copyAll") }
@@ -521,16 +551,6 @@ struct DataTable<Row: Identifiable>: View {
         return filtered.sorted(by: sort)
     }
 
-    /// Tabela ma kolumnę SQL_ID albo hash zapytania.
-    private var hasSQLColumn: Bool { columns.contains { SQLIdentity.columnKind($0.title) != nil || SQLIdentity.columnKind($0.id) != nil } }
-
-    /// Zapytanie z wiersza (kolumna SQL_ID, potem hash).
-    private func sqlTarget(_ row: Row) -> SQLReportTarget? {
-        let names = columns.map { SQLIdentity.columnKind($0.title) != nil ? $0.title : $0.id }
-        return SQLIdentity.target(columns: names, values: columns.map { $0.text(row) })
-            .map { SQLReportTarget(target: $0, origin: L10n.tr("zaznaczony wiersz tabeli"), connection: reportConnection) }
-    }
-
     /// Wartości tabeli dla uchwytu (bez widoku — uchwyt w `@State` nie może trzymać widoku, który trzyma uchwyt).
     struct Snapshot {
         let texts: [(id: String, title: String, text: (Row) -> String)]
@@ -547,13 +567,20 @@ struct DataTable<Row: Identifiable>: View {
                                  selectedRows: selected.isEmpty ? [] : shown.indices.filter { selected.contains(shown[$0].id) })
         }
 
-        func sqlTarget(_ shown: [Row]) -> SQLReportTarget? {
-            let names = texts.map { SQLIdentity.columnKind($0.title) != nil ? $0.title : $0.id }
-            guard names.contains(where: { SQLIdentity.columnKind($0) != nil }) else { return nil }
-            let selected = selected()
-            guard let row = shown.first(where: { selected.contains($0.id) }) else { return nil }
+        /// Nazwy kolumn do rozpoznania SQL_ID/hash (tytuł, a gdy nie pasuje — identyfikator).
+        var names: [String] { texts.map { SQLIdentity.columnKind($0.title) != nil ? $0.title : $0.id } }
+        var hasSQLColumn: Bool { names.contains { SQLIdentity.columnKind($0) != nil } }
+
+        /// Zapytanie z wiersza (kolumna SQL_ID, potem hash) — menu wiersza, skrót, wstążka (jedna reguła).
+        func sqlTarget(row: Row) -> SQLReportTarget? {
+            guard hasSQLColumn else { return nil }
             return SQLIdentity.target(columns: names, values: texts.map { $0.text(row) })
                 .map { SQLReportTarget(target: $0, origin: L10n.tr("zaznaczony wiersz tabeli"), connection: connection) }
+        }
+
+        func sqlTarget(_ shown: [Row]) -> SQLReportTarget? {
+            let selected = selected()
+            return shown.first(where: { selected.contains($0.id) }).flatMap(sqlTarget(row:))
         }
     }
 
@@ -574,7 +601,7 @@ struct DataTable<Row: Identifiable>: View {
             table(shown)
                 .background(TableViewLocator(handle: handle))
                 .contextMenu(forSelectionType: Row.ID.self) { ids in
-                    rowMenuContent(ids, shown: shown, contents: contents)
+                    rowMenuContent(ids, shown: shown, contents: contents, snapshot: snapshot)
                 } primaryAction: { ids in
                     primaryAction?(ids)
                 }
@@ -594,9 +621,9 @@ struct DataTable<Row: Identifiable>: View {
     }
 
     /// Menu wiersza: raporty SQL, menu właściciela tabeli, kopia, filtr wartością, eksport.
-    @ViewBuilder private func rowMenuContent(_ ids: Set<Row.ID>, shown: [Row], contents: TableContents) -> some View {
+    @ViewBuilder private func rowMenuContent(_ ids: Set<Row.ID>, shown: [Row], contents: TableContents, snapshot: Snapshot) -> some View {
         let idx = shown.indices.filter { ids.contains(shown[$0].id) }
-        if hasSQLColumn, let r = idx.first, let t = sqlTarget(shown[r]) {
+        if let r = idx.first, let t = snapshot.sqlTarget(row: shown[r]) {
             Button(L10n.tr("Raporty dla \(t.label)…")) { SQLReportLauncher.open(t) }
             Divider()
         }

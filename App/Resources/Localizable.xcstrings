@@ -37913,30 +37913,30 @@
         }
       }
     },
-    "Kopiuje kolumny zaznaczone do kopii: wszystkie wiersze widoku albo podane wiersze." : {
+    "Kopiuje kolumny zaznaczone do kopii: wszystkie wiersze widoku, zaznaczone albo podane wiersze." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Copies the columns marked for copying: all rows of the view or the given rows."
+            "value" : "Copies the columns marked for copying: all rows of the view, the selected rows or the given rows."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kopiert die zum Kopieren markierten Spalten: alle Zeilen der Ansicht oder die angegebenen Zeilen."
+            "value" : "Kopiert die zum Kopieren markierten Spalten: alle Zeilen der Ansicht, die ausgewählten oder die angegebenen Zeilen."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Copia las columnas marcadas para copiar: todas las filas de la vista o las filas indicadas."
+            "value" : "Copia las columnas marcadas para copiar: todas las filas de la vista, las seleccionadas o las indicadas."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Копіює стовпці, позначені для копіювання: усі рядки подання або вказані рядки."
+            "value" : "Копіює стовпці, позначені для копіювання: усі рядки подання, виділені або вказані рядки."
           }
         }
       }
@@ -91029,6 +91029,34 @@
         }
       }
     },
+    "Tabeli z menu już nie ma (okno zamknięte)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The table from the menu no longer exists (window closed)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Tabelle aus dem Menü gibt es nicht mehr (Fenster geschlossen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La tabla del menú ya no existe (ventana cerrada)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Таблиці з меню вже немає (вікно закрито)"
+          }
+        }
+      }
+    },
     "Także przypięte" : {
       "localizations" : {
         "en" : {
@@ -94469,6 +94497,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nur in der Auswahl"
+          }
+        }
+      }
+    },
+    "Tylko zaznaczone wiersze (domyślnie wszystkie)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected rows only (default: all)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur ausgewählte Zeilen (Standard: alle)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo las filas seleccionadas (por defecto, todas)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лише виділені рядки (типово всі)"
           }
         }
       }
@@ -104745,6 +104801,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeilen pro Seite"
+          }
+        }
+      }
+    },
+    "Wierszy z menu nie ma już w tabeli (odświeżona)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The rows from the menu are no longer in the table (refreshed)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Zeilen aus dem Menü sind nicht mehr in der Tabelle (aktualisiert)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las filas del menú ya no están en la tabla (actualizada)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рядків із меню вже немає в таблиці (оновлено)"
           }
         }
       }

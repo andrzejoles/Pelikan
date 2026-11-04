@@ -87,11 +87,23 @@ struct PlanPanel: View {
         }
     }
 
-    /// Zawartość tabeli planu: domknięcie komórek trzyma tylko teksty kolumn (nie widok z uchwytem w `@State`).
-    private func planContents(_ lines: [PlanLine]) -> TableContents {
+    /// Wiersze drzewa planu w kolejności ekranu: korzenie i rodzeństwo posortowane, dzieci tylko gałęzi rozwiniętych.
+    private func visibleTreeLines() -> [PlanLine] {
+        var out: [PlanLine] = []
+        func add(_ l: PlanLine) {
+            out.append(l)
+            guard let children = l.children, document.planExpanded.contains(l.id) else { return }
+            children.sorted(by: sortPlan).forEach(add)
+        }
+        (document.plan?.roots ?? []).sorted(by: sortPlan).forEach(add)
+        return out
+    }
+
+    /// Zawartość tabeli planu (wiersze w kolejności ekranu): domknięcie komórek trzyma tylko teksty kolumn (nie widok
+    /// z uchwytem w `@State`).
+    private func planContents(_ shown: [PlanLine]) -> TableContents {
         let cols = planColumns
         let texts = Dictionary(cols.map { ($0.id, $0.text) }, uniquingKeysWith: { a, _ in a })
-        let shown = lines.sorted(by: sortPlan)
         return TableContents(title: L10n.tr("Plan wykonania"), columns: cols.map { ($0.id, $0.title) }, rowCount: shown.count,
                              cell: { r, id in r < shown.count ? texts[id]?(shown[r]) ?? "" : "" },
                              selectedRows: shown.indices.filter { shown[$0].id == selection })
@@ -153,9 +165,10 @@ struct PlanPanel: View {
             } else {
                 // Rozwinięcie gałęzi w modelu okna (`planExpanded`) — komendy Rozwiń/Zwiń wszystko (PD-OPT-001).
                 let lines = filteredLines
-                // Wiersze w kolejności widoku (po filtrze i sortowaniu) — te same indeksy w menu i w kopii.
-                let shownLines = (lines ?? document.plan?.lines ?? []).sorted(by: sortPlan)
-                let contents = planContents(lines ?? document.plan?.lines ?? [])
+                // Wiersze tak jak na ekranie: z filtrem — płaska lista posortowana; bez filtra — drzewo (rodzeństwo
+                // posortowane, zwinięte gałęzie pominięte). Te same wiersze w menu, kopii, eksporcie i liczniku paska.
+                let shownLines = lines.map { $0.sorted(by: sortPlan) } ?? visibleTreeLines()
+                let contents = planContents(shownLines)
                 let handle = tableHandle
                 let _ = handle.update(contents: { contents }, sqlTarget: { nil }, state: $tools, indexes: SwiftUITableHandle.indexer(shownLines))
                 TableToolsBar(contents: contents, handle: handle, state: $tools, total: document.plan?.lines.count ?? 0)
@@ -169,8 +182,8 @@ struct PlanPanel: View {
                         }
                     } rows: {
                         // Filtr (D214): pasujące kroki jako płaska lista; bez filtra — drzewo planu.
-                        if let lines {
-                            ForEach(lines.sorted(by: sortPlan)) { TableRow($0) }
+                        if lines != nil {
+                            ForEach(shownLines) { TableRow($0) }
                         } else {
                             ForEach((document.plan?.roots ?? []).sorted(by: sortPlan)) { PlanTreeRows(line: $0, expanded: $document.planExpanded, sort: sortPlan) }
                         }

@@ -138,12 +138,20 @@ public actor LocalDocsClient {
                 session = nil
                 initialization = nil
             }
-            return try await callToolOnce(name, arguments)
+            do {
+                return try await callToolOnce(name, arguments)
+            } catch let again as SessionExpired {
+                throw again.error
+            }
         }
     }
 
-    /// Odpowiedź serwera na nieznaną sesję: 404 (MCP) albo 400 z komunikatem o sesji (część serwerów).
-    private struct SessionExpired: Error { let session: String }
+    /// Odpowiedź 4xx na żądanie z sesją: serwery różnie odpowiadają na nieznaną sesję (404 wg MCP, 400, 401, 410…),
+    /// więc każdy taki kod daje jedną próbę z nową sesją; ponowny błąd idzie do wywołującego jako `LocalDocsError`.
+    private struct SessionExpired: Error {
+        let session: String
+        let error: LocalDocsError
+    }
 
     /// Inicjalizacja sesji MCP raz — równoczesne pierwsze wywołania (aktor jest współbieżny przy `await`) czekają na
     /// to samo zadanie zamiast inicjować po kilka sesji.
@@ -170,9 +178,8 @@ public actor LocalDocsClient {
         let result: [String: Any]
         do {
             result = try await rpc("tools/call", ["name": name, "arguments": arguments])
-        } catch LocalDocsError.http(let code, let body) where used != nil
-                    && (code == 404 || (code == 400 && body.range(of: "session", options: .caseInsensitive) != nil)) {
-            throw SessionExpired(session: used!)
+        } catch LocalDocsError.http(let code, let body) where used != nil && (400..<500).contains(code) {
+            throw SessionExpired(session: used!, error: .http(code, body))
         }
         let content = (result["content"] as? [[String: Any]]) ?? []
         let text = content.compactMap { $0["type"] as? String == "text" || $0["type"] == nil ? $0["text"] as? String : nil }.joined(separator: "\n")

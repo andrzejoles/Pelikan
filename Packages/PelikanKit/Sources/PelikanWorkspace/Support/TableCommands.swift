@@ -47,7 +47,8 @@ public enum TableRegistry {
 
     /// Identyfikator tabeli (ten sam przez cały czas życia obiektu).
     public static func id(for handle: any TableHandle) -> String {
-        let id = String(UInt(bitPattern: ObjectIdentifier(handle).hashValue), radix: 36)
+        // Adres obiektu — jednoznaczny dla żywych tabel (rejestr trzyma je słabo i sprawdza tożsamość).
+        let id = String(UInt(bitPattern: ObjectIdentifier(handle)), radix: 36)
         if tables[id]?.handle !== handle {
             tables = tables.filter { $0.value.handle != nil }
             tables[id] = Weak(handle)
@@ -86,7 +87,11 @@ enum TableCommands {
     static let tableParam = CommandParameter("table", .string, L10n.tr("Tabela (menu tabeli; domyślnie tabela z fokusem)"))
 
     static func handle(_ ctx: CommandContext) throws -> any TableHandle {
-        if let id = ctx.arguments.string("table"), let h = TableRegistry.handle(id) { return h }
+        // Wskazana tabela (menu, makro) — jej brak to błąd, nie zamiana na tabelę z fokusem.
+        if let id = ctx.arguments.string("table") {
+            guard let h = TableRegistry.handle(id) else { throw CommandError.notAvailable(L10n.tr("Tabeli z menu już nie ma (okno zamknięte)")) }
+            return h
+        }
         guard let h = ctx.ui?.focusedTable() else { throw CommandError.notAvailable(L10n.tr("Brak tabeli okna narzędzia z fokusem")) }
         return h
     }
@@ -95,7 +100,9 @@ enum TableCommands {
 
     /// Wiersze z argumentu `rows` (numery od 1) albo zaznaczone.
     static func rows(_ ctx: CommandContext, _ c: TableContents) throws -> [Int] {
-        guard let raw = ctx.arguments.string("rows"), !raw.isEmpty else { return c.selectedRows }
+        guard let raw = ctx.arguments.string("rows") else { return c.selectedRows }
+        // Pusta lista: wiersze menu zniknęły z tabeli (odświeżenie) — nie zastępować ich zaznaczeniem.
+        guard !raw.isEmpty else { throw CommandError.notAvailable(L10n.tr("Wierszy z menu nie ma już w tabeli (odświeżona)")) }
         return try raw.split(separator: ",").map { part in
             guard let n = Int(part.trimmingCharacters(in: .whitespaces)), n >= 1, n <= c.rowCount else { throw CommandError.invalidArgument("rows", raw) }
             return n - 1
@@ -105,6 +112,7 @@ enum TableCommands {
     /// Wiersz z argumentu `row` (numer od 1) albo pierwszy zaznaczony.
     static func row(_ ctx: CommandContext, _ c: TableContents) throws -> Int {
         if let n = ctx.arguments.int("row") {
+            if n == 0 { throw CommandError.notAvailable(L10n.tr("Wierszy z menu nie ma już w tabeli (odświeżona)")) }
             guard n >= 1, n <= c.rowCount else { throw CommandError.invalidArgument("row", String(n)) }
             return Int(n) - 1
         }
@@ -178,11 +186,13 @@ enum TableCommands {
                 return .ok
             },
             command("table.copyMarkedColumns", L10n.tr("Kopiuj zaznaczone kolumny tabeli"),
-                    L10n.tr("Kopiuje kolumny zaznaczone do kopii: wszystkie wiersze widoku albo podane wiersze."), parameters: [rowsParam]) { ctx in
+                    L10n.tr("Kopiuje kolumny zaznaczone do kopii: wszystkie wiersze widoku, zaznaczone albo podane wiersze."),
+                    parameters: [rowsParam, CommandParameter("selected", .boolean, L10n.tr("Tylko zaznaczone wiersze (domyślnie wszystkie)"))]) { ctx in
                 let h = try handle(ctx)
                 let c = h.contents
                 guard !h.markedColumns.isEmpty else { throw CommandError.notAvailable(L10n.tr("Zaznacz kolumny do kopii")) }
-                let rows = ctx.arguments.string("rows") == nil ? c.all : try rows(ctx, c)
+                let rows = ctx.arguments.string("rows") != nil || ctx.arguments.bool("selected") == true ? try rows(ctx, c) : c.all
+                guard !rows.isEmpty else { throw CommandError.notAvailable(L10n.tr("Zaznacz wiersze tabeli")) }
                 return put(ctx, c.data(rows: rows, columns: h.markedColumns), header: TableExport.copyHeader)
             },
             command("table.copyAll", L10n.tr("Kopiuj całą tabelę"), L10n.tr("Kopiuje wszystkie wiersze widoku tabeli (po filtrze, w kolejności sortowania).")) { ctx in
