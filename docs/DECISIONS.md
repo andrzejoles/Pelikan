@@ -3699,3 +3699,10 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   drzewie obiektów — jak dotąd z zaznaczenia i edytora); komendy z palety i skrótu na tabeli AppKit biorą tekst
   zaznaczonych wierszy na starcie (`stableContents`); „Cała sekcja” w makrze — stan docelowy (`whole`); tabela SwiftUI
   rejestruje się także przy zmianie zaznaczenia (fokus najpierw w polu edycji komórki).
+- Runda 15: komendy z palety i skrótu na tabeli AppKit biorą na starcie tekst wszystkich wierszy (kopia całej tabeli,
+  kolumny i eksport — kompletne); „Raporty dla SQL_ID” pytają o zapytanie tylko przy fokusie w tabeli z kolumną SQL_ID
+  albo hash (plan, widok rekordu, komunikaty — jak dotąd z okna i edytora); tabela SwiftUI rejestruje się zdarzeniem
+  zmiany widoku z fokusem okna (obserwacja `firstResponder`) i zmiany zaznaczenia — bez stanu fokusu SwiftUI
+  i ponowień; zawartość tabel z jednego pomocnika (`TableContents.make`). Weto rundy 15 wobec palety (okno pod paletą
+  w kontekście wywołania zamiast oddania fokusu) odrzucone: bez zysku informacji, ergonomia równa — decyzja rundy 12
+  zostaje.

@@ -67,8 +67,17 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     }
     @objc private func selectionChanged(_ note: Notification) { model.revision += 1 }
 
-    /// Komendy z palety i skrótu: tekst zaznaczonych wierszy przepisany na starcie (okno wyboru kolumny, przeładowanie).
-    var stableContents: TableContents { snapshot().contents }
+    /// Komendy z palety i skrótu: tekst wszystkich wierszy przepisany na starcie komendy (komenda czeka na wybór kolumny,
+    /// a tabela może się w tym czasie przeładować) — raz na komendę, nie przy każdym otwarciu menu.
+    var stableContents: TableContents {
+        let c = contents
+        let cells = (0..<c.rowCount).map { r in c.columns.map { c.cell(r, $0.id) } }
+        let index = Dictionary(c.columns.enumerated().map { ($0.element.id, $0.offset) }, uniquingKeysWith: { a, _ in a })
+        return TableContents(title: c.title, columns: c.columns, rowCount: c.rowCount,
+                             cell: { r, id in r < cells.count ? index[id].map { cells[r][$0] } ?? "" : "" }, selectedRows: c.selectedRows)
+    }
+
+    var hasSQLColumn: Bool { columns.contains { SQLIdentity.columnKind($0.title) != nil || SQLIdentity.columnKind($0.id) != nil } }
 
     /// Zapytanie z pierwszego zaznaczonego wiersza (kolumna SQL_ID albo hash).
     var sqlTarget: SQLReportTarget? { contents.selectedRows.first.flatMap { sqlTarget(row: $0, in: contents) } }

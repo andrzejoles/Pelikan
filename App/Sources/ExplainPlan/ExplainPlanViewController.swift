@@ -107,10 +107,8 @@ struct PlanPanel: View {
     }
 
     static func contents(_ shown: [PlanLine], columns cols: [PlanColumn], selected: PlanLine.ID?) -> TableContents {
-        let texts = Dictionary(cols.map { ($0.id, $0.text) }, uniquingKeysWith: { a, _ in a })
-        return TableContents(title: L10n.tr("Plan wykonania"), columns: cols.map { ($0.id, $0.title) }, rowCount: shown.count,
-                             cell: { r, id in r < shown.count ? texts[id]?(shown[r]) ?? "" : "" },
-                             selectedRows: shown.indices.filter { shown[$0].id == selected })
+        TableContents.make(title: L10n.tr("Plan wykonania"), columns: cols.map { ($0.id, $0.title, $0.text) }, shown: shown,
+                           isSelected: { $0.id == selected })
     }
 
     var body: some View {
@@ -181,7 +179,7 @@ struct PlanPanel: View {
                                                         sort: sortState.wrappedValue)
                                       },
                                       contents: { Self.contents($0, columns: cols, selected: selectionState.wrappedValue) },
-                                      sqlTarget: { _ in nil }, state: $tools)
+                                      state: $tools, sqlTarget: nil)
                 TableToolsBar(contents: contents, handle: handle, state: $tools, total: document.plan?.lines.count ?? 0)
                 ScrollViewReader { proxy in
                     Table(of: PlanLine.self, selection: $selection, sortOrder: $sortPlan) {
@@ -200,8 +198,6 @@ struct PlanPanel: View {
                         }
                     }
                     .registersTable(handle)
-                    // Zmiana zaznaczenia przy fokusie w tabeli — rejestracja także bez zmiany stanu fokusu SwiftUI.
-                    .onChange(of: selection) { handle.focused() }
                     .contextMenu(forSelectionType: PlanLine.ID.self) { ids in
                         // Migawka z chwili otwarcia menu (jak w DataTable).
                         let frozen = FrozenTable(handle, contents: contents, indexes: SwiftUITableHandle.indexer(shownLines))

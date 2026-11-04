@@ -120,7 +120,7 @@ public protocol UIServices: AnyObject {
     func showPerfReport(_ reportID: String?, connection: UUID)
     /// Zapytanie z elementu z fokusem (wiersz albo komórka tabeli, edytor) — przed oknem aktywnym.
     func focusedSQLTarget() -> SQLReportTarget?
-    /// Fokus w tabeli okna (siatka albo tabela narzędzia) — cel SQL tylko z jej wiersza.
+    /// Fokus w tabeli z kolumną SQL_ID/hash (tabela narzędzia) — cel SQL tylko z jej wiersza, bez polecenia z edytora.
     func focusIsInTable() -> Bool
     /// Tabela okna narzędzia z fokusem (ostatnio używana w oknie aktywnym) — dla komend `table.*` (D214).
     func focusedTable() -> (any TableHandle)?

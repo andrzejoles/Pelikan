@@ -247,7 +247,7 @@ enum TableCommands {
                 guard await ctx.ui?.saveFile(suggestedName: name, fileExtension: format.fileExtension, data: TableExport.file(format, data), table: table) == true
                 else { return .ok }
                 Log.tools.info("Eksport tabeli: \(format.rawValue, privacy: .public), wierszy \(data.rows.count, privacy: .public)")
-                return CommandResult(message: L10n.tr("Zapisano wierszy: \(data.rows.count)"), resolvedArguments: ctx.arguments.string("format") == nil ? CommandArguments(["format": .string(format.rawValue)]) : nil)
+                return CommandResult(message: L10n.tr("Zapisano wierszy: \(data.rows.count)"))
             },
         ]
     }

@@ -852,8 +852,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     /// Tabela okna narzędzia, której dotyczą komendy `table.*` (D214). Siatka wyników SQL ma własne komendy `grid.*`.
     func focusedTable() -> (any TableHandle)? { TableFocus.current() }
 
-    /// Fokus w tabeli narzędzia z narzędziami tabel (zarejestrowanej) — nie w siatce, drzewie obiektów ani widoku rekordu.
-    func focusIsInTable() -> Bool { TableFocus.current() != nil }
+    /// Fokus w tabeli z kolumną SQL_ID albo hash (Sesje, SQL Monitor, Top SQL…) bez zaznaczonego zapytania — raporty
+    /// pytają o zapytanie; w innych tabelach (plan, widok rekordu, komunikaty) — jak dotąd z okna i edytora.
+    func focusIsInTable() -> Bool { TableFocus.current()?.hasSQLColumn == true }
 
     func localDocsFragment() -> (text: String, link: URL?)? { LocalDocsModel.shared.fragment }
     func localDocsToggleSection() async { await LocalDocsModel.shared.toggleSection(settings: workspace.settings.localDocs) }
