@@ -106,6 +106,12 @@ final class AppKitTableTools: NSObject, NSMenuDelegate {
         let colIndex = table.clickedColumn
         let column = colIndex >= 0 && colIndex < table.tableColumns.count ? table.tableColumns[colIndex] : nil
         let rows: [Int] = row < 0 ? c.selectedRows : (table.selectedRowIndexes.contains(row) ? c.selectedRows : [row])
+        // Raporty SQL z wiersza z kolumną SQL_ID/hash (D217).
+        if let r = rows.first, let t = SQLIdentity.target(columns: c.columns.map(\.title), values: c.columns.map { c.cell(r, $0.id) }) {
+            let target = SQLReportTarget(target: t, origin: L10n.tr("wiersz tabeli"))
+            menu.addItem(BlockMenuItem(L10n.tr("Raporty dla \(target.label)…")) { SQLReportLauncher.open(target) })
+            menu.addItem(.separator())
+        }
         if row >= 0, let column {
             let id = column.identifier.rawValue
             menu.addItem(BlockMenuItem(L10n.tr("Kopiuj komórkę")) { TableActions.put(c.cell(row, id)) })

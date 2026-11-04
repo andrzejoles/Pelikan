@@ -51,6 +51,8 @@ struct DBAPanelView: View {
             .padding(10)
         }
         .frame(minWidth: 900, minHeight: 540)
+        .environment(\.reportConnection, connection)
+
         .toolTask(id: connection) { await reload() }
         .onChange(of: section) { Task { await reload() } }
     }
@@ -164,6 +166,7 @@ struct InstanceViewerView: View {
         }
         .padding(10)
         .frame(minWidth: 860, minHeight: 560)
+        .environment(\.reportConnection, connection)
         .onChange(of: connection) { snap = nil; Task { await refresh() } }
         .task(id: auto ? interval : 0) {
             await refresh()

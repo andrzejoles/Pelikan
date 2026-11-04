@@ -155,6 +155,14 @@ public enum SQLProbe {
         return nil
     }
 
+    /// SQL_ID polecenia o tym tekście w pamięci kursorów (SQL_TEXT to pierwsze 1000 znaków) — gdy SQL_ID policzony
+    /// z tekstu edytora nie pasuje (np. inne białe znaki niż wysłane do bazy).
+    public static func resolve(text: String, in s: any DatabaseSession) async -> String? {
+        let t = BindVariable(name: "t", value: .text(String(text.prefix(1000))))
+        let id = try? await s.scalar("select sql_id from gv$sql where sql_text = :t and rownum = 1", binds: [t])
+        return id?.isEmpty == false ? id : nil
+    }
+
     /// Dostępność zapytania; każde źródło osobno (brak uprawnień do jednego widoku nie przerywa sprawdzania).
     public static func probe(sqlID: String, in s: any DatabaseSession, license: PerfLicense) async -> SQLAvailability {
         var a = SQLAvailability(sqlID: sqlID)

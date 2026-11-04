@@ -26,11 +26,11 @@ public struct ToolDockSettings: Codable, Sendable, Hashable {
 
     /// Narzędzia domyślnie w osobnym oknie. `approval` to okno podglądu zgody ze scenariusza zrzutów
     /// (`debug.approval`); w aplikacji zgoda na operację agenta jest arkuszem na oknie głównym, nie narzędziem.
-    public static let floatingByDefault: Set<String> = ["approval"]
+    public static let floatingByDefault: Set<String> = ["approval", "sqlReports", "perfReports", "perfResult"]
 
     /// Przedrostki kluczy jednorazowych (`diff-<UUID>`, `table-APP.T`, `debugger-<id>`): okna dzielą miejsce rodzaju
     /// i nie zapamiętują własnej ramki. Jedyna lista — okno narzędzia rozpoznaje klucz jednorazowy przez `kind(of:)`.
-    static let transientPrefixes = ["diff-", "table-", "graph-", "spatial-", "debugger-", "html-", "objectInfo-", "largeData-"]
+    static let transientPrefixes = ["diff-", "table-", "graph-", "spatial-", "debugger-", "html-", "objectInfo-", "largeData-", "sqlReports-", "perfReports-", "perfResult-"]
 
     /// Rodzaj narzędzia z klucza okna: klucze jednorazowe dzielą miejsce z innymi oknami tego rodzaju; pozostałe klucze
     /// są rodzajem same w sobie (`kind(of:) == key`).
