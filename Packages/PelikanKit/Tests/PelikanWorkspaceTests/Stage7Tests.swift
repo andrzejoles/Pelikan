@@ -154,9 +154,9 @@ struct Stage7Tests {
 
     @Test("Filtr siatki: LIKE z % i _ obejmuje znak nowej linii, koniec wzorca — koniec wartości")
     func gridFilterLikeNewline() {
-        #expect(GridFilter.like("pierwsza\ndruga", "pierwsza%"))
-        #expect(GridFilter.like("a\nb", "a_b"))
-        #expect(!GridFilter.like("abc\n", "abc"))
+        #expect(LikePattern("pierwsza%").matches("pierwsza\ndruga"))
+        #expect(LikePattern("a_b").matches("a\nb"))
+        #expect(!LikePattern("abc").matches("abc\n"))
     }
 
     @Test("Panel wartości: JSON, XML z wcięciami, obraz z BLOB, hex, NULL")

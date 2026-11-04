@@ -165,11 +165,15 @@ enum TableCommands {
                 return put(ctx, c.data(rows: c.all, columns: [try await column(ctx, c)]), header: TableExport.copyHeader)
             },
             command("table.markColumn", L10n.tr("Zaznacz kolumnę do kopii"), L10n.tr("Dodaje kolumnę do kolumn kopiowanych razem albo ją z nich usuwa."),
-                    parameters: [columnParam], effect: .uiState) { ctx in
+                    parameters: [columnParam, CommandParameter("marked", .boolean, L10n.tr("Zaznaczona (domyślnie — przełączenie)"))],
+                    effect: .uiState) { ctx in
                 let h = try handle(ctx)
                 let id = try await column(ctx, h.contents)
-                if h.markedColumns.contains(id) { h.markedColumns.removeAll { $0 == id } } else { h.markedColumns.append(id) }
-                return CommandResult(resolvedArguments: resolved(ctx, ["column": .string(id)]))
+                // `marked` — stan docelowy (makro odtwarza stan, nie przełączenie); bez niego — przełączenie.
+                let mark = ctx.arguments.bool("marked") ?? !h.markedColumns.contains(id)
+                h.markedColumns.removeAll { $0 == id }
+                if mark { h.markedColumns.append(id) }
+                return CommandResult(resolvedArguments: resolved(ctx, ["column": .string(id), "marked": .bool(mark)]))
             },
             command("table.clearMarkedColumns", L10n.tr("Odznacz kolumny do kopii"), L10n.tr("Usuwa zaznaczenie wszystkich kolumn do kopii."),
                     effect: .uiState) { ctx in
@@ -201,15 +205,17 @@ enum TableCommands {
             },
             command("table.filterByValue", L10n.tr("Filtruj tabelę wartością"),
                     L10n.tr("Filtr kolumny: tylko wartość komórki wiersza (domyślnie pierwszego zaznaczonego) albo bez niej."),
-                    parameters: [columnParam, rowParam,
+                    parameters: [columnParam, rowParam, CommandParameter("value", .string, L10n.tr("Wartość (zamiast wiersza)")),
                                  CommandParameter("exclude", .boolean, L10n.tr("Bez tej wartości (domyślnie tylko ta wartość)"))],
                     effect: .uiState) { ctx in
                 let h = try handle(ctx)
                 let c = h.contents
-                let r = try row(ctx, c)
                 let col = try await column(ctx, c)
-                h.filter.columns[col] = TableExport.condition(c.cell(r, col), exclude: ctx.arguments.bool("exclude") ?? false)
-                return CommandResult(resolvedArguments: resolved(ctx, ["column": .string(col)]))
+                // Wartość podana wprost (makro) albo z wiersza (menu, paleta).
+                let value = try ctx.arguments.string("value") ?? c.cell(try row(ctx, c), col)
+                h.filter.columns[col] = TableExport.condition(value, exclude: ctx.arguments.bool("exclude") ?? false)
+                // Do makra wartość, nie numer wiersza — odtworzenie filtruje tą samą wartością w każdej tabeli i kolejności.
+                return CommandResult(resolvedArguments: CommandArguments(["column": .string(col), "value": .string(value)]))
             },
             command("table.clearFilter", L10n.tr("Wyczyść filtr tabeli"), L10n.tr("Usuwa szybki filtr i filtry kolumn tabeli."), effect: .uiState) { ctx in
                 try handle(ctx).filter = TableFilter()

@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import PelikanLog
 import PelikanWorkspace
 import SwiftUI
@@ -200,20 +201,25 @@ final class FrozenTable: TableHandle {
 /// (skrót, makro) widzi bieżące wiersze. Domknięcia trzymają tylko wartości tabeli (wiersze, teksty kolumn,
 /// zaznaczenie), nie widok — bez cyklu widok ↔ uchwyt.
 @MainActor
-final class SwiftUITableHandle: FocusTable {
-    private var snapshotter: () -> (contents: TableContents, sqlTarget: SQLReportTarget?, indexes: ([AnyHashable]) -> [Int]) = {
-        (TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []), nil, { _ in [] })
+final class SwiftUITableHandle: FocusTable, ObservableObject {
+    /// Każde liczone osobno przy wywołaniu z bieżącymi wierszami widoku (filtr i sortowanie) — tylko to, czego trzeba.
+    private var contentsNow: () -> TableContents = { TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []) }
+    private var targetNow: () -> SQLReportTarget? = { nil }
+    private var snapshotNow: () -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) = {
+        (TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []), { _ in [] })
     }
     private var state: Binding<TableToolsState>?
     /// Okno tabeli (sonda w tle tabeli); widok z fokusem rejestrowany przy zdobyciu fokusu.
     weak var window: NSWindow?
 
-    /// `rows` — wiersze widoku liczone przy wywołaniu (bieżący filtr i sortowanie); zawartość, cel SQL i indeksy z nich.
+    /// `rows` — wiersze widoku liczone przy wywołaniu (bieżący filtr i sortowanie); zawartość i cel SQL z nich.
     func update<Row: Identifiable>(rows: @escaping () -> [Row], contents: @escaping ([Row]) -> TableContents,
                                    sqlTarget: @escaping ([Row]) -> SQLReportTarget?, state: Binding<TableToolsState>) {
-        snapshotter = {
+        contentsNow = { contents(rows()) }
+        targetNow = { sqlTarget(rows()) }
+        snapshotNow = {
             let shown = rows()
-            return (contents(shown), sqlTarget(shown), { ids in
+            return (contents(shown), { ids in
                 let set = Set(ids)
                 return shown.indices.filter { set.contains(AnyHashable(shown[$0].id)) }
             })
@@ -221,12 +227,9 @@ final class SwiftUITableHandle: FocusTable {
         self.state = state
     }
 
-    var contents: TableContents { snapshotter().contents }
-    var sqlTarget: SQLReportTarget? { snapshotter().sqlTarget }
-    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) {
-        let s = snapshotter()
-        return (s.contents, s.indexes)
-    }
+    var contents: TableContents { contentsNow() }
+    var sqlTarget: SQLReportTarget? { targetNow() }
+    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) { snapshotNow() }
     var filter: TableFilter {
         get { state?.wrappedValue.filter ?? TableFilter() }
         set { state?.wrappedValue.filter = newValue }
@@ -237,9 +240,16 @@ final class SwiftUITableHandle: FocusTable {
     }
 
     /// Tabela zdobyła fokus: widok z fokusem okna to jej NSTableView — rejestracja bez szukania po geometrii.
+    /// Fokus zdobyty, zanim sonda zapisała okno — rejestracja po jego zapisaniu.
+    private var pendingFocus = false
+    func focusedPending() {
+        if pendingFocus { pendingFocus = false; focused() }
+    }
+
     func focused() {
-        guard let tv = (window ?? NSApp.keyWindow)?.firstResponder as? NSTableView, !(tv is GridTableView) else { return }
-        TableFocus.register(tv, self)
+        guard window != nil else { pendingFocus = true; return }
+        guard let window, let tv = window.firstResponder as? NSTableView, !(tv is GridTableView) else { return }
+        TableFocus.registerSwiftUI(tv, self)
     }
 }
 
@@ -253,6 +263,13 @@ enum TableFocus {
     static weak var palette: NSWindow?
 
     static func register(_ table: NSTableView, _ handle: any FocusTable) { tables.setObject(handle, forKey: table) }
+
+    /// Tabela SwiftUI z fokusem: nie nadpisuje tabeli AppKit z narzędziami (inny widok mógł mieć fokus w chwili
+    /// zmiany stanu fokusu SwiftUI).
+    static func registerSwiftUI(_ table: NSTableView, _ handle: SwiftUITableHandle) {
+        if tables.object(forKey: table) is AppKitTableTools { return }
+        tables.setObject(handle, forKey: table)
+    }
 
     /// Okno czynności: okno z fokusem, a gdy fokus ma paleta komend — okno, nad którym ją otwarto.
     static var contextWindow: NSWindow? {
@@ -280,6 +297,7 @@ struct TableWindowProbe: NSViewRepresentable {
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
             handle?.window = window
+            handle?.focusedPending()
         }
     }
 
@@ -299,7 +317,6 @@ struct TableWindowProbe: NSViewRepresentable {
 /// działają na niej niezależnie od fokusu i okna kluczowego.
 @MainActor
 enum TableActions {
-    /// Komenda na migawce tabeli; `args` liczone z tej migawki (wiersze menu po identyfikatorach).
     /// Komenda na wierszach z menu: na migawce tabeli z chwili wyboru pozycji (`args` z tej migawki — wiersze po
     /// identyfikatorach). Cel przekazany jako `CommandContext.target`, poza argumentami (nie trafia do makr).
     static func performOnRows(_ handle: any FocusTable, _ id: String, _ args: (FrozenTable) -> [String: JSONValue]) {
@@ -563,7 +580,7 @@ struct DataTable<Row: Identifiable>: View {
     @State private var sort: [ColumnSort<Row>] = []
     @State private var tools = TableToolsState()
     /// Uchwyt tabeli dla komend `table.*` i raportów SQL (rejestrowany z widokiem NSTableView przy zdobyciu fokusu).
-    @State private var handle = SwiftUITableHandle()
+    @StateObject private var handle = SwiftUITableHandle()
     @FocusState private var focused: Bool
     /// Połączenie tabeli narzędzia — raporty SQL z wiersza z kolumną SQL_ID/hash (D217).
     @Environment(\.reportConnection) private var reportConnection

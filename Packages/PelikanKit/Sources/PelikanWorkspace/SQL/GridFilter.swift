@@ -145,8 +145,6 @@ public struct GridFilter: Sendable, Hashable {
         return GridFilter(groups: groups, text: expression)
     }
 
-    nonisolated static func like(_ s: String, _ pattern: String) -> Bool { LikePattern(pattern).matches(s) }
-
     /// Wzorce LIKE warunków skompilowane raz dla całego filtrowania (bez wyszukiwania w pamięci przy każdej komórce).
     public func likePatterns() -> [String: LikePattern] {
         var out: [String: LikePattern] = [:]

@@ -11,6 +11,8 @@ final class FakeDocsServer: URLProtocol {
     nonisolated(unsafe) static var sessionHeaders: [String?] = []
     /// Tyle następnych tools/call z identyfikatorem sesji dostaje 404 (sesja wygasła po restarcie serwera).
     nonisolated(unsafe) static var expireSession = 0
+    /// Sesje wygasłe: każde tools/call z tym identyfikatorem dostaje odrzucenie (deterministycznie, bez liczenia żądań).
+    nonisolated(unsafe) static var expiredSessions: Set<String> = []
     /// Kod odpowiedzi dla wygasłej sesji (404 albo 400 z komunikatem o sesji).
     nonisolated(unsafe) static var expiredStatus = 404
     /// Kolejny numer sesji nadawanej w odpowiedzi na initialize (jak prawdziwy serwer — nowa sesja, nowy identyfikator).
@@ -34,7 +36,9 @@ final class FakeDocsServer: URLProtocol {
         }
         let id = json["id"] as? Int
         let expired = Self.lock.withLock {
-            guard Self.expireSession > 0, json["method"] as? String == "tools/call", request.value(forHTTPHeaderField: "Mcp-Session-Id") != nil else { return false }
+            guard json["method"] as? String == "tools/call", let sid = request.value(forHTTPHeaderField: "Mcp-Session-Id") else { return false }
+            if Self.expiredSessions.contains(sid) { return true }
+            guard Self.expireSession > 0 else { return false }
             Self.expireSession -= 1
             return true
         }
@@ -153,7 +157,7 @@ struct LocalDocsTests {
     @Test("Klient (D224): równoczesne pierwsze wywołania — jedna inicjalizacja; wygasła sesja (404) — nowa sesja i ponowienie")
     func clientSession() async throws {
         FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.sessionHeaders = []; FakeDocsServer.expireSession = 0 }
-        defer { FakeDocsServer.lock.withLock { FakeDocsServer.expiredStatus = 404; FakeDocsServer.expireSession = 0 } }
+        defer { FakeDocsServer.lock.withLock { FakeDocsServer.expiredStatus = 404; FakeDocsServer.expireSession = 0; FakeDocsServer.expiredSessions = [] } }
         let cfg = URLSessionConfiguration.ephemeral
         cfg.protocolClasses = [FakeDocsServer.self]
         let c = LocalDocsClient(endpoint: URL(string: "http://127.0.0.1:8765/mcp")!, urlSession: URLSession(configuration: cfg))
@@ -167,14 +171,18 @@ struct LocalDocsTests {
         #expect(found.map(\.chunk) == [299800])
         methods = FakeDocsServer.lock.withLock { FakeDocsServer.requests.map { $0["method"] as? String } }
         #expect(methods == ["tools/call", "initialize", "notifications/initialized", "tools/call"])
-        // Dwa równoczesne wywołania dostają 404 — jedna nowa sesja, oba kończą się wynikiem.
-        FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.expireSession = 2 }
+        // Dwa równoczesne wywołania ze starą sesją dostają 404 — jedna nowa sesja, oba kończą się wynikiem.
+        FakeDocsServer.lock.withLock {
+            FakeDocsServer.requests = []
+            FakeDocsServer.expiredSessions = ["s-\(FakeDocsServer.sessionCounter)"]
+        }
         async let x = c.search("NVL", version: "19c")
         async let y = c.search("DECODE", version: "19c")
         let both = try await (x, y)
         #expect(both.0.count == 1 && both.1.count == 1)
         methods = FakeDocsServer.lock.withLock { FakeDocsServer.requests.map { $0["method"] as? String } }
         #expect(methods.filter { $0 == "initialize" }.count == 1)
+        FakeDocsServer.lock.withLock { FakeDocsServer.expiredSessions = [] }
         // Serwer odpowiadający na starą sesję kodem 400 z komunikatem o sesji — też nowa sesja.
         FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.expireSession = 1; FakeDocsServer.expiredStatus = 400 }
         #expect(try await c.search("NVL", version: "19c").count == 1)

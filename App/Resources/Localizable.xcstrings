@@ -102593,6 +102593,34 @@
         }
       }
     },
+    "Wartość (zamiast wiersza)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Value (instead of a row)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wert (statt einer Zeile)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valor (en lugar de una fila)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Значення (замість рядка)"
+          }
+        }
+      }
+    },
     "Wartość bieżącej komórki z listy: CHECK … IN (…) albo klucz obcy do małej tabeli (tryb edycji)." : {
       "localizations" : {
         "en" : {
@@ -124345,6 +124373,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Виділення не в підпрограмі й не в блоці PL/SQL"
+          }
+        }
+      }
+    },
+    "Zaznaczona (domyślnie — przełączenie)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marked (default — toggle)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markiert (Standard — umschalten)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcada (por defecto — alternar)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позначено (типово — перемикання)"
           }
         }
       }

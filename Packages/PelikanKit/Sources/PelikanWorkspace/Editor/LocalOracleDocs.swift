@@ -162,17 +162,26 @@ public actor LocalDocsClient {
     /// to samo zadanie zamiast inicjować po kilka sesji.
     private var initialization: Task<Void, any Error>?
 
+    /// Czeka na zakończoną inicjalizację bieżącej sesji. Gdy w trakcie czekania inne wywołanie unieważniło sesję
+    /// (wygasła — nowa inicjalizacja), czeka na nową, zamiast wysłać żądanie bez sesji albo przed `initialized`.
     private func ensureInitialized() async throws {
-        if let initialization { return try await initialization.value }
-        let task = Task { [self] in
-            _ = try await rpc("initialize", ["protocolVersion": "2025-06-18", "capabilities": [String: Any](),
-                                             "clientInfo": ["name": "Pelikan", "version": "1"]])
-            try await notify("notifications/initialized")
-        }
-        initialization = task
-        do { try await task.value } catch {
-            if initialization == task { initialization = nil }
-            throw error
+        for _ in 0..<3 {
+            let task: Task<Void, any Error>
+            if let initialization {
+                task = initialization
+            } else {
+                task = Task { [self] in
+                    _ = try await rpc("initialize", ["protocolVersion": "2025-06-18", "capabilities": [String: Any](),
+                                                     "clientInfo": ["name": "Pelikan", "version": "1"]])
+                    try await notify("notifications/initialized")
+                }
+                initialization = task
+            }
+            do { try await task.value } catch {
+                if initialization == task { initialization = nil }
+                throw error
+            }
+            if initialization == task { return }
         }
     }
 

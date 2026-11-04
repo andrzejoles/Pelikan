@@ -206,7 +206,7 @@ struct TableToolsReviewTests {
         #expect(f.matches(text: "12.35", key: .number(12.345678)))
         #expect(!ValueFilter.parse("<> 12.35")!.matches(text: "12.35", key: .number(12.345678)))
         #expect(ValueFilter.parse("> 3")!.matches(text: "", key: .number(5)))   // bez tekstu — wartość klucza
-        #expect(GridFilter.like("DBA_USERS", "dba%") && !GridFilter.like("X", "dba%"))
+        #expect(LikePattern("dba%").matches("DBA_USERS") && !LikePattern("dba%").matches("X"))
         // Tekst z jednostką albo procentem — liczba z tekstu, nie klucz w innej skali.
         #expect(ValueFilter.parse("> 10")!.matches(text: "12.3%", key: .number(0.123)))
         #expect(ValueFilter.parse("> 50")!.matches(text: "75%", key: .number(0.75)))
@@ -280,9 +280,15 @@ struct TableToolsReviewTests {
         t.gone = false
         #expect(ui.clipboard == "y")
         // Kolumna podana argumentem — nic do uzupełnienia w makrze.
-        // Filtr z kolumną wybraną argumentem — nic do uzupełnienia w makrze.
+        // Filtr z menu — do makra wartość, nie numer wiersza; odtworzenie z wartością nie czyta wierszy.
         let r = try await ws.registry.command("table.filterByValue")!.run(CommandContext(workspace: ws, invoker: .user, arguments: CommandArguments(["column": "a", "row": 1]), target: t))
-        #expect(r.resolvedArguments == nil)
+        #expect(r.resolvedArguments?.string("value") == "1")
+        try await run("table.filterByValue", ["column": "b", "value": "q", "row": 99], target: t)
+        #expect(t.filter.columns["b"] == "= q")
+        // Zaznaczenie kolumny w makrze — stan docelowy.
+        try await run("table.markColumn", ["column": "a", "marked": true], target: t)
+        try await run("table.markColumn", ["column": "a", "marked": true], target: t)
+        #expect(t.markedColumns.contains("a"))
         try await run("table.clearFilter", target: t)
         ui.table = nil
         let before = TableExport.copyHeader

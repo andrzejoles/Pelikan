@@ -50,7 +50,7 @@ struct PlanPanel: View {
     /// Filtr, kopiowanie i eksport kroków planu (D214).
     @State private var tools = TableToolsState()
     /// Cel komend `table.*` (D214) — rejestrowany z widokiem NSTableView tabeli planu przy zdobyciu fokusu.
-    @State private var tableHandle = SwiftUITableHandle()
+    @StateObject private var tableHandle = SwiftUITableHandle()
     @FocusState private var tableFocused: Bool
     @Bindable var document: PelikanWorkspace.Document
     let workspace: Workspace
