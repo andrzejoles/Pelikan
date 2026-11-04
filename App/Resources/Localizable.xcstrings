@@ -10557,6 +10557,34 @@
         }
       }
     },
+    "Błąd serwera dokumentacji: HTTP %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentation server error: HTTP %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler des Dokumentationsservers: HTTP %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error del servidor de documentación: HTTP %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Помилка сервера документації: HTTP %@"
+          }
+        }
+      }
+    },
     "Błąd w aplikacji" : {
       "localizations" : {
         "en" : {

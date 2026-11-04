@@ -849,26 +849,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
-    /// Tabela narzędzia z fokusem (AppKit) albo ostatnio używana tabela okna aktywnego (SwiftUI) — komendy `table.*`.
-    /// Siatka wyników SQL ma własne komendy `grid.*`.
-    func focusedTable() -> (any TableHandle)? {
-        let responder = NSApp.keyWindow?.firstResponder
-        if responder is GridTableView { return nil }
-        if let tv = responder as? NSTableView, let tools = AppKitTableTools.tools(for: tv) { return tools }
-        return TableFocus.shared.current()
-    }
+    /// Tabela okna narzędzia, której dotyczą komendy `table.*` (D214). Siatka wyników SQL ma własne komendy `grid.*`.
+    func focusedTable() -> (any TableHandle)? { TableFocus.shared.current() }
 
-    /// Zapytanie z elementu z fokusem: edytor (zaznaczenie, słowo, polecenie), siatka (wiersz, komórka), tabela narzędzia.
+    /// Zapytanie z elementu z fokusem: siatka (wiersz, komórka), edytor (zaznaczenie, słowo, polecenie), tabela
+    /// narzędzia. Paleta komend (panel) nie zabiera celu oknu pod nią.
     func focusedSQLTarget() -> SQLReportTarget? {
-        let responder = NSApp.keyWindow?.firstResponder
+        let window = TableFocus.contextWindow
+        let responder = window?.firstResponder
         if responder is GridTableView, let doc = workspace.activeDocument, doc.kind == .sql,
            let tab = doc.results.first(where: { $0.id == doc.activeResultID }) ?? doc.results.first {
             return SQLTargetFinder.fromGrid(tab)
         }
-        if let tv = responder as? NSTextView, !tv.isFieldEditor, NSApp.keyWindow === mainWindow?.window, let doc = workspace.activeDocument {
+        if let tv = responder as? NSTextView, !tv.isFieldEditor, window === mainWindow?.window, let doc = workspace.activeDocument {
             return SQLTargetFinder.fromEditor(doc)
         }
-        if responder is NSTableView { return SQLTargetRegistry.shared.current() }
+        if responder is NSTableView { return TableFocus.shared.current()?.sqlTarget }
         return nil
     }
 
@@ -1175,7 +1171,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {
         if Self.scriptSkipsDialog("saveFile") { return false }
-        guard let window = mainWindow?.window else { return false }
+        // Okno, z którego wywołano zapis (np. okno narzędzia przed głównym) — inaczej arkusz byłby niewidoczny.
+        guard let window = TableFocus.contextWindow ?? mainWindow?.window else { return false }
         let panel = NSSavePanel()
         panel.nameFieldStringValue = suggestedName.replacingOccurrences(of: "/", with: "-") + "." + fileExtension
         panel.allowedContentTypes = [UTType(filenameExtension: fileExtension) ?? .data]

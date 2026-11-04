@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 import PelikanDB
 
 /// Filtr lokalny siatki (DB-GRID-001): warunki na pobranych wierszach, bez ponownego zapytania.
@@ -144,7 +145,8 @@ public struct GridFilter: Sendable, Hashable {
         return GridFilter(groups: groups, text: expression)
     }
 
-    nonisolated static func like(_ s: String, _ pattern: String) -> Bool { LikePattern(pattern).matches(s) }
+    /// Wzorzec z pamięci podręcznej — filtr siatki sprawdza nim każdy wiersz (bez kompilowania przy każdej komórce).
+    nonisolated static func like(_ s: String, _ pattern: String) -> Bool { LikePattern.cached(pattern).matches(s) }
 
     /// Czy wiersz spełnia filtr (wartości porównywane jako liczby, gdy obie są liczbami; inaczej jako tekst).
     public func matches(_ row: [OracleValue], columns: [ColumnInfo], format: ValueFormat) -> Bool {
@@ -213,6 +215,19 @@ public struct LikePattern: @unchecked Sendable {
     public init(_ pattern: String) {
         let body = NSRegularExpression.escapedPattern(for: pattern).replacingOccurrences(of: "%", with: ".*").replacingOccurrences(of: "_", with: ".")
         re = try? NSRegularExpression(pattern: "^" + body + #"\z"#, options: [.caseInsensitive, .dotMatchesLineSeparators])
+    }
+
+    private static let cache = Mutex<[String: LikePattern]>([:])
+
+    /// Wzorzec skompilowany raz na tekst (pamięć ograniczona do 256 wzorców).
+    public static func cached(_ pattern: String) -> LikePattern {
+        cache.withLock { c in
+            if let p = c[pattern] { return p }
+            if c.count >= 256 { c.removeAll() }
+            let p = LikePattern(pattern)
+            c[pattern] = p
+            return p
+        }
     }
 
     public func matches(_ s: String) -> Bool {

@@ -179,10 +179,20 @@ struct TableToolsReviewTests {
         #expect(hit("abc%", "ABCD"))
     }
 
+    @Test("Liczba w filtrze porównywana z tekstem komórki (zaokrąglony klucz nie przeszkadza); wzorzec LIKE z pamięci")
+    func shownNumber() {
+        let f = ValueFilter.parse(TableExport.condition("12.35", exclude: false))!
+        #expect(f.matches(text: "12.35", key: .number(12.345678)))
+        #expect(!ValueFilter.parse("<> 12.35")!.matches(text: "12.35", key: .number(12.345678)))
+        #expect(ValueFilter.parse("> 3")!.matches(text: "", key: .number(5)))   // bez tekstu — wartość klucza
+        #expect(GridFilter.like("DBA_USERS", "dba%") && !GridFilter.like("X", "dba%"))
+    }
+
     @Test("Eksport: zera wiodące i długie identyfikatory zostają tekstem")
     func exportNumbers() {
         #expect(TableExport.isNumber("12.35") && TableExport.isNumber("-0.5") && TableExport.isNumber("0") && TableExport.isNumber(".5"))
         #expect(!TableExport.isNumber("0012") && !TableExport.isNumber("123456789012345678") && !TableExport.isNumber("-") && !TableExport.isNumber(""))
+        #expect(!TableExport.isNumber("E1") && !TableExport.isNumber("e5") && !TableExport.isNumber("-E2") && TableExport.isNumber("1e5"))
         #expect(TableExport.isNumber("123456789012345"))
         let d = TableExport.data(title: "", columns: ["kod"], rows: [["0012"], ["0100"]])
         #expect(d.columns[0].type == .varchar2)

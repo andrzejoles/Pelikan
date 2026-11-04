@@ -54,7 +54,8 @@ extension TableExport {
 }
 
 /// Komendy tabel okien narzędzi (D214): kopiowanie komórki, wierszy, kolumn i całej tabeli, eksport, filtr wartością.
-/// Menu tabel wywołują te komendy, więc są też w palecie, skrótach i makrach. Agent: Brak — dotyczą okna z fokusem.
+/// Menu i pasek tabel wywołują te komendy; są też w menu Edycja › Tabela, palecie, skrótach i makrach. Agent: Brak —
+/// dotyczą okna z fokusem.
 @MainActor
 enum TableCommands {
     static let submenu = L10n.tr("Tabela")
@@ -78,6 +79,18 @@ enum TableCommands {
         }
     }
 
+    /// Wiersz z argumentu `row` (numer od 1) albo pierwszy zaznaczony.
+    static func row(_ ctx: CommandContext, _ c: TableContents) throws -> Int {
+        if let n = ctx.arguments.int("row") {
+            guard n >= 1, n <= c.rowCount else { throw CommandError.invalidArgument("row", String(n)) }
+            return Int(n) - 1
+        }
+        guard let r = c.selectedRows.first else { throw CommandError.notAvailable(L10n.tr("Zaznacz wiersz tabeli")) }
+        return r
+    }
+
+    static let rowParam = CommandParameter("row", .integer, L10n.tr("Numer wiersza widoku od 1 (domyślnie pierwszy zaznaczony)"))
+
     /// Kolumna z argumentu `column` (identyfikator albo tytuł, bez wielkości liter); bez argumentu — wybór z listy.
     static func column(_ ctx: CommandContext, _ c: TableContents) async throws -> String {
         if let raw = ctx.arguments.string("column"), !raw.isEmpty {
@@ -100,22 +113,18 @@ enum TableCommands {
     static func command(_ id: String, _ title: String, _ summary: String, parameters: [CommandParameter] = [], effect: CommandEffect = .none,
                         state: StateHandler? = nil, run: @escaping CommandHandler) -> Command {
         Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .edit, submenu: submenu, parameters: parameters,
-                                  agent: .none, effect: effect, summary: summary, inMenu: false, feature: "PD-UI-015"),
+                                  agent: .none, effect: effect, summary: summary, feature: "PD-UI-015"),
                 validate: hasTable, state: state, run: run)
     }
 
     static var all: [Command] {
         [
             command("table.copyCell", L10n.tr("Kopiuj komórkę tabeli"), L10n.tr("Kopiuje tekst komórki wiersza (domyślnie pierwszego zaznaczonego) w kolumnie."),
-                    parameters: [CommandParameter("row", .integer, L10n.tr("Numer wiersza widoku od 1 (domyślnie pierwszy zaznaczony)")), columnParam]) { ctx in
+                    parameters: [rowParam, columnParam]) { ctx in
                 let c = try handle(ctx).contents
-                let row = try ctx.arguments.int("row").map { n in
-                    guard n >= 1, n <= c.rowCount else { throw CommandError.invalidArgument("row", String(n)) }
-                    return Int(n) - 1
-                } ?? c.selectedRows.first
-                guard let row else { throw CommandError.notAvailable(L10n.tr("Zaznacz wiersz tabeli")) }
+                let r = try row(ctx, c)
                 let col = try await column(ctx, c)
-                ctx.ui?.copyToClipboard(c.cell(row, col), html: nil)
+                ctx.ui?.copyToClipboard(c.cell(r, col), html: nil)
                 return .ok
             },
             command("table.copyRows", L10n.tr("Kopiuj wiersze tabeli"), L10n.tr("Kopiuje zaznaczone wiersze tabeli (tekst z tabulatorami i HTML)."),
@@ -165,18 +174,14 @@ enum TableCommands {
             },
             command("table.filterByValue", L10n.tr("Filtruj tabelę wartością"),
                     L10n.tr("Filtr kolumny: tylko wartość komórki wiersza (domyślnie pierwszego zaznaczonego) albo bez niej."),
-                    parameters: [columnParam, CommandParameter("row", .integer, L10n.tr("Numer wiersza widoku od 1 (domyślnie pierwszy zaznaczony)")),
+                    parameters: [columnParam, rowParam,
                                  CommandParameter("exclude", .boolean, L10n.tr("Bez tej wartości (domyślnie tylko ta wartość)"))],
                     effect: .uiState) { ctx in
                 let h = try handle(ctx)
                 let c = h.contents
-                let row = try ctx.arguments.int("row").map { n in
-                    guard n >= 1, n <= c.rowCount else { throw CommandError.invalidArgument("row", String(n)) }
-                    return Int(n) - 1
-                } ?? c.selectedRows.first
-                guard let row else { throw CommandError.notAvailable(L10n.tr("Zaznacz wiersz tabeli")) }
+                let r = try row(ctx, c)
                 let col = try await column(ctx, c)
-                h.filter.columns[col] = TableExport.condition(c.cell(row, col), exclude: ctx.arguments.bool("exclude") ?? false)
+                h.filter.columns[col] = TableExport.condition(c.cell(r, col), exclude: ctx.arguments.bool("exclude") ?? false)
                 return .ok
             },
             command("table.clearFilter", L10n.tr("Wyczyść filtr tabeli"), L10n.tr("Usuwa szybki filtr i filtry kolumn tabeli."), effect: .uiState) { ctx in

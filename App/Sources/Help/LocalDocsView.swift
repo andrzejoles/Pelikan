@@ -25,7 +25,11 @@ struct LocalDocsView: View {
     @State private var results: [DocFragment] = []
     @State private var selection: DocFragment.ID?
     @State private var detail: String?
-    @State private var busy = false
+    /// Wywołania serwera w toku (wskaźnik pracy) i numery najnowszych żądań — wynik starszego żądania jest pomijany.
+    @State private var pending = 0
+    @State private var searchRequest = 0
+    @State private var sectionRequest = 0
+    private var busy: Bool { pending > 0 }
     @State private var message = ""
 
     private var selected: DocFragment? { results.first { $0.id == selection } }
@@ -99,16 +103,18 @@ struct LocalDocsView: View {
         let q = model.query.trimmingCharacters(in: .whitespaces)
         guard !q.isEmpty else { return }
         guard let endpoint = settings.endpoint else { message = LocalDocsError.badAddress(settings.url).localizedDescription; return }
-        busy = true
-        defer { busy = false }
+        searchRequest += 1
+        let request = searchRequest
+        pending += 1
+        defer { pending -= 1 }
         do {
             let found = try await LocalDocsClient.shared(for: endpoint).search(q, version: version, count: 10)
-            // Nowsze zapytanie w trakcie — wynik starego pomijany.
-            guard model.query.trimmingCharacters(in: .whitespaces) == q else { return }
+            guard request == searchRequest else { return }
             results = found
             selection = results.first?.id
             message = results.isEmpty ? L10n.tr("Nic nie znaleziono") : L10n.tr("Fragmentów: \(results.count)")
         } catch {
+            guard request == searchRequest else { return }
             results = []
             message = error.localizedDescription + " " + L10n.tr("Dokumentacja online działa bez serwera (przycisk obok).")
         }
@@ -116,15 +122,17 @@ struct LocalDocsView: View {
 
     private func loadSection(_ f: DocFragment) async {
         guard let endpoint = settings.endpoint else { return }
-        busy = true
-        defer { busy = false }
+        sectionRequest += 1
+        let request = sectionRequest
+        pending += 1
+        defer { pending -= 1 }
         do {
             let text = try await LocalDocsClient.shared(for: endpoint).section(f.chunk)
-            // W międzyczasie wybrano inny fragment — sekcja należy do poprzedniego.
-            guard selection == f.id else { return }
+            // W międzyczasie wybrano inny fragment albo pobrano inną sekcję — ten wynik jest nieaktualny.
+            guard request == sectionRequest, selection == f.id else { return }
             detail = text
         } catch {
-            if selection == f.id { message = error.localizedDescription }
+            if request == sectionRequest, selection == f.id { message = error.localizedDescription }
         }
     }
 

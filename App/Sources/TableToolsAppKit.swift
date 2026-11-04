@@ -36,7 +36,7 @@ func BlockMenuItem(_ title: String, state: Bool = false, enabled: Bool = true, _
 /// menu kontekstowe (komórka, wiersze, kolumna, zaznaczone kolumny, cała tabela, filtr wartością, eksport)
 /// i pasek nad tabelą (szybki filtr, filtr kolumn, liczba wierszy, Kopiuj, Eksportuj).
 @MainActor
-final class AppKitTableTools: NSObject, NSMenuDelegate, TableHandle {
+final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     /// Narzędzia tabel AppKit po tabeli — cel komend `table.*`, gdy tabela ma fokus.
     private static let byTable = NSMapTable<NSTableView, AppKitTableTools>.weakToWeakObjects()
 
@@ -49,6 +49,13 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, TableHandle {
     var markedColumns: [String] {
         get { model.state.markedColumns }
         set { model.state.markedColumns = newValue }
+    }
+    /// Zapytanie z pierwszego zaznaczonego wiersza (kolumna SQL_ID albo hash).
+    var sqlTarget: SQLReportTarget? {
+        let c = contents
+        guard let r = c.selectedRows.first,
+              let t = SQLIdentity.target(columns: c.columns.map(\.title), values: c.columns.map { c.cell(r, $0.id) }) else { return nil }
+        return SQLReportTarget(target: t, origin: L10n.tr("wiersz tabeli"))
     }
 
     let table: NSTableView
@@ -179,7 +186,7 @@ struct AppKitTableBar: View {
     var body: some View {
         let model = tools.model
         _ = model.revision
-        return TableToolsBar(handle: tools, state: Binding(get: { model.state }, set: { model.state = $0 }), total: tools.total())
+        return TableToolsBar(contents: tools.contents, handle: tools, state: Binding(get: { model.state }, set: { model.state = $0 }), total: tools.total())
             .padding(.horizontal, 4)
     }
 }

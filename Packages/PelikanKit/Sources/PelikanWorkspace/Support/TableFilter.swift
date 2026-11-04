@@ -121,8 +121,11 @@ public struct ValueFilter: Sendable, Hashable {
         func order<T: Comparable>(_ a: T, _ b: T) -> ComparisonResult { a < b ? .orderedAscending : a > b ? .orderedDescending : .orderedSame }
         switch v {
         case .number(let n):
+            // Najpierw liczba z tekstu pokazanego w tabeli (np. „12.35” przy kluczu 12.345678) — filtr „tylko ta
+            // wartość” i wpisane „= 12.35” trafiają w to, co widać; klucz, gdy tekst nie jest liczbą.
+            if let shown = CellOrder.number(text) { return order(shown, n) }
             if case .number(let x) = key { return order(x, n) }
-            return CellOrder.number(text).map { order($0, n) }
+            return nil
         case .date(let d, let dayOnly):
             var cell: Date?
             if case .date(let x) = key { cell = x } else { cell = date(text)?.date }

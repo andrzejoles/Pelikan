@@ -73,9 +73,11 @@ public enum LocalDocsError: Error, LocalizedError, Equatable {
     case badAddress(String)
     case unreachable(String)
     case server(String)
+    case http(Int)
 
     public var errorDescription: String? {
         switch self {
+        case .http(let code): L10n.tr("Błąd serwera dokumentacji: HTTP \(code)")
         case .badAddress(let a): L10n.tr("Niedozwolony adres serwera dokumentacji: \(a) (HTTPS albo HTTP na tym komputerze)")
         case .unreachable(let m): L10n.tr("Serwer dokumentacji lokalnej nie odpowiada: \(m)")
         case .server(let m): L10n.tr("Błąd serwera dokumentacji: \(m)")
@@ -101,7 +103,6 @@ public actor LocalDocsClient {
 
     public let endpoint: URL
     private var session: String?
-    private var initialized = false
     private var nextID = 1
     private let urlSession: URLSession
 
@@ -129,21 +130,34 @@ public actor LocalDocsClient {
     private func callTool(_ name: String, _ arguments: [String: Any]) async throws -> String {
         do {
             return try await callToolOnce(name, arguments)
-        } catch LocalDocsError.server("HTTP 404") where session != nil {
-            // Sesja wygasła albo serwer uruchomiono ponownie — nowa sesja i jedno ponowienie.
+        } catch LocalDocsError.http(let code) where (400..<500).contains(code) && session != nil {
+            // Sesja wygasła albo serwer uruchomiono ponownie (404, niektóre serwery — 400) — nowa sesja i jedno ponowienie.
             session = nil
-            initialized = false
+            initialization = nil
             return try await callToolOnce(name, arguments)
         }
     }
 
-    private func callToolOnce(_ name: String, _ arguments: [String: Any]) async throws -> String {
-        if !initialized {
+    /// Inicjalizacja sesji MCP raz — równoczesne pierwsze wywołania (aktor jest współbieżny przy `await`) czekają na
+    /// to samo zadanie zamiast inicjować po kilka sesji.
+    private var initialization: Task<Void, any Error>?
+
+    private func ensureInitialized() async throws {
+        if let initialization { return try await initialization.value }
+        let task = Task { [self] in
             _ = try await rpc("initialize", ["protocolVersion": "2025-06-18", "capabilities": [String: Any](),
                                              "clientInfo": ["name": "Pelikan", "version": "1"]])
             try await notify("notifications/initialized")
-            initialized = true
         }
+        initialization = task
+        do { try await task.value } catch {
+            initialization = nil
+            throw error
+        }
+    }
+
+    private func callToolOnce(_ name: String, _ arguments: [String: Any]) async throws -> String {
+        try await ensureInitialized()
         let result = try await rpc("tools/call", ["name": name, "arguments": arguments])
         let content = (result["content"] as? [[String: Any]]) ?? []
         let text = content.compactMap { $0["type"] as? String == "text" || $0["type"] == nil ? $0["text"] as? String : nil }.joined(separator: "\n")
@@ -179,7 +193,7 @@ public actor LocalDocsClient {
         }
         if let http = response as? HTTPURLResponse {
             if let s = http.value(forHTTPHeaderField: "Mcp-Session-Id") { session = s }
-            guard (200..<300).contains(http.statusCode) else { throw LocalDocsError.server("HTTP \(http.statusCode)") }
+            guard (200..<300).contains(http.statusCode) else { throw LocalDocsError.http(http.statusCode) }
         }
         guard let message = Self.message(data, id: id) else { throw LocalDocsError.server(L10n.tr("nieczytelna odpowiedź")) }
         if let e = message["error"] as? [String: Any] { throw LocalDocsError.server(e["message"] as? String ?? "\(e)") }

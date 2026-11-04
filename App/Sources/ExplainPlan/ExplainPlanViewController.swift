@@ -49,6 +49,9 @@ struct PlanPanel: View {
     @State private var sortPlan: [ColumnSort<PlanLine>] = []
     /// Filtr, kopiowanie i eksport kroków planu (D214).
     @State private var tools = TableToolsState()
+    /// Cel komend `table.*` (D214) — zapis przy fokusie i zaznaczeniu wiersza przez użytkownika.
+    @State private var tableHandle = SwiftUITableHandle()
+    @FocusState private var tableFocused: Bool
     @Bindable var document: PelikanWorkspace.Document
     let workspace: Workspace
     @State private var selection: PlanLine.ID?
@@ -151,9 +154,10 @@ struct PlanPanel: View {
                 let lines = filteredLines
                 // Wiersze w kolejności widoku (po filtrze i sortowaniu) — te same indeksy w menu i w kopii.
                 let shownLines = (lines ?? document.plan?.lines ?? []).sorted(by: sortPlan)
-                let view = self
-                let handle = SwiftUITableHandle({ view.planContents(view.filteredLines ?? view.document.plan?.lines ?? []) }, state: $tools)
-                TableToolsBar(handle: handle, state: $tools, total: document.plan?.lines.count ?? 0)
+                let contents = planContents(lines ?? document.plan?.lines ?? [])
+                let handle = tableHandle
+                let _ = handle.update(contents: { contents }, sqlTarget: { nil }, state: $tools)
+                TableToolsBar(contents: contents, handle: handle, state: $tools, total: document.plan?.lines.count ?? 0)
                 ScrollViewReader { proxy in
                     Table(of: PlanLine.self, selection: $selection, sortOrder: $sortPlan) {
                         TableColumnForEach(planColumns) { c in
@@ -170,12 +174,15 @@ struct PlanPanel: View {
                             ForEach((document.plan?.roots ?? []).sorted(by: sortPlan)) { PlanTreeRows(line: $0, expanded: $document.planExpanded, sort: sortPlan) }
                         }
                     }
+                    .focused($tableFocused)
+                    .onChange(of: tableFocused) { _, now in if now { TableFocus.shared.note(handle) } }
+                    .onChange(of: selection) { if tableFocused { TableFocus.shared.note(handle) } }
                     .contextMenu(forSelectionType: PlanLine.ID.self) { ids in
                         let rows = shownLines.indices.filter { ids.contains(shownLines[$0].id) }
-                        TableCopyMenu(handle: handle, rows: rows)
+                        TableCopyMenu(contents: contents, handle: handle, marked: tools.markedColumns, rows: rows)
                         if let r = rows.first {
                             Divider()
-                            TableValueFilterMenu(handle: handle, row: r)
+                            TableValueFilterMenu(columns: contents.columns, handle: handle, row: r)
                         }
                         Divider()
                         Menu(L10n.tr("Eksportuj")) { TableExportMenu(handle: handle) }
@@ -183,7 +190,6 @@ struct PlanPanel: View {
                     // Krok zaznaczony nawigacją albo w Diagramie/Flame graph: rozwinięte gałęzie nad nim i przewinięcie do niego.
                     .onChange(of: selection, initial: true) { _, id in
                         guard let id else { return }
-                        TableFocus.shared.note(handle)
                         document.revealPlanLine(id)
                         DispatchQueue.main.async { proxy.scrollTo(id) }
                     }

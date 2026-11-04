@@ -98,28 +98,6 @@ struct ActiveReportView: NSViewRepresentable {
     func updateNSView(_ web: WKWebView, context: Context) {}
 }
 
-/// Wiersz z SQL_ID/hash tabeli z fokusem (D217) — dla komendy wołanej ze wstążki, menu albo skrótu. Tabela zapisuje
-/// cel przy zmianie zaznaczenia i przy przejęciu fokusu (tabela bez kolumny SQL zapisuje brak celu).
-@MainActor
-final class SQLTargetRegistry {
-    static let shared = SQLTargetRegistry()
-    private(set) var target: SQLReportTarget?
-    private(set) var window: Int?
-    private(set) var at = Date.distantPast
-
-    func note(_ t: SQLReportTarget?) {
-        target = t
-        window = NSApp.keyWindow?.windowNumber
-        at = Date()
-    }
-
-    /// Cel z tabeli w oknie z fokusem, gdy zaznaczono go w ciągu ostatnich 10 minut.
-    func current() -> SQLReportTarget? {
-        guard let target, window == NSApp.keyWindow?.windowNumber, Date().timeIntervalSince(at) < 600 else { return nil }
-        return target
-    }
-}
-
 /// Połączenie tabeli narzędzia (sesje, SQL Monitor…) — raporty SQL z wiersza na tym połączeniu (D217).
 struct ReportConnectionKey: EnvironmentKey { static let defaultValue: UUID? = nil }
 
