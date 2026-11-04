@@ -230,8 +230,9 @@ final class SwiftUITableHandle: FocusTable, ObservableObject {
 
     /// `rows` — wiersze widoku liczone przy wywołaniu (bieżący filtr i sortowanie); zawartość i cel SQL z nich.
     func update<Row: Identifiable>(rows: @escaping () -> [Row], contents: @escaping ([Row]) -> TableContents,
-                                   sqlTarget: @escaping ([Row]) -> SQLReportTarget?, state: Binding<TableToolsState>) {
-        targetNow = { sqlTarget(rows()) }
+                                   sqlTarget: @escaping ([Row]) -> SQLReportTarget?, state: Binding<TableToolsState>,
+                                   selectedRows: (() -> [Row])? = nil) {
+        targetNow = { sqlTarget((selectedRows ?? rows)()) }
         snapshotNow = {
             let shown = rows()
             return (contents(shown), Self.indexer(shown))
@@ -270,7 +271,8 @@ final class SwiftUITableHandle: FocusTable, ObservableObject {
     func focused() {
         pendingFocus = true
         guard let window, let probe, let tv = window.firstResponder as? NSTableView, !(tv is GridTableView) else {
-            // Kolejna próba po bieżącym zdarzeniu (fokus przechodzi na tabelę po zmianie stanu SwiftUI).
+            // Kolejna próba po bieżącym zdarzeniu (fokus przechodzi na tabelę po zmianie stanu SwiftUI); dalej —
+            // przy zmianie zaznaczenia albo okna.
             DispatchQueue.main.async { [weak self] in self?.retryFocus() }
             return
         }
@@ -702,9 +704,15 @@ struct DataTable<Row: Identifiable>: View {
         let contents = snapshot.contents(shown)
         // Komendy liczą wiersze widoku przy wywołaniu z bieżącego filtra i sortowania (stan narzędzi mógł się zmienić bez
         // przerysowania — makro, kilka komend z rzędu). Domknięcia trzymają wartości tabeli, nie widok.
-        let (all, cols, toolsState, sortState) = (rows, columns, $tools, $sort)
+        let (all, cols, toolsState, sortState, sel) = (rows, columns, $tools, $sort, selection)
         let _ = handle.update(rows: { Self.viewRows(all, columns: cols, filter: toolsState.wrappedValue.filter, sort: sortState.wrappedValue) },
-                              contents: snapshot.contents, sqlTarget: snapshot.sqlTarget, state: $tools)
+                              contents: snapshot.contents, sqlTarget: snapshot.sqlTarget, state: $tools,
+                              // Cel SQL — tylko z zaznaczonych wierszy (zwykle jeden), bez filtrowania i sortowania całej tabeli.
+                              selectedRows: {
+                                  let ids = sel.ids
+                                  return Self.viewRows(all.filter { ids.contains($0.id) }, columns: cols, filter: toolsState.wrappedValue.filter,
+                                                       sort: sortState.wrappedValue)
+                              })
         VStack(spacing: 3) {
             TableToolsBar(contents: contents, handle: handle, state: $tools, total: rows.count)
             table(shown)
@@ -724,6 +732,9 @@ struct DataTable<Row: Identifiable>: View {
                 }
         }
         .onChange(of: shown.map(\.id), initial: true) { _, ids in onViewRowsChange?(ids) }
+        // Zmiana zaznaczenia przez użytkownika — tabela jest widokiem z fokusem (rejestracja także, gdy stan fokusu
+        // SwiftUI się nie zmienił, np. fokus najpierw w polu edycji komórki).
+        .onChange(of: selection.ids) { handle.focused() }
         // Inny zestaw kolumn (np. inne zapytanie w tej samej tabeli) — filtr i sortowanie dotyczyły starych kolumn.
         .onChange(of: columns.map { $0.id + "\u{1}" + $0.title }) {
             tools = TableToolsState()

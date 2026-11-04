@@ -11369,6 +11369,34 @@
         }
       }
     },
+    "Cała sekcja (domyślnie — przełączenie)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whole section (default — toggle)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ganzer Abschnitt (Standard — umschalten)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sección completa (por defecto — alternar)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увесь розділ (типово — перемикання)"
+          }
+        }
+      }
+    },
     "Cała sekcja dokumentacji" : {
       "localizations" : {
         "en" : {

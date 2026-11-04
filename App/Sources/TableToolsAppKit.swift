@@ -67,6 +67,9 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     }
     @objc private func selectionChanged(_ note: Notification) { model.revision += 1 }
 
+    /// Komendy z palety i skrótu: tekst zaznaczonych wierszy przepisany na starcie (okno wyboru kolumny, przeładowanie).
+    var stableContents: TableContents { snapshot().contents }
+
     /// Zapytanie z pierwszego zaznaczonego wiersza (kolumna SQL_ID albo hash).
     var sqlTarget: SQLReportTarget? { contents.selectedRows.first.flatMap { sqlTarget(row: $0, in: contents) } }
 

@@ -217,6 +217,10 @@ struct TableToolsReviewTests {
         #expect(ValueFilter.parse("= 12.35")!.matches(text: "12.35", key: .number(12.345678)))
         #expect(ValueFilter.parse(">= 12.35")!.matches(text: "12.35", key: .number(12.345678)))
         #expect(ValueFilter.parse("between 12.35 and 13")!.matches(text: "12.35", key: .number(12.345678)))
+        // Klucz ułamkowy pokazany jako liczba całkowita („13” przy 12.6) — „tylko ta wartość” trafia.
+        #expect(ValueFilter.parse("= 13")!.matches(text: "13", key: .number(12.6)))
+        // between z apostrofami — tekst dosłownie, jak przy = < >.
+        #expect(ValueFilter.parse("between '1,200' and '1,900'")!.matches(text: "1,500", key: .text("1,500")))
         // Wartość z białymi znakami na brzegach — „tylko ta wartość” trafia w tę samą komórkę.
         #expect(ValueFilter.parse(TableExport.condition("abc\n", exclude: false))!.matches(text: "abc\n", key: .text("abc\n")))
         #expect(!ValueFilter.parse("= 19")!.matches(text: "19c", key: .text("19c")))

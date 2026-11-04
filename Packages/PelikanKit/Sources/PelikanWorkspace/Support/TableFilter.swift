@@ -42,9 +42,16 @@ public struct ValueFilter: Sendable, Hashable {
         if lower.hasPrefix("between ") {
             let body = String(t.dropFirst(8))
             if let r = body.range(of: " and ", options: .caseInsensitive) {
-                let a = unquote(body[..<r.lowerBound].trimmingCharacters(in: .whitespaces))
-                let b = unquote(body[r.upperBound...].trimmingCharacters(in: .whitespaces))
-                if !a.isEmpty, !b.isEmpty { return ValueFilter(condition: .between(value(a), value(b)), text: t) }
+                // W apostrofach — tekst dosłownie (jak przy =, <, >).
+                func bound(_ raw: String) -> Value? {
+                    let v = unquote(raw)
+                    guard !v.isEmpty else { return nil }
+                    return raw.count >= 2 && raw.hasPrefix("'") && raw.hasSuffix("'") ? .text(v) : value(v)
+                }
+                if let a = bound(body[..<r.lowerBound].trimmingCharacters(in: .whitespaces)),
+                   let b = bound(body[r.upperBound...].trimmingCharacters(in: .whitespaces)) {
+                    return ValueFilter(condition: .between(a, b), text: t)
+                }
             }
         }
         if lower.hasPrefix("not like ") { return ValueFilter(condition: .like(rest(after: 9), negated: true), text: t) }
@@ -141,8 +148,9 @@ public struct ValueFilter: Sendable, Hashable {
         func order<T: Comparable>(_ a: T, _ b: T) -> ComparisonResult { a < b ? .orderedAscending : a > b ? .orderedDescending : .orderedSame }
         switch v {
         case .number(let n):
-            // Klucz liczbowy i tekst bez części ułamkowej — wprost klucz (bez parsowania tekstu przy każdym wierszu).
-            if case .number(let x) = key, !text.contains("."), !text.contains(",") { return order(x, n) }
+            // Klucz całkowity i tekst bez części ułamkowej — wprost klucz (bez parsowania tekstu przy każdym wierszu);
+            // klucz ułamkowy pokazany jako liczba całkowita („13” przy 12.6) — przez `cellNumber`.
+            if case .number(let x) = key, x == x.rounded(), !text.contains("."), !text.contains(",") { return order(x, n) }
             return cellNumber(text: text, key: key).map { order($0, n) }
         case .date(let d, let precision):
             var cell: Date?

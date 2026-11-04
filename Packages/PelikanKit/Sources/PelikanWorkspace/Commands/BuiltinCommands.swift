@@ -961,13 +961,16 @@ public enum BuiltinCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "help.localDocsSection", title: L10n.tr("Cała sekcja dokumentacji"), category: .help,
+                                      parameters: [CommandParameter("whole", .boolean, L10n.tr("Cała sekcja (domyślnie — przełączenie)"))],
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Pokazuje całą sekcję fragmentu wybranego w oknie dokumentacji lokalnej (składnia, parametry, uwagi) albo z powrotem sam fragment."),
                                       inMenu: false, feature: "PD-DOC-002"),
                     validate: { ws in ws.ui?.localDocsFragment() != nil }) { ctx in
-                guard ctx.ui?.localDocsFragment() != nil else { throw CommandError.notAvailable(L10n.tr("Wybierz fragment dokumentacji")) }
-                await ctx.ui?.localDocsToggleSection()
-                return .ok
+                guard let ui = ctx.ui, ui.localDocsFragment() != nil else { throw CommandError.notAvailable(L10n.tr("Wybierz fragment dokumentacji")) }
+                // `whole` — stan docelowy (makro odtwarza stan, nie przełączenie).
+                let whole = ctx.arguments.bool("whole") ?? !ui.localDocsShowsSection()
+                if whole != ui.localDocsShowsSection() { await ui.localDocsToggleSection() }
+                return CommandResult(resolvedArguments: CommandArguments(["whole": .bool(whole)]))
             },
             Command(CommandDescriptor(id: "help.localDocsSearchOnline", title: L10n.tr("Szukaj w dokumentacji online"), category: .help,
                                       agent: .none, effect: .external,

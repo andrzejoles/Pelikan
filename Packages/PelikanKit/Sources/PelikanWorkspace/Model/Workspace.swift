@@ -128,6 +128,7 @@ public protocol UIServices: AnyObject {
     func localDocsFragment() -> (text: String, link: URL?)?
     /// Okno dokumentacji lokalnej: cała sekcja wybranego fragmentu albo z powrotem sam fragment; zapytanie okna.
     func localDocsToggleSection() async
+    func localDocsShowsSection() -> Bool
     func localDocsQuery() -> String?
     /// Okno druku dla dokumentu HTML (PD-SQLW-016).
     func printHTML(title: String, html: String)
@@ -277,6 +278,7 @@ extension UIServices {
     public func focusedTable() -> (any TableHandle)? { nil }
     public func localDocsFragment() -> (text: String, link: URL?)? { nil }
     public func localDocsToggleSection() async {}
+    public func localDocsShowsSection() -> Bool { false }
     public func localDocsQuery() -> String? { nil }
     public func saveFile(suggestedName: String, fileExtension: String, data: Data, table: any TableHandle) async -> Bool {
         await saveFile(suggestedName: suggestedName, fileExtension: fileExtension, data: data)

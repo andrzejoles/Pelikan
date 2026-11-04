@@ -3661,8 +3661,9 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   modyfikator `registersTable` (`DataTable`, plan). Menu tabel AppKit nie zmienia zaznaczenia. Pusty identyfikator
   kolumny (kolumna bez tytułu) jest kolumną. „Kopiuj z nagłówkiem” — ustawienie, dostępne bez tabeli. ⌘C w tabeli to
   systemowe Edycja › Kopiuj (zawartość od razu); w menu tabeli i palecie — „Kopiuj wiersze tabeli”. Kolumny liczbowe
-  i czasowe mają jedno formatowanie dla komórki i kopii (`DataColumn.digits`). Kopia, eksport i licznik planu — wiersze
-  jak na ekranie (zwinięte gałęzie pominięte).
+  i czasowe mają jedno formatowanie dla komórki i kopii (`DataColumn.digits`). Kopia, eksport, licznik i numery wierszy
+  planu — cały plan w kolejności drzewa (także gałęzie zwinięte). Pasek każdej tabeli pokazuje „Wierszy: x z y”, gdy
+  widok ma mniej wierszy niż tabela (filtr).
 - Komendy `table.*` w menu Edycja › Tabela i w palecie (poza wstążką — działają w oknach narzędzi). Liczba w filtrze
   — jedna wartość komórki dla wszystkich porównań (`=`, `<`, between): liczba pokazana w tekście, gdy zgadza się
   z kluczem z dokładnością do wyświetlonych cyfr („12.35” przy 12.345678), inaczej klucz („450 ms” obok „1.2 s”, „1,234”);
@@ -3687,3 +3688,14 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   lista), SQL Monitor i dokumentacja lokalna (wyniki nad treścią, przyciski w dwóch wierszach) dopasowują układ do
   szerokości; minimum 340–360 pt. Okno raportów przy błędzie połączenia pokazuje ten błąd zamiast „wymaga licencji”.
   Paleta komend zapamiętuje okno, nad którym ją otwarto (cel czynności), a arkusz zapisu otwiera się nad oknem tabeli.
+- **Zasada weta (właściciel):** kolejne rundy przeglądu działają na zasadzie weta wobec poprzedniego recenzenta — uwaga
+  sprzeczna z decyzją przyjętą wcześniej obala ją tylko wtedy, gdy jej rozwiązanie daje więcej informacji
+  (szczegółowość), a przy remisie — większą ergonomię i czytelność; inaczej decyzja zostaje. Rozstrzygnięcia:
+  eksport i kopia planu — cały plan (runda 12; weto rundy 13 „tylko widoczne” odrzucone: mniej informacji); wzorce
+  LIKE — kompilowane raz na filtrowanie siatki, pamięć wzorców w filtrach tabel (rundy 6, 12; weto rundy 14 „jedna
+  pamięć” — bez zysku informacji ani ergonomii); jeden klient MCP dla bieżącego adresu (runda 13; weto rundy 14
+  „kilka klientów” — bez zysku informacji, ergonomia równa).
+- Runda 14: „Raporty dla SQL_ID” pytają o zapytanie tylko przy fokusie w tabeli narzędzia (w siatce, widoku rekordu,
+  drzewie obiektów — jak dotąd z zaznaczenia i edytora); komendy z palety i skrótu na tabeli AppKit biorą tekst
+  zaznaczonych wierszy na starcie (`stableContents`); „Cała sekcja” w makrze — stan docelowy (`whole`); tabela SwiftUI
+  rejestruje się także przy zmianie zaznaczenia (fokus najpierw w polu edycji komórki).

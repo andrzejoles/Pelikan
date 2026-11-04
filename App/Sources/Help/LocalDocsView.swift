@@ -134,8 +134,10 @@ struct LocalDocsView: View {
             }
             // Wykonanie zlecenia komendy (F1, „Szukaj”, paleta) — samo wyszukiwanie, raz na zlecenie.
             guard model.handledRequest != model.request else { return }
-            model.handledRequest = model.request
+            let request = model.request
             if !model.query.trimmingCharacters(in: .whitespaces).isEmpty { await model.search(settings: settings) }
+            // Wykonane dopiero po nieprzerwanym wyszukiwaniu (okno zamknięte w trakcie — przy ponownym pokazaniu od nowa).
+            if !Task.isCancelled { model.handledRequest = request }
         }
     }
 
