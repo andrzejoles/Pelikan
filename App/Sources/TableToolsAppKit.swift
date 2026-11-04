@@ -37,10 +37,7 @@ func BlockMenuItem(_ title: String, state: Bool = false, enabled: Bool = true, _
 /// i pasek nad tabelą (szybki filtr, filtr kolumn, liczba wierszy, Kopiuj, Eksportuj).
 @MainActor
 final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
-    var tableView: NSTableView? { table }
-
-    /// Identyfikatory wierszy tabel AppKit to ich indeksy w widoku.
-    func indexes(of ids: [AnyHashable]) -> [Int] { ids.compactMap { $0 as? Int }.filter { $0 < table.numberOfRows } }
+    var window: NSWindow? { table.window }
 
     /// Migawka: tekst komórek przepisany w chwili wyboru pozycji menu (tabela może się przeładować przed komendą).
     func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) {

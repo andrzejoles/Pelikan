@@ -9,6 +9,8 @@ final class LocalDocsModel {
     var query = ""
     /// Zmienia się przy każdym zleceniu wyszukiwania z zewnątrz (F1, komenda).
     var request = 0
+    /// Wybrany fragment (tekst fragmentu albo całej sekcji, adres online) — komendy „Kopiuj” i „Otwórz online”.
+    var fragment: (text: String, link: URL?)?
 
     func search(_ q: String) {
         query = q
@@ -73,6 +75,11 @@ struct LocalDocsView: View {
             if !model.query.trimmingCharacters(in: .whitespaces).isEmpty { await search() }
         }
         .onChange(of: selection) { detail = nil }
+        // Fragment dla komend okna („Kopiuj”, „Otwórz online”).
+        .onChange(of: "\(selection.map(String.init) ?? "")|\(detail ?? "")", initial: true) {
+            model.fragment = selected.map { (detail ?? $0.text, $0.link) }
+        }
+        .onDisappear { model.fragment = nil }
     }
 
     private var queryField: some View {
@@ -128,12 +135,12 @@ struct LocalDocsView: View {
         Button(detail == nil ? L10n.tr("Cała sekcja") : L10n.tr("Tylko fragment")) {
             if detail == nil { Task { await loadSection(f) } } else { detail = nil }
         }
-        Button(L10n.tr("Kopiuj")) { DocsClipboard.put(detail ?? f.text) }
+        Button(L10n.tr("Kopiuj")) { workspace.perform("help.localDocsCopy") }
     }
 
     @ViewBuilder private func openButton(_ f: DocFragment) -> some View {
         if let link = f.link {
-            Button(L10n.tr("Otwórz online")) { NSWorkspace.shared.open(link) }
+            Button(L10n.tr("Otwórz online")) { workspace.perform("help.localDocsOpenOnline") }
                 .help(link.absoluteString)
         }
     }
@@ -202,10 +209,3 @@ private struct DocText: View {
     }
 }
 
-/// Schowek dla okna dokumentacji (tekst; historia schowka Pelikana).
-@MainActor
-private enum DocsClipboard {
-    static func put(_ text: String) {
-        if let ui = NSApp.delegate as? AppDelegate { ui.copyToClipboard(text, html: nil) }
-    }
-}

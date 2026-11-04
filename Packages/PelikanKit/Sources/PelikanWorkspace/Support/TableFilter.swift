@@ -9,10 +9,13 @@ import Foundation
 public struct ValueFilter: Sendable, Hashable {
     public enum Value: Sendable, Hashable {
         case number(Double)
-        /// Data; `dayOnly` — wpisana bez czasu, porównywana z dniem wartości.
-        case date(Date, dayOnly: Bool)
+        /// Data z dokładnością, z jaką ją wpisano (dzień, minuta, sekunda) — wartość komórki porównywana z tą samą
+        /// dokładnością („= 2026-11-04 12:00” obejmuje całą minutę).
+        case date(Date, precision: DatePrecision)
         case text(String)
     }
+
+    public enum DatePrecision: Sendable, Hashable { case day, minute, second }
 
     public enum Op: String, Sendable, Hashable { case eq = "=", ne = "<>", lt = "<", le = "<=", gt = ">", ge = ">=" }
 
@@ -60,7 +63,7 @@ public struct ValueFilter: Sendable, Hashable {
 
     /// Wartość z tekstu: liczba, data `YYYY-MM-DD[ HH24:MI[:SS]]` albo tekst.
     static func value(_ s: String) -> Value {
-        if let d = date(s) { return .date(d.date, dayOnly: d.dayOnly) }
+        if let d = date(s) { return .date(d.date, precision: d.precision) }
         if let n = CellOrder.number(s) { return .number(n) }
         return .text(s)
     }
@@ -69,7 +72,7 @@ public struct ValueFilter: Sendable, Hashable {
         pattern: #"^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2})(?:[.,]\d+)?)?)?$"#)
 
     /// Data z tekstu w kalendarzu bieżącym (strefa lokalna, jak daty pokazywane w tabelach).
-    static func date(_ s: String) -> (date: Date, dayOnly: Bool)? {
+    static func date(_ s: String) -> (date: Date, precision: DatePrecision)? {
         let ns = s as NSString
         guard s.count <= 32, let m = dateRE.firstMatch(in: s, range: NSRange(location: 0, length: ns.length)) else { return nil }
         func part(_ i: Int) -> Int? {
@@ -79,7 +82,8 @@ public struct ValueFilter: Sendable, Hashable {
         var c = DateComponents(year: part(1), month: part(2), day: part(3), hour: part(4) ?? 0, minute: part(5) ?? 0, second: part(6) ?? 0)
         c.calendar = Calendar(identifier: .gregorian)
         guard let month = c.month, (1...12).contains(month), let day = c.day, (1...31).contains(day), c.isValidDate, let d = c.date else { return nil }
-        return (d, m.range(at: 4).location == NSNotFound)
+        let precision: DatePrecision = m.range(at: 4).location == NSNotFound ? .day : m.range(at: 6).location == NSNotFound ? .minute : .second
+        return (d, precision)
     }
 
     /// Czy wartość komórki (tekst pokazany w tabeli i klucz sortowania kolumny) spełnia warunek; `like` — wzorzec
@@ -139,14 +143,20 @@ public struct ValueFilter: Sendable, Hashable {
             if let shown = Self.shownNumber(text) { return order(shown, n) }
             if case .number(let x) = key { return order(x, n) }
             return nil
-        case .date(let d, let dayOnly):
+        case .date(let d, let precision):
             var cell: Date?
             if case .date(let x) = key { cell = x } else { cell = date(text)?.date }
             guard let cell else { return nil }
             let cal = Calendar(identifier: .gregorian)
-            if dayOnly { return order(cal.startOfDay(for: cell), cal.startOfDay(for: d)) }
-            // Tekst w tabeli i w filtrze ma dokładność do sekundy — ułamki klucza daty pomijane („tylko ta wartość”).
-            return order(cell.timeIntervalSinceReferenceDate.rounded(.down), d.timeIntervalSinceReferenceDate.rounded(.down))
+            switch precision {
+            case .day: return order(cal.startOfDay(for: cell), cal.startOfDay(for: d))
+            case .minute:
+                let start = { (x: Date) in cal.dateInterval(of: .minute, for: x)?.start ?? x }
+                return order(start(cell), start(d))
+            case .second:
+                // Tekst w tabeli i w filtrze ma dokładność do sekundy — ułamki klucza daty pomijane („tylko ta wartość”).
+                return order(cell.timeIntervalSinceReferenceDate.rounded(.down), d.timeIntervalSinceReferenceDate.rounded(.down))
+            }
         case .text(let s):
             return text.compare(s, options: [.caseInsensitive, .numeric])
         }

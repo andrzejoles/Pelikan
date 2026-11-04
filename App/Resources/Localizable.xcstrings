@@ -36989,6 +36989,34 @@
         }
       }
     },
+    "Kopiuj fragment dokumentacji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Documentation Fragment"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentationsausschnitt kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar fragmento de documentación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати фрагмент документації"
+          }
+        }
+      }
+    },
     "Kopiuj i eksport" : {
       "localizations" : {
         "en" : {
@@ -37909,6 +37937,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Копіює в буфер обміну текст елемента вмісту коду."
+          }
+        }
+      }
+    },
+    "Kopiuje fragment (albo całą sekcję) wybrany w oknie dokumentacji lokalnej." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies the fragment (or the whole section) selected in the local documentation window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert den im Fenster der lokalen Dokumentation ausgewählten Ausschnitt (oder den ganzen Abschnitt)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia el fragmento (o la sección completa) seleccionado en la ventana de documentación local."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіює фрагмент (або весь розділ), вибраний у вікні локальної документації."
           }
         }
       }
@@ -59473,6 +59529,34 @@
         }
       }
     },
+    "Otwiera w przeglądarce stronę docs.oracle.com fragmentu wybranego w oknie dokumentacji lokalnej." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the docs.oracle.com page of the fragment selected in the local documentation window in the browser."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet die Seite auf docs.oracle.com zum im Fenster der lokalen Dokumentation ausgewählten Ausschnitt im Browser."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre en el navegador la página de docs.oracle.com del fragmento seleccionado en la ventana de documentación local."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває в браузері сторінку docs.oracle.com фрагмента, вибраного у вікні локальної документації."
+          }
+        }
+      }
+    },
     "Otwiera w przeglądarce wyszukiwanie zaznaczonego tekstu albo słowa pod kursorem (wyszukiwania z %%s w Ustawieniach)." : {
       "localizations" : {
         "en" : {
@@ -59749,6 +59833,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Відкривати без запитання навіть понад %@ файлів"
+          }
+        }
+      }
+    },
+    "Otwórz fragment dokumentacji online" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Documentation Fragment Online"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentationsausschnitt online öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir fragmento de documentación en línea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити фрагмент документації онлайн"
           }
         }
       }
@@ -107549,6 +107661,34 @@
         }
       }
     },
+    "Wybierz fragment dokumentacji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a documentation fragment"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen Sie einen Dokumentationsausschnitt aus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccione un fragmento de documentación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть фрагмент документації"
+          }
+        }
+      }
+    },
     "Wybierz katalog z biblioteką libclntsh.dylib" : {
       "localizations" : {
         "en" : {
@@ -135237,34 +135377,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Text"
-          }
-        }
-      }
-    },
-    "tekst nowego okna agent podaje przez agent.openEditor" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "the agent provides the text of a new window through agent.openEditor"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "den Text eines neuen Fensters übergibt der Agent über agent.openEditor"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "el agente indica el texto de una ventana nueva mediante agent.openEditor"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "текст нового вікна агент передає через agent.openEditor"
           }
         }
       }

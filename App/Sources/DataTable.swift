@@ -130,11 +130,9 @@ extension SQLReportTarget {
 protocol FocusTable: TableHandle {
     /// Zapytanie z zaznaczonego wiersza (nil — tabela bez kolumny SQL albo bez zaznaczenia).
     var sqlTarget: SQLReportTarget? { get }
-    /// Widok tabeli (fokus przed komendą z menu, tytuł okna do nazwy pliku).
-    var tableView: NSTableView? { get }
-    /// Bieżące indeksy wierszy widoku o tych identyfikatorach (menu kontekstowe — wiersze mogły się przesunąć).
-    func indexes(of ids: [AnyHashable]) -> [Int]
-    /// Zawartość i indeksy liczone raz (migawka do komendy z menu).
+    /// Okno tabeli (tytuł do nazwy pliku, arkusz zapisu eksportu).
+    var window: NSWindow? { get }
+    /// Zawartość i indeksy wierszy po identyfikatorach — liczone raz (migawka do komendy z menu).
     func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int])
 }
 
@@ -146,13 +144,18 @@ final class FrozenTable: TableHandle {
     let contents: TableContents
     private let indexer: ([AnyHashable]) -> [Int]
     private weak var base: (any FocusTable)?
+    weak var window: NSWindow?
 
     init(_ base: any FocusTable) {
         self.base = base
+        window = base.window
         let snap = base.snapshot()
         contents = snap.contents
         indexer = snap.indexes
     }
+
+    /// Tabela zamknięta przed startem komendy — komenda to zgłasza (zapis filtra nie miałby skutku).
+    var isAvailable: Bool { base != nil }
 
     var filter: TableFilter {
         get { base?.filter ?? TableFilter() }
@@ -164,14 +167,19 @@ final class FrozenTable: TableHandle {
     }
     func indexes(of ids: [AnyHashable]) -> [Int] { indexer(ids) }
 
-    /// Argument wierszy menu: brak — wiersze równe zaznaczeniu; pusta lista — wiersze zniknęły (komenda to zgłosi).
+    /// Argument wierszy menu: brak — wiersze równe zaznaczeniu; wiersze, których już nie ma — znacznik wewnętrzny
+    /// (komenda zgłasza, że zniknęły; publiczne `rows` nie niesie wartości umownych).
     func rowsArgument(_ ids: [AnyHashable]) -> [String: JSONValue] {
         let rows = indexes(of: ids)
-        return !rows.isEmpty && rows == contents.selectedRows ? [:] : ["rows": .string(rows.map { String($0 + 1) }.joined(separator: ","))]
+        if rows.isEmpty { return [TableRegistry.goneKey: .bool(true)] }
+        return rows == contents.selectedRows ? [:] : ["rows": .string(rows.map { String($0 + 1) }.joined(separator: ","))]
     }
 
-    /// Argument wiersza menu (numer od 1; 0 — wiersza już nie ma).
-    func rowArgument(_ ids: [AnyHashable]) -> [String: JSONValue] { ["row": .int(Int64((indexes(of: ids).first ?? -1) + 1))] }
+    /// Argument wiersza menu (numer od 1) albo znacznik, że wiersza już nie ma.
+    func rowArgument(_ ids: [AnyHashable]) -> [String: JSONValue] {
+        guard let r = indexes(of: ids).first else { return [TableRegistry.goneKey: .bool(true)] }
+        return ["row": .int(Int64(r + 1))]
+    }
 }
 
 /// Tabela SwiftUI: jeden obiekt na widok (`@State`), odświeżany przy każdym rysowaniu — komenda wywołana później
@@ -179,28 +187,32 @@ final class FrozenTable: TableHandle {
 /// zaznaczenie), nie widok — bez cyklu widok ↔ uchwyt.
 @MainActor
 final class SwiftUITableHandle: FocusTable {
-    private var provider: () -> TableContents = { TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []) }
-    private var target: () -> SQLReportTarget? = { nil }
-    private var indexer: ([AnyHashable]) -> [Int] = { _ in [] }
+    private var snapshotter: () -> (contents: TableContents, sqlTarget: SQLReportTarget?, indexes: ([AnyHashable]) -> [Int]) = {
+        (TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []), nil, { _ in [] })
+    }
     private var state: Binding<TableToolsState>?
-    weak var tableView: NSTableView?
+    /// Okno tabeli (sonda w tle tabeli); widok z fokusem rejestrowany przy zdobyciu fokusu.
+    weak var window: NSWindow?
 
-    /// `rows` — wiersze widoku liczone przy wywołaniu (bieżący filtr i sortowanie), `contents` i `sqlTarget` — z tych
-    /// wierszy; migawka liczy je raz.
+    /// `rows` — wiersze widoku liczone przy wywołaniu (bieżący filtr i sortowanie); zawartość, cel SQL i indeksy z nich.
     func update<Row: Identifiable>(rows: @escaping () -> [Row], contents: @escaping ([Row]) -> TableContents,
                                    sqlTarget: @escaping ([Row]) -> SQLReportTarget?, state: Binding<TableToolsState>) {
-        provider = { contents(rows()) }
-        target = { sqlTarget(rows()) }
-        indexer = { ids in Self.indexer(rows())(ids) }
         snapshotter = {
             let shown = rows()
-            return (contents(shown), Self.indexer(shown))
+            return (contents(shown), sqlTarget(shown), { ids in
+                let set = Set(ids)
+                return shown.indices.filter { set.contains(AnyHashable(shown[$0].id)) }
+            })
         }
         self.state = state
     }
 
-    var contents: TableContents { provider() }
-    var sqlTarget: SQLReportTarget? { target() }
+    var contents: TableContents { snapshotter().contents }
+    var sqlTarget: SQLReportTarget? { snapshotter().sqlTarget }
+    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) {
+        let s = snapshotter()
+        return (s.contents, s.indexes)
+    }
     var filter: TableFilter {
         get { state?.wrappedValue.filter ?? TableFilter() }
         set { state?.wrappedValue.filter = newValue }
@@ -210,49 +222,23 @@ final class SwiftUITableHandle: FocusTable {
         set { state?.wrappedValue.markedColumns = newValue }
     }
 
-    func indexes(of ids: [AnyHashable]) -> [Int] { indexer(ids) }
-
-    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) { snapshotter() }
-    private var snapshotter: () -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) = {
-        (TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []), { _ in [] })
-    }
-
-    /// Indeksy wierszy widoku o identyfikatorach (liczone przy wyborze pozycji menu).
-    static func indexer<Row: Identifiable>(_ shown: [Row]) -> ([AnyHashable]) -> [Int] {
-        { ids in
-            let set = Set(ids)
-            return shown.indices.filter { set.contains(AnyHashable(shown[$0].id)) }
-        }
+    /// Tabela zdobyła fokus: widok z fokusem okna to jej NSTableView — rejestracja bez szukania po geometrii.
+    func focused() {
+        guard let tv = (window ?? NSApp.keyWindow)?.firstResponder as? NSTableView, !(tv is GridTableView) else { return }
+        TableFocus.register(tv, self)
     }
 }
 
 /// Tabele okien po widoku `NSTableView` (D214, D217): cel komend `table.*` i „Raporty dla SQL_ID” to tabela z fokusem
-/// w oknie bieżącym — bez stanu globalnego „ostatniej tabeli”.
+/// w oknie bieżącym. Tabele AppKit rejestrują się przy utworzeniu, SwiftUI — przy zdobyciu fokusu.
 @MainActor
 enum TableFocus {
     private static let tables = NSMapTable<NSTableView, AnyObject>.weakToWeakObjects()
-    /// Sondy tabel SwiftUI — ponowne szukanie, gdy tabela z fokusem nie jest jeszcze zarejestrowana.
-    static let probes = NSHashTable<TableViewLocator.Probe>.weakObjects()
     /// Okno, nad którym otwarto paletę komend (jej czynności dotyczą tego okna).
     static weak var paletteHost: NSWindow?
-    /// Okna tabel komend z menu w toku (po migawce) — arkusz zapisu eksportu nad oknem tej tabeli.
-    static var exportWindows: [ObjectIdentifier: NSWindow] = [:]
-    /// Widok z fokusem, dla którego szukanie tabeli już zawiodło (walidacja menu i palety woła `current()` często).
-    private static weak var missed: NSTableView?
-
-    static func window(for table: any TableHandle) -> NSWindow? {
-        exportWindows[ObjectIdentifier(table)] ?? (table as? any FocusTable)?.tableView?.window
-    }
-
-    static func unregister(_ table: NSTableView, _ handle: AnyObject) {
-        if tables.object(forKey: table) === handle { tables.removeObject(forKey: table) }
-    }
     static weak var palette: NSWindow?
 
-    static func register(_ table: NSTableView, _ handle: any FocusTable) {
-        tables.setObject(handle, forKey: table)
-        if missed === table { missed = nil }
-    }
+    static func register(_ table: NSTableView, _ handle: any FocusTable) { tables.setObject(handle, forKey: table) }
 
     /// Okno czynności: okno z fokusem, a gdy fokus ma paleta komend — okno, nad którym ją otwarto.
     static var contextWindow: NSWindow? {
@@ -260,94 +246,26 @@ enum TableFocus {
         return NSApp.keyWindow ?? NSApp.mainWindow
     }
 
-    /// Tabela z fokusem w oknie bieżącym (siatka wyników SQL ma własne komendy `grid.*`).
+    /// Tabela z fokusem w oknie bieżącym (siatka wyników SQL ma własne komendy `grid.*`). Bez skutków ubocznych —
+    /// wołane przy sprawdzaniu menu i palety.
     static func current() -> (any FocusTable)? {
-        guard let window = contextWindow, let tv = window.firstResponder as? NSTableView, !(tv is GridTableView) else { return nil }
-        if let h = tables.object(forKey: tv) as? any FocusTable { return h }
-        // Tabela jeszcze niezarejestrowana (np. pokazana z ukrytej karty doku bez przerysowania) — szukanie raz na
-        // widok z fokusem (nie przy każdym sprawdzeniu menu i palety).
-        guard missed !== tv else { return nil }
-        missed = tv
-        for p in probes.allObjects where p.window === window { p.locate() }
+        guard let tv = contextWindow?.firstResponder as? NSTableView, !(tv is GridTableView) else { return nil }
         return tables.object(forKey: tv) as? any FocusTable
     }
+
+    /// Okno tabeli komendy (migawka z menu albo tabela z fokusem) — arkusz zapisu eksportu.
+    static func window(for table: any TableHandle) -> NSWindow? { (table as? FrozenTable)?.window ?? (table as? any FocusTable)?.window }
 }
 
-/// Odnajduje widok `NSTableView` pod tabelą SwiftUI (tło o tej samej ramce) i rejestruje go z uchwytem tabeli.
-struct TableViewLocator: NSViewRepresentable {
+/// Sonda w tle tabeli SwiftUI: zapisuje okno tabeli w uchwycie (tytuł, arkusz zapisu) — bez szukania widoków.
+struct TableWindowProbe: NSViewRepresentable {
     let handle: SwiftUITableHandle
 
     final class Probe: NSView {
-        var handle: SwiftUITableHandle?
+        weak var handle: SwiftUITableHandle?
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
-            TableFocus.probes.add(self)
-            schedule()
-        }
-
-        /// Karta doku odkryta (także przez odkrycie przodka) — tabela mogła dopiero teraz dostać ramkę.
-        override func viewDidUnhide() {
-            super.viewDidUnhide()
-            schedule()
-        }
-
-        /// Ramka ustalona po pierwszym układzie (pierwsze szukanie bywa przy ramce zerowej) i każda zmiana rozmiaru.
-        override func setFrameSize(_ newSize: NSSize) {
-            super.setFrameSize(newSize)
-            schedule()
-        }
-
-        private var scheduled = false
-        func schedule() {
-            guard !scheduled else { return }
-            scheduled = true
-            DispatchQueue.main.async { [weak self] in
-                self?.scheduled = false
-                self?.locate()
-            }
-        }
-
-        /// Tabela o ramce najbliższej ramce sondy (stosunek części wspólnej do sumy — tabela obejmująca sondę nie
-        /// remisuje z właściwą); widoki ukryte (np. nieaktywne narzędzia doku) pomijane.
-        /// Zgodność ramek tabeli i sondy: część wspólna do sumy (1 — ta sama ramka).
-        static func score(_ tv: NSTableView, _ mine: NSRect) -> CGFloat {
-            let outer = tv.enclosingScrollView ?? tv
-            let frame = outer.convert(outer.bounds, to: nil)
-            let i = frame.intersection(mine)
-            guard !i.isNull else { return 0 }
-            let u = frame.union(mine)
-            return (i.width * i.height) / max(1, u.width * u.height)
-        }
-
-        /// Tabela pod tabelą SwiftUI: najbliższy przodek sondy, którego poddrzewo ma widoczną tabelę o ramce prawie
-        /// równej ramce sondy (tło `.background` leży obok tabeli w tym samym kontenerze); widoki ukryte (nieaktywne
-        /// narzędzia doku) pomijane. Brak tabeli — rejestracja usuwana.
-        func locate() {
-            guard let handle, window != nil, !isHiddenOrHasHiddenAncestor else { return }
-            let mine = convert(bounds, to: nil)
-            guard mine.width > 0, mine.height > 0 else { return }
-            if let tv = handle.tableView, tv.window === window, !tv.isHiddenOrHasHiddenAncestor, Self.score(tv, mine) > 0.8 { return }
-            var best: (NSTableView, CGFloat)?
-            func walk(_ v: NSView) {
-                guard !v.isHidden else { return }
-                if let tv = v as? NSTableView, !(tv is GridTableView) {
-                    let score = Self.score(tv, mine)
-                    if score > (best?.1 ?? 0.8) { best = (tv, score) }
-                }
-                v.subviews.forEach(walk)
-            }
-            var ancestor = superview
-            while let a = ancestor, best == nil {
-                walk(a)
-                ancestor = a.superview
-            }
-            if let old = handle.tableView, old !== best?.0 { TableFocus.unregister(old, handle) }
-            guard let tv = best?.0 else {
-                handle.tableView = nil
-                return
-            }
-            handle.tableView = tv
-            TableFocus.register(tv, handle)
+            handle?.window = window
         }
     }
 
@@ -359,7 +277,7 @@ struct TableViewLocator: NSViewRepresentable {
 
     func updateNSView(_ p: Probe, context: Context) {
         p.handle = handle
-        p.schedule()
+        if handle.window == nil { handle.window = p.window }
     }
 }
 
@@ -373,12 +291,10 @@ enum TableActions {
         let frozen = FrozenTable(handle)
         var a = args(frozen)
         a[TableRegistry.key] = .string(TableRegistry.id(for: frozen))
-        TableFocus.exportWindows[ObjectIdentifier(frozen)] = handle.tableView?.window
         let task = ws.perform(CommandID(rawValue: id), CommandArguments(a))
         // Migawka żyje do końca komendy (rejestr trzyma ją słabo).
         Task { @MainActor in
             await task.value
-            TableFocus.exportWindows[ObjectIdentifier(frozen)] = nil
             withExtendedLifetime(frozen) {}
         }
     }
@@ -633,8 +549,9 @@ struct DataTable<Row: Identifiable>: View {
     let onViewRowsChange: (([Row.ID]) -> Void)?
     @State private var sort: [ColumnSort<Row>] = []
     @State private var tools = TableToolsState()
-    /// Uchwyt tabeli dla komend `table.*` i raportów SQL (rejestrowany z widokiem NSTableView tej tabeli).
+    /// Uchwyt tabeli dla komend `table.*` i raportów SQL (rejestrowany z widokiem NSTableView przy zdobyciu fokusu).
     @State private var handle = SwiftUITableHandle()
+    @FocusState private var focused: Bool
     /// Połączenie tabeli narzędzia — raporty SQL z wiersza z kolumną SQL_ID/hash (D217).
     @Environment(\.reportConnection) private var reportConnection
 
@@ -675,7 +592,7 @@ struct DataTable<Row: Identifiable>: View {
         func contents(_ shown: [Row]) -> TableContents {
             let byID = Dictionary(texts.map { ($0.id, $0.text) }, uniquingKeysWith: { a, _ in a })
             let selected = selected()
-            return TableContents(title: TableActions.title(title, window: handle?.tableView?.window), columns: texts.map { ($0.id, $0.title) },
+            return TableContents(title: TableActions.title(title, window: handle?.window), columns: texts.map { ($0.id, $0.title) },
                                  rowCount: shown.count, cell: { r, id in r < shown.count ? byID[id]?(shown[r]) ?? "" : "" },
                                  selectedRows: selected.isEmpty ? [] : shown.indices.filter { selected.contains(shown[$0].id) })
         }
@@ -709,16 +626,21 @@ struct DataTable<Row: Identifiable>: View {
         VStack(spacing: 3) {
             TableToolsBar(contents: contents, handle: handle, state: $tools, total: rows.count)
             table(shown)
-                .background(TableViewLocator(handle: handle))
+                .focused($focused)
+                .onChange(of: focused, initial: true) { _, now in if now { handle.focused() } }
+                .background(TableWindowProbe(handle: handle))
                 .contextMenu(forSelectionType: Row.ID.self) { ids in
                     rowMenuContent(ids, shown: shown, contents: contents, snapshot: snapshot)
                 } primaryAction: { ids in
                     primaryAction?(ids)
                 }
-                // ⌘C — komenda „Kopiuj wiersze tabeli” (jak menu; historia wywołań, makra).
+                // ⌘C — systemowe „Kopiuj” (Edycja › Kopiuj, jak w polach tekstowych i siatce): zawartość od razu, w tej
+                // samej chwili; menu tabeli i paleta mają komendę „Kopiuj wiersze tabeli”.
                 .onCopyCommand {
-                    if !contents.selectedRows.isEmpty { TableActions.perform(handle, "table.copyRows") }
-                    return []
+                    let rows = contents.selectedRows
+                    guard !rows.isEmpty else { return [] }
+                    let c = TableExport.clipboard(contents.data(rows: rows), header: TableExport.copyHeader)
+                    return [NSItemProvider(object: c.text as NSString)]
                 }
         }
         .onChange(of: shown.map(\.id), initial: true) { _, ids in onViewRowsChange?(ids) }

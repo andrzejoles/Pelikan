@@ -122,6 +122,8 @@ public protocol UIServices: AnyObject {
     func focusedSQLTarget() -> SQLReportTarget?
     /// Tabela okna narzędzia z fokusem (ostatnio używana w oknie aktywnym) — dla komend `table.*` (D214).
     func focusedTable() -> (any TableHandle)?
+    /// Fragment wybrany w oknie dokumentacji lokalnej (tekst — fragment albo cała sekcja, adres online) — D216.
+    func localDocsFragment() -> (text: String, link: URL?)?
     /// Okno druku dla dokumentu HTML (PD-SQLW-016).
     func printHTML(title: String, html: String)
     /// Widoki dualności (SD-DV-001), moduły MLE (SD-MLE-001), podgląd przestrzenny (SD-DATA-001).
@@ -267,6 +269,7 @@ extension UIServices {
     public func showPerfReport(_ reportID: String?, connection: UUID) {}
     public func focusedSQLTarget() -> SQLReportTarget? { nil }
     public func focusedTable() -> (any TableHandle)? { nil }
+    public func localDocsFragment() -> (text: String, link: URL?)? { nil }
     public func saveFile(suggestedName: String, fileExtension: String, data: Data, table: any TableHandle) async -> Bool {
         await saveFile(suggestedName: suggestedName, fileExtension: fileExtension, data: data)
     }
@@ -856,10 +859,6 @@ public final class Workspace {
         registry.command(id)?.state?(self)
     }
 
-    /// Klucze wewnętrzne wskazujące cel komendy (np. tabela z menu) — jak jawny argument: komenda sama sprawdza cel,
-    /// walidacja „tabela z fokusem” jej nie wyłącza; do makr nie trafiają (klucze „__…”).
-    static let targetKeys: Set<String> = [TableRegistry.key]
-
     /// Jedyny punkt wywołania komendy — menu, skróty, paleta, linia poleceń i agent.
     @discardableResult
     public func invoke(_ id: CommandID, _ arguments: CommandArguments = .empty, invoker: Invoker = .user) async throws -> CommandResult {
@@ -867,7 +866,7 @@ public final class Workspace {
         // Stan menu obowiązuje wszystkich wywołujących (także agenta): komenda wyłączona nie wykonuje się. Komenda
         // wywołana z argumentami (np. obiekt wskazany nazwą zamiast zaznaczenia) sama sprawdza swój cel. Klucze
         // wewnętrzne („__…”, np. znacznik run_command) nie są argumentami — nie wyłączają sprawdzenia.
-        let explicit = arguments.values.keys.contains { !$0.hasPrefix("__") || Self.targetKeys.contains($0) }
+        let explicit = arguments.values.keys.contains { !$0.hasPrefix("__") || command.targetKeys.contains($0) }
         if !explicit, let validate = command.validate, !validate(self) {
             throw CommandError.notAvailable(L10n.tr("„\(command.descriptor.title)” jest teraz niedostępne"))
         }

@@ -36,6 +36,12 @@ public protocol TableHandle: AnyObject {
     var filter: TableFilter { get set }
     /// Kolumny zaznaczone do kopii (identyfikatory, w kolejności zaznaczania).
     var markedColumns: [String] { get set }
+    /// Tabela nadal istnieje (migawka z menu po zamknięciu okna — nie).
+    var isAvailable: Bool { get }
+}
+
+extension TableHandle {
+    public var isAvailable: Bool { true }
 }
 
 /// Tabele widoczne w oknach po identyfikatorze (klucz wewnętrzny `__table` komend z menu i paska tabeli — nie trafia
@@ -43,6 +49,8 @@ public protocol TableHandle: AnyObject {
 @MainActor
 public enum TableRegistry {
     public static let key = "__table"
+    /// Znacznik menu: wierszy, których dotyczyła pozycja, już nie ma (tabela odświeżona).
+    public static let goneKey = "__rowsGone"
     private final class Entry { weak var handle: (any TableHandle)?; let id: String; init(_ h: any TableHandle) { handle = h; id = UUID().uuidString } }
     private static var entries: [Entry] = []
 
@@ -86,7 +94,8 @@ enum TableCommands {
     static func handle(_ ctx: CommandContext) throws -> any TableHandle {
         // Wskazana tabela (menu, makro) — jej brak to błąd, nie zamiana na tabelę z fokusem.
         if let id = ctx.arguments.string(TableRegistry.key) {
-            guard let h = TableRegistry.handle(id) else { throw CommandError.notAvailable(L10n.tr("Tabeli z menu już nie ma (okno zamknięte)")) }
+            guard let h = TableRegistry.handle(id), h.isAvailable else { throw CommandError.notAvailable(L10n.tr("Tabeli z menu już nie ma (okno zamknięte)")) }
+            if ctx.arguments.bool(TableRegistry.goneKey) == true { throw CommandError.notAvailable(L10n.tr("Wierszy z menu nie ma już w tabeli (odświeżona)")) }
             return h
         }
         guard let h = ctx.ui?.focusedTable() else { throw CommandError.notAvailable(L10n.tr("Brak tabeli okna narzędzia z fokusem")) }
@@ -98,8 +107,7 @@ enum TableCommands {
     /// Wiersze z argumentu `rows` (numery od 1) albo zaznaczone.
     static func rows(_ ctx: CommandContext, _ c: TableContents) throws -> [Int] {
         guard let raw = ctx.arguments.string("rows") else { return c.selectedRows }
-        // Pusta lista: wiersze menu zniknęły z tabeli (odświeżenie) — nie zastępować ich zaznaczeniem.
-        guard !raw.isEmpty else { throw CommandError.notAvailable(L10n.tr("Wierszy z menu nie ma już w tabeli (odświeżona)")) }
+        guard !raw.isEmpty else { throw CommandError.invalidArgument("rows", raw) }
         return try raw.split(separator: ",").map { part in
             guard let n = Int(part.trimmingCharacters(in: .whitespaces)), n >= 1, n <= c.rowCount else { throw CommandError.invalidArgument("rows", raw) }
             return n - 1
@@ -109,7 +117,6 @@ enum TableCommands {
     /// Wiersz z argumentu `row` (numer od 1) albo pierwszy zaznaczony.
     static func row(_ ctx: CommandContext, _ c: TableContents) throws -> Int {
         if let n = ctx.arguments.int("row") {
-            if n == 0 { throw CommandError.notAvailable(L10n.tr("Wierszy z menu nie ma już w tabeli (odświeżona)")) }
             guard n >= 1, n <= c.rowCount else { throw CommandError.invalidArgument("row", String(n)) }
             return Int(n) - 1
         }
@@ -118,6 +125,12 @@ enum TableCommands {
     }
 
     static let rowParam = CommandParameter("row", .integer, L10n.tr("Numer wiersza widoku od 1 (domyślnie pierwszy zaznaczony)"))
+
+    /// Argumenty wybrane w oknie pytania — do makra (odtworzenie nie pyta ponownie).
+    static func resolved(_ ctx: CommandContext, _ values: [String: JSONValue]) -> CommandArguments? {
+        let chosen = values.filter { ctx.arguments.values[$0.key] == nil }
+        return chosen.isEmpty ? nil : CommandArguments(chosen)
+    }
 
     /// Kolumna z argumentu `column` (identyfikator albo tytuł, bez wielkości liter); bez argumentu — wybór z listy.
     static func column(_ ctx: CommandContext, _ c: TableContents) async throws -> String {
@@ -145,7 +158,7 @@ enum TableCommands {
         Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .edit, submenu: submenu,
                                   parameters: parameters,
                                   agent: .none, effect: effect, summary: summary, feature: "PD-UI-015"),
-                validate: needsTable ? hasTable : nil, state: state, run: run)
+                validate: needsTable ? hasTable : nil, state: state, targetKeys: [TableRegistry.key], run: run)
     }
 
     static var all: [Command] {
@@ -156,7 +169,7 @@ enum TableCommands {
                 let r = try row(ctx, c)
                 let col = try await column(ctx, c)
                 ctx.ui?.copyToClipboard(c.cell(r, col), html: nil)
-                return .ok
+                return CommandResult(resolvedArguments: resolved(ctx, ["column": .string(col)]))
             },
             command("table.copyRows", L10n.tr("Kopiuj wiersze tabeli"), L10n.tr("Kopiuje zaznaczone wiersze tabeli (tekst z tabulatorami i HTML)."),
                     parameters: [rowsParam]) { ctx in
@@ -168,14 +181,17 @@ enum TableCommands {
             command("table.copyColumn", L10n.tr("Kopiuj kolumnę tabeli"), L10n.tr("Kopiuje całą kolumnę tabeli (wiersze widoku)."),
                     parameters: [columnParam]) { ctx in
                 let c = try handle(ctx).contents
-                return put(ctx, c.data(rows: c.all, columns: [try await column(ctx, c)]), header: TableExport.copyHeader)
+                let col = try await column(ctx, c)
+                var r = put(ctx, c.data(rows: c.all, columns: [col]), header: TableExport.copyHeader)
+                r.resolvedArguments = resolved(ctx, ["column": .string(col)])
+                return r
             },
             command("table.markColumn", L10n.tr("Zaznacz kolumnę do kopii"), L10n.tr("Dodaje kolumnę do kolumn kopiowanych razem albo ją z nich usuwa."),
                     parameters: [columnParam], effect: .uiState) { ctx in
                 let h = try handle(ctx)
                 let id = try await column(ctx, h.contents)
                 if h.markedColumns.contains(id) { h.markedColumns.removeAll { $0 == id } } else { h.markedColumns.append(id) }
-                return .ok
+                return CommandResult(resolvedArguments: resolved(ctx, ["column": .string(id)]))
             },
             command("table.clearMarkedColumns", L10n.tr("Odznacz kolumny do kopii"), L10n.tr("Usuwa zaznaczenie wszystkich kolumn do kopii."),
                     effect: .uiState) { ctx in
@@ -215,7 +231,7 @@ enum TableCommands {
                 let r = try row(ctx, c)
                 let col = try await column(ctx, c)
                 h.filter.columns[col] = TableExport.condition(c.cell(r, col), exclude: ctx.arguments.bool("exclude") ?? false)
-                return .ok
+                return CommandResult(resolvedArguments: resolved(ctx, ["column": .string(col)]))
             },
             command("table.clearFilter", L10n.tr("Wyczyść filtr tabeli"), L10n.tr("Usuwa szybki filtr i filtry kolumn tabeli."), effect: .uiState) { ctx in
                 try handle(ctx).filter = TableFilter()
@@ -241,7 +257,7 @@ enum TableCommands {
                 guard await ctx.ui?.saveFile(suggestedName: name, fileExtension: format.fileExtension, data: TableExport.file(format, data), table: table) == true
                 else { return .ok }
                 Log.tools.info("Eksport tabeli: \(format.rawValue, privacy: .public), wierszy \(data.rows.count, privacy: .public)")
-                return CommandResult(message: L10n.tr("Zapisano wierszy: \(data.rows.count)"))
+                return CommandResult(message: L10n.tr("Zapisano wierszy: \(data.rows.count)"), resolvedArguments: resolved(ctx, ["format": .string(format.rawValue)]))
             },
         ]
     }

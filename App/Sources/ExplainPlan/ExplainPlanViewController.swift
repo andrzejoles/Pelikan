@@ -49,8 +49,9 @@ struct PlanPanel: View {
     @State private var sortPlan: [ColumnSort<PlanLine>] = []
     /// Filtr, kopiowanie i eksport kroków planu (D214).
     @State private var tools = TableToolsState()
-    /// Cel komend `table.*` (D214) — rejestrowany z widokiem NSTableView tabeli planu.
+    /// Cel komend `table.*` (D214) — rejestrowany z widokiem NSTableView tabeli planu przy zdobyciu fokusu.
     @State private var tableHandle = SwiftUITableHandle()
+    @FocusState private var tableFocused: Bool
     @Bindable var document: PelikanWorkspace.Document
     let workspace: Workspace
     @State private var selection: PlanLine.ID?
@@ -203,7 +204,9 @@ struct PlanPanel: View {
                             ForEach((document.plan?.roots ?? []).sorted(by: sortPlan)) { PlanTreeRows(line: $0, expanded: $document.planExpanded, sort: sortPlan) }
                         }
                     }
-                    .background(TableViewLocator(handle: handle))
+                    .focused($tableFocused)
+                    .onChange(of: tableFocused, initial: true) { _, now in if now { handle.focused() } }
+                    .background(TableWindowProbe(handle: handle))
                     .contextMenu(forSelectionType: PlanLine.ID.self) { ids in
                         TableCopyMenu(contents: contents, handle: handle, marked: tools.markedColumns, rows: .from(ids, shown: shownLines))
                         if let id = ids.first {

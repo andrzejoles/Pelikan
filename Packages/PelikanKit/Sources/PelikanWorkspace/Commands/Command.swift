@@ -296,14 +296,18 @@ public struct Command: Sendable {
     /// Stan komendy-przełącznika (zaznaczenie w menu, wyróżnienie na wstążce, pasku wyniku i pasku narzędzi); nil —
     /// komenda bez stanu.
     let state: StateHandler?
+    /// Klucze wewnętrzne („__…”), którymi wywołujący wskazuje cel komendy (np. tabela z menu): komenda sama sprawdza
+    /// ten cel, więc walidacja stanu menu jej nie blokuje — jak przy jawnych argumentach.
+    let targetKeys: Set<String>
 
     public init(_ descriptor: CommandDescriptor, validate: ValidationHandler? = nil, state: StateHandler? = nil,
-                preview: PreviewHandler? = nil, run: @escaping CommandHandler) {
+                preview: PreviewHandler? = nil, targetKeys: Set<String> = [], run: @escaping CommandHandler) {
         self.descriptor = descriptor
         self.run = run
         self.preview = preview
         self.validate = validate
         self.state = state
+        self.targetKeys = targetKeys
     }
 
     public var id: CommandID { descriptor.id }

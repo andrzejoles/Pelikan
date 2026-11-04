@@ -28,9 +28,9 @@ public enum BuiltinCommands {
             feature: feature
         )) { ctx in
             let text = kind == .sql ? ctx.arguments.string("text") ?? "" : ""
-            // Agent wpisuje tekst do okna przez agent.openEditor (zmiana edytora: zgoda i dziennik zmian agenta).
+            // Tekst od agenta — przez agent.openEditor (zmiana edytora: polityka zgody i dziennik zmian agenta).
             if !text.isEmpty, ctx.invoker.isAgent {
-                throw AgentDenial.permissionDenied(L10n.tr("tekst nowego okna agent podaje przez agent.openEditor"))
+                return try await ctx.workspace.invoke("agent.openEditor", CommandArguments(["kind": "sql", "text": .string(text)]), invoker: ctx.invoker)
             }
             let doc = ctx.workspace.newDocument(kind, text: text)
             return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
@@ -945,6 +945,24 @@ public enum BuiltinCommands {
                                       feature: "PD-DOC-002"),
                     validate: { ws in ws.settings.localDocs.endpoint != nil }) { ctx in
                 ctx.ui?.showLocalDocs(query: ctx.arguments.string("query") ?? "")
+                return .ok
+            },
+            Command(CommandDescriptor(id: "help.localDocsCopy", title: L10n.tr("Kopiuj fragment dokumentacji"), category: .help,
+                                      agent: .none, effect: .none,
+                                      summary: L10n.tr("Kopiuje fragment (albo całą sekcję) wybrany w oknie dokumentacji lokalnej."), inMenu: false,
+                                      feature: "PD-DOC-002"),
+                    validate: { ws in ws.ui?.localDocsFragment() != nil }) { ctx in
+                guard let f = ctx.ui?.localDocsFragment() else { throw CommandError.notAvailable(L10n.tr("Wybierz fragment dokumentacji")) }
+                ctx.ui?.copyToClipboard(f.text, html: nil)
+                return .ok
+            },
+            Command(CommandDescriptor(id: "help.localDocsOpenOnline", title: L10n.tr("Otwórz fragment dokumentacji online"), category: .help,
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Otwiera w przeglądarce stronę docs.oracle.com fragmentu wybranego w oknie dokumentacji lokalnej."),
+                                      inMenu: false, feature: "PD-DOC-002"),
+                    validate: { ws in ws.ui?.localDocsFragment()?.link != nil }) { ctx in
+                guard let link = ctx.ui?.localDocsFragment()?.link else { throw CommandError.notAvailable(L10n.tr("Wybierz fragment dokumentacji")) }
+                ctx.ui?.openURL(link)
                 return .ok
             },
             Command(CommandDescriptor(id: "help.log", title: L10n.tr("Dziennik aplikacji"), category: .help,

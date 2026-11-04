@@ -145,8 +145,7 @@ public struct GridFilter: Sendable, Hashable {
         return GridFilter(groups: groups, text: expression)
     }
 
-    /// Wzorzec z pamięci podręcznej — filtr siatki sprawdza nim każdy wiersz (bez kompilowania przy każdej komórce).
-    nonisolated static func like(_ s: String, _ pattern: String) -> Bool { LikePattern.cached(pattern).matches(s) }
+    nonisolated static func like(_ s: String, _ pattern: String) -> Bool { LikePattern(pattern).matches(s) }
 
     /// Wzorce LIKE warunków skompilowane raz dla całego filtrowania (bez wyszukiwania w pamięci przy każdej komórce).
     public func likePatterns() -> [String: LikePattern] {
@@ -156,8 +155,8 @@ public struct GridFilter: Sendable, Hashable {
     }
 
     /// Czy wiersz spełnia filtr (wartości porównywane jako liczby, gdy obie są liczbami; inaczej jako tekst);
-    /// `likes` — wzorce z `likePatterns()` (wiele wierszy), inaczej z pamięci wzorców.
-    public func matches(_ row: [OracleValue], columns: [ColumnInfo], format: ValueFormat, likes: [String: LikePattern]? = nil) -> Bool {
+    /// `likes` — wzorce z `likePatterns()`, skompilowane raz dla całego filtrowania.
+    public func matches(_ row: [OracleValue], columns: [ColumnInfo], format: ValueFormat, likes: [String: LikePattern]) -> Bool {
         groups.contains { group in
             group.allSatisfy { c in
                 guard let idx = columns.firstIndex(where: { $0.name == c.column }), idx < row.count else { return false }
@@ -171,8 +170,8 @@ public struct GridFilter: Sendable, Hashable {
                 if isNull { return false }
                 let s = v.format(format)
                 switch c.op {
-                case .like: return (likes?[c.value] ?? LikePattern.cached(c.value)).matches(s)
-                case .notLike: return !(likes?[c.value] ?? LikePattern.cached(c.value)).matches(s)
+                case .like: return (likes[c.value] ?? LikePattern(c.value)).matches(s)
+                case .notLike: return !(likes[c.value] ?? LikePattern(c.value)).matches(s)
                 default: break
                 }
                 let cmp: ComparisonResult

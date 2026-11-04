@@ -179,6 +179,16 @@ struct TableToolsReviewTests {
         #expect(!ValueFilter.parse("<> 2026-11-04 12:00:01")!.matches(text: "2026-11-04 12:00:01", key: .date(d)))
     }
 
+    @Test("Data wpisana z dokładnością do minuty obejmuje całą minutę")
+    func dateMinute() throws {
+        var c = DateComponents(year: 2026, month: 11, day: 4, hour: 12, minute: 0, second: 37)
+        c.calendar = Calendar(identifier: .gregorian)
+        let d = try #require(c.date)
+        #expect(ValueFilter.parse("= 2026-11-04 12:00")!.matches(text: "2026-11-04 12:00:37", key: .date(d)))
+        #expect(!ValueFilter.parse("<> 2026-11-04 12:00")!.matches(text: "2026-11-04 12:00:37", key: .date(d)))
+        #expect(!ValueFilter.parse("= 2026-11-04 12:00:00")!.matches(text: "2026-11-04 12:00:37", key: .date(d)))
+    }
+
     @Test("Szybki filtr: podkreślenie nie wyłącza szukania fragmentu, % — wzorzec całej wartości")
     func quickUnderscore() {
         func hit(_ q: String, _ text: String) -> Bool { TableFilter(quick: q).compiled().matches(all: ["x"]) { _ in (text, text.sortKey) } }
@@ -262,7 +272,12 @@ struct TableToolsReviewTests {
         await #expect(throws: CommandError.self) { try await run("table.copyCell", ["column": "a", "row": 0]) }
         await #expect(throws: CommandError.self) { try await run("table.copyAll", ["__table": "nie-ma-takiej"]) }
         try await run("table.copyMarkedColumns", ["selected": true, "__table": .string(TableRegistry.id(for: t))])
+        // Znacznik menu „wiersze zniknęły” — komunikat; wartości umowne w publicznych argumentach to zwykły błąd argumentu.
+        await #expect(throws: CommandError.self) { try await run("table.copyRows", ["__table": .string(TableRegistry.id(for: t)), "__rowsGone": true]) }
         #expect(ui.clipboard == "y")
+        // Kolumna podana argumentem — nic do uzupełnienia w makrze.
+        let r = try await ws.registry.command("table.copyColumn")!.run(CommandContext(workspace: ws, invoker: .user, arguments: CommandArguments(["column": "a", "__table": .string(TableRegistry.id(for: t))])))
+        #expect(r.resolvedArguments == nil)
         ui.table = nil
         let before = TableExport.copyHeader
         try await run("table.toggleCopyHeader")
