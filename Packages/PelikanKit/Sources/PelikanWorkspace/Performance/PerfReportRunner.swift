@@ -101,8 +101,18 @@ public enum PerfReportRunner {
 
         switch q.reportID {
         case "sql.planCursor":
-            content = try await lines("select plan_table_output from table(dbms_xplan.display_cursor(:id, :c, :f))",
-                                      [text("id", id), num("c", q.child), text("f", q.planFormat)])
+            if q.format == .text {
+                content = try await lines("select plan_table_output from table(dbms_xplan.display_cursor(:id, :c, :f))",
+                                          [text("id", id), num("c", q.child), text("f", q.planFormat)])
+            } else {
+                // HTML, ACTIVE i XML: DISPLAY_PLAN na planie z pamięci kursorów; filtr z SQL_ID sprawdzonego wzorcem
+                // i numeru kursora (bez tekstu od użytkownika w filter_preds).
+                guard SQLIdentity.isSQLID(id) else { throw CommandError.invalidArgument("sqlId", id) }
+                // Bez numeru kursora — najniższy (plany kilku kursorów w jednym raporcie by się mieszały).
+                let filter = "sql_id = '\(id)' and child_number = " + (q.child.map(String.init) ?? "(select min(child_number) from v$sql where sql_id = '\(id)')")
+                content = try await clob("dbms_xplan.display_plan(table_name => 'V$SQL_PLAN_STATISTICS_ALL', format => :f, filter_preds => :p, type => :ty)",
+                                         [text("f", q.planFormat), text("p", filter), text("ty", ty)])
+            }
         case "sql.planAWR":
             let f = q.planFormat.replacingOccurrences(of: "ALLSTATS LAST", with: "TYPICAL")
             let binds = [text("id", id), numText("ph", q.planHash), text("f", f)]
@@ -217,6 +227,7 @@ public enum PerfReportRunner {
         default:
             throw CommandError.invalidArgument("report", q.reportID)
         }
+        content = secureViewerScripts(content)
         let format = detect(content, requested: q.format)
         guard !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw CommandError.notAvailable(L10n.tr("Oracle zwrócił pusty raport (brak danych w wybranym źródle albo okresie)"))
@@ -224,6 +235,14 @@ public enum PerfReportRunner {
         let name = (q.sqlID.map { report.title + " " + $0 } ?? report.title)
         return PerfReportOutput(title: name, format: format, content: content,
                                 suggestedName: name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: " ", with: "_") + "." + format.fileExtension)
+    }
+
+    /// Raporty ACTIVE z Oracle 19c ładują przeglądarkę raportów z `http://download.oracle.com/…` (23ai — już https).
+    /// macOS blokuje w aplikacjach niezaszyfrowane skrypty (pusty raport), a przeglądarka przechodzi na https i ramka
+    /// z inną domeną nie dostaje danych („Błąd podczas pobierania danych”). Adres serwera Oracle zawsze przez https (D220).
+    static func secureViewerScripts(_ content: String) -> String {
+        guard content.contains("http://download.oracle.com/") else { return content }
+        return content.replacingOccurrences(of: "http://download.oracle.com/", with: "https://download.oracle.com/")
     }
 
     // MARK: Raporty budowane w Pelikanie

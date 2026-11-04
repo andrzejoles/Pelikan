@@ -21,7 +21,7 @@ struct SessionBrowserView: View {
     @State private var interval = 10.0
     @State private var editing = false
 
-    private let shown = ["SID", "SERIAL#", "USERNAME", "STATUS", "OSUSER", "MACHINE", "PROGRAM", "MODULE", "ACTION", "SQL_ID", "EVENT", "LOGON_TIME"]
+    private let shown = ["SID", "SERIAL#", "USERNAME", "STATUS", "OSUSER", "MACHINE", "PROGRAM", "MODULE", "ACTION", "SQL_ID", "PREV_SQL_ID", "EVENT", "LOGON_TIME"]
     private var queries: SessionQueries { workspace.settings.sessionQueries }
     private var selected: SessionRow? { rows.first { $0.id == selection } }
 
@@ -56,6 +56,7 @@ struct SessionBrowserView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Picker("", selection: $detailName) {
                         ForEach(queries.details) { Text($0.name).tag($0.name) }
+                        Text(Self.planTab).tag(Self.planTab)
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
@@ -100,8 +101,25 @@ struct SessionBrowserView: View {
         try await workspace.toolSession("sessions", connection: connection)
     }
 
+    /// Karta planu bieżącego zapytania sesji (D220): SQL_ID, a gdy sesja nic nie wykonuje — PREV_SQL_ID.
+    static let planTab = L10n.tr("Plan wykonania")
+
     @ViewBuilder private var detailView: some View {
-        if let d = detail {
+        if detailName == Self.planTab {
+            if let r = selected {
+                let current = (r.values["SQL_ID"] ?? "").trimmingCharacters(in: .whitespaces)
+                let id = current.isEmpty ? (r.values["PREV_SQL_ID"] ?? "").trimmingCharacters(in: .whitespaces) : current
+                let child = Int(current.isEmpty ? r.values["PREV_CHILD_NUMBER"] ?? "" : r.values["SQL_CHILD_NUMBER"] ?? "")
+                if SQLIdentity.isSQLID(id), let connection {
+                    SessionPlanView(workspace: workspace, connection: connection, sqlID: id, child: child, previous: current.isEmpty)
+                        .id("\(id)/\(child ?? -1)")
+                } else {
+                    Text(L10n.tr("Sesja nie ma bieżącego ani poprzedniego zapytania")).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            } else {
+                Text(L10n.tr("Zaznacz sesję")).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        } else if let d = detail {
             if let text = d.text {
                 CodePreview(text: text)
             } else {
@@ -126,6 +144,7 @@ struct SessionBrowserView: View {
     }
 
     private func loadDetail() async {
+        guard detailName != Self.planTab else { detail = nil; return }
         guard let r = selected, let item = queries.details.first(where: { $0.name == detailName }) else { detail = nil; return }
         do {
             detail = try await SessionBrowser.detail(item, sid: r.sid, serial: r.serial, in: try await session())
@@ -210,5 +229,74 @@ struct SessionQueriesEditor: View {
         .padding(14)
         .windowSize(width: 720, height: 460)
         .onAppear { queries = workspace.settings.sessionQueries }
+    }
+}
+
+/// Plan bieżącego zapytania sesji (D220): z pamięci kursorów (DBMS_XPLAN), format wyniku Tekst/HTML/Active/XML i format
+/// planu do wyboru; raporty dla SQL_ID jednym przyciskiem.
+struct SessionPlanView: View {
+    let workspace: Workspace
+    let connection: UUID
+    let sqlID: String
+    let child: Int?
+    let previous: Bool
+    @AppStorage("sessionPlan.format") private var formatRaw = ReportFormat.html.rawValue
+    @AppStorage("sessionPlan.planFormat") private var planFormat = "ALLSTATS LAST +PEEKED_BINDS"
+    @State private var output: PerfReportOutput?
+    @State private var file: URL?
+    @State private var message = ""
+    @State private var busy = false
+
+    private var format: ReportFormat { ReportFormat(rawValue: formatRaw) ?? .text }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                Text(previous ? L10n.tr("Poprzednie zapytanie \(sqlID)") : L10n.tr("Bieżące zapytanie \(sqlID)")).font(.code).textSelection(.enabled)
+                Picker(L10n.tr("Wynik"), selection: $formatRaw) {
+                    ForEach([ReportFormat.html, .active, .text, .xml], id: \.self) { Text($0.displayName).tag($0.rawValue) }
+                }
+                .fixedSize()
+                Picker(L10n.tr("Plan"), selection: $planFormat) {
+                    ForEach(PerfReportParameters.planFormats, id: \.self) { Text($0).tag($0) }
+                }
+                .fixedSize()
+                if busy { ProgressView().controlSize(.small) }
+                Spacer()
+                Button(L10n.tr("Raporty dla SQL_ID…")) {
+                    SQLReportLauncher.open(SQLReportTarget(target: .sqlID(sqlID), origin: L10n.tr("okno sesji"), connection: connection))
+                }
+            }
+            .controlSize(.small)
+            .font(.uiSecondary)
+            if let o = output {
+                switch o.format {
+                case .active: if let file { ActiveReportView(file: file).id(file) }
+                case .html: HTMLPreview(html: o.content)
+                default: HighlightedCodeView(text: o.content, highlight: false)
+                }
+            } else {
+                Text(message).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .task(id: "\(formatRaw)|\(planFormat)") { await load() }
+    }
+
+    private func load() async {
+        busy = true
+        defer { busy = false }
+        do {
+            let s = try await workspace.toolSession("sessions", connection: connection)
+            var q = PerfReportRequest(reportID: "sql.planCursor", sqlID: sqlID, format: format)
+            q.source = .cursorCache
+            q.child = child
+            q.planFormat = planFormat
+            let out = try await PerfReportRunner.run(q, availability: nil, in: s)
+            file = out.format == .active ? PerfReportPresenter.write(out) : nil
+            output = out
+        } catch {
+            output = nil
+            message = error.localizedDescription
+        }
     }
 }

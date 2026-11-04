@@ -3550,3 +3550,25 @@ Wyłącz ograniczenia plików lokalnych).
 
 - Raport ACTIVE wyświetla się w oknie Pelikana: WebKit z dostępem do sieci i do pliku raportu w katalogu tymczasowym;
   bez automatycznego otwierania przeglądarki. „Otwórz w przeglądarce” i „Zapisz…” zostają.
+
+### D220 · 2026-11-04 — Raporty ACTIVE z Oracle 19c: przeglądarka raportów przez https
+
+**Zgłoszenie właściciela:** po 1.20.1 raporty ACTIVE w oknie Pelikana są puste. D219 sprawdzono na bazie testowej
+(Oracle 23ai), której raporty ładują przeglądarkę raportów z `https://download.oracle.com/otn_software/omx/`. Raporty
+z baz właściciela (19c) mają `swf_base_path = "http://download.oracle.com/otn_software/omx/"`: macOS blokuje w aplikacji
+skrypt pobierany przez http (App Transport Security — pusty raport), a przeglądarki ładują ramkę przez https, więc strona
+wysyła dane pod adres http i ramka ich nie dostaje („Błąd podczas pobierania danych” — także w Safari i Chrome).
+
+- Wynik każdego raportu: `http://download.oracle.com/` zamieniany na `https://download.oracle.com/` (tylko serwer
+  Oracle) przed zapisem do pliku, wyświetleniem w oknie i „Otwórz w przeglądarce”. Sprawdzone na kopii raportu SQL
+  Monitor z bazy 19c właściciela: oryginał — błąd pobierania danych, po zamianie — pełny raport.
+- Komenda `perf.sqlReports` ma parametry `report` i `run` (zaznaczenie i uruchomienie raportu po otwarciu okna — makra,
+  skrypty zrzutów); okno wyniku sprawdzane takim przebiegiem w tle.
+- **Okno sesji** (prośby właściciela w tym samym zgłoszeniu): lista ma kolumnę PREV_SQL_ID (sesja bez bieżącego SQL_ID
+  pokazuje w „Bieżące SQL” ostatnie polecenie — teraz widać jego SQL_ID, raporty z wiersza biorą SQL_ID, potem
+  PREV_SQL_ID); karta „Otwarte kursory” ma kolumnę WYKONYWANY (TAK — SQL_ID bieżący sesji, „ostatni” — PREV_SQL_ID)
+  i czas ostatniej aktywności, bieżący kursor na górze (zapisane dotąd domyślne zapytanie przełączane samo, zmienione
+  przez użytkownika zostaje); nowa karta „Plan wykonania” — plan bieżącego (albo poprzedniego) zapytania z pamięci
+  kursorów: HTML (domyślnie, jak w PL/SQL Developerze), Active, tekst albo XML, format planu do wyboru, „Raporty dla
+  SQL_ID…”. Raport „Plan z pamięci kursorów” ma te same formaty (HTML/ACTIVE/XML — DBMS_XPLAN.DISPLAY_PLAN na
+  V$SQL_PLAN_STATISTICS_ALL, filtr z SQL_ID sprawdzonego wzorcem i numeru kursora).

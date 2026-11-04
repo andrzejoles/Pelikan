@@ -149,6 +149,10 @@ struct PerfReportTests {
         let b = try await PerfReportRunner.run(PerfReportRequest(reportID: "sql.binds", sqlID: "ghkw1782vah43", format: .text), availability: availability(), in: s)
         #expect(b.format == .text && b.content.contains(":B1") && b.content.contains("42"))
         #expect(PerfReportRunner.detect("<html><body>x", requested: .active) == .active)
+        // 19c: przeglądarka raportów ACTIVE z http — zawsze https (D220).
+        let r19 = #"var swf_base_path = "http://download.oracle.com/otn_software/omx/";"#
+        #expect(PerfReportRunner.secureViewerScripts(r19) == #"var swf_base_path = "https://download.oracle.com/otn_software/omx/";"#)
+        #expect(PerfReportRunner.secureViewerScripts("http://example.com/") == "http://example.com/")
         #expect(PerfReportRunner.detect("<?xml version='1.0'?><report/>", requested: .html) == .xml)
         #expect(PerfReportRunner.detect("SQL Tuning Advisor report", requested: .html) == .text)
     }
@@ -162,5 +166,16 @@ struct PerfReportTests {
         let off = (doc.text as NSString).range(of: "ghkw").location + 3
         doc.selectedRange = off..<off
         #expect(SQLTargetFinder.fromEditor(doc)?.origin.contains("słowo") == true)
+    }
+
+    @Test("Sesje: otwarte kursory z kolumną wykonywania; stare ustawienia przełączone, zmienione zostają; PREV_SQL_ID na liście (D220)")
+    func sessionQueries() {
+        #expect(SessionQueries.standard.details.first { $0.name == L10n.tr("Otwarte kursory") }?.sql == SessionQueries.openCursors)
+        var old = SessionQueries.standard
+        old.details[1].sql = "select sql_id, sql_text, cursor_type from v$open_cursor where sid = :sid"
+        old.details.append(.init(name: "Moje", sql: "select 1 from dual"))
+        let m = old.migrated()
+        #expect(m.details[1].sql.contains("wykonywany") && m.details.last?.sql == "select 1 from dual")
+        #expect(SessionBrowser.columns.contains("PREV_SQL_ID") && SQLIdentity.columnKind("PREV_SQL_ID") == .sqlID)
     }
 }

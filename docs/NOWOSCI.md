@@ -2,6 +2,16 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.20.2 — raporty ACTIVE z baz Oracle 19c, plan i kursory w oknie sesji
+
+- **Raporty ACTIVE z baz 19c wyświetlają się poprawnie** (w oknie Pelikana, po zapisie i w przeglądarce). Oracle 19c
+  wskazuje w raporcie przeglądarkę raportów przez http — Pelikan zamienia ten adres na https, więc okno nie jest puste
+  i nie pojawia się „Błąd podczas pobierania danych”.
+- **Okno sesji:** kolumna PREV_SQL_ID (SQL_ID ostatniego polecenia sesji bez bieżącego), w „Otwartych kursorach”
+  kolumna WYKONYWANY (bieżący i ostatni kursor sesji, na górze listy) oraz nowa karta **Plan wykonania** — plan
+  bieżącego zapytania jako HTML, Active, tekst albo XML, z wyborem formatu planu i przyciskiem raportów dla SQL_ID.
+- **Plan z pamięci kursorów** w raportach SQL także jako HTML, Active i XML.
+
 ## 1.20.1 — raporty ACTIVE w oknie Pelikana
 
 - **Raporty ACTIVE (SQL Monitor, SQL Detail, Performance Hub…) wyświetlają się w oknie Pelikana.** W przeglądarkach na

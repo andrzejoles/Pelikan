@@ -8,6 +8,9 @@ public struct SQLReportTarget: Sendable, Hashable {
     public var origin: String
     public var statement: String?
     public var connection: UUID?
+    /// Raport zaznaczony po otwarciu okna i czy uruchomić go od razu (makra, skrypty zrzutów).
+    public var report: String?
+    public var runReport = false
 
     public init(target: SQLIdentity.Target, origin: String, statement: String? = nil, connection: UUID? = nil) {
         self.target = target; self.origin = origin; self.statement = statement; self.connection = connection
@@ -118,6 +121,8 @@ enum PerfCommands {
     static let sqlParams: [CommandParameter] = [
         CommandParameter("sqlId", .string, L10n.tr("SQL_ID (domyślnie z zaznaczonego wiersza, komórki albo polecenia pod kursorem)")),
         CommandParameter("hash", .integer, L10n.tr("HASH_VALUE zapytania (zamiast SQL_ID)")),
+        CommandParameter("report", .string, L10n.tr("Raport do zaznaczenia (np. sql.monitor)")),
+        CommandParameter("run", .boolean, L10n.tr("Uruchom zaznaczony raport od razu (wartości domyślne)")),
         CommandContext.toolConnectionParam,
     ]
 
@@ -150,6 +155,8 @@ enum PerfCommands {
                 let t = try await target(ctx)
                 var tt = t
                 tt.connection = try t.connection ?? ctx.toolConnection()
+                tt.report = ctx.arguments.string("report")
+                tt.runReport = ctx.arguments.bool("run") ?? false
                 ctx.ui?.showSQLReports(tt)
                 return .ok
             },

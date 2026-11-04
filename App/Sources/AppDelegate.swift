@@ -836,7 +836,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let key = "sqlReports-\(conn.uuidString)-\(PerfReportsModel.text(target.target))"
         let title = L10n.tr("Raporty SQL: \(PerfReportsModel.text(target.target))")
         ToolWindowController.show(key: key, title: title, size: NSSize(width: 1000, height: 680)) {
-            PerfReportsView(model: PerfReportsModel(workspace: workspace, connection: conn, mode: .sql(target)))
+            PerfReportsView(model: PerfReportsModel(workspace: workspace, connection: conn, mode: .sql(target), report: target.report, run: target.runReport))
         }
     }
 
