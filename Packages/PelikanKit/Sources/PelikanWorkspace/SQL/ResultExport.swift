@@ -384,6 +384,16 @@ public enum ResultExporter {
 
     /// Skoroszyt xlsx: arkusz na wynik (UG 7.2 „Copy all”), nagłówek pogrubiony, liczby jako liczby, daty jako daty,
     /// opcjonalnie arkusz z poleceniem SQL.
+    /// Cyfry znaczące zapisu liczby (bez znaku, kropki, zer wiodących i wykładnika) — liczby do 15 cyfr arkusz zapisuje
+    /// jako liczby bez straty (jak `TableExport.isNumber`).
+    static func significantDigits(_ n: String) -> Int {
+        let mantissa = n.prefix { $0 != "e" && $0 != "E" }
+        var digits = Substring(mantissa.filter(\.isNumber).drop { $0 == "0" })
+        // Liczba całkowita: zera końcowe nie są cyframi znaczącymi (10^18 zapisuje się dokładnie).
+        if !mantissa.contains(".") { while digits.last == "0" { digits = digits.dropLast() } }
+        return digits.count
+    }
+
     public static func xlsx(_ sheets: [ExportData], includeSQL: Bool = false, options: ExportOptions = ExportOptions()) -> Data {
         var all = sheets
         if includeSQL {
@@ -465,7 +475,7 @@ public enum ResultExporter {
                 let ref = "\(columnLetter(i))\(r)"
                 switch v {
                 case .null: continue
-                case .number(let n) where Double(n) != nil && n.count <= 15: s += "<c r=\"\(ref)\"><v>\(n)</v></c>"
+                case .number(let n) where Double(n) != nil && Self.significantDigits(n) <= 15: s += "<c r=\"\(ref)\"><v>\(n)</v></c>"
                 case .double(let d) where d.isFinite: s += "<c r=\"\(ref)\"><v>\(d)</v></c>"
                 case .timestamp(let t, let type):
                     if let serial = excelSerial(t) {

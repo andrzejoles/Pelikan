@@ -157,7 +157,9 @@ struct PlanComparisonView: View {
                 Toggle(L10n.tr("Tylko różnice"), isOn: $onlyDifferent).toggleStyle(.checkbox)
             }
             DataTable(comparison.rows.filter { !onlyDifferent || $0.status != .same }) {
-                DataColumn("", sortKey: { r in icon(r.status) }) { r in Image(systemName: icon(r.status)).foregroundStyle(color(r.status)) }.width(24)
+                DataColumn("", sortKey: { r in statusText(r.status) }, text: { r in statusText(r.status) }) { r in
+                    Image(systemName: icon(r.status)).foregroundStyle(color(r.status)).help(statusText(r.status))
+                }.width(24)
                 DataColumn(leftTitle, sortKey: { r in r.left.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "" }) { r in Text(r.left.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.code) }
                 DataColumn(rightTitle, sortKey: { r in r.right.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "" }) { r in Text(r.right.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.code) }
                 DataColumn(L10n.tr("Różnice"), sortKey: { r in r.differences.joined(separator: ", ") }) { r in Text(r.differences.joined(separator: ", ")).font(.uiSecondary) }
@@ -169,6 +171,16 @@ struct PlanComparisonView: View {
 
     private func icon(_ s: PlanComparisonRow.Status) -> String {
         switch s { case .same: "equal.circle"; case .changed: "pencil.circle"; case .onlyLeft: "minus.circle"; case .onlyRight: "plus.circle" }
+    }
+
+    /// Stan wiersza słowami — kopia, eksport, filtr i podpowiedź ikony.
+    private func statusText(_ s: PlanComparisonRow.Status) -> String {
+        switch s {
+        case .same: L10n.tr("bez zmian")
+        case .changed: L10n.tr("zmieniony")
+        case .onlyLeft: L10n.tr("tylko po lewej")
+        case .onlyRight: L10n.tr("tylko po prawej")
+        }
     }
 
     private func color(_ s: PlanComparisonRow.Status) -> Color {

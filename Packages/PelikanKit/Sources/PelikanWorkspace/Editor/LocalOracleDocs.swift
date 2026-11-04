@@ -3,6 +3,7 @@ import Foundation
 import FoundationNetworking
 #endif
 import PelikanLog
+import Synchronization
 
 /// Dokumentacja Oracle z lokalnego serwera MCP (D216): wyszukiwanie pełnotekstowe i semantyczne w dokumentacji
 /// zainstalowanej na komputerze użytkownika (narzędzia `search_oracle_docs` i `get_doc_section`), obok dokumentacji
@@ -72,9 +73,12 @@ public enum LocalDocsError: Error, LocalizedError, Equatable {
     case badAddress(String)
     case unreachable(String)
     case server(String)
+    /// Kod HTTP i początek treści odpowiedzi (rozpoznanie wygasłej sesji).
+    case http(Int, String)
 
     public var errorDescription: String? {
         switch self {
+        case .http(let code, _): L10n.tr("Błąd serwera dokumentacji: HTTP \(code)")
         case .badAddress(let a): L10n.tr("Niedozwolony adres serwera dokumentacji: \(a) (HTTPS albo HTTP na tym komputerze)")
         case .unreachable(let m): L10n.tr("Serwer dokumentacji lokalnej nie odpowiada: \(m)")
         case .server(let m): L10n.tr("Błąd serwera dokumentacji: \(m)")
@@ -83,11 +87,24 @@ public enum LocalDocsError: Error, LocalizedError, Equatable {
 }
 
 /// Klient MCP serwera dokumentacji: `initialize` przy pierwszym wywołaniu (z identyfikatorem sesji, jeśli serwer go
-/// nada), potem `tools/call`. Odpowiedź JSON albo strumień SSE (`data:`).
+/// nada), potem `tools/call`. Odpowiedź JSON albo strumień SSE (`data:`). Jeden klient na adres (`shared`) — sesja MCP
+/// jest używana ponownie, a po restarcie serwera (HTTP 404 dla starej sesji) nawiązywana od nowa.
 public actor LocalDocsClient {
+    private static let clients = Mutex<[URL: LocalDocsClient]>([:])
+
+    /// Wspólny klient dla adresu serwera (okno dokumentacji, F1, ustawienia, agent).
+    public static func shared(for endpoint: URL) -> LocalDocsClient {
+        clients.withLock { c in
+            if let existing = c[endpoint] { return existing }
+            // Jeden klient — dla bieżącego adresu (zmiana adresu w ustawieniach zwalnia poprzedniego klienta i jego sesję).
+            let new = LocalDocsClient(endpoint: endpoint)
+            c = [endpoint: new]
+            return new
+        }
+    }
+
     public let endpoint: URL
     private var session: String?
-    private var initialized = false
     private var nextID = 1
     private let urlSession: URLSession
 
@@ -101,7 +118,9 @@ public actor LocalDocsClient {
         var args: [String: Any] = ["query": query, "k": max(1, min(15, count)), "version": version]
         if let book, !book.isEmpty { args["book"] = book }
         let text = try await callTool("search_oracle_docs", args)
-        Log.tools.info("Dokumentacja lokalna: wyszukiwanie, wersja \(version, privacy: .public)")
+        // Wersja bywa z argumentu agenta — jawnie tylko znane wartości (stałe techniczne).
+        let shown = LocalDocsSettings.versions.contains(version) ? version : "?"
+        Log.tools.info("Dokumentacja lokalna: wyszukiwanie, wersja \(shown, privacy: .public)")
         return Self.parseSearch(text)
     }
 
@@ -111,13 +130,74 @@ public actor LocalDocsClient {
     }
 
     private func callTool(_ name: String, _ arguments: [String: Any]) async throws -> String {
-        if !initialized {
-            _ = try await rpc("initialize", ["protocolVersion": "2025-06-18", "capabilities": [String: Any](),
-                                             "clientInfo": ["name": "Pelikan", "version": "1"]])
-            try await notify("notifications/initialized")
-            initialized = true
+        do {
+            return try await callToolOnce(name, arguments)
+        } catch let expired as SessionExpired {
+            // Sesja wygasła albo serwer uruchomiono ponownie — nowa sesja i jedno ponowienie. Sesję kasuje tylko
+            // pierwsze wywołanie, które ją zobaczyło; równoczesne dołączają do nowej inicjalizacji.
+            if session == expired.session {
+                session = nil
+                initialization = nil
+            }
+            do {
+                return try await callToolOnce(name, arguments)
+            } catch let again as SessionExpired {
+                throw again.error
+            }
         }
-        let result = try await rpc("tools/call", ["name": name, "arguments": arguments])
+    }
+
+    /// Odrzucona sesja: 404 (MCP: nieznana sesja) albo inny kod 4xx z komunikatem o sesji („No valid session ID”).
+    /// Inne błędy 4xx (argumenty, autoryzacja pośrednika) nie kasują sesji wspólnej dla okna, F1 i agenta.
+    static func sessionRejected(_ code: Int, _ body: String) -> Bool {
+        code == 404 || ((400..<500).contains(code) && body.range(of: "session", options: .caseInsensitive) != nil)
+    }
+
+    /// Odrzucona sesja daje jedną próbę z nową sesją; ponowny błąd idzie do wywołującego jako `LocalDocsError`.
+    private struct SessionExpired: Error {
+        let session: String
+        let error: LocalDocsError
+    }
+
+    /// Inicjalizacja sesji MCP raz — równoczesne pierwsze wywołania (aktor jest współbieżny przy `await`) czekają na
+    /// to samo zadanie zamiast inicjować po kilka sesji.
+    private var initialization: Task<Void, any Error>?
+
+    /// Czeka na zakończoną inicjalizację bieżącej sesji. Gdy w trakcie czekania inne wywołanie unieważniło sesję
+    /// (wygasła — nowa inicjalizacja), czeka na nową, zamiast wysłać żądanie bez sesji albo przed `initialized`.
+    private func ensureInitialized() async throws {
+        for _ in 0..<3 {
+            let task: Task<Void, any Error>
+            if let initialization {
+                task = initialization
+            } else {
+                task = Task { [self] in
+                    _ = try await rpc("initialize", ["protocolVersion": "2025-06-18", "capabilities": [String: Any](),
+                                                     "clientInfo": ["name": "Pelikan", "version": "1"]])
+                    try await notify("notifications/initialized")
+                }
+                initialization = task
+            }
+            do { try await task.value } catch {
+                if initialization == task { initialization = nil }
+                throw error
+            }
+            if initialization == task { return }
+        }
+        // Sesja unieważniana raz po raz (serwer ciągle odrzuca) — błąd zamiast żądania bez zainicjowanej sesji.
+        throw LocalDocsError.server(L10n.tr("nie udało się nawiązać sesji MCP"))
+    }
+
+    private func callToolOnce(_ name: String, _ arguments: [String: Any]) async throws -> String {
+        try await ensureInitialized()
+        // Sesja odczytana bez zawieszenia przed zbudowaniem żądania — ta sama, którą żądanie wysyła.
+        let used = session
+        let result: [String: Any]
+        do {
+            result = try await rpc("tools/call", ["name": name, "arguments": arguments])
+        } catch LocalDocsError.http(let code, let body) where used != nil && Self.sessionRejected(code, body) {
+            throw SessionExpired(session: used!, error: .http(code, body))
+        }
         let content = (result["content"] as? [[String: Any]]) ?? []
         let text = content.compactMap { $0["type"] as? String == "text" || $0["type"] == nil ? $0["text"] as? String : nil }.joined(separator: "\n")
         if result["isError"] as? Bool == true { throw LocalDocsError.server(text) }
@@ -151,8 +231,11 @@ public actor LocalDocsClient {
             throw LocalDocsError.unreachable(error.localizedDescription)
         }
         if let http = response as? HTTPURLResponse {
-            if let s = http.value(forHTTPHeaderField: "Mcp-Session-Id") { session = s }
-            guard (200..<300).contains(http.statusCode) else { throw LocalDocsError.server("HTTP \(http.statusCode)") }
+            // Identyfikator sesji tylko z udanej odpowiedzi na initialize (odpowiedź błędu nie ustanawia sesji).
+            if method == "initialize", (200..<300).contains(http.statusCode), let s = http.value(forHTTPHeaderField: "Mcp-Session-Id") { session = s }
+            guard (200..<300).contains(http.statusCode) else {
+                throw LocalDocsError.http(http.statusCode, String(decoding: data.prefix(500), as: UTF8.self))
+            }
         }
         guard let message = Self.message(data, id: id) else { throw LocalDocsError.server(L10n.tr("nieczytelna odpowiedź")) }
         if let e = message["error"] as? [String: Any] { throw LocalDocsError.server(e["message"] as? String ?? "\(e)") }

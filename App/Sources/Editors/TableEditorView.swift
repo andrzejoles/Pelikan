@@ -138,7 +138,7 @@ struct TableEditorView: View {
                         ForEach(["SELECT", "INSERT", "UPDATE", "DELETE", "REFERENCES", "ALTER", "INDEX", "READ", "DEBUG", "FLASHBACK"], id: \.self) { Text($0).tag($0) }
                     }.labelsHidden()
                 }.width(140)
-                DataColumn(L10n.tr("Z prawem nadawania"), sortKey: { g in g.grantable }) { $g in Toggle("", isOn: $g.grantable).labelsHidden() }.width(120)
+                DataColumn.check(L10n.tr("Z prawem nadawania"), \.grantable).width(120)
             }
             listButtons(add: { definition.grants.append(TableDefinition.Grant(grantee: "PUBLIC", privilege: "SELECT")) },
                         remove: { if !definition.grants.isEmpty { definition.grants.removeLast() } })
@@ -251,13 +251,13 @@ struct TableEditorView: View {
             DataTable(Binding.rows($definition.columns)) {
                 DataColumn(L10n.tr("Nazwa"), sortKey: { c in c.name }) { $c in TextField("", text: upper($c.name)) }.width(min: 110, ideal: 150)
                 DataColumn(L10n.tr("Typ"), sortKey: { c in c.type }) { $c in typeField($c.type) }.width(min: 140, ideal: 170)
-                DataColumn(L10n.tr("Null"), sortKey: { c in c.nullable }) { $c in Toggle("", isOn: $c.nullable).labelsHidden() }.width(40)
+                DataColumn.check(L10n.tr("Null"), \.nullable).width(40)
                 DataColumn(L10n.tr("Domyślna"), sortKey: { c in c.defaultValue }) { $c in TextField("", text: $c.defaultValue).disabled(!c.virtualExpression.isEmpty || c.identity) }
                     .width(min: 80, ideal: 110)
                 DataColumn(L10n.tr("Wirtualna (wyrażenie)"), sortKey: { c in c.virtualExpression }) { $c in TextField("", text: $c.virtualExpression).disabled(c.originalName != nil) }
                     .width(min: 80, ideal: 120)
-                DataColumn(L10n.tr("Identity"), sortKey: { c in c.identity }) { $c in Toggle("", isOn: $c.identity).labelsHidden().disabled(c.originalName != nil) }.width(52)
-                DataColumn(L10n.tr("Niewidoczna"), sortKey: { c in c.invisible }) { $c in Toggle("", isOn: $c.invisible).labelsHidden() }.width(70)
+                DataColumn.check(L10n.tr("Identity"), \.identity, disabled: { c in c.originalName != nil }).width(52)
+                DataColumn.check(L10n.tr("Niewidoczna"), \.invisible).width(70)
                 DataColumn(L10n.tr("Domena"), sortKey: { c in c.domain }) { $c in TextField("", text: upper($c.domain)) }.width(min: 80, ideal: 110)
                 DataColumn(L10n.tr("Adnotacje"), sortKey: { c in annotations(c.annotations) }) { $c in ListTextField("", text: annotations($c.annotations)) }.width(min: 80, ideal: 120)
                 DataColumn(L10n.tr("Komentarz"), sortKey: { c in c.comment }) { $c in TextField("", text: $c.comment) }
@@ -285,7 +285,7 @@ struct TableEditorView: View {
                     Picker("", selection: $k.onDelete) { Text("—").tag(""); Text("CASCADE").tag("CASCADE"); Text("SET NULL").tag("SET NULL") }
                         .labelsHidden().disabled(k.kind != .foreign)
                 }.width(100)
-                DataColumn(L10n.tr("Włączony"), sortKey: { k in k.enabled }) { $k in Toggle("", isOn: $k.enabled).labelsHidden() }.width(60)
+                DataColumn.check(L10n.tr("Włączony"), \.enabled).width(60)
             }
             HStack {
                 listButtons(add: { definition.keys.append(TableDefinition.Key(name: "\(definition.name)_UK\(definition.keys.count + 1)", kind: .unique, columns: [])) },
@@ -303,7 +303,7 @@ struct TableEditorView: View {
             DataTable(Binding.rows($definition.checks)) {
                 DataColumn(L10n.tr("Nazwa"), sortKey: { c in c.name }) { $c in TextField("", text: upper($c.name)) }.width(min: 140, ideal: 180)
                 DataColumn(L10n.tr("Warunek"), sortKey: { c in c.condition }) { $c in TextField("", text: $c.condition).font(.code) }
-                DataColumn(L10n.tr("Włączony"), sortKey: { c in c.enabled }) { $c in Toggle("", isOn: $c.enabled).labelsHidden() }.width(60)
+                DataColumn.check(L10n.tr("Włączony"), \.enabled).width(60)
             }
             listButtons(add: { definition.checks.append(TableDefinition.Check(name: "\(definition.name)_CK\(definition.checks.count + 1)", condition: "")) },
                         remove: { if !definition.checks.isEmpty { definition.checks.removeLast() } })
@@ -333,9 +333,9 @@ struct TableEditorView: View {
                     }.labelsHidden()
                 }.width(130)
                 DataColumn("PCTFREE", sortKey: { x in x.pctFree }) { $x in TextField("", text: $x.pctFree) }.width(56)
-                DataColumn(L10n.tr("Odwrócony"), sortKey: { x in x.reverse }) { $x in Toggle("", isOn: $x.reverse).labelsHidden().disabled(x.kind == .bitmap) }.width(70)
-                DataColumn(L10n.tr("Lokalny"), sortKey: { x in x.local }) { $x in Toggle("", isOn: $x.local).labelsHidden() }.width(56)
-                DataColumn(L10n.tr("Niewidoczny"), sortKey: { x in x.invisible }) { $x in Toggle("", isOn: $x.invisible).labelsHidden() }.width(76)
+                DataColumn.check(L10n.tr("Odwrócony"), \.reverse, disabled: { x in x.kind == .bitmap }).width(70)
+                DataColumn.check(L10n.tr("Lokalny"), \.local).width(56)
+                DataColumn.check(L10n.tr("Niewidoczny"), \.invisible).width(76)
             }
             listButtons(add: { definition.indexes.append(TableDefinition.Index(name: "\(definition.name)_IX\(definition.indexes.count + 1)", columns: [])) },
                         remove: { if !definition.indexes.isEmpty { definition.indexes.removeLast() } })

@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 import PelikanDB
 
 /// Filtr lokalny siatki (DB-GRID-001): warunki na pobranych wierszach, bez ponownego zapytania.
@@ -144,14 +145,16 @@ public struct GridFilter: Sendable, Hashable {
         return GridFilter(groups: groups, text: expression)
     }
 
-    nonisolated static func like(_ s: String, _ pattern: String) -> Bool {
-        // (?s): `%` i `_` obejmują też znak nowej linii; \z — dokładnie koniec tekstu (jak LIKE w Oracle).
-        let re = "(?s)^" + NSRegularExpression.escapedPattern(for: pattern).replacingOccurrences(of: "%", with: ".*").replacingOccurrences(of: "_", with: ".") + #"\z"#
-        return s.range(of: re, options: [.regularExpression, .caseInsensitive]) != nil
+    /// Wzorce LIKE warunków skompilowane raz dla całego filtrowania (bez wyszukiwania w pamięci przy każdej komórce).
+    public func likePatterns() -> [String: LikePattern] {
+        var out: [String: LikePattern] = [:]
+        for g in groups { for c in g where c.op == .like || c.op == .notLike { out[c.value] = out[c.value] ?? LikePattern(c.value) } }
+        return out
     }
 
-    /// Czy wiersz spełnia filtr (wartości porównywane jako liczby, gdy obie są liczbami; inaczej jako tekst).
-    public func matches(_ row: [OracleValue], columns: [ColumnInfo], format: ValueFormat) -> Bool {
+    /// Czy wiersz spełnia filtr (wartości porównywane jako liczby, gdy obie są liczbami; inaczej jako tekst);
+    /// `likes` — wzorce z `likePatterns()`, skompilowane raz dla całego filtrowania.
+    public func matches(_ row: [OracleValue], columns: [ColumnInfo], format: ValueFormat, likes: [String: LikePattern]) -> Bool {
         groups.contains { group in
             group.allSatisfy { c in
                 guard let idx = columns.firstIndex(where: { $0.name == c.column }), idx < row.count else { return false }
@@ -165,8 +168,8 @@ public struct GridFilter: Sendable, Hashable {
                 if isNull { return false }
                 let s = v.format(format)
                 switch c.op {
-                case .like: return Self.like(s, c.value)
-                case .notLike: return !Self.like(s, c.value)
+                case .like: return (likes[c.value] ?? LikePattern(c.value)).matches(s)
+                case .notLike: return !(likes[c.value] ?? LikePattern(c.value)).matches(s)
                 default: break
                 }
                 let cmp: ComparisonResult
@@ -205,5 +208,36 @@ extension ResultGridModel {
         }
         return firstSeen.map { k in (value: counts[k]!.0 ? "NULL" : k, isNull: counts[k]!.0, count: counts[k]!.1) }
             .sorted { $0.count != $1.count ? $0.count > $1.count : $0.value < $1.value }
+    }
+}
+
+/// Wzorzec LIKE skompilowany raz (filtry tabel sprawdzają nim tysiące komórek): `%` — dowolny ciąg, `_` — jeden znak,
+/// bez wielkości liter; `%` i `_` obejmują też znak nowej linii, dopasowanie do końca tekstu (jak LIKE w Oracle).
+public struct LikePattern: @unchecked Sendable {
+    /// NSRegularExpression jest niezmienne po utworzeniu i bezpieczne między wątkami (dokumentacja Foundation).
+    private let re: NSRegularExpression?
+
+    public init(_ pattern: String) {
+        let body = NSRegularExpression.escapedPattern(for: pattern).replacingOccurrences(of: "%", with: ".*").replacingOccurrences(of: "_", with: ".")
+        re = try? NSRegularExpression(pattern: "^" + body + #"\z"#, options: [.caseInsensitive, .dotMatchesLineSeparators])
+    }
+
+    private static let cache = Mutex<[String: LikePattern]>([:])
+
+    /// Wzorzec skompilowany raz na tekst (pamięć ograniczona do 256 wzorców).
+    public static func cached(_ pattern: String) -> LikePattern {
+        if let p = cache.withLock({ $0[pattern] }) { return p }
+        // Kompilacja poza blokadą; przy pełnej pamięci usuwany jeden wzorzec, nie wszystkie.
+        let p = LikePattern(pattern)
+        cache.withLock { c in
+            if c[pattern] == nil, c.count >= 256, let k = c.keys.first { c.removeValue(forKey: k) }
+            c[pattern] = c[pattern] ?? p
+        }
+        return p
+    }
+
+    public func matches(_ s: String) -> Bool {
+        guard let re else { return false }
+        return re.firstMatch(in: s, range: NSRange(s.startIndex..., in: s)) != nil
     }
 }

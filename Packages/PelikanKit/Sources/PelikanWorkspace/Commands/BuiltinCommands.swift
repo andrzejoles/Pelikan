@@ -7,7 +7,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + PerfCommands.all + MultiObjectCommands.all + ProfilerCommands.all + DebugP2Commands.all + P1DataCommands.all + WindowListCommands.all + TabGroupCommands.all + GridStage8Commands.all + BrowserCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + ToolDockCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + ProgramUnitCommands.all + CodeContentsCommands.all + EditorViewCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + PerfCommands.all + TableCommands.all + MultiObjectCommands.all + ProfilerCommands.all + DebugP2Commands.all + P1DataCommands.all + WindowListCommands.all + TabGroupCommands.all + GridStage8Commands.all + BrowserCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + ToolDockCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + ProgramUnitCommands.all + CodeContentsCommands.all + EditorViewCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + view + window + help
     }
 
     /// Połączenie aktywnego okna, inaczej główne — dla zmiany hasła.
@@ -20,11 +20,17 @@ public enum BuiltinCommands {
                                     agent: AgentAccess = .none, feature: String) -> Command {
         Command(CommandDescriptor(
             id: CommandID(rawValue: id), title: title, category: .file, submenu: L10n.tr("Nowy"), pd: pd, mac: mac,
+            parameters: kind == .sql ? [CommandParameter("text", .sql, L10n.tr("Początkowy tekst okna (domyślnie puste)"))] : [],
             agent: agent, effect: .uiState,
-            summary: kind == .command ? L10n.tr("Otwiera nową, pustą konsolę SQL*Plus.") : L10n.tr("Otwiera nowe puste okno: \(kind.displayName)."),
+            summary: kind == .command ? L10n.tr("Otwiera nową, pustą konsolę SQL*Plus.")
+                : kind == .sql ? L10n.tr("Otwiera nowe okno SQL — puste albo z podanym tekstem.")
+                : L10n.tr("Otwiera nowe puste okno: \(kind.displayName)."),
             feature: feature
         )) { ctx in
-            let doc = ctx.workspace.newDocument(kind)
+            let text = kind == .sql ? ctx.arguments.string("text") ?? "" : ""
+            let doc = ctx.workspace.newDocument(kind, text: text)
+            // Okno otwarte przez agenta — w dzienniku zmian agenta („Cofnij sesję agenta” je zamyka), jak agent.openEditor.
+            if ctx.invoker.isAgent { ctx.workspace.recordAgentEdit(ctx, doc, before: "", created: true) }
             return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
         }
     }
@@ -937,6 +943,51 @@ public enum BuiltinCommands {
                                       feature: "PD-DOC-002"),
                     validate: { ws in ws.settings.localDocs.endpoint != nil }) { ctx in
                 ctx.ui?.showLocalDocs(query: ctx.arguments.string("query") ?? "")
+                return .ok
+            },
+            Command(CommandDescriptor(id: "help.localDocsCopy", title: L10n.tr("Kopiuj fragment dokumentacji"), category: .help,
+                                      agent: .none, effect: .none,
+                                      summary: L10n.tr("Kopiuje fragment (albo całą sekcję) wybrany w oknie dokumentacji lokalnej."), inMenu: false,
+                                      feature: "PD-DOC-002"),
+                    validate: { ws in ws.ui?.localDocsFragment() != nil }) { ctx in
+                guard let f = ctx.ui?.localDocsFragment() else { throw CommandError.notAvailable(L10n.tr("Wybierz fragment dokumentacji")) }
+                ctx.ui?.copyToClipboard(f.text, html: nil)
+                return .ok
+            },
+            Command(CommandDescriptor(id: "help.localDocsSection", title: L10n.tr("Cała sekcja dokumentacji"), category: .help,
+                                      parameters: [CommandParameter("whole", .boolean, L10n.tr("Cała sekcja (domyślnie — przełączenie)"))],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Pokazuje całą sekcję fragmentu wybranego w oknie dokumentacji lokalnej (składnia, parametry, uwagi) albo z powrotem sam fragment."),
+                                      inMenu: false, feature: "PD-DOC-002"),
+                    validate: { ws in ws.ui?.localDocsFragment() != nil }) { ctx in
+                guard let ui = ctx.ui, ui.localDocsFragment() != nil else { throw CommandError.notAvailable(L10n.tr("Wybierz fragment dokumentacji")) }
+                // `whole` — stan docelowy (makro odtwarza stan, nie przełączenie).
+                let whole = ctx.arguments.bool("whole") ?? !ui.localDocsShowsSection()
+                if whole != ui.localDocsShowsSection(), await !ui.localDocsToggleSection() {
+                    throw CommandError.notAvailable(L10n.tr("Nie udało się pobrać sekcji dokumentacji (szczegóły w oknie)"))
+                }
+                return CommandResult(resolvedArguments: CommandArguments(["whole": .bool(whole)]))
+            },
+            Command(CommandDescriptor(id: "help.localDocsSearchOnline", title: L10n.tr("Szukaj w dokumentacji online"), category: .help,
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Szuka słów z okna dokumentacji lokalnej na docs.oracle.com (wybrana wersja Oracle)."),
+                                      inMenu: false, feature: "PD-DOC-002"),
+                    validate: { ws in !(ws.ui?.localDocsQuery() ?? "").trimmingCharacters(in: .whitespaces).isEmpty }) { ctx in
+                let q = (ctx.ui?.localDocsQuery() ?? "").trimmingCharacters(in: .whitespaces)
+                let parts = q.split(separator: " ").map(String.init)
+                guard !q.isEmpty, let url = OracleDocs.url(for: parts.first ?? q, next: parts.dropFirst().first, release: ctx.workspace.settings.oracleDocsRelease) else {
+                    throw CommandError.notAvailable(L10n.tr("Wpisz szukane słowa"))
+                }
+                ctx.ui?.openURL(url)
+                return CommandResult(value: .string(url.absoluteString))
+            },
+            Command(CommandDescriptor(id: "help.localDocsOpenOnline", title: L10n.tr("Otwórz fragment dokumentacji online"), category: .help,
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Otwiera w przeglądarce stronę docs.oracle.com fragmentu wybranego w oknie dokumentacji lokalnej."),
+                                      inMenu: false, feature: "PD-DOC-002"),
+                    validate: { ws in ws.ui?.localDocsFragment()?.link != nil }) { ctx in
+                guard let link = ctx.ui?.localDocsFragment()?.link else { throw CommandError.notAvailable(L10n.tr("Wybierz fragment dokumentacji")) }
+                ctx.ui?.openURL(link)
                 return .ok
             },
             Command(CommandDescriptor(id: "help.log", title: L10n.tr("Dziennik aplikacji"), category: .help,

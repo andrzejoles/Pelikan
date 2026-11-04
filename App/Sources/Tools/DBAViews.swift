@@ -107,6 +107,23 @@ struct DBAPanelView: View {
     }
 }
 
+/// Odświeżanie narzędzia: przycisk „Odśwież”, „Odświeżaj co” i odstęp w sekundach (Sesje, Instance Viewer).
+struct AutoRefreshControls: View {
+    @Binding var auto: Bool
+    @Binding var interval: Double
+    let range: ClosedRange<Double>
+    let refresh: () -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button(action: refresh) { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
+            Toggle(L10n.tr("Odświeżaj co"), isOn: $auto).toggleStyle(.checkbox)
+            Stepper("\(Int(interval)) s", value: $interval, in: range, step: 1).fixedSize()
+        }
+        .fixedSize()
+    }
+}
+
 /// Instance Viewer (SD-DBA-004): pulpit instancji z odświeżaniem.
 struct InstanceViewerView: View {
     let workspace: Workspace
@@ -120,19 +137,27 @@ struct InstanceViewerView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                ToolConnectionPicker(workspace: workspace, connection: $connection)
-                if let s = snap {
-                    VStack(alignment: .leading) {
-                        Text("\(s.instanceName ?? "—") · \(s.status ?? "") · \(s.databaseRole ?? "") · \(s.logMode ?? "")").font(.uiHeadline)
-                        Text(s.version ?? "").font(.uiSecondary).foregroundStyle(.secondary)
-                        Text(L10n.tr("Czas pracy: \(uptime(s.uptime)) · sesje: \(s.sessionsTotal.map(String.init) ?? "—"), aktywne: \(s.sessionsActive.map(String.init) ?? "—")")).font(.uiSecondary)
-                    }
+            // Szeroko: połączenie, opis instancji i odświeżanie w jednym wierszu; w wąskim panelu doku — opis pod spodem.
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    ToolConnectionPicker(workspace: workspace, connection: $connection)
+                    if let s = snap { instanceInfo(s) }
+                    Spacer()
+                    refreshControls
                 }
-                Spacer()
-                Toggle(L10n.tr("Odświeżaj co"), isOn: $auto).toggleStyle(.checkbox)
-                Stepper("\(Int(interval)) s", value: $interval, in: 2...120).fixedSize()
-                Button { Task { await refresh() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        ToolConnectionPicker(workspace: workspace, connection: $connection)
+                        Spacer(minLength: 4)
+                        refreshControls
+                    }
+                    if let s = snap { instanceInfo(s) }
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    ToolConnectionPicker(workspace: workspace, connection: $connection)
+                    refreshControls
+                    if let s = snap { instanceInfo(s) }
+                }
             }
             if let s = snap {
                 // Wykresy obok siebie, w wąskim panelu jeden pod drugim (D222).
@@ -142,11 +167,11 @@ struct InstanceViewerView: View {
                 }
                 Text(L10n.tr("Najdroższe SQL (czas)")).font(.uiSecondary.bold())
                 DataTable(s.topSQL) {
-                    DataColumn("SQL_ID", sortKey: { t in t.sqlID }) { t in Text(t.sqlID).font(.code) }.width(110)
-                    DataColumn(L10n.tr("Wykonania"), sortKey: { t in t.executions }) { t in Text("\(t.executions)").monospacedDigit() }.width(80)
-                    DataColumn(L10n.tr("Czas s"), sortKey: { t in t.elapsedSeconds }) { t in Text(String(format: "%.2f", t.elapsedSeconds)).monospacedDigit() }.width(70)
-                    DataColumn("CPU s", sortKey: { t in t.cpuSeconds }) { t in Text(String(format: "%.2f", t.cpuSeconds)).monospacedDigit() }.width(70)
-                    DataColumn(L10n.tr("Bufory"), sortKey: { t in t.bufferGets }) { t in Text("\(t.bufferGets)").monospacedDigit() }.width(90)
+                    DataColumn("SQL_ID", sortKey: { t in t.sqlID }) { t in Text(t.sqlID).font(.code) }.width(min: 90, ideal: 110)
+                    DataColumn(L10n.tr("Wykonania"), sortKey: { t in t.executions }) { t in Text("\(t.executions)").monospacedDigit() }.width(min: 50, ideal: 80)
+                    DataColumn.digits(L10n.tr("Czas s"), sortKey: { t in t.elapsedSeconds }, text: { t in String(format: "%.2f", t.elapsedSeconds) }).width(min: 45, ideal: 70)
+                    DataColumn.digits("CPU s", sortKey: { t in t.cpuSeconds }, text: { t in String(format: "%.2f", t.cpuSeconds) }).width(min: 45, ideal: 70)
+                    DataColumn(L10n.tr("Bufory"), sortKey: { t in t.bufferGets }) { t in Text("\(t.bufferGets)").monospacedDigit() }.width(min: 50, ideal: 90)
                     DataColumn("SQL", sortKey: { t in t.text }) { t in Text(t.text).lineLimit(1) }
                 }
                 ForEach(s.unavailable, id: \.self) { Text($0).font(.uiSecondary).foregroundStyle(.orange) }
@@ -157,7 +182,7 @@ struct InstanceViewerView: View {
             }
         }
         .padding(10)
-        .frame(minWidth: 860, minHeight: 560)
+        .frame(minWidth: 360, minHeight: 560)
         .environment(\.reportConnection, connection)
         .onChange(of: connection) { snap = nil; Task { await refresh() } }
         .task(id: auto ? interval : 0) {
@@ -169,16 +194,31 @@ struct InstanceViewerView: View {
         }
     }
 
+    private func instanceInfo(_ s: InstanceSnapshot) -> some View {
+        VStack(alignment: .leading) {
+            Text("\(s.instanceName ?? "—") · \(s.status ?? "") · \(s.databaseRole ?? "") · \(s.logMode ?? "")").font(.uiHeadline)
+            Text(s.version ?? "").font(.uiSecondary).foregroundStyle(.secondary)
+            Text(L10n.tr("Czas pracy: \(uptime(s.uptime)) · sesje: \(s.sessionsTotal.map(String.init) ?? "—"), aktywne: \(s.sessionsActive.map(String.init) ?? "—")")).font(.uiSecondary)
+        }
+        .lineLimit(2)
+        // Stała szerokość opisu — wybór układu nagłówka nie skacze przy odświeżaniu (liczby sesji, czas pracy).
+        .frame(width: 320, alignment: .leading)
+    }
+
+    private var refreshControls: some View {
+        AutoRefreshControls(auto: $auto, interval: $interval, range: 2...120) { Task { await refresh() } }
+    }
+
     /// Oczekiwania (przyrost od poprzedniego odświeżenia) i pule SGA.
     @ViewBuilder private func charts(_ s: InstanceSnapshot) -> some View {
         InstanceBarChart(title: L10n.tr("Oczekiwania (s/s, bez Idle)"),
                          items: s.waitClasses.map { BarItem(name: $0.name, value: $0.rate ?? 0) },
                          format: { String(format: "%.2f", $0) }, empty: L10n.tr("Przyrost oczekiwań po następnym odświeżeniu"))
-            .frame(minWidth: 320)
+            .frame(minWidth: 300)
         InstanceBarChart(title: L10n.tr("SGA (MB)") + (s.pgaAllocatedMB.map { " · PGA \($0) MB" } ?? ""),
                          items: s.sga.prefix(8).map { BarItem(name: $0.0, value: $0.1) },
                          format: { String(format: "%.0f", $0) }, empty: "")
-            .frame(minWidth: 320)
+            .frame(minWidth: 300)
     }
 
     private func refresh() async {
@@ -263,19 +303,19 @@ struct TaskMonitorView: View {
                 DataColumn(L10n.tr("Rodzaj"), sortKey: { t in t.kind }) { t in Text(t.kind).foregroundStyle(.secondary) }.width(90)
                 DataColumn(L10n.tr("Stan"), sortKey: { t in status(t) }) { t in Text(status(t)).foregroundStyle(color(t)) }.width(160)
                 // Czas zadania w toku odświeża sama komórka (co sekundę) — bez przebudowy tabeli (przewinięcie, „Anuluj”).
-                DataColumn(L10n.tr("Czas"), sortKey: { t in t.duration }) { t in
+                DataColumn(L10n.tr("Czas"), sortKey: { t in t.duration }, text: { t in String(format: "%.1f s", t.duration) }) { t in
                     if t.isRunning {
                         TimelineView(.periodic(from: .now, by: 1)) { _ in Text(String(format: "%.1f s", t.duration)).monospacedDigit() }
                     } else {
                         Text(String(format: "%.1f s", t.duration)).monospacedDigit()
                     }
                 }.width(70)
-                DataColumn(L10n.tr("Postęp"), sortKey: { t in t.progress ?? -1 }) { t in
+                DataColumn(L10n.tr("Postęp"), sortKey: { t in t.progress.map { $0 * 100 } }, text: { t in t.progress.map { String(format: "%.0f%%", $0 * 100) } ?? (t.message ?? "") }) { t in
                     if let p = t.progress { ProgressView(value: p) } else { Text(t.message ?? "").font(.uiSecondary).lineLimit(1) }
                 }
-                DataColumn("", sortKey: { t in t.isRunning }) { t in
+                DataColumn("", sortKey: { t in t.isRunning }, text: { _ in "" }) { t in
                     if t.isRunning { Button(L10n.tr("Anuluj")) { t.cancel() } }
-                }.width(70)
+                }.width(70).action()
             }
         }
         .padding(10)

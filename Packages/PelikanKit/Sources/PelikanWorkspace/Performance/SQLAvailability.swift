@@ -19,6 +19,16 @@ public struct PerfLicense: Sendable, Hashable {
     }
 
     public static let all = PerfLicense(diagnostics: true, tuning: true)
+    /// Bez pakietów (licencja nieznana, odmowa albo anulowana deklaracja) — tylko raporty bez Diagnostics/Tuning Pack.
+    public static let unlicensed = PerfLicense(diagnostics: false, tuning: false)
+
+    /// Powód blokady raportu z licencji albo wersji bazy; nil — raport dozwolony (jedno miejsce dla okna, listy
+    /// dostępności i wykonania, D217).
+    public func blockReason(_ r: PerfReport, major: Int) -> String? {
+        if major < r.minMajor { return L10n.tr("Wymaga Oracle \(r.minMajor) lub nowszej") }
+        if !allows(r.need) { return L10n.tr("Wymaga licencji \(r.need.displayName)") }
+        return nil
+    }
 }
 
 /// Gdzie Oracle pamięta zapytanie (D217): pamięć kursorów, aktywne sesje, ASH, AWR, SQL Monitor, zapisane raporty
@@ -313,8 +323,7 @@ extension SQLAvailability {
     /// Raporty dostępne dla zapytania: (raport, czy można uruchomić, powód blokady).
     public func reports() -> [(report: PerfReport, available: Bool, reason: String?)] {
         PerfReportCatalog.sqlReports.map { r in
-            if major < r.minMajor { return (r, false, L10n.tr("Wymaga Oracle \(r.minMajor) lub nowszej")) }
-            if !license.allows(r.need) { return (r, false, L10n.tr("Wymaga licencji \(r.need.displayName)")) }
+            if let reason = license.blockReason(r, major: major) { return (r, false, reason) }
             if let reason = PerfReportRunner.missingPrivilege(r.id, accessible: accessiblePackages, user: user) { return (r, false, reason) }
             if r.id == "sql.planAWR", awrPlanRows == 0 {
                 return (r, false, L10n.tr("AWR ma statystyki zapytania, ale nie zapisał jego planu (DBA_HIST_SQL_PLAN)"))

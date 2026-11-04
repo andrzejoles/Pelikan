@@ -20,6 +20,8 @@ final class PerfReportsModel {
     /// Pakiety raportów z EXECUTE dla użytkownika (D223) — raporty bazy bez uprawnienia są blokowane z poleceniem GRANT.
     var packages: Set<String>?
     var sessionUser = ""
+    /// Wersja serwera z sesji (wymagania `minMajor` także w oknie raportów bazy); nil — przed połączeniem.
+    var serverMajor: Int?
     var loading = false
     var running = false
     var message = ""
@@ -27,6 +29,9 @@ final class PerfReportsModel {
     var request = PerfReportRequest(reportID: "", format: .text)
     /// Wpisany SQL_ID albo hash (zmiana zapytania w oknie).
     var input = ""
+
+    /// Pytanie o licencje anulowane — okno działa z raportami bez pakietów.
+    private var cancelledLicense = false
 
     /// Uruchomienie zaznaczonego raportu po wczytaniu (parametr `run` komendy).
     private var runAfterLoad = false
@@ -57,9 +62,22 @@ final class PerfReportsModel {
         loading = true
         defer { loading = false }
         message = ""
+        cancelledLicense = false
+        // Licencja i uprawnienia z tego wczytania (błąd połączenia przy ponownym — raporty niedostępne z tym błędem).
+        license = nil
+        packages = nil
+        serverMajor = nil
+        availability = nil
         do {
             let s = try await session()
-            let lic = try await ManagementPacks.license(connection: connection, session: s, in: workspace, invoker: .user, ask: true)
+            // Anulowana deklaracja licencji: dalej tylko raporty bez pakietów (wersja, uprawnienia, zaznaczenie — jak zwykle).
+            let lic: PerfLicense
+            do {
+                lic = try await ManagementPacks.license(connection: connection, session: s, in: workspace, invoker: .user, ask: true)
+            } catch CommandError.cancelledByUser {
+                lic = .unlicensed
+                cancelledLicense = true
+            }
             license = lic
             if let r = try? await s.queryAll("select to_char(sysdate, 'YYYY-MM-DD HH24:MI:SS'), to_char(sysdate - 1/24, 'YYYY-MM-DD HH24:MI:SS') from dual", limit: 1).1.first {
                 dbNow = r[0].displayText ?? ""; dbHourAgo = r[1].displayText ?? ""
@@ -67,6 +85,7 @@ final class PerfReportsModel {
             snapshots = (try? await ManagementPacks.snapshots(in: s)) ?? []
             packages = await SQLProbe.accessiblePackages(in: s)
             sessionUser = s.info.sessionUser
+            serverMajor = s.info.server.major > 0 ? s.info.server.major : nil
             if case .sql(var t) = mode {
                 var sqlID: String
                 switch t.target {
@@ -95,6 +114,9 @@ final class PerfReportsModel {
                     message = L10n.tr("Zapytania \(sqlID) nie ma już w pamięci kursorów, aktywnych sesjach\(lic.diagnostics ? L10n.tr(", ASH, AWR") : "")\(lic.allows(.tuning) ? L10n.tr(" ani SQL Monitor") : "") — raporty nie mają danych. Sprawdź SQL_ID albo połączenie (\(connectionName)).")
                 }
             }
+            if cancelledLicense, message.isEmpty {
+                message = L10n.tr("Anulowano — bez deklaracji licencji dostępne są tylko raporty bez pakietów")
+            }
             if selected == nil { selected = statuses.first { $0.available }?.report ?? reports.first }
             if let r = selected { select(r) }
             if runAfterLoad, let r = selected, status(r).available {
@@ -103,8 +125,6 @@ final class PerfReportsModel {
                 await run()
             }
         } catch is CancellationError {
-        } catch CommandError.cancelledByUser {
-            message = L10n.tr("Anulowano — bez deklaracji licencji dostępne są tylko raporty bez pakietów")
         } catch {
             message = error.localizedDescription
         }
@@ -113,11 +133,14 @@ final class PerfReportsModel {
     /// Raporty z informacją o dostępności (licencja, wersja, dane zapytania).
     var statuses: [(report: PerfReport, available: Bool, reason: String?)] {
         if let a = availability, mode != .global { return a.reports() }
-        let lic = license ?? .all
-        let major = availability?.major ?? 99
+        // Licencja jeszcze nieznana: wczytywanie albo błąd połączenia — powód z komunikatu, nie z licencji.
+        guard let lic = license else {
+            let reason = loading ? L10n.tr("Wczytywanie…") : (message.isEmpty ? nil : message)
+            return reports.map { ($0, false, reason) }
+        }
+        let major = availability?.major ?? serverMajor ?? 99
         return reports.map { r in
-            if !lic.allows(r.need) { return (r, false, L10n.tr("Wymaga licencji \(r.need.displayName)")) }
-            if major < r.minMajor { return (r, false, L10n.tr("Wymaga Oracle \(r.minMajor) lub nowszej")) }
+            if let reason = lic.blockReason(r, major: major) { return (r, false, reason) }
             if let reason = PerfReportRunner.missingPrivilege(r.id, accessible: packages, user: sessionUser) { return (r, false, reason) }
             if r.parameters.contains(.snapshots), snapshots.count < 2 { return (r, false, L10n.tr("W AWR są mniej niż dwie migawki")) }
             return (r, true, nil)
@@ -136,7 +159,7 @@ final class PerfReportsModel {
             if s.contains(.ashBoth) { s.removeAll { $0 == .ashBoth }; s.insert(.ashBoth, at: 0) }
             return s
         }
-        let lic = license ?? .all
+        let lic = license ?? .unlicensed
         return r.sources.filter { lic.allows($0.need) }
     }
 
@@ -157,7 +180,7 @@ final class PerfReportsModel {
             if q.source == .awr, a.sources.contains(.cursorCache) == false { q.planHash = nil }
         } else {
             if snapshots.count >= 2 { q.beginSnap = snapshots[snapshots.count - 2].id; q.endSnap = snapshots.last!.id }
-            if snapshots.count >= 4, let b = q.beginSnap, let e = q.endSnap {
+            if r.parameters.contains(.snapshots2), snapshots.count >= 4, let b = q.beginSnap, let e = q.endSnap {
                 let len = e - b
                 q.endSnap2 = b; q.beginSnap2 = b - max(1, len)
                 // Porównanie: wcześniejszy okres jako bazowy.
@@ -178,7 +201,7 @@ final class PerfReportsModel {
         message = L10n.tr("Generowanie: \(r.title)…")
         do {
             let s = try await session()
-            let out = try await PerfReportRunner.run(request, availability: availability, in: s)
+            let out = try await PerfReportRunner.run(request, availability: availability, license: license ?? .unlicensed, in: s)
             Log.tools.info("Raport wydajności: \(r.id, privacy: .public), format \(out.format.rawValue, privacy: .public)")
             message = L10n.tr("Gotowe: \(out.title)")
             PerfReportPresenter.present(out)

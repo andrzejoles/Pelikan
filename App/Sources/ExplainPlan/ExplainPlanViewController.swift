@@ -49,6 +49,8 @@ struct PlanPanel: View {
     @State private var sortPlan: [ColumnSort<PlanLine>] = []
     /// Filtr, kopiowanie i eksport kroków planu (D214).
     @State private var tools = TableToolsState()
+    /// Cel komend `table.*` (D214) — rejestrowany z widokiem NSTableView tabeli planu przy zdobyciu fokusu.
+    @StateObject private var tableHandle = SwiftUITableHandle()
     @Bindable var document: PelikanWorkspace.Document
     let workspace: Workspace
     @State private var selection: PlanLine.ID?
@@ -75,22 +77,38 @@ struct PlanPanel: View {
     }
 
     /// Kroki planu spełniające filtr; nil — filtr pusty (widok drzewa).
-    private var filteredLines: [PlanLine]? {
-        let f = tools.filter.compiled()
-        guard !f.isEmpty else { return nil }
-        let cols = planColumns
-        let ids = cols.map(\.id)
-        return (document.plan?.lines ?? []).filter { l in
-            f.matches(all: ids) { id in cols.first { $0.id == id }.map { ($0.text(l), $0.key(l)) } ?? ("", .none) }
+    private var filteredLines: [PlanLine]? { Self.filtered(document.plan, columns: planColumnValues, filter: tools.filter) }
+
+    /// Kolumna planu bez widoku komórki (tekst i klucz) — dla uchwytu tabeli, który nie może trzymać widoku
+    /// (widok kolumny „Opis” czyta zaznaczenie, czyli trzyma `self` z uchwytem w `@State`).
+    typealias PlanColumn = (id: String, title: String, text: (PlanLine) -> String, key: (PlanLine) -> SortKey)
+
+    private var planColumnValues: [PlanColumn] { planColumns.map { ($0.id, $0.title, $0.text, $0.key) } }
+
+    /// Wiersze tabeli planu do kopii, eksportu, licznika i numerów `rows` komend: z filtrem — pasujące kroki
+    /// posortowane; bez filtra — cały plan w kolejności drzewa (rodzeństwo posortowane jak na ekranie), także kroki
+    /// w gałęziach zwiniętych. Spór rund 12–13 rozstrzygnięty zasadą weta (D224): więcej informacji — eksport nie gubi
+    /// kroków.
+    static func planRows(_ plan: ExplainPlanResult?, filtered: [PlanLine]?, sort: [ColumnSort<PlanLine>]) -> [PlanLine] {
+        if let filtered { return filtered.sorted(by: sort) }
+        var out: [PlanLine] = []
+        func add(_ l: PlanLine) {
+            out.append(l)
+            (l.children ?? []).sorted(by: sort).forEach(add)
         }
+        (plan?.roots ?? []).sorted(by: sort).forEach(add)
+        return out
     }
 
-    private func planContents(_ lines: [PlanLine]) -> TableContents {
-        let cols = planColumns
-        let shown = lines.sorted(by: sortPlan)
-        return TableContents(title: L10n.tr("Plan wykonania"), columns: cols.map { ($0.id, $0.title) }, rowCount: shown.count,
-                             cell: { r, id in r < shown.count ? cols.first { $0.id == id }?.text(shown[r]) ?? "" : "" },
-                             selectedRows: shown.indices.filter { shown[$0].id == selection })
+    /// Kroki spełniające filtr; nil — filtr pusty.
+    static func filtered(_ plan: ExplainPlanResult?, columns: [PlanColumn], filter: TableFilter) -> [PlanLine]? {
+        guard filter.isActive else { return nil }
+        return filterRows(plan?.lines ?? [], columns: columns.map { ($0.id, $0.text, $0.key) }, filter: filter)
+    }
+
+    static func contents(_ shown: [PlanLine], columns cols: [PlanColumn], selected: PlanLine.ID?) -> TableContents {
+        TableContents.make(title: L10n.tr("Plan wykonania"), columns: cols.map { ($0.id, $0.title, $0.text) }, shown: shown,
+                           isSelected: { $0.id == selected })
     }
 
     var body: some View {
@@ -149,8 +167,20 @@ struct PlanPanel: View {
             } else {
                 // Rozwinięcie gałęzi w modelu okna (`planExpanded`) — komendy Rozwiń/Zwiń wszystko (PD-OPT-001).
                 let lines = filteredLines
-                let contents = planContents(lines ?? document.plan?.lines ?? [])
-                TableToolsBar(contents: contents, state: $tools, total: document.plan?.lines.count ?? 0)
+                let shownLines = Self.planRows(document.plan, filtered: lines, sort: sortPlan)
+                let cols = planColumnValues
+                let contents = Self.contents(shownLines, columns: cols, selected: selection)
+                let handle = tableHandle
+                // Komendy liczą wiersze widoku przy wywołaniu (bieżący filtr, sortowanie, rozwinięcie, zaznaczenie);
+                // domknięcia trzymają dokument i teksty kolumn, nie widok.
+                let (doc, toolsState, sortState, selectionState) = (document, $tools, $sortPlan, $selection)
+                let _ = handle.update(rows: {
+                                          Self.planRows(doc.plan, filtered: Self.filtered(doc.plan, columns: cols, filter: toolsState.wrappedValue.filter),
+                                                        sort: sortState.wrappedValue)
+                                      },
+                                      contents: { Self.contents($0, columns: cols, selected: selectionState.wrappedValue) },
+                                      state: $tools, sqlTarget: nil)
+                TableToolsBar(contents: contents, handle: handle, state: $tools, total: document.plan?.lines.count ?? 0)
                 ScrollViewReader { proxy in
                     Table(of: PlanLine.self, selection: $selection, sortOrder: $sortPlan) {
                         TableColumnForEach(planColumns) { c in
@@ -161,21 +191,24 @@ struct PlanPanel: View {
                         }
                     } rows: {
                         // Filtr (D214): pasujące kroki jako płaska lista; bez filtra — drzewo planu.
-                        if let lines {
-                            ForEach(lines.sorted(by: sortPlan)) { TableRow($0) }
+                        if lines != nil {
+                            ForEach(shownLines) { TableRow($0) }
                         } else {
                             ForEach((document.plan?.roots ?? []).sorted(by: sortPlan)) { PlanTreeRows(line: $0, expanded: $document.planExpanded, sort: sortPlan) }
                         }
                     }
+                    .registersTable(handle)
                     .contextMenu(forSelectionType: PlanLine.ID.self) { ids in
-                        let rows = (lines ?? document.plan?.lines ?? []).indices.filter { ids.contains((lines ?? document.plan?.lines ?? [])[$0].id) }
-                        TableCopyMenu(contents: contents, state: $tools, rows: rows)
-                        if let r = rows.first {
+                        // Migawka z chwili otwarcia menu, wiersze menu jako jej zaznaczenie (jak w DataTable).
+                        let idx = TableMenuRows.indices(ids, shown: shownLines)
+                        let frozen = FrozenTable(handle, contents: contents, menuRows: idx)
+                        TableCopyMenu(contents: frozen.contents, handle: idx.isEmpty ? handle : frozen, marked: tools.markedColumns, rows: .from(idx))
+                        if !idx.isEmpty {
                             Divider()
-                            TableValueFilterMenu(contents: contents, state: $tools, row: r)
+                            TableValueFilterMenu(columns: contents.columns, handle: frozen)
                         }
                         Divider()
-                        Menu(L10n.tr("Eksportuj")) { TableExportMenu(contents: contents) }
+                        Menu(L10n.tr("Eksportuj")) { TableExportMenu(handle: handle) }
                     }
                     // Krok zaznaczony nawigacją albo w Diagramie/Flame graph: rozwinięte gałęzie nad nim i przewinięcie do niego.
                     .onChange(of: selection, initial: true) { _, id in

@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanSQL
 @testable import PelikanWorkspace
 import Testing
 
@@ -115,5 +116,217 @@ struct TableToolsTests {
         var c = DateComponents(year: 2026, month: 10, day: 3)
         c.calendar = Calendar(identifier: .gregorian)
         #expect(SortKey.date(c.date!).text == "2026-10-03")
+    }
+}
+
+/// Tabela testowa dla komend `table.*`.
+@MainActor
+final class FakeTableHandle: TableHandle {
+    var filter = TableFilter()
+    var markedColumns: [String] = []
+    let rows: [[String]]
+    var selected: [Int]
+    init(rows: [[String]], selected: [Int]) { self.rows = rows; self.selected = selected }
+    func stableContents(_ live: TableContents, rows: [Int]?, columns: [String]?) -> TableContents { live }
+    var contents: TableContents {
+        TableContents(title: "T", columns: [("a", "A"), ("b", "B")], rowCount: rows.count,
+                      cell: { [rows] r, id in rows[r][id == "a" ? 0 : 1] }, selectedRows: selected)
+    }
+}
+
+@MainActor
+final class EmptyColumnTable: TableHandle {
+    func stableContents(_ live: TableContents, rows: [Int]?, columns: [String]?) -> TableContents { live }
+    var filter = TableFilter()
+    var markedColumns: [String] = []
+    var contents: TableContents {
+        TableContents(title: "T", columns: [("", ""), ("m", "Problem")], rowCount: 1, cell: { _, id in id.isEmpty ? "błąd" : "x" }, selectedRows: [])
+    }
+}
+
+@MainActor
+final class TableUI: UIServices {
+    var clipboard: String?
+    var saved: (name: String, ext: String, data: Data)?
+    var table: (any TableHandle)?
+    func focusedTable() -> (any TableHandle)? { table }
+    func clipboardText() -> String? { nil }
+    func copyToClipboard(_ text: String, html: String?) { clipboard = text }
+    func showError(_ message: String) {}
+    func showCommandPalette() {}
+    func ask(_ title: String, message: String, buttons: [String]) async -> Int? { 0 }
+    func showConnectionEditor(connectionID: UUID?) {}
+    func showLogon() {}
+    func askVariables(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]? { [:] }
+    func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool { saved = (suggestedName, fileExtension, data); return true }
+    func showLargeDataEditor(_ model: LargeDataModel) {}
+    func chooseFilesToOpen() async -> [URL] { [] }
+    func askText(_ title: String, message: String, defaultValue: String) async -> String? { nil }
+    func showFindReplace() {}
+    func showObjectInfo(title: String, columns: [String], rows: [[String]]) {}
+    func showClientMissingHelp(_ message: String) {}
+    func showRecallStatement() {}
+    func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? { nil }
+}
+
+@Suite("Narzędzia tabel: poprawki z przeglądu kodu (D224)")
+struct TableToolsReviewTests {
+    @Test("Data z ułamkami sekund: „tylko ta wartość” z tekstu do sekundy trafia")
+    func dateSeconds() throws {
+        var c = DateComponents(year: 2026, month: 11, day: 4, hour: 12, minute: 0, second: 1)
+        c.calendar = Calendar(identifier: .gregorian)
+        let d = try #require(c.date).addingTimeInterval(0.734)
+        let f = try #require(ValueFilter.parse("= 2026-11-04 12:00:01"))
+        #expect(f.matches(text: "2026-11-04 12:00:01", key: .date(d)))
+        #expect(!ValueFilter.parse("<> 2026-11-04 12:00:01")!.matches(text: "2026-11-04 12:00:01", key: .date(d)))
+    }
+
+    @Test("Data wpisana z dokładnością do minuty obejmuje całą minutę")
+    func dateMinute() throws {
+        var c = DateComponents(year: 2026, month: 11, day: 4, hour: 12, minute: 0, second: 37)
+        c.calendar = Calendar(identifier: .gregorian)
+        let d = try #require(c.date)
+        #expect(ValueFilter.parse("= 2026-11-04 12:00")!.matches(text: "2026-11-04 12:00:37", key: .date(d)))
+        #expect(!ValueFilter.parse("<> 2026-11-04 12:00")!.matches(text: "2026-11-04 12:00:37", key: .date(d)))
+        #expect(!ValueFilter.parse("= 2026-11-04 12:00:00")!.matches(text: "2026-11-04 12:00:37", key: .date(d)))
+    }
+
+    @Test("Szybki filtr: podkreślenie nie wyłącza szukania fragmentu, % — wzorzec całej wartości")
+    func quickUnderscore() {
+        func hit(_ q: String, _ text: String) -> Bool { TableFilter(quick: q).compiled().matches(all: ["x"]) { _ in (text, text.sortKey) } }
+        #expect(hit("dba_us", "DBA_USERS"))
+        #expect(hit("sql_id", "PREV_SQL_ID"))
+        #expect(!hit("abc%", "xabc"))
+        #expect(hit("abc%", "ABCD"))
+    }
+
+    @Test("Liczba w filtrze porównywana z tekstem komórki (zaokrąglony klucz nie przeszkadza); wzorzec LIKE z pamięci")
+    func shownNumber() {
+        let f = ValueFilter.parse(TableExport.condition("12.35", exclude: false))!
+        #expect(f.matches(text: "12.35", key: .number(12.345678)))
+        #expect(!ValueFilter.parse("<> 12.35")!.matches(text: "12.35", key: .number(12.345678)))
+        #expect(ValueFilter.parse("> 3")!.matches(text: "", key: .number(5)))   // bez tekstu — wartość klucza
+        #expect(LikePattern("dba%").matches("DBA_USERS") && !LikePattern("dba%").matches("X"))
+        // Porządek według klucza kolumny (jednolita skala przy jednostkach w tekście: „450 ms” obok „1.2 s”).
+        #expect(ValueFilter.parse("< 1")!.matches(text: "450 ms", key: .number(0.45)))
+        #expect(!ValueFilter.parse("< 1")!.matches(text: "1.2 s", key: .number(1.2)))
+        #expect(ValueFilter.parse("> 1000")!.matches(text: "1,234", key: .number(1234)))
+        #expect(ValueFilter.parse("= 1234")!.matches(text: "1,234", key: .number(1234)))
+        // „Tylko ta wartość” z przecinkiem — tekst dosłownie (apostrofy), trafia w tę samą komórkę.
+        #expect(ValueFilter.parse(TableExport.condition("1,234", exclude: false))!.matches(text: "1,234", key: .number(1234)))
+        #expect(!ValueFilter.parse(TableExport.condition("1,234", exclude: true))!.matches(text: "1,234", key: .number(1234)))
+        // Ta sama wartość dla wszystkich porównań: „= 12.35” i „>= 12.35” trafiają razem.
+        #expect(ValueFilter.parse("= 12.35")!.matches(text: "12.35", key: .number(12.345678)))
+        #expect(ValueFilter.parse(">= 12.35")!.matches(text: "12.35", key: .number(12.345678)))
+        #expect(ValueFilter.parse("between 12.35 and 13")!.matches(text: "12.35", key: .number(12.345678)))
+        // Klucz ułamkowy pokazany jako liczba całkowita („13” przy 12.6) — „tylko ta wartość” trafia.
+        #expect(ValueFilter.parse("= 13")!.matches(text: "13", key: .number(12.6)))
+        // between z apostrofami — tekst dosłownie, jak przy = < >.
+        #expect(ValueFilter.parse("between '1,200' and '1,900'")!.matches(text: "1,500", key: .text("1,500")))
+        // Kody z zerami wiodącymi i długie liczby — „tylko ta wartość” rozróżnia je; równość tekstu dokładna.
+        #expect(!ValueFilter.parse(TableExport.condition("0012", exclude: false))!.matches(text: "12", key: .text("12")))
+        #expect(ValueFilter.parse(TableExport.condition("0012", exclude: false))!.matches(text: "0012", key: .text("0012")))
+        #expect(!ValueFilter.parse("= 'EMP2'")!.matches(text: "EMP02", key: .text("EMP02")))
+        // „Tylko ta wartość” z wielkością liter („Emp” ≠ „EMP”); wpisany tekst bez apostrofów — bez wielkości liter.
+        #expect(!ValueFilter.parse(TableExport.condition("Emp", exclude: false))!.matches(text: "EMP", key: .text("EMP")))
+        #expect(ValueFilter.parse("= active")!.matches(text: "ACTIVE", key: .text("ACTIVE")))
+        // „Tylko ta wartość” — zawsze tekst dosłownie: „19.10” ≠ „19.1”; =, <, between zgodne dla tekstu.
+        #expect(!ValueFilter.parse(TableExport.condition("19.10", exclude: false))!.matches(text: "19.1", key: .text("19.1")))
+        #expect(!ValueFilter.parse("between 'EMP02' and 'EMP02'")!.matches(text: "EMP2", key: .text("EMP2")))
+        // Komórka bez klucza, ale z opisem (kolumna postępu) — nie jest pusta.
+        #expect(ValueFilter.parse(TableExport.condition("Łączenie…", exclude: false))!.matches(text: "Łączenie…", key: .none))
+        #expect(TableExport.isNumber("5."))
+        #expect(TableExport.isNumber("1000000000000000000"))
+        #expect(ValueFilter.parse("between 'Rock and Roll' and 'Z'")!.matches(text: "Sabbath", key: .text("Sabbath")))
+        // Liczba z zerami po przecinku (16 znaków, 8 cyfr znaczących) — liczba; kolumna zostaje liczbowa.
+        #expect(TableExport.isNumber("-0.0000012345678"))
+        #expect(ResultExporter.significantDigits("-123456789012.34") == 14)
+        // Wartość z białymi znakami na brzegach — „tylko ta wartość” trafia w tę samą komórkę.
+        #expect(ValueFilter.parse(TableExport.condition("abc\n", exclude: false))!.matches(text: "abc\n", key: .text("abc\n")))
+        #expect(!ValueFilter.parse("= 19")!.matches(text: "19c", key: .text("19c")))
+    }
+
+    @Test("Eksport: zera wiodące i długie identyfikatory zostają tekstem")
+    func exportNumbers() {
+        #expect(TableExport.isNumber("12.35") && TableExport.isNumber("-0.5") && TableExport.isNumber("0") && TableExport.isNumber(".5"))
+        #expect(!TableExport.isNumber("0012") && !TableExport.isNumber("123456789012345678") && !TableExport.isNumber("-") && !TableExport.isNumber(""))
+        #expect(!TableExport.isNumber("E1") && !TableExport.isNumber("e5") && !TableExport.isNumber("-E2") && TableExport.isNumber("1e5"))
+        #expect(TableExport.isNumber("123456789012345"))
+        let d = TableExport.data(title: "", columns: ["kod"], rows: [["0012"], ["0100"]])
+        #expect(d.columns[0].type == .varchar2)
+    }
+
+    @Test("Komendy table.*: komórka, wiersze, kolumny zaznaczone, filtr wartością, eksport; bez tabeli — niedostępne")
+    @MainActor func commands() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let ui = TableUI()
+        ws.ui = ui
+        #expect(ws.registry.command("table.copyAll")?.validate?(ws) == false)
+        let t = FakeTableHandle(rows: [["1", "x"], ["2", "y"], ["3", "z"]], selected: [1])
+        ui.table = t
+        func run(_ id: String, _ args: [String: JSONValue] = [:], target: AnyObject? = nil) async throws {
+            _ = try await ws.registry.command(CommandID(rawValue: id))!.run(CommandContext(workspace: ws, invoker: .user, arguments: CommandArguments(args), target: target))
+        }
+        try await run("table.copyCell", ["column": "B"])
+        #expect(ui.clipboard == "y")
+        let header = TableExport.copyHeader
+        defer { TableExport.copyHeader = header }
+        TableExport.copyHeader = false
+        try await run("table.copyRows", ["rows": "1,3"])
+        await #expect(throws: CommandError.self) { try await run("table.copyCell", ["column": "a", "row": "x"]) }
+        #expect(ui.clipboard == "1\tx\n3\tz")
+        try await run("table.markColumn", ["column": "b"])
+        try await run("table.copyMarkedColumns")
+        // Kolejność zaznaczania kolumn (b, potem a) — w kopii b przed a.
+        try await run("table.markColumn", ["column": "a"])
+        try await run("table.copyMarkedColumns", ["rows": "1"])
+        #expect(ui.clipboard == "x\t1")
+        try await run("table.markColumn", ["column": "a", "marked": false])
+        try await run("table.copyMarkedColumns")
+        #expect(ui.clipboard == "x\ny\nz")
+        try await run("table.filterByValue", ["column": "a", "exclude": true])
+        #expect(t.filter.columns["a"] == "<> '2'")
+        try await run("table.clearFilter")
+        #expect(!t.filter.isActive)
+        try await run("table.export", ["format": "csv"])
+        #expect(ui.saved?.ext == "csv")
+        await #expect(throws: CommandError.self) { try await run("table.copyRows", ["rows": "9"]) }
+        // Kolumna bez tytułu (pusty identyfikator) — od razu, bez pytania o kolumnę.
+        let icons = EmptyColumnTable()
+        ui.table = icons
+        try await run("table.copyCell", ["column": "", "row": 1])
+        #expect(ui.clipboard == "błąd")
+        #expect(ws.registry.command("file.new.sql")?.descriptor.parameters.map(\.name) == ["text"])
+        #expect(ws.registry.command("file.new.program")?.descriptor.parameters.isEmpty == true)
+        // Okno z tekstem od agenta — w dzienniku zmian agenta (cofnięcie sesji je zamyka).
+        _ = try await ws.registry.command("file.new.sql")!.run(CommandContext(workspace: ws, invoker: .agent(sessionID: "s", agentName: "test"), arguments: CommandArguments(["text": "select 1 from dual"])))
+        #expect(ws.agentEdits.contains { $0.session == "s" && $0.created })
+        // Menu tabeli wskazuje ją identyfikatorem — działa na niej, choć fokus ma inna tabela; bez tabeli — przełącznik nagłówka.
+        let other = FakeTableHandle(rows: [["9", "q"]], selected: [0])
+        ui.table = other
+        try await run("table.copyCell", ["column": "b", "row": 2], target: t)
+        #expect(ui.clipboard == "y")
+        // Wiersze menu, których już nie ma, i zamknięta tabela — błąd zamiast zaznaczenia albo innej tabeli.
+        await #expect(throws: CommandError.self) { try await run("table.copyRows", ["rows": ""]) }
+        await #expect(throws: CommandError.self) { try await run("table.copyCell", ["column": "a", "row": 0]) }
+        await #expect(throws: CommandError.self) { try await run("table.copyAll", target: NSObject()) }
+        try await run("table.copyMarkedColumns", ["selected": true], target: t)
+        // Znacznik menu „wiersze zniknęły” — komunikat; wartości umowne w publicznych argumentach to zwykły błąd argumentu.
+        #expect(ui.clipboard == "y")
+        // Kolumna podana argumentem — nic do uzupełnienia w makrze.
+        // Filtr z menu — do makra wartość, nie numer wiersza; odtworzenie z wartością nie czyta wierszy.
+        let r = try await ws.registry.command("table.filterByValue")!.run(CommandContext(workspace: ws, invoker: .user, arguments: CommandArguments(["column": "a", "row": 1]), target: t))
+        #expect(r.resolvedArguments?.string("value") == "1")
+        try await run("table.filterByValue", ["column": "b", "value": "q", "row": 99], target: t)
+        #expect(t.filter.columns["b"] == "= 'q'")
+        // Zaznaczenie kolumny w makrze — stan docelowy.
+        try await run("table.markColumn", ["column": "a", "marked": true], target: t)
+        try await run("table.markColumn", ["column": "a", "marked": true], target: t)
+        #expect(t.markedColumns.contains("a"))
+        try await run("table.clearFilter", target: t)
+        ui.table = nil
+        let before = TableExport.copyHeader
+        try await run("table.toggleCopyHeader")
+        #expect(TableExport.copyHeader == !before)
     }
 }

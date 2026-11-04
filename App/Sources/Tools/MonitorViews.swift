@@ -30,7 +30,7 @@ struct EventMonitorView: View {
                 Button(L10n.tr("Wyczyść")) { monitor?.clear() }
             }
             DataTable(monitor?.events ?? []) {
-                DataColumn(L10n.tr("Czas"), sortKey: { e in e.time }) { e in Text(e.time.formatted(date: .omitted, time: .standard)) }.width(90)
+                DataColumn.digits(L10n.tr("Czas"), sortKey: { e in e.time }, text: { e in e.time.formatted(date: .omitted, time: .standard) }).width(90)
                 DataColumn(L10n.tr("Nazwa"), sortKey: { e in e.name }) { e in Text(e.name) }.width(160)
                 DataColumn(L10n.tr("Treść"), sortKey: { e in e.message }) { e in Text(e.message).textSelection(.enabled) }
             }
@@ -125,8 +125,8 @@ struct LoadTesterView: View {
                     DataColumn(L10n.tr("Krok"), sortKey: { s in s.name }) { s in Text(s.name) }
                     DataColumn(L10n.tr("Wykonania"), sortKey: { s in s.count }) { s in Text("\(s.count)").monospacedDigit() }.width(80)
                     DataColumn(L10n.tr("Błędy"), sortKey: { s in s.errors }) { s in Text("\(s.errors)").foregroundStyle(s.errors > 0 ? .red : .primary) }.width(60)
-                    DataColumn(L10n.tr("Średnio ms"), sortKey: { s in s.averageMs }) { s in Text(String(format: "%.1f", s.averageMs)).monospacedDigit() }.width(80)
-                    DataColumn(L10n.tr("Maks ms"), sortKey: { s in s.maxMs }) { s in Text(String(format: "%.1f", s.maxMs)).monospacedDigit() }.width(70)
+                    DataColumn.digits(L10n.tr("Średnio ms"), sortKey: { s in s.averageMs }, text: { s in String(format: "%.1f", s.averageMs) }).width(80)
+                    DataColumn.digits(L10n.tr("Maks ms"), sortKey: { s in s.maxMs }, text: { s in String(format: "%.1f", s.maxMs) }).width(70)
                 }
                 .frame(minHeight: 120)
                 Chart(t.stats) { s in BarMark(x: .value(L10n.tr("Krok"), s.name), y: .value(L10n.tr("Średnio ms"), s.averageMs)) }

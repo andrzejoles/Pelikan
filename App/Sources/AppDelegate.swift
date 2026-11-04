@@ -849,18 +849,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
-    /// Zapytanie z elementu z fokusem: edytor (zaznaczenie, słowo, polecenie), siatka (wiersz, komórka), tabela narzędzia.
-    func focusedSQLTarget() -> SQLReportTarget? {
-        let responder = NSApp.keyWindow?.firstResponder
+    /// Tabela okna narzędzia, której dotyczą komendy `table.*` (D214). Siatka wyników SQL ma własne komendy `grid.*`.
+    func focusedTable() -> (any TableHandle)? { TableFocus.current() }
+
+
+
+    func localDocsFragment() -> (text: String, link: URL?)? { LocalDocsModel.shared.fragment }
+    func localDocsToggleSection() async -> Bool { await LocalDocsModel.shared.toggleSection(settings: workspace.settings.localDocs) }
+    func localDocsShowsSection() -> Bool { LocalDocsModel.shared.detail != nil }
+
+    func localDocsQuery() -> String? { LocalDocsModel.shared.isOpen ? LocalDocsModel.shared.query : nil }
+
+    /// Zapytanie z elementu z fokusem: siatka (wiersz, komórka), edytor (zaznaczenie, słowo, polecenie), tabela
+    /// narzędzia. Paleta komend (panel) nie zabiera celu oknu pod nią.
+    func focusedSQLTarget() -> FocusedSQL {
+        let window = TableFocus.contextWindow
+        let responder = window?.firstResponder
         if responder is GridTableView, let doc = workspace.activeDocument, doc.kind == .sql,
            let tab = doc.results.first(where: { $0.id == doc.activeResultID }) ?? doc.results.first {
-            return SQLTargetFinder.fromGrid(tab)
+            return SQLTargetFinder.fromGrid(tab).map(FocusedSQL.target) ?? .noTarget
         }
-        if let tv = responder as? NSTextView, !tv.isFieldEditor, NSApp.keyWindow === mainWindow?.window, let doc = workspace.activeDocument {
-            return SQLTargetFinder.fromEditor(doc)
+        if let tv = responder as? NSTextView, !tv.isFieldEditor, window === mainWindow?.window, let doc = workspace.activeDocument {
+            return SQLTargetFinder.fromEditor(doc).map(FocusedSQL.target) ?? .noTarget
         }
-        if responder is NSTableView { return SQLTargetRegistry.shared.current() }
-        return nil
+        // Tabela narzędzia: cel z zaznaczonego wiersza; tabela z kolumną SQL bez zaznaczenia — pytanie o zapytanie.
+        if responder is NSTableView, let table = TableFocus.current() {
+            if let t = table.sqlTarget { return .target(t) }
+            return table.hasSQLColumn ? .tableWithoutTarget : .noTarget
+        }
+        return .noTarget
     }
 
     /// Dokumentacja Oracle z lokalnego serwera MCP (D216): jedno okno, nowe zapytanie wyszukuje od nowa.
@@ -1165,10 +1182,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {
-        if Self.scriptSkipsDialog("saveFile") { return false }
         guard let window = mainWindow?.window else { return false }
+        return await saveFile(suggestedName: suggestedName, fileExtension: fileExtension, data: data, window: window)
+    }
+
+    /// Eksport tabeli: arkusz nad oknem tej tabeli (okno narzędzia przed oknem głównym), inaczej nad oknem głównym.
+    func saveFile(suggestedName: String, fileExtension: String, data: Data, table: any TableHandle) async -> Bool {
+        guard let window = TableFocus.window(for: table) ?? mainWindow?.window else { return false }
+        return await saveFile(suggestedName: suggestedName, fileExtension: fileExtension, data: data, window: window)
+    }
+
+    private func saveFile(suggestedName: String, fileExtension: String, data: Data, window: NSWindow) async -> Bool {
+        if Self.scriptSkipsDialog("saveFile") { return false }
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = suggestedName.replacingOccurrences(of: "/", with: "-") + "." + fileExtension
+        // Nazwa bez znaków niedozwolonych w nazwach plików macOS („/” i „:” — jedno miejsce dla wszystkich zapisów).
+        panel.nameFieldStringValue = suggestedName.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-") + "." + fileExtension
         panel.allowedContentTypes = [UTType(filenameExtension: fileExtension) ?? .data]
         panel.canCreateDirectories = true
         let response = await panel.beginSheetModal(for: window)

@@ -48,6 +48,9 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
     }
 
     func show(relativeTo window: NSWindow?) {
+        // Czynności z palety dotyczą okna pod nią (tabela z fokusem, raporty dla SQL_ID).
+        TableFocus.palette = panel
+        TableFocus.paletteHost = NSApp.keyWindow === panel ? TableFocus.paletteHost : NSApp.keyWindow
         search.stringValue = ""
         filter()
         if let frame = window?.frame {
@@ -95,7 +98,10 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
         guard row >= 0, row < items.count else { return }
         // Niedostępnej teraz komendy nie wykonuje (jak „Szukaj czynności”).
         guard workspace.isEnabled(items[row].id) else { NSSound.beep(); return }
+        // Okno, nad którym otwarto paletę, wraca jako okno z fokusem przed wykonaniem — każda komenda (tabela z fokusem,
+        // SQL_ID z zaznaczenia) widzi to samo, co przy sprawdzaniu dostępności.
         panel.orderOut(nil)
+        if let host = TableFocus.paletteHost, host.isVisible, !host.isMiniaturized { host.makeKey() }
         workspace.perform(items[row].id)
     }
 

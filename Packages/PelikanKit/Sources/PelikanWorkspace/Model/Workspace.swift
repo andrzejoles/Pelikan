@@ -32,6 +32,8 @@ public protocol UIServices: AnyObject {
     func printHTML(_ html: String, title: String)
     /// Okno zapisu pliku; zwraca false przy anulowaniu.
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool
+    /// Zapis pliku eksportu tabeli — okno zapisu nad oknem tej tabeli (D224).
+    func saveFile(suggestedName: String, fileExtension: String, data: Data, table: any TableHandle) async -> Bool
     /// Large Data Editor (UG 27) dla komórki siatki.
     func showLargeDataEditor(_ model: LargeDataModel)
     /// Pytanie o tekst (np. numer linii); nil — anulowano.
@@ -116,8 +118,18 @@ public protocol UIServices: AnyObject {
     /// Raporty wydajności (D217): okno raportów zapytania i okno raportów bazy (nil — lista wszystkich).
     func showSQLReports(_ target: SQLReportTarget)
     func showPerfReport(_ reportID: String?, connection: UUID)
-    /// Zapytanie z elementu z fokusem (wiersz albo komórka tabeli, edytor) — przed oknem aktywnym.
-    func focusedSQLTarget() -> SQLReportTarget?
+    /// Zapytanie z elementu z fokusem (wiersz albo komórka tabeli, edytor) — przed oknem aktywnym; jedna odpowiedź
+    /// o fokusie: cel, tabela z kolumną SQL bez zaznaczonego zapytania (pytanie zamiast polecenia z edytora) albo brak.
+    func focusedSQLTarget() -> FocusedSQL
+    /// Tabela okna narzędzia z fokusem (ostatnio używana w oknie aktywnym) — dla komend `table.*` (D214).
+    func focusedTable() -> (any TableHandle)?
+    /// Fragment wybrany w oknie dokumentacji lokalnej (tekst — fragment albo cała sekcja, adres online) — D216.
+    func localDocsFragment() -> (text: String, link: URL?)?
+    /// Okno dokumentacji lokalnej: cała sekcja wybranego fragmentu albo z powrotem sam fragment; zapytanie okna.
+    /// `false` — nie udało się (adres, serwer); komunikat w oknie.
+    func localDocsToggleSection() async -> Bool
+    func localDocsShowsSection() -> Bool
+    func localDocsQuery() -> String?
     /// Okno druku dla dokumentu HTML (PD-SQLW-016).
     func printHTML(title: String, html: String)
     /// Widoki dualności (SD-DV-001), moduły MLE (SD-MLE-001), podgląd przestrzenny (SD-DATA-001).
@@ -261,7 +273,15 @@ extension UIServices {
     public func showLocalDocs(query: String) {}
     public func showSQLReports(_ target: SQLReportTarget) {}
     public func showPerfReport(_ reportID: String?, connection: UUID) {}
-    public func focusedSQLTarget() -> SQLReportTarget? { nil }
+    public func focusedSQLTarget() -> FocusedSQL { .noTarget }
+    public func focusedTable() -> (any TableHandle)? { nil }
+    public func localDocsFragment() -> (text: String, link: URL?)? { nil }
+    public func localDocsToggleSection() async -> Bool { false }
+    public func localDocsShowsSection() -> Bool { false }
+    public func localDocsQuery() -> String? { nil }
+    public func saveFile(suggestedName: String, fileExtension: String, data: Data, table: any TableHandle) async -> Bool {
+        await saveFile(suggestedName: suggestedName, fileExtension: fileExtension, data: data)
+    }
     public func printHTML(title: String, html: String) {}
     public func showDualityViews() {}
     public func showMLEModules() {}
@@ -850,23 +870,24 @@ public final class Workspace {
 
     /// Jedyny punkt wywołania komendy — menu, skróty, paleta, linia poleceń i agent.
     @discardableResult
-    public func invoke(_ id: CommandID, _ arguments: CommandArguments = .empty, invoker: Invoker = .user) async throws -> CommandResult {
+    public func invoke(_ id: CommandID, _ arguments: CommandArguments = .empty, invoker: Invoker = .user,
+                       target: AnyObject? = nil) async throws -> CommandResult {
         guard let command = registry.command(id) else { throw CommandError.unknownCommand(id) }
         // Stan menu obowiązuje wszystkich wywołujących (także agenta): komenda wyłączona nie wykonuje się. Komenda
-        // wywołana z argumentami (np. obiekt wskazany nazwą zamiast zaznaczenia) sama sprawdza swój cel. Klucze
-        // wewnętrzne („__…”, np. znacznik run_command) nie są argumentami — nie wyłączają sprawdzenia.
-        let explicit = arguments.values.keys.contains { !$0.hasPrefix("__") }
+        // wywołana z argumentami (np. obiekt wskazany nazwą zamiast zaznaczenia) albo z celem z interfejsu (`target`)
+        // sama sprawdza swój cel. Klucze wewnętrzne („__…”, np. znacznik run_command) nie są argumentami.
+        let explicit = (target != nil && command.acceptsTarget) || arguments.values.keys.contains { !$0.hasPrefix("__") }
         if !explicit, let validate = command.validate, !validate(self) {
             throw CommandError.notAvailable(L10n.tr("„\(command.descriptor.title)” jest teraz niedostępne"))
         }
-        var context = CommandContext(workspace: self, invoker: invoker, arguments: arguments)
+        var context = CommandContext(workspace: self, invoker: invoker, arguments: arguments, target: target)
         let started = Date()
         let clock = ContinuousClock.now
         do {
             if invoker.isAgent {
                 // Agent bez bramki uprawnień (serwer agentów nie działa) nie wykonuje niczego.
                 guard let gate = agentGate else { throw AgentDenial.sessionClosed }
-                context = CommandContext(workspace: self, invoker: invoker, arguments: try await gate.authorize(command, context: context))
+                context = CommandContext(workspace: self, invoker: invoker, arguments: try await gate.authorize(command, context: context), target: target)
             }
             let result = if let s = invoker.agentSessionID, AgentChanges.serializedCommands.contains(id) {
                 try await agentSerialized(s) { try await command.run(context) }
@@ -902,10 +923,10 @@ public final class Workspace {
 
     /// Wywołanie z interfejsu: błędy pokazywane użytkownikowi zamiast rzucane. Zadanie — gdy trzeba poczekać na koniec.
     @discardableResult
-    public func perform(_ id: CommandID, _ arguments: CommandArguments = .empty) -> Task<Void, Never> {
+    public func perform(_ id: CommandID, _ arguments: CommandArguments = .empty, target: AnyObject? = nil) -> Task<Void, Never> {
         Task {
             do {
-                try await invoke(id, arguments)
+                try await invoke(id, arguments, target: target)
             } catch CommandError.cancelledByUser {
             } catch DatabaseError.clientMissing(let message) {
                 ui?.showClientMissingHelp(message)

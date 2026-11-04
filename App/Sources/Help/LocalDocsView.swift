@@ -2,17 +2,99 @@ import AppKit
 import PelikanWorkspace
 import SwiftUI
 
-/// Stan okna dokumentacji lokalnej (D216): jedno okno; kolejne F1 podmienia zapytanie i wyszukuje od nowa.
+/// Stan okna dokumentacji lokalnej (D216): jedno okno; kolejne F1 podmienia zapytanie i wyszukuje od nowa. Wyniki,
+/// zaznaczenie i treść sekcji są w modelu — komendy okna („Kopiuj”, „Cała sekcja”, „Otwórz online”) widzą to samo
+/// co okno, także gdy narzędzie przeniesiono między dokiem a osobnym oknem.
 @MainActor @Observable
 final class LocalDocsModel {
     static let shared = LocalDocsModel()
     var query = ""
     /// Zmienia się przy każdym zleceniu wyszukiwania z zewnątrz (F1, komenda).
     var request = 0
+    var version = "19c"
+    /// Wersja ustawiona z ustawień raz (przy pierwszym otwarciu); potem wybór w oknie — także przy wyszukiwaniu z F1.
+    var versionInitialized = false
+    /// Okno widoczne — komendy okna („Kopiuj”, „Cała sekcja”, „Otwórz online”) działają tylko na tym, co widać:
+    /// widok okna jest w oknie i nie jest ukryty (np. nieaktywna karta doku).
+    @ObservationIgnored weak var view: NSView?
+    var isOpen: Bool {
+        guard let view, view.window != nil else { return false }
+        return !view.isHiddenOrHasHiddenAncestor
+    }
+    /// Ostatnie wykonane zlecenie — ponowne pokazanie okna (przeniesienie narzędzia) nie powtarza wyszukiwania.
+    var handledRequest = -1
+    var results: [DocFragment] = []
+    var selection: DocFragment.ID? {
+        didSet { if selection != oldValue { detail = nil } }
+    }
+    /// Cała sekcja wybranego fragmentu (nil — sam fragment).
+    var detail: String?
+    var message = ""
+    /// Wywołania serwera w toku (wskaźnik pracy) i numery najnowszych żądań — wynik starszego żądania jest pomijany.
+    private(set) var pending = 0
+    private var searchRequest = 0
+    private var sectionRequest = 0
+
+    var busy: Bool { pending > 0 }
+    var selected: DocFragment? { results.first { $0.id == selection } }
+    /// Wybrany fragment (tekst fragmentu albo całej sekcji, adres online).
+    var fragment: (text: String, link: URL?)? { isOpen ? selected.map { (detail ?? $0.text, $0.link) } : nil }
 
     func search(_ q: String) {
         query = q
         request += 1
+    }
+
+    func search(settings: LocalDocsSettings) async {
+        let q = query.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return }
+        searchRequest += 1
+        let request = searchRequest
+        // Zły adres unieważnia też wyszukiwanie w toku (jego wynik nie nadpisze komunikatu).
+        guard let endpoint = settings.endpoint else { message = LocalDocsError.badAddress(settings.url).localizedDescription; return }
+        pending += 1
+        defer { pending -= 1 }
+        do {
+            let found = try await LocalDocsClient.shared(for: endpoint).search(q, version: version, count: 10)
+            guard request == searchRequest else { return }
+            results = found
+            selection = results.first?.id
+            message = results.isEmpty ? L10n.tr("Nic nie znaleziono") : L10n.tr("Fragmentów: \(results.count)")
+        } catch {
+            // Zamknięcie okna w trakcie (anulowane zadanie) to nie błąd serwera — wyniki zostają.
+            guard request == searchRequest, !Task.isCancelled else { return }
+            results = []
+            selection = nil
+            message = error.localizedDescription + " " + L10n.tr("Dokumentacja online działa bez serwera (przycisk obok).")
+        }
+    }
+
+    /// „Cała sekcja” albo z powrotem „Tylko fragment”.
+    /// Wynik: czy okno pokazuje teraz to, o co poproszono (błąd serwera albo adresu — komunikat, `false`).
+    @discardableResult
+    func toggleSection(settings: LocalDocsSettings) async -> Bool {
+        guard let f = selected else { return false }
+        if detail != nil { detail = nil; return true }
+        guard let endpoint = settings.endpoint else {
+            message = LocalDocsError.badAddress(settings.url).localizedDescription
+            return false
+        }
+        sectionRequest += 1
+        let request = sectionRequest
+        pending += 1
+        defer { pending -= 1 }
+        do {
+            let text = try await LocalDocsClient.shared(for: endpoint).section(f.chunk)
+            // W międzyczasie wybrano inny fragment albo pobrano inną sekcję — ten wynik jest nieaktualny (zastąpiony, nie
+            // błąd).
+            guard request == sectionRequest, selection == f.id else { return true }
+            detail = text
+            return true
+        } catch {
+            guard request == sectionRequest, selection == f.id else { return true }
+            message = error.localizedDescription
+            return false
+        }
     }
 }
 
@@ -21,110 +103,134 @@ final class LocalDocsModel {
 struct LocalDocsView: View {
     let workspace: Workspace
     @Bindable var model: LocalDocsModel
-    @State private var version = "19c"
-    @State private var results: [DocFragment] = []
-    @State private var selection: DocFragment.ID?
-    @State private var detail: String?
-    @State private var busy = false
-    @State private var message = ""
 
-    private var selected: DocFragment? { results.first { $0.id == selection } }
     private var settings: LocalDocsSettings { workspace.settings.localDocs }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                TextField(L10n.tr("Szukaj w dokumentacji Oracle (po angielsku, np. DBMS_SCHEDULER.CREATE_JOB repeat_interval)"), text: $model.query)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit { Task { await search() } }
-                Picker(L10n.tr("Wersja"), selection: $version) {
-                    ForEach(LocalDocsSettings.versions, id: \.self) { v in Text(v == "all" ? L10n.tr("wszystkie") : v).tag(v) }
-                }
-                .fixedSize()
-                Button(L10n.tr("Szukaj")) { Task { await search() } }
-                    .disabled(model.query.trimmingCharacters(in: .whitespaces).isEmpty || busy)
-                if busy { ProgressView().controlSize(.small) }
-            }
-            HSplitView {
-                List(results, selection: $selection) { f in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(f.heading).lineLimit(2)
-                        Text(f.title).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(1)
-                    }
-                    .tag(f.id)
-                }
-                .frame(minWidth: 170, idealWidth: 260)
+            // Wąski panel doku: wersja i „Szukaj” pod polem; wyniki nad treścią fragmentu.
+            ViewThatFits(in: .horizontal) {
+                HStack { queryField; searchControls }
                 VStack(alignment: .leading, spacing: 4) {
-                    if let f = selected {
-                        Text(f.section).font(.uiSecondary).foregroundStyle(.secondary).textSelection(.enabled).lineLimit(3)
-                        ScrollView {
-                            DocText(text: detail ?? f.text).frame(maxWidth: .infinity, alignment: .leading).padding(.trailing, 6)
-                        }
-                        HStack {
-                            Button(detail == nil ? L10n.tr("Cała sekcja") : L10n.tr("Tylko fragment")) {
-                                if detail == nil { Task { await loadSection(f) } } else { detail = nil }
-                            }
-                            Button(L10n.tr("Kopiuj")) { DocsClipboard.put(detail ?? f.text) }
-                            Spacer()
-                            if let link = f.link {
-                                Button(L10n.tr("Otwórz online")) { NSWorkspace.shared.open(link) }
-                                    .help(link.absoluteString)
-                            }
-                        }
-                    } else {
-                        Text(results.isEmpty ? L10n.tr("Wpisz szukane słowa albo naciśnij F1 na słowie w edytorze.") : L10n.tr("Wybierz fragment"))
-                            .foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+                    queryField
+                    HStack { searchControls; Spacer() }
+                }
+            }
+            GeometryReader { g in
+                if g.size.width < 560 {
+                    VSplitView {
+                        resultList.frame(minHeight: 120, idealHeight: 180)
+                        detailPane.frame(minHeight: 160)
+                    }
+                } else {
+                    HSplitView {
+                        resultList.frame(minWidth: 170, idealWidth: 260)
+                        detailPane.frame(minWidth: 240)
                     }
                 }
-                .frame(minWidth: 240)
             }
             HStack {
-                Text(message).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(2).textSelection(.enabled)
+                Text(model.message).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(2).textSelection(.enabled)
                 Spacer()
-                Button(L10n.tr("Dokumentacja online")) { openOnline() }
+                Button(L10n.tr("Dokumentacja online")) { workspace.perform("help.localDocsSearchOnline") }
                     .disabled(model.query.trimmingCharacters(in: .whitespaces).isEmpty)
                     .help(L10n.tr("Szuka tych samych słów na docs.oracle.com"))
             }
         }
         .padding(10)
-        .frame(minWidth: 440, minHeight: 380)
+        .frame(minWidth: 320, minHeight: 380)
+        .background(DocsVisibilityProbe(model: model))
         .task(id: model.request) {
-            version = settings.version
-            if !model.query.trimmingCharacters(in: .whitespaces).isEmpty { await search() }
-        }
-        .onChange(of: selection) { detail = nil }
-    }
-
-    private func search() async {
-        let q = model.query.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { return }
-        guard let endpoint = settings.endpoint else { message = LocalDocsError.badAddress(settings.url).localizedDescription; return }
-        busy = true
-        defer { busy = false }
-        do {
-            results = try await LocalDocsClient(endpoint: endpoint).search(q, version: version, count: 10)
-            selection = results.first?.id
-            message = results.isEmpty ? L10n.tr("Nic nie znaleziono") : L10n.tr("Fragmentów: \(results.count)")
-        } catch {
-            results = []
-            message = error.localizedDescription + " " + L10n.tr("Dokumentacja online działa bez serwera (przycisk obok).")
+            if !model.versionInitialized {
+                model.version = settings.version
+                model.versionInitialized = true
+            }
+            // Wykonanie zlecenia komendy (F1, „Szukaj”, paleta) — samo wyszukiwanie, raz na zlecenie.
+            guard model.handledRequest != model.request else { return }
+            let request = model.request
+            if !model.query.trimmingCharacters(in: .whitespaces).isEmpty { await model.search(settings: settings) }
+            // Wykonane dopiero po nieprzerwanym wyszukiwaniu (okno zamknięte w trakcie — przy ponownym pokazaniu od nowa).
+            if !Task.isCancelled { model.handledRequest = request }
         }
     }
 
-    private func loadSection(_ f: DocFragment) async {
-        guard let endpoint = settings.endpoint else { return }
-        busy = true
-        defer { busy = false }
-        do { detail = try await LocalDocsClient(endpoint: endpoint).section(f.chunk) } catch { message = error.localizedDescription }
+    private var queryField: some View {
+        TextField(L10n.tr("Szukaj w dokumentacji Oracle (po angielsku, np. DBMS_SCHEDULER.CREATE_JOB repeat_interval)"), text: $model.query)
+            .textFieldStyle(.roundedBorder)
+            .frame(minWidth: 200)
+            .onSubmit { search() }
     }
 
-    private func openOnline() {
-        let q = model.query.trimmingCharacters(in: .whitespaces)
-        let parts = q.split(separator: " ").map(String.init)
-        if let url = OracleDocs.url(for: parts.first ?? q, next: parts.dropFirst().first, release: workspace.settings.oracleDocsRelease) {
-            NSWorkspace.shared.open(url)
+    private var searchControls: some View {
+        HStack {
+            Picker(L10n.tr("Wersja"), selection: $model.version) {
+                ForEach(LocalDocsSettings.versions, id: \.self) { v in Text(v == "all" ? L10n.tr("wszystkie") : v).tag(v) }
+            }
+            .fixedSize()
+            Button(L10n.tr("Szukaj")) { search() }
+                .disabled(model.query.trimmingCharacters(in: .whitespaces).isEmpty || model.busy)
+            if model.busy { ProgressView().controlSize(.small) }
+        }
+        .fixedSize()
+    }
+
+    private var resultList: some View {
+        List(model.results, selection: $model.selection) { f in
+            VStack(alignment: .leading, spacing: 2) {
+                Text(f.heading).lineLimit(2)
+                Text(f.title).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(1)
+            }
+            .tag(f.id)
         }
     }
+
+    private var detailPane: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let f = model.selected {
+                Text(f.section).font(.uiSecondary).foregroundStyle(.secondary).textSelection(.enabled).lineLimit(3)
+                ScrollView {
+                    DocText(text: model.detail ?? f.text).frame(maxWidth: .infinity, alignment: .leading).padding(.trailing, 6)
+                }
+                // Przyciski w wąskim panelu w dwóch wierszach (bez ucinania „Otwórz online”).
+                ViewThatFits(in: .horizontal) {
+                    HStack { sectionButtons(); Spacer(); openButton(f) }
+                    VStack(alignment: .leading, spacing: 4) { HStack { sectionButtons() }; openButton(f) }
+                }
+            } else {
+                Text(model.results.isEmpty ? L10n.tr("Wpisz szukane słowa albo naciśnij F1 na słowie w edytorze.") : L10n.tr("Wybierz fragment"))
+                    .foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+    }
+
+    @ViewBuilder private func sectionButtons() -> some View {
+        Button(model.detail == nil ? L10n.tr("Cała sekcja") : L10n.tr("Tylko fragment")) {
+            workspace.perform("help.localDocsSection")
+        }
+        Button(L10n.tr("Kopiuj")) { workspace.perform("help.localDocsCopy") }
+    }
+
+    @ViewBuilder private func openButton(_ f: DocFragment) -> some View {
+        if let link = f.link {
+            Button(L10n.tr("Otwórz online")) { workspace.perform("help.localDocsOpenOnline") }
+                .help(link.absoluteString)
+        }
+    }
+
+    /// Wyszukiwanie z okna — komenda „Dokumentacja Oracle (lokalna)” z zapytaniem (paleta, makra, historia).
+    private func search() { workspace.perform("help.localDocs", CommandArguments(["query": .string(model.query)])) }
+
+}
+
+/// Widok w tle okna dokumentacji — model sprawdza przez niego, czy okno jest widoczne.
+private struct DocsVisibilityProbe: NSViewRepresentable {
+    let model: LocalDocsModel
+    func makeNSView(context: Context) -> NSView {
+        let v = NSView()
+        model.view = v
+        return v
+    }
+    func updateNSView(_ v: NSView, context: Context) { model.view = v }
 }
 
 /// Tekst dokumentacji: nagłówki „## …” pogrubione, reszta czcionką kodu (składnia i przykłady zachowują układ).
@@ -145,10 +251,3 @@ private struct DocText: View {
     }
 }
 
-/// Schowek dla okna dokumentacji (tekst; historia schowka Pelikana).
-@MainActor
-private enum DocsClipboard {
-    static func put(_ text: String) {
-        if let ui = NSApp.delegate as? AppDelegate { ui.copyToClipboard(text, html: nil) }
-    }
-}

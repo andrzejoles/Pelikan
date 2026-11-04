@@ -83,7 +83,7 @@ struct PerfReportResultView: View {
 }
 
 /// Raport ACTIVE w oknie Pelikana (D219): WebKit z dostępem do sieci (skrypty przeglądarki raportów z serwerów Oracle)
-/// i do pliku raportu. Raport otwarty z pliku działa; zewnętrzna przeglądarka albo serwer HTTP kończy się
+/// i tylko do pliku tego raportu (nie do innych raportów w katalogu — skrypty są zdalne). Raport otwarty z pliku działa; zewnętrzna przeglądarka albo serwer HTTP kończy się
 /// „Błąd podczas pobierania danych” (przeglądarka raportów w ramce nie dostaje danych ze strony).
 struct ActiveReportView: NSViewRepresentable {
     let file: URL
@@ -91,33 +91,11 @@ struct ActiveReportView: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView {
         let web = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
         web.setAccessibilityLabel(L10n.tr("Raport interaktywny"))
-        web.loadFileURL(file, allowingReadAccessTo: file.deletingLastPathComponent())
+        web.loadFileURL(file, allowingReadAccessTo: file)
         return web
     }
 
     func updateNSView(_ web: WKWebView, context: Context) {}
-}
-
-/// Ostatnio zaznaczony w tabeli wiersz z SQL_ID/hash (D217) — dla komendy wołanej ze wstążki, menu albo skrótu, gdy
-/// fokus jest w tej tabeli.
-@MainActor
-final class SQLTargetRegistry {
-    static let shared = SQLTargetRegistry()
-    private(set) var target: SQLReportTarget?
-    private(set) var window: Int?
-    private(set) var at = Date.distantPast
-
-    func note(_ t: SQLReportTarget?) {
-        target = t
-        window = NSApp.keyWindow?.windowNumber
-        at = Date()
-    }
-
-    /// Cel z tabeli w oknie z fokusem, gdy zaznaczono go w ciągu ostatnich 10 minut.
-    func current() -> SQLReportTarget? {
-        guard let target, window == NSApp.keyWindow?.windowNumber, Date().timeIntervalSince(at) < 600 else { return nil }
-        return target
-    }
 }
 
 /// Połączenie tabeli narzędzia (sesje, SQL Monitor…) — raporty SQL z wiersza na tym połączeniu (D217).

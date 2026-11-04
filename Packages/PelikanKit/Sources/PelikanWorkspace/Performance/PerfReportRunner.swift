@@ -93,9 +93,21 @@ public enum PerfReportRunner {
         return .text
     }
 
-    public static func run(_ q: PerfReportRequest, availability: SQLAvailability?, in s: any DatabaseSession) async throws -> PerfReportOutput {
+    /// Wykonanie raportu. Licencja i wersja bazy sprawdzane tutaj (nie tylko w oknie): raport albo źródło z pakietu
+    /// spoza licencji nie wywołuje Oracle.
+    public static func run(_ q: PerfReportRequest, availability: SQLAvailability?, license: PerfLicense,
+                           in s: any DatabaseSession) async throws -> PerfReportOutput {
         guard let report = PerfReportCatalog.report(q.reportID) else { throw CommandError.invalidArgument("report", q.reportID) }
         let major = s.info.server.major > 0 ? s.info.server.major : 19
+        if let reason = license.blockReason(report, major: major) { throw CommandError.notAvailable(reason) }
+        // Źródło: podane albo pierwsze raportu (raport z samym źródłem AWR wymaga Diagnostics Pack także bez wyboru).
+        if let src = q.source ?? report.sources.first, !license.allows(report.need(for: src)) {
+            throw CommandError.notAvailable(L10n.tr("Źródło „\(src.displayName)” wymaga licencji \(report.need(for: src).displayName)"))
+        }
+        // Bindy z AWR (doradcy czytają DBA_HIST_SQLBIND i DBA_HIST_SQLTEXT) — Diagnostics Pack niezależnie od źródła.
+        if let set = q.bindSet, case .awr = set.origin, !license.allows(.diagnostics) {
+            throw CommandError.notAvailable(L10n.tr("Bindy z AWR wymagają licencji \(PerfReport.Need.diagnostics.displayName)"))
+        }
         let dbid = SQLProbe.dbid(major)
         for p in packages(q.reportID) { try await ManagementPacks.requireExecute(p, in: s, report: report.title) }
         let id = q.sqlID ?? ""

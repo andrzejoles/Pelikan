@@ -9,6 +9,14 @@ import Testing
 final class FakeDocsServer: URLProtocol {
     nonisolated(unsafe) static var requests: [[String: Any]] = []
     nonisolated(unsafe) static var sessionHeaders: [String?] = []
+    /// Tyle następnych tools/call z identyfikatorem sesji dostaje 404 (sesja wygasła po restarcie serwera).
+    nonisolated(unsafe) static var expireSession = 0
+    /// Sesje wygasłe: każde tools/call z tym identyfikatorem dostaje odrzucenie (deterministycznie, bez liczenia żądań).
+    nonisolated(unsafe) static var expiredSessions: Set<String> = []
+    /// Kod odpowiedzi dla wygasłej sesji (404 albo 400 z komunikatem o sesji).
+    nonisolated(unsafe) static var expiredStatus = 404
+    /// Kolejny numer sesji nadawanej w odpowiedzi na initialize (jak prawdziwy serwer — nowa sesja, nowy identyfikator).
+    nonisolated(unsafe) static var sessionCounter = 0
     static let lock = NSLock()
 
     override class func canInit(with request: URLRequest) -> Bool { request.url?.host == "127.0.0.1" }
@@ -27,6 +35,21 @@ final class FakeDocsServer: URLProtocol {
             Self.sessionHeaders.append(request.value(forHTTPHeaderField: "Mcp-Session-Id"))
         }
         let id = json["id"] as? Int
+        let expired = Self.lock.withLock {
+            guard json["method"] as? String == "tools/call", let sid = request.value(forHTTPHeaderField: "Mcp-Session-Id") else { return false }
+            if Self.expiredSessions.contains(sid) { return true }
+            guard Self.expireSession > 0 else { return false }
+            Self.expireSession -= 1
+            return true
+        }
+        if expired {
+            let status = Self.lock.withLock { Self.expiredStatus }
+            client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: "HTTP/1.1", headerFields: [:])!,
+                                cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: Data("Bad Request: No valid session ID provided".utf8))
+            client?.urlProtocolDidFinishLoading(self)
+            return
+        }
         var result: Any = [String: Any]()
         if json["method"] as? String == "tools/call" {
             let text = """
@@ -41,8 +64,11 @@ final class FakeDocsServer: URLProtocol {
         }
         let payload = try! JSONSerialization.data(withJSONObject: ["jsonrpc": "2.0", "id": id as Any, "result": result])
         let sse = Data("event: message\ndata: ".utf8) + payload + Data("\n\n".utf8)
-        let resp = HTTPURLResponse(url: request.url!, statusCode: id == nil ? 202 : 200, httpVersion: "HTTP/1.1",
-                                   headerFields: ["Content-Type": "text/event-stream", "Mcp-Session-Id": "s-1"])!
+        var headers = ["Content-Type": "text/event-stream"]
+        if json["method"] as? String == "initialize" {
+            headers["Mcp-Session-Id"] = Self.lock.withLock { Self.sessionCounter += 1; return "s-\(Self.sessionCounter)" }
+        }
+        let resp = HTTPURLResponse(url: request.url!, statusCode: id == nil ? 202 : 200, httpVersion: "HTTP/1.1", headerFields: headers)!
         client?.urlProtocol(self, didReceive: resp, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: id == nil ? Data() : sse)
         client?.urlProtocolDidFinishLoading(self)
@@ -112,7 +138,7 @@ struct LocalDocsTests {
 
     @Test("Klient: initialize, notifications/initialized, tools/call z identyfikatorem sesji i argumentami")
     func client() async throws {
-        FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.sessionHeaders = [] }
+        FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.sessionHeaders = []; FakeDocsServer.sessionCounter = 0 }
         let cfg = URLSessionConfiguration.ephemeral
         cfg.protocolClasses = [FakeDocsServer.self]
         let c = LocalDocsClient(endpoint: URL(string: "http://127.0.0.1:8765/mcp")!, urlSession: URLSession(configuration: cfg))
@@ -126,5 +152,40 @@ struct LocalDocsTests {
         let args = params?["arguments"] as? [String: Any]
         #expect(params?["name"] as? String == "search_oracle_docs")
         #expect(args?["query"] as? String == "DBMS_OUTPUT.PUT_LINE" && args?["version"] as? String == "11g" && args?["k"] as? Int == 15)
+    }
+
+    @Test("Klient (D224): równoczesne pierwsze wywołania — jedna inicjalizacja; wygasła sesja (404) — nowa sesja i ponowienie")
+    func clientSession() async throws {
+        FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.sessionHeaders = []; FakeDocsServer.expireSession = 0 }
+        defer { FakeDocsServer.lock.withLock { FakeDocsServer.expiredStatus = 404; FakeDocsServer.expireSession = 0; FakeDocsServer.expiredSessions = [] } }
+        let cfg = URLSessionConfiguration.ephemeral
+        cfg.protocolClasses = [FakeDocsServer.self]
+        let c = LocalDocsClient(endpoint: URL(string: "http://127.0.0.1:8765/mcp")!, urlSession: URLSession(configuration: cfg))
+        async let a = c.search("NVL", version: "19c")
+        async let b = c.search("DECODE", version: "19c")
+        _ = try await (a, b)
+        var methods = FakeDocsServer.lock.withLock { FakeDocsServer.requests.map { $0["method"] as? String } }
+        #expect(methods.filter { $0 == "initialize" }.count == 1)
+        FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.expireSession = 1 }
+        let found = try await c.search("NVL", version: "19c")
+        #expect(found.map(\.chunk) == [299800])
+        methods = FakeDocsServer.lock.withLock { FakeDocsServer.requests.map { $0["method"] as? String } }
+        #expect(methods == ["tools/call", "initialize", "notifications/initialized", "tools/call"])
+        // Dwa równoczesne wywołania ze starą sesją dostają 404 — jedna nowa sesja, oba kończą się wynikiem.
+        FakeDocsServer.lock.withLock {
+            FakeDocsServer.requests = []
+            FakeDocsServer.expiredSessions = ["s-\(FakeDocsServer.sessionCounter)"]
+        }
+        async let x = c.search("NVL", version: "19c")
+        async let y = c.search("DECODE", version: "19c")
+        let both = try await (x, y)
+        #expect(both.0.count == 1 && both.1.count == 1)
+        methods = FakeDocsServer.lock.withLock { FakeDocsServer.requests.map { $0["method"] as? String } }
+        #expect(methods.filter { $0 == "initialize" }.count == 1)
+        FakeDocsServer.lock.withLock { FakeDocsServer.expiredSessions = [] }
+        // Serwer odpowiadający na starą sesję kodem 400 z komunikatem o sesji — też nowa sesja.
+        FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.expireSession = 1; FakeDocsServer.expiredStatus = 400 }
+        #expect(try await c.search("NVL", version: "19c").count == 1)
+        #expect(LocalDocsClient.shared(for: URL(string: "http://127.0.0.1:1/mcp")!) === LocalDocsClient.shared(for: URL(string: "http://127.0.0.1:1/mcp")!))
     }
 }

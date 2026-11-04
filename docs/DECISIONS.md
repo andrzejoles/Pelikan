@@ -3617,3 +3617,126 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
 - **Raport sesji i Real-Time ADDM tylko w XML:** aktywny raport sesji przeglądarka Oracle odrzuca („Not a sfx file”),
   także z SID aktywnej sesji; aktywna wersja Real-Time ADDM przez DBMS_REPORT.FORMAT_REPORT kończy się stroną 404 na
   serwerze Oracle, a formaty HTML i tekst — ORA-13972 (tak jak raport planu, D221).
+
+### D224 · 2026-11-04 — Code review zmian D214–D223: poprawki
+
+**Zlecenie właściciela:** dogłębny code review zmian od #133 do #142, poprawki i kolejne przeglądy aż do braku uwag.
+
+- **Licencja i wersja bazy sprawdzane przy wykonaniu raportu** (`PerfReportRunner.run(…, license:)`, `PerfLicense.blockReason`):
+  raport, źródło (podane albo pierwsze raportu) i bindy z AWR dla doradców spoza licencji i raport z nowszej wersji Oracle nie wywołują bazy. Licencja nieznana (przed
+  wczytaniem, anulowana deklaracja) — tylko raporty bez pakietów. Okno raportów bazy bierze wersję z sesji. Domyślny
+  drugi okres tylko w raportach porównania.
+- **Cel raportów SQL:** menu siatki z wiersza spod kursora (jedna logika `SQLTargetFinder.fromGrid(_:row:column:)`);
+  w tabelach narzędzi cel podaje tabela z fokusem (zmiana fokusu go zastępuje albo czyści).
+- **Filtr tabel:** daty porównywane do sekundy (jak tekst w tabeli), podkreślenie w szybkim filtrze nie wyłącza szukania
+  fragmentu (tylko `%` — wzorzec całej wartości), wzorce LIKE kompilowane raz na filtr (`LikePattern`).
+- **Tekst kolumn = to, co widać:** kolumna z własnym widokiem i kluczem liczbowym, datą albo wartością logiczną musi
+  podać tekst (kopia, eksport, filtr); pola wyboru — „tak”/„nie”.
+- **Eksport:** zera wiodące i liczby dłuższe niż 15 cyfr zostają tekstem (bez straty w xlsx i JSON).
+- **Czynności tabel jako komendy** (`table.*`: komórka, wiersze, kolumna, kolumny zaznaczone, cała tabela, nagłówki,
+  nagłówek przy kopii, filtr wartością, wyczyszczenie filtra, eksport) — menu i pasek tabel je wywołują; „Otwórz
+  w oknie SQL” przez `file.new.sql` z parametrem `text`.
+- **Dokumentacja lokalna:** jeden klient MCP na adres (sesja używana ponownie, po 404 — nowa), wynik nieaktualnego
+  wyszukiwania albo sekcji pomijany; wersja z argumentu agenta w dzienniku tylko jako znana wartość.
+- **Raport ACTIVE:** WebKit z dostępem tylko do pliku tego raportu (skrypty raportu są zdalne).
+- Przy okazji: „Otwórz przebieg profilera” bez numeru pyta o niego (wykryte testem wstążki); wpisany numer trafia do makra.
+- **Tabela komendy — stan końcowy (rundy 2–17):** menu i pasek tabeli przekazują swoją tabelę jako typowany cel
+  wywołania (`CommandContext.target`, `Workspace.perform/invoke(…, target:)`), poza argumentami — nie trafia do makr ani
+  historii; komendy `table.*` deklarują, że przyjmują cel (`Command.acceptsTarget`), więc przy celu walidacja „tabela
+  z fokusem” ich nie blokuje (inne komendy walidują się jak zwykle). Menu kontekstowe działa na migawce z chwili
+  otwarcia menu (`FrozenTable`: etykiety i czynność na tych samych danych; SwiftUI — z wierszy policzonych przy
+  rysowaniu, AppKit — tekst zaznaczonych wierszy i wiersza spod kursora), w której wiersze menu są zaznaczeniem —
+  komendy wierszy idą zwykłą ścieżką „zaznaczone”, bez numerów wierszy w argumentach. Pasek i czynności bez wierszy
+  działają na żywej tabeli. Zamknięta tabela — komunikat. Paleta, skrót i makro: tabela z fokusem w oknie bieżącym
+  (pod paletą — w oknie, nad którym ją otwarto; paleta przed wykonaniem oddaje mu fokus bez przestawiania okien);
+  komendy biorą na starcie tekst tylko wierszy i kolumn, których dotyczą (`stableContents(_:rows:columns:)` — wymagana
+  bez domyślnej implementacji, więc każda tabela deklaruje ją wprost; AppKit przepisuje tekst, bo tabela może się
+  przeładować w trakcie wyboru kolumny; migawka i SwiftUI — zawartość już stała). Tabele AppKit rejestrują swój
+  `NSTableView` przy utworzeniu; tabela SwiftUI — zdarzeniem zmiany widoku z fokusem okna (obserwacja `firstResponder`)
+  i zmiany zaznaczenia, gdy tabela z fokusem pokrywa większość ramki sondy w tle tabeli (sprawdzenie dopasowania, nie
+  wyszukiwanie widoków); wspólny modyfikator `registersTable` (`DataTable`, plan). Uchwyt tabeli SwiftUI trzyma wartości
+  kolumn (tekst, klucz), nie widoki, i liczy wiersze przy wywołaniu (cel SQL — tylko z zaznaczonych). Makra nagrywają
+  komendy zmieniające stan tabeli: filtr z wartością (nie numerem wiersza), zaznaczenie kolumny jako stan docelowy,
+  kolumnę jako pozycję „#n” (tytuły zależą od języka); kopie — jak w siatce — nie. „Raporty dla SQL_ID” z fokusem
+  w tabeli z kolumną SQL_ID/hash bez zaznaczonego zapytania pytają o nie; w innych tabelach — z okna i edytora jak
+  dotąd. Kolumny czynności (przyciski) nie trafiają do kopii, eksportu ani filtra. Menu tabel AppKit nie zmienia
+  zaznaczenia. Pusty identyfikator kolumny (kolumna bez tytułu) jest kolumną.
+- Komendy `table.*` w menu Edycja › Tabela i w palecie (poza wstążką — działają w oknach narzędzi). Liczba w filtrze
+  — jedna wartość komórki dla wszystkich porównań (`=`, `<`, between): liczba pokazana w tekście, gdy zgadza się
+  z kluczem z dokładnością do wyświetlonych cyfr („12.35” przy 12.345678), inaczej klucz („450 ms” obok „1.2 s”, „1,234”);
+  kolumny procentu i postępu mają klucz w skali pokazanej; kody jak „19c” to tekst; „tylko ta wartość” ujmuje w apostrofy wartości
+  z białymi znakami na brzegach, apostrofem albo przecinkiem — wartość w apostrofach to tekst dosłownie (jak w SQL); data z dokładnością, z jaką ją wpisano (dzień, minuta, sekunda); tekst kolumn całkowitych bez przejścia przez Double. Zapis pliku (arkusz)
+  w oknie, z którego go wywołano; nazwa pliku z tytułu okna tabeli.
+- Klient MCP inicjuje sesję raz także przy równoczesnych wywołaniach (wywołanie czekające na unieważnioną sesję czeka
+  na nową; sesja tylko z udanej odpowiedzi na initialize); wyszukiwanie z okna to komenda `help.localDocs`
+  (wersja wybrana w oknie zostaje; ponowne pokazanie okna nie powtarza wyszukiwania; zamknięcie okna w trakcie nie
+  czyści wyników; komendy okna — tylko przy otwartym oknie); jeden klient MCP — dla bieżącego adresu; ponowienie po odpowiedzi 4xx na żądanie z sesją, jeden raz na sesję
+  (równoczesne wywołania dołączają do nowej); okno dokumentacji pomija wyniki starszych żądań po numerze żądania.
+  Wzorce LIKE: filtr siatki kompiluje je raz na filtrowanie, filtr tabel — z pamięci wzorców. Okno dokumentacji
+  trzyma wyniki, zaznaczenie i sekcję w modelu; „Kopiuj”, „Cała sekcja”, „Otwórz online” i „Dokumentacja online” to
+  komendy (`help.localDocsCopy`, `help.localDocsSection`, `help.localDocsOpenOnline`, `help.localDocsSearchOnline`).
+- Okno raportów po anulowaniu deklaracji licencji działa dalej z raportami bez pakietów. `file.new.sql` przyjmuje
+  tekst (opis komendy o tym mówi; tekst od agenta idzie przez `agent.openEditor` — polityka zgody i dziennik zmian); pozostałe
+  `file.new.*` — bez parametru. Okno zapisu eksportu tabeli nad oknem tej tabeli; pozostałe zapisy — jak dotąd.
+- **Przegląd ergonomii (zrzuty w tle):** narzędzia z tej serii w wąskim panelu doku nie mieszczą się w nim
+  (minimalna szerokość 860–900 pt — dok przewijał je w poziomie, pasek tabeli z „Kopiuj” i „Eksportuj” był poza
+  widokiem). Instance Viewer (nagłówek w wierszach, wykresy jeden pod drugim, elastyczne kolumny Top SQL), Sesje
+  (połączenie i filtr, odświeżanie, czynności — w wierszach, w najwęższym panelu menu „Sesja”; karty szczegółów jako
+  lista), SQL Monitor i dokumentacja lokalna (wyniki nad treścią, przyciski w dwóch wierszach) dopasowują układ do
+  szerokości; minimum 340–360 pt. Okno raportów przy błędzie połączenia pokazuje ten błąd zamiast „wymaga licencji”.
+  Paleta komend zapamiętuje okno, nad którym ją otwarto (cel czynności), a arkusz zapisu otwiera się nad oknem tabeli.
+- **Zasada weta (właściciel):** kolejne rundy przeglądu działają na zasadzie weta wobec poprzedniego recenzenta — uwaga
+  sprzeczna z decyzją przyjętą wcześniej obala ją tylko wtedy, gdy jej rozwiązanie daje więcej informacji
+  (szczegółowość), a przy remisie — większą ergonomię i czytelność; inaczej decyzja zostaje. Rozstrzygnięcia:
+  eksport i kopia planu — cały plan (runda 12; weto rundy 13 „tylko widoczne” odrzucone: mniej informacji); wzorce
+  LIKE — kompilowane raz na filtrowanie siatki, pamięć wzorców w filtrach tabel (rundy 6, 12; weto rundy 14 „jedna
+  pamięć” — bez zysku informacji ani ergonomii); jeden klient MCP dla bieżącego adresu (runda 13; weto rundy 14
+  „kilka klientów” — bez zysku informacji, ergonomia równa).
+- Runda 14: „Raporty dla SQL_ID” pytają o zapytanie tylko przy fokusie w tabeli narzędzia (w siatce, widoku rekordu,
+  drzewie obiektów — jak dotąd z zaznaczenia i edytora); komendy z palety i skrótu na tabeli AppKit biorą tekst
+  zaznaczonych wierszy na starcie (`stableContents`); „Cała sekcja” w makrze — stan docelowy (`whole`); tabela SwiftUI
+  rejestruje się także przy zmianie zaznaczenia (fokus najpierw w polu edycji komórki).
+- Runda 15: komendy z palety i skrótu na tabeli AppKit biorą na starcie tekst wszystkich wierszy (kopia całej tabeli,
+  kolumny i eksport — kompletne); „Raporty dla SQL_ID” pytają o zapytanie tylko przy fokusie w tabeli z kolumną SQL_ID
+  albo hash (plan, widok rekordu, komunikaty — jak dotąd z okna i edytora); tabela SwiftUI rejestruje się zdarzeniem
+  zmiany widoku z fokusem okna (obserwacja `firstResponder`) i zmiany zaznaczenia — bez stanu fokusu SwiftUI
+  i ponowień; zawartość tabel z jednego pomocnika (`TableContents.make`). Weto rundy 15 wobec palety (okno pod paletą
+  w kontekście wywołania zamiast oddania fokusu) odrzucone: bez zysku informacji, ergonomia równa — decyzja rundy 12
+  zostaje.
+- Runda 16: menu tabel AppKit — znów migawka z chwili otwarcia menu (zaznaczone wiersze i wiersz spod kursora); weto
+  wobec rundy 15 („błąd po przeładowaniu”) przyjęte — to samo, co widział użytkownik, bez fałszywego błędu: lepsza
+  ergonomia. Komendy biorą na starcie tekst tylko tych wierszy, których dotyczą (`stableContents(rows:)`). „Tylko ta
+  wartość” ujmuje w apostrofy kody z zerami wiodącymi i liczby ponad 15 cyfr; równość tekstu w apostrofach dokładna
+  (bez porównania cyfr wg wartości). `rows`/`row` innego typu — błąd argumentu. Kolumna stanu w porównaniu planów —
+  tekst stanu. Okno dokumentacji „otwarte” = widoczne (także nie w ukrytej karcie doku). Eksport — „5.” to liczba.
+  Wspólne: reguła kolumny SQL (`SQLReportTarget.hasSQLColumn`), kontrolki odświeżania (`AutoRefreshControls`).
+- Runda 17: „Cała sekcja” zgłasza błąd, gdy sekcji nie udało się pobrać (nic nie trafia do makra jako sukces);
+  „Kopiuj zaznaczone kolumny” — w kolejności zaznaczania; liczba w eksporcie do 15 cyfr i 15 znaków (jak w xlsx);
+  „Sprawdź” w Ustawieniach — własny klient (weto wobec jednego klienta MCP odrzucone; test nie zastępuje klienta okna).
+- Runda 18: tabele AppKit naprawdę zamrażają tekst na starcie komendy (wcześniej niezgodna sygnatura po cichu brała
+  domyślną implementację — usunięta); „Cała sekcja” zastąpiona nowszym żądaniem to nie błąd; pusta komórka „Postęp”
+  ma pusty klucz (filtr „tylko ta wartość” trafia); liczba w eksporcie — do 15 cyfr znaczących, a arkusz xlsx stosuje tę
+  samą regułę per komórka (kolumna nie przechodzi na tekst przez jedną długą wartość); `focusedSQLTarget()` zwraca
+  jedną odpowiedź (`FocusedSQL`: cel, tabela SQL bez zaznaczenia, brak) zamiast dwóch metod; przełącznik kolumny do
+  kopii ustawia stan (`marked`). Weta odrzucone: walidacja z celem w `validate` zamiast `acceptsTarget` (ergonomia
+  równa) i leniwa migawka menu AppKit (decyzja rundy 16 — to, co widział użytkownik).
+- Runda 19: „Filtruj: tylko ta wartość / bez tej wartości” zawsze zapisuje wartość komórki jako tekst w apostrofach
+  (dokładnie to, co widać — koniec heurystyk liczb: „19.10” ≠ „19.1”, „0012” ≠ „12”); tekst w apostrofach porównywany
+  dosłownie (bez wielkości liter) tak samo dla =, <, between. Komórka bez klucza, ale z opisem, nie jest pusta.
+  „Kopiuj kolumnę” zamraża tekst przed oknem wyboru kolumny; tabela SwiftUI z fokusem już przy wstawieniu rejestruje
+  się po pierwszym układzie; opis instancji o stałej szerokości (układ nagłówka nie skacze przy odświeżaniu); kolumny
+  pól wyboru z jednej fabryki (`DataColumn.check`). Weto wobec palety (kontekst okna w wywołaniu) i `stableContents`
+  odrzucone — bez zysku informacji ani ergonomii.
+- Przegląd na poziomie medium (właściciel: „poprawiaj tylko to, co istotne”): wartość w apostrofach („tylko ta
+  wartość”) porównywana dokładnie, z wielkością liter („Emp” ≠ „EMP” — nazwy Oracle w cudzysłowach); tekst wpisany bez
+  apostrofów i wzorce LIKE — bez wielkości liter, jak dotąd. Cel komendy zachowany także w ścieżce agenta; „Zaznacz
+  kolumnę do kopii” w menu AppKit ustawia stan z chwili otwarcia menu. Pominięte jako nieistotne: wyścig „Całej
+  sekcji” w makrach, koszt migawki menu przy zaznaczeniu wszystkiego, zapasowa kompilacja wzorca w filtrze siatki.
+- Druga runda medium: kolumna w makrze zapisywana identyfikatorem, gdy nie jest on tytułem (kolumny AppKit — odporne na
+  przestawienie), a „#n” tylko dla identyfikatorów z tytułów; `file.new.sql` z tekstem od agenta zapisuje okno
+  w dzienniku zmian agenta (bez drugiej bramki zgody przez `agent.openEditor`). Odrzucone: „bez tej wartości” miałoby
+  zostawiać puste komórki — filtr ma składnię i znaczenie SQL (wymaganie D214), `<>` pomija puste jak NULL.
+- Trzecia runda medium (bez poważnych błędów — koniec pętli): granice `between` w apostrofach mogą zawierać „and”;
+  zera końcowe liczby całkowitej nie są cyframi znaczącymi (10^18 eksportuje się jako liczba); każde okno otwarte przez
+  agenta przez `file.new.sql` trafia do dziennika zmian agenta. Pozostałe uwagi (porządki, wydajność migawek, rejestracja
+  tabel SwiftUI geometrią) — nieistotne, bez zmian.

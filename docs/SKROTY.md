@@ -159,6 +159,18 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wstaw fragment kodu | `edit.insertSnippet` |  |  | Brak | SC-SNIP-001 |
 | Zapisz fragment kodu | `snippets.save` |  |  | Brak | SC-SNIP-001 |
 | Usuń fragment kodu | `snippets.remove` |  |  | Brak | SC-SNIP-001 |
+| Tabela › Kopiuj komórkę tabeli | `table.copyCell` |  |  | Brak | PD-UI-015 |
+| Tabela › Kopiuj wiersze tabeli | `table.copyRows` |  |  | Brak | PD-UI-015 |
+| Tabela › Kopiuj kolumnę tabeli | `table.copyColumn` |  |  | Brak | PD-UI-015 |
+| Tabela › Zaznacz kolumnę do kopii | `table.markColumn` |  |  | Brak | PD-UI-015 |
+| Tabela › Odznacz kolumny do kopii | `table.clearMarkedColumns` |  |  | Brak | PD-UI-015 |
+| Tabela › Kopiuj zaznaczone kolumny tabeli | `table.copyMarkedColumns` |  |  | Brak | PD-UI-015 |
+| Tabela › Kopiuj całą tabelę | `table.copyAll` |  |  | Brak | PD-UI-015 |
+| Tabela › Kopiuj nagłówki tabeli | `table.copyHeaders` |  |  | Brak | PD-UI-015 |
+| Tabela › Kopiuj tabele z nagłówkiem | `table.toggleCopyHeader` |  |  | Brak | PD-UI-015 |
+| Tabela › Filtruj tabelę wartością | `table.filterByValue` |  |  | Brak | PD-UI-015 |
+| Tabela › Wyczyść filtr tabeli | `table.clearFilter` |  |  | Brak | PD-UI-015 |
+| Tabela › Eksportuj tabelę… | `table.export` |  |  | Brak | PD-UI-015 |
 | Wynik › Kalendarz… | `grid.chooseDate` |  |  | Brak | PD-GRID-005 |
 | Wynik › Zaznacz blok komórek | `grid.selectBlock` |  |  | Brak | PD-GRID-007 |
 | Wynik › Zaznacz kolumnę | `grid.selectColumn` |  |  | Brak | PD-GRID-007 |
@@ -671,6 +683,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Instrukcja Pelikana | `help.manual` | ⇧⌘/ | ⇧⌘/ | Brak | PL-INFRA-010 |
 | Dokumentacja Oracle… | `help.oracleManuals` |  |  | Brak | PD-DOC-001 |
 | Dokumentacja Oracle (lokalna)… | `help.localDocs` |  |  | Brak | PD-DOC-002 |
+| Kopiuj fragment dokumentacji | `help.localDocsCopy` |  |  | Brak | PD-DOC-002 |
+| Cała sekcja dokumentacji | `help.localDocsSection` |  |  | Brak | PD-DOC-002 |
+| Szukaj w dokumentacji online | `help.localDocsSearchOnline` |  |  | Brak | PD-DOC-002 |
+| Otwórz fragment dokumentacji online | `help.localDocsOpenOnline` |  |  | Brak | PD-DOC-002 |
 | Dziennik aplikacji | `help.log` |  |  | Brak | PL-INFRA-011 |
 | Zgłoś problem… | `help.reportProblem` |  |  | Brak | PL-INFRA-013 |
 | Eksportuj dziennik… | `help.exportLog` |  |  | Brak | PL-INFRA-011 |

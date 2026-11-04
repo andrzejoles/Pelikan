@@ -101,6 +101,10 @@ public enum RibbonModel {
     public static let notOnRibbon: Set<String> = [
         "file.closeWindow", "file.reopen", "ob.dropText", "ob.dropOnWorkspace", "tools.saveObjectSearch", "tools.deleteObjectSearch",
         "reports.predefined.run", "reports.predefined.worksheet",
+        // Tabele okien narzędzi (D224): działają na tabeli z fokusem w oknie narzędzia — wstążka jest w oknie głównym.
+        "table.copyCell", "table.copyRows", "table.copyColumn", "table.markColumn", "table.clearMarkedColumns",
+        "table.copyMarkedColumns", "table.copyAll", "table.copyHeaders", "table.toggleCopyHeader", "table.filterByValue",
+        "table.clearFilter", "table.export",
     ]
 
     // MARK: Karty stałe

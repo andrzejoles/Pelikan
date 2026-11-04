@@ -11,7 +11,7 @@ struct BreakpointsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             DataTable(Binding.rows($workspace.breakpoints)) {
-                DataColumn(L10n.tr("Włączony"), sortKey: { b in b.enabled }) { $b in Toggle("", isOn: $b.enabled).labelsHidden() }.width(60)
+                DataColumn.check(L10n.tr("Włączony"), \.enabled).width(60)
                 DataColumn(L10n.tr("Miejsce"), sortKey: { b in place(b.wrappedValue) }) { $b in
                     HStack(spacing: 4) {
                         if workspace.unappliedBreakpoints.contains(b.id) {
@@ -22,7 +22,7 @@ struct BreakpointsView: View {
                     }
                 }
                 DataColumn(L10n.tr("Linia"), sortKey: { b in b.line }) { $b in Text("\(b.line)") }.width(50)
-                DataColumn(L10n.tr("Liczba przejść"), sortKey: { b in b.passCount }) { $b in
+                DataColumn(L10n.tr("Liczba przejść"), sortKey: { b in b.passCount }, text: { b in String(b.wrappedValue.passCount) }) { $b in
                     TextField("", value: $b.passCount, format: .number).frame(width: 60)
                 }.width(100)
                 DataColumn(L10n.tr("Warunek"), sortKey: { b in b.wrappedValue.condition ?? "" }) { $b in
@@ -31,12 +31,12 @@ struct BreakpointsView: View {
                 DataColumn(L10n.tr("Komunikat"), sortKey: { b in b.wrappedValue.message ?? "" }) { $b in
                     TextField(L10n.tr("np. i={i}"), text: Binding(get: { b.message ?? "" }, set: { b.message = $0.isEmpty ? nil : $0 }))
                 }
-                DataColumn(L10n.tr("Nie zatrzymuj"), sortKey: { b in b.wrappedValue.dontBreak ?? false }) { $b in
+                DataColumn(L10n.tr("Nie zatrzymuj"), sortKey: { b in b.wrappedValue.dontBreak ?? false }, text: { b in checkText(b.wrappedValue.dontBreak ?? false) }) { $b in
                     Toggle("", isOn: Binding(get: { b.dontBreak ?? false }, set: { b.dontBreak = $0 ? true : nil })).labelsHidden()
                 }.width(90)
-                DataColumn("", sortKey: { b in b.wrappedValue.enabled }) { $b in
+                DataColumn("", sortKey: { b in b.wrappedValue.enabled }, text: { _ in "" }) { $b in
                     Button { workspace.perform("debug.removeBreakpoint", CommandArguments(["id": .string(b.id.uuidString)])) } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń")).buttonStyle(.borderless)
-                }.width(30)
+                }.width(30).action()
             }
             HStack {
                 Button(L10n.tr("Włącz wszystkie")) { workspace.perform("debug.enableAllBreakpoints") }
