@@ -34,12 +34,7 @@ struct SessionBrowserView: View {
     }
 
     private var refreshControls: some View {
-        HStack(spacing: 6) {
-            Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
-            Toggle(L10n.tr("Odświeżaj co"), isOn: $autoRefresh).toggleStyle(.checkbox)
-            Stepper("\(Int(interval)) s", value: $interval, in: 2...300, step: 1).fixedSize()
-        }
-        .fixedSize()
+        AutoRefreshControls(auto: $autoRefresh, interval: $interval, range: 2...300) { Task { await reload() } }
     }
 
     private var detailPicker: some View {

@@ -107,6 +107,23 @@ struct DBAPanelView: View {
     }
 }
 
+/// Odświeżanie narzędzia: przycisk „Odśwież”, „Odświeżaj co” i odstęp w sekundach (Sesje, Instance Viewer).
+struct AutoRefreshControls: View {
+    @Binding var auto: Bool
+    @Binding var interval: Double
+    let range: ClosedRange<Double>
+    let refresh: () -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button(action: refresh) { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
+            Toggle(L10n.tr("Odświeżaj co"), isOn: $auto).toggleStyle(.checkbox)
+            Stepper("\(Int(interval)) s", value: $interval, in: range, step: 1).fixedSize()
+        }
+        .fixedSize()
+    }
+}
+
 /// Instance Viewer (SD-DBA-004): pulpit instancji z odświeżaniem.
 struct InstanceViewerView: View {
     let workspace: Workspace
@@ -187,12 +204,7 @@ struct InstanceViewerView: View {
     }
 
     private var refreshControls: some View {
-        HStack(spacing: 6) {
-            Toggle(L10n.tr("Odświeżaj co"), isOn: $auto).toggleStyle(.checkbox)
-            Stepper("\(Int(interval)) s", value: $interval, in: 2...120).fixedSize()
-            Button { Task { await refresh() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
-        }
-        .fixedSize()
+        AutoRefreshControls(auto: $auto, interval: $interval, range: 2...120) { Task { await refresh() } }
     }
 
     /// Oczekiwania (przyrost od poprzedniego odświeżenia) i pule SGA.

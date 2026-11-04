@@ -10,8 +10,8 @@ final class TableToolsModel {
     }
     /// Zmienia się po każdym przeładowaniu wierszy — pasek odświeża liczbę wierszy.
     var revision = 0
-    /// Przeładowania wierszy (nie zmiany zaznaczenia) — menu wykrywa przesunięcie wierszy po otwarciu.
-    @ObservationIgnored var reloads = 0
+    /// Liczba wszystkich wierszy (przed filtrem) — liczona przy przeładowaniu, nie przy każdej zmianie zaznaczenia.
+    var totalRows = 0
     @ObservationIgnored var onFilterChange: (() -> Void)?
 }
 
@@ -41,21 +41,30 @@ func BlockMenuItem(_ title: String, state: Bool = false, enabled: Bool = true, _
 final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     var window: NSWindow? { table.window }
 
-    /// Migawka w chwili wyboru pozycji menu: tekst wierszy, których dotyczy czynność (zaznaczone i spod kursora) —
-    /// komenda startuje później (zadanie), a tabela może się w tym czasie przeładować.
-    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) {
+    /// Tekst wierszy `rows` (nil — wszystkich) przepisany teraz — komenda działa na nich, choć tabela może się potem
+    /// przeładować. Jedno miejsce dla migawki menu i komend z palety, skrótu i paska.
+    func frozenContents(rows: Set<Int>?) -> TableContents {
         let c = contents
-        var wanted = Set(c.selectedRows)
-        if table.clickedRow >= 0 { wanted.insert(table.clickedRow) }
+        let wanted = rows ?? Set(0..<c.rowCount)
         let cells = Dictionary(uniqueKeysWithValues: wanted.filter { $0 < c.rowCount }.map { r in
             (r, Dictionary(c.columns.map { ($0.id, c.cell(r, $0.id)) }, uniquingKeysWith: { a, _ in a }))
         })
-        let frozen = TableContents(title: c.title, columns: c.columns, rowCount: c.rowCount,
-                                   cell: { r, id in cells[r]?[id] ?? "" }, selectedRows: c.selectedRows)
-        let count = c.rowCount
+        return TableContents(title: c.title, columns: c.columns, rowCount: c.rowCount,
+                             cell: { r, id in cells[r]?[id] ?? "" }, selectedRows: c.selectedRows)
+    }
+
+    /// Migawka menu z chwili jego otwarcia: zaznaczone wiersze i wiersz spod kursora (to, co widział użytkownik).
+    func snapshot() -> (contents: TableContents, indexes: ([AnyHashable]) -> [Int]) {
+        var wanted = Set(table.selectedRowIndexes)
+        if table.clickedRow >= 0 { wanted.insert(table.clickedRow) }
+        let frozen = frozenContents(rows: wanted)
+        let count = frozen.rowCount
         // Identyfikatory wierszy tabel AppKit to ich indeksy.
         return (frozen, { ids in ids.compactMap { $0 as? Int }.filter { $0 < count } })
     }
+
+    /// Komendy z palety, skrótu i paska: tekst wierszy, których dotyczą, przepisany na starcie komendy.
+    func stableContents(rows: [Int]?) -> TableContents { frozenContents(rows: rows.map(Set.init)) }
 
     var filter: TableFilter {
         get { model.state.filter }
@@ -67,17 +76,7 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     }
     @objc private func selectionChanged(_ note: Notification) { model.revision += 1 }
 
-    /// Komendy z palety i skrótu: tekst wszystkich wierszy przepisany na starcie komendy (komenda czeka na wybór kolumny,
-    /// a tabela może się w tym czasie przeładować) — raz na komendę, nie przy każdym otwarciu menu.
-    var stableContents: TableContents {
-        let c = contents
-        let cells = (0..<c.rowCount).map { r in c.columns.map { c.cell(r, $0.id) } }
-        let index = Dictionary(c.columns.enumerated().map { ($0.element.id, $0.offset) }, uniquingKeysWith: { a, _ in a })
-        return TableContents(title: c.title, columns: c.columns, rowCount: c.rowCount,
-                             cell: { r, id in r < cells.count ? index[id].map { cells[r][$0] } ?? "" : "" }, selectedRows: c.selectedRows)
-    }
-
-    var hasSQLColumn: Bool { columns.contains { SQLIdentity.columnKind($0.title) != nil || SQLIdentity.columnKind($0.id) != nil } }
+    var hasSQLColumn: Bool { SQLReportTarget.hasSQLColumn(columns) }
 
     /// Zapytanie z pierwszego zaznaczonego wiersza (kolumna SQL_ID albo hash).
     var sqlTarget: SQLReportTarget? { contents.selectedRows.first.flatMap { sqlTarget(row: $0, in: contents) } }
@@ -101,6 +100,7 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         self.table = table
         self.title = title
         self.total = total
+        defer { model.totalRows = total() }
         self.cell = cell
         super.init()
         model.onFilterChange = onFilterChange
@@ -136,8 +136,8 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
 
     /// Po przeładowaniu tabeli — liczba wierszy na pasku.
     func reloaded() {
+        model.totalRows = total()
         model.revision += 1
-        model.reloads += 1
     }
 
     /// Pasek narzędzi nad widokiem przewijania tabeli.
@@ -163,27 +163,21 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         let colIndex = table.clickedColumn
         let column = colIndex >= 0 && colIndex < table.tableColumns.count ? table.tableColumns[colIndex] : nil
         let rows: [Int] = row < 0 ? c.selectedRows : (table.selectedRowIndexes.contains(row) ? c.selectedRows : [row])
-        // Czynności bez wierszy — na tej tabeli (cel wywołania); czynności na wierszach — na migawce z chwili wyboru
-        // pozycji, o ile tabela nie przeładowała się od otwarcia menu. Menu nie zmienia zaznaczenia (zaznaczenie bywa
-        // nawigacją, np. wybór pliku dziennika).
+        // Czynności bez wierszy — na tej tabeli (cel wywołania); czynności na wierszach — na migawce z chwili otwarcia
+        // menu. Menu nie zmienia zaznaczenia (zaznaczenie bywa nawigacją, np. wybór pliku dziennika).
         func item(_ title: String, state: Bool = false, enabled: Bool = true, _ id: String, _ args: [String: JSONValue] = [:]) -> NSMenuItem {
             BlockMenuItem(title, state: state, enabled: enabled) { [weak self] in
                 guard let self else { return }
                 TableActions.perform(self, id, args)
             }
         }
-        // Przeładowanie tabeli po otwarciu menu przesuwa wiersze (zaznaczenie i numery to indeksy) — komunikat zamiast
-        // czynności na innych wierszach.
-        let reloadsAtOpen = model.reloads
+        // Migawka z chwili otwarcia menu (to, co widział użytkownik) — czynności na wierszach działają na niej, także gdy
+        // tabela przeładuje się, zanim użytkownik wybierze pozycję.
+        let frozen = row >= 0 || !rows.isEmpty ? FrozenTable(self) : nil
         func rowItem(_ title: String, _ id: String, _ args: [String: JSONValue]) -> NSMenuItem {
-            BlockMenuItem(title) { [weak self] in
-                guard let self else { return }
-                guard self.model.reloads == reloadsAtOpen else {
-                    (NSApp.delegate as? AppDelegate)?.showError(L10n.tr("Wierszy z menu nie ma już w tabeli (odświeżona)"))
-                    return
-                }
-                // Migawka teraz, synchronicznie z wyborem pozycji — komenda (zadanie) działa na tych wierszach.
-                TableActions.performOnRows(FrozenTable(self), id) { _ in args }
+            BlockMenuItem(title) {
+                guard let frozen else { return }
+                TableActions.performOnRows(frozen, id) { _ in args }
             }
         }
         // Raporty SQL z wiersza z kolumną SQL_ID/hash (D217).
@@ -238,7 +232,7 @@ struct AppKitTableBar: View {
     var body: some View {
         let model = tools.model
         _ = model.revision
-        return TableToolsBar(contents: tools.contents, handle: tools, state: Binding(get: { model.state }, set: { model.state = $0 }), total: tools.total())
+        return TableToolsBar(contents: tools.contents, handle: tools, state: Binding(get: { model.state }, set: { model.state = $0 }), total: model.totalRows)
             .padding(.horizontal, 4)
     }
 }

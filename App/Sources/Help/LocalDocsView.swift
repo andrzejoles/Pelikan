@@ -14,8 +14,13 @@ final class LocalDocsModel {
     var version = "19c"
     /// Wersja ustawiona z ustawień raz (przy pierwszym otwarciu); potem wybór w oknie — także przy wyszukiwaniu z F1.
     var versionInitialized = false
-    /// Okno widoczne — komendy okna („Kopiuj”, „Cała sekcja”, „Otwórz online”) działają tylko na tym, co widać.
-    var isOpen = false
+    /// Okno widoczne — komendy okna („Kopiuj”, „Cała sekcja”, „Otwórz online”) działają tylko na tym, co widać:
+    /// widok okna jest w oknie i nie jest ukryty (np. nieaktywna karta doku).
+    @ObservationIgnored weak var view: NSView?
+    var isOpen: Bool {
+        guard let view, view.window != nil else { return false }
+        return !view.isHiddenOrHasHiddenAncestor
+    }
     /// Ostatnie wykonane zlecenie — ponowne pokazanie okna (przeniesienie narzędzia) nie powtarza wyszukiwania.
     var handledRequest = -1
     var results: [DocFragment] = []
@@ -125,8 +130,7 @@ struct LocalDocsView: View {
         }
         .padding(10)
         .frame(minWidth: 320, minHeight: 380)
-        .onAppear { model.isOpen = true }
-        .onDisappear { model.isOpen = false }
+        .background(DocsVisibilityProbe(model: model))
         .task(id: model.request) {
             if !model.versionInitialized {
                 model.version = settings.version
@@ -207,6 +211,17 @@ struct LocalDocsView: View {
     /// Wyszukiwanie z okna — komenda „Dokumentacja Oracle (lokalna)” z zapytaniem (paleta, makra, historia).
     private func search() { workspace.perform("help.localDocs", CommandArguments(["query": .string(model.query)])) }
 
+}
+
+/// Widok w tle okna dokumentacji — model sprawdza przez niego, czy okno jest widoczne.
+private struct DocsVisibilityProbe: NSViewRepresentable {
+    let model: LocalDocsModel
+    func makeNSView(context: Context) -> NSView {
+        let v = NSView()
+        model.view = v
+        return v
+    }
+    func updateNSView(_ v: NSView, context: Context) { model.view = v }
 }
 
 /// Tekst dokumentacji: nagłówki „## …” pogrubione, reszta czcionką kodu (składnia i przykłady zachowują układ).

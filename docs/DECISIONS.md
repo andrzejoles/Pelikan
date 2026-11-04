@@ -3706,3 +3706,10 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   i ponowień; zawartość tabel z jednego pomocnika (`TableContents.make`). Weto rundy 15 wobec palety (okno pod paletą
   w kontekście wywołania zamiast oddania fokusu) odrzucone: bez zysku informacji, ergonomia równa — decyzja rundy 12
   zostaje.
+- Runda 16: menu tabel AppKit — znów migawka z chwili otwarcia menu (zaznaczone wiersze i wiersz spod kursora); weto
+  wobec rundy 15 („błąd po przeładowaniu”) przyjęte — to samo, co widział użytkownik, bez fałszywego błędu: lepsza
+  ergonomia. Komendy biorą na starcie tekst tylko tych wierszy, których dotyczą (`stableContents(rows:)`). „Tylko ta
+  wartość” ujmuje w apostrofy kody z zerami wiodącymi i liczby ponad 15 cyfr; równość tekstu w apostrofach dokładna
+  (bez porównania cyfr wg wartości). `rows`/`row` innego typu — błąd argumentu. Kolumna stanu w porównaniu planów —
+  tekst stanu. Okno dokumentacji „otwarte” = widoczne (także nie w ukrytej karcie doku). Eksport — „5.” to liczba.
+  Wspólne: reguła kolumny SQL (`SQLReportTarget.hasSQLColumn`), kontrolki odświeżania (`AutoRefreshControls`).

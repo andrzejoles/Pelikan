@@ -133,11 +133,16 @@ struct TableToolsState {
 }
 
 extension SQLReportTarget {
+    /// Tabela ma kolumnę SQL_ID albo hash (tytuł albo identyfikator kolumny) — jedna reguła dla menu, skrótu i pytania.
+    static func hasSQLColumn(_ columns: [(id: String, title: String)]) -> Bool {
+        columns.contains { SQLIdentity.columnKind($0.title) != nil || SQLIdentity.columnKind($0.id) != nil }
+    }
+
     /// Zapytanie z wiersza tabeli: kolumna SQL_ID, potem hash; nazwa kolumny — tytuł, a gdy nie pasuje — identyfikator
     /// (jedna reguła dla tabel SwiftUI i AppKit, menu wiersza i skrótu).
     static func fromTableRow(columns: [(id: String, title: String)], values: [String], connection: UUID?, origin: String) -> SQLReportTarget? {
+        guard hasSQLColumn(columns) else { return nil }
         let names = columns.map { SQLIdentity.columnKind($0.title) != nil ? $0.title : $0.id }
-        guard names.contains(where: { SQLIdentity.columnKind($0) != nil }) else { return nil }
         return SQLIdentity.target(columns: names, values: values).map { SQLReportTarget(target: $0, origin: origin, connection: connection) }
     }
 }
@@ -349,10 +354,22 @@ struct TableWindowProbe: NSViewRepresentable {
 
         private func responderChanged(_ responder: NSResponder?) {
             guard let handle, let tv = responder as? NSTableView, !(tv is GridTableView), !isHiddenOrHasHiddenAncestor else { return }
+            // Tabela pod tą tabelą SwiftUI: sonda (tło tabeli, po układzie) leży w większości w ramce tabeli z fokusem —
+            // sonda bez ramki albo z ramką w innej tabeli nie przejmuje cudzego widoku.
+            let mine = convert(bounds, to: nil)
             let outer = tv.enclosingScrollView ?? tv
-            guard outer.convert(outer.bounds, to: nil).intersects(convert(bounds, to: nil)) else { return }
+            let overlap = outer.convert(outer.bounds, to: nil).intersection(mine)
+            guard mine.width > 1, mine.height > 1, !overlap.isNull, overlap.width * overlap.height > mine.width * mine.height / 2 else { return }
             TableFocus.registerSwiftUI(tv, handle)
+            // Dalej tylko zaznaczenie tej tabeli (nie wszystkich tabel aplikacji).
+            if observedTable !== tv {
+                NotificationCenter.default.removeObserver(self, name: NSTableView.selectionDidChangeNotification, object: nil)
+                NotificationCenter.default.addObserver(self, selector: #selector(selectionChanged(_:)), name: NSTableView.selectionDidChangeNotification, object: tv)
+                observedTable = tv
+            }
         }
+
+        private weak var observedTable: NSTableView?
     }
 
     func makeNSView(context: Context) -> Probe {
@@ -373,9 +390,7 @@ struct TableWindowProbe: NSViewRepresentable {
 enum TableActions {
     /// Komenda na wierszach z menu: na migawce tabeli (`args` z niej — wiersze po identyfikatorach). Cel przekazany jako
     /// `CommandContext.target`, poza argumentami (nie trafia do makr).
-    static func performOnRows(_ handle: any FocusTable, _ id: String, _ args: (FrozenTable) -> [String: JSONValue]) {
-        // Menu kontekstowe przekazuje migawkę z chwili otwarcia (etykiety i czynność — te same dane).
-        let frozen = (handle as? FrozenTable) ?? FrozenTable(handle)
+    static func performOnRows(_ frozen: FrozenTable, _ id: String, _ args: (FrozenTable) -> [String: JSONValue]) {
         let a = args(frozen)
         (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(a), target: frozen)
     }
@@ -417,9 +432,13 @@ struct TableCopyMenu: View {
 
     private func run(_ id: String, _ args: [String: JSONValue] = [:]) { TableActions.perform(handle, id, args) }
 
+    /// Migawka menu kontekstowego (przekazana jako `handle`); na pasku menu nie ma czynności na wierszach menu.
+    private var frozen: FrozenTable { (handle as? FrozenTable) ?? FrozenTable(handle) }
+
     /// Komenda z wierszami menu kontekstowego (indeksy z migawki w chwili wyboru pozycji).
     private func runRows(_ id: String, _ extra: [String: JSONValue] = [:], cell: Bool = false) {
-        TableActions.performOnRows(handle, id) { f in
+        // Menu kontekstowe dostaje migawkę z chwili otwarcia; pasek (.selection) tej ścieżki nie używa.
+        TableActions.performOnRows(frozen, id) { f in
             guard case .context(let ids, _, _) = rows else { return extra }
             return extra.merging(cell ? f.rowArgument(ids) : f.rowsArgument(ids)) { a, _ in a }
         }
@@ -462,7 +481,7 @@ struct TableCopyMenu: View {
             case .context(let ids, _, _):
                 Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) {
                     // Zawsze wiersze menu (bez argumentu komenda kopiowałaby wszystkie).
-                    TableActions.performOnRows(handle, "table.copyMarkedColumns") { f in ["rows": .string(f.rowNumbers(ids))] }
+                    TableActions.performOnRows(frozen, "table.copyMarkedColumns") { f in ["rows": .string(f.rowNumbers(ids))] }
                 }
             case .selection:
                 Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) { run("table.copyMarkedColumns", ["selected": .bool(true)]) }
@@ -490,7 +509,8 @@ struct TableExportMenu: View {
 /// Filtr po wartości komórki z menu wiersza (wiersz po identyfikatorze — indeks liczony przy wyborze pozycji).
 struct TableValueFilterMenu: View {
     let columns: [(id: String, title: String)]
-    let handle: any FocusTable
+    /// Migawka z chwili otwarcia menu.
+    let handle: FrozenTable
     let rowID: AnyHashable
 
     var body: some View {
@@ -673,7 +693,7 @@ struct DataTable<Row: Identifiable>: View {
         }
 
         /// Tabela ma kolumnę SQL_ID albo hash.
-        var hasSQLColumn: Bool { texts.contains { SQLIdentity.columnKind($0.title) != nil || SQLIdentity.columnKind($0.id) != nil } }
+        var hasSQLColumn: Bool { SQLReportTarget.hasSQLColumn(texts.map { ($0.id, $0.title) }) }
 
         /// Zapytanie z wiersza (kolumna SQL_ID, potem hash) — menu wiersza, skrót, wstążka (jedna reguła).
         func sqlTarget(row: Row) -> SQLReportTarget? {

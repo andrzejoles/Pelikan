@@ -114,7 +114,11 @@ public struct ValueFilter: Sendable, Hashable {
             let hit = !isEmpty && (compiled ?? LikePattern.cached(p)).matches(text)
             return negated ? !hit && !isEmpty : hit
         case .compare(let op, let v):
-            guard !isEmpty, let r = Self.compare(text: text, key: key, v) else { return false }
+            // Równość tekstu (wartość w apostrofach) — dokładnie, bez wielkości liter („EMP2” ≠ „EMP02”); porządek —
+            // naturalny (cyfry wg wartości).
+            let r: ComparisonResult?
+            if case .text(let s) = v, op == .eq || op == .ne { r = isEmpty ? nil : text.caseInsensitiveCompare(s) } else { r = isEmpty ? nil : Self.compare(text: text, key: key, v) }
+            guard let r else { return false }
             switch op {
             case .eq: return r == .orderedSame
             case .ne: return r != .orderedSame

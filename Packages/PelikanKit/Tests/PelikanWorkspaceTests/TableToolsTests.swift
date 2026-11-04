@@ -221,6 +221,11 @@ struct TableToolsReviewTests {
         #expect(ValueFilter.parse("= 13")!.matches(text: "13", key: .number(12.6)))
         // between z apostrofami — tekst dosłownie, jak przy = < >.
         #expect(ValueFilter.parse("between '1,200' and '1,900'")!.matches(text: "1,500", key: .text("1,500")))
+        // Kody z zerami wiodącymi i długie liczby — „tylko ta wartość” rozróżnia je; równość tekstu dokładna.
+        #expect(!ValueFilter.parse(TableExport.condition("0012", exclude: false))!.matches(text: "12", key: .text("12")))
+        #expect(ValueFilter.parse(TableExport.condition("0012", exclude: false))!.matches(text: "0012", key: .text("0012")))
+        #expect(!ValueFilter.parse("= 'EMP2'")!.matches(text: "EMP02", key: .text("EMP02")))
+        #expect(TableExport.isNumber("5."))
         // Wartość z białymi znakami na brzegach — „tylko ta wartość” trafia w tę samą komórkę.
         #expect(ValueFilter.parse(TableExport.condition("abc\n", exclude: false))!.matches(text: "abc\n", key: .text("abc\n")))
         #expect(!ValueFilter.parse("= 19")!.matches(text: "19c", key: .text("19c")))
@@ -253,6 +258,7 @@ struct TableToolsReviewTests {
         defer { TableExport.copyHeader = header }
         TableExport.copyHeader = false
         try await run("table.copyRows", ["rows": "1,3"])
+        await #expect(throws: CommandError.self) { try await run("table.copyCell", ["column": "a", "row": "x"]) }
         #expect(ui.clipboard == "1\tx\n3\tz")
         try await run("table.markColumn", ["column": "b"])
         try await run("table.copyMarkedColumns")

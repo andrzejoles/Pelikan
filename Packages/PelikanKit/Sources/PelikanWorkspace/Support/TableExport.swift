@@ -34,7 +34,7 @@ public enum TableExport {
     /// zapisie jako liczba: bez zer wiodących (kody „0012”) i najwyżej 15 cyfr znaczących (identyfikatory jak DBID,
     /// FORCE_MATCHING_SIGNATURE zostają tekstem — Excel i JSON zaokrągliłyby je).
     static func isNumber(_ s: String) -> Bool {
-        guard s.range(of: #"^-?(0|[1-9][0-9]*)?(\.[0-9]+)?([eE][+-]?[0-9]+)?$"#, options: .regularExpression) != nil else { return false }
+        guard s.range(of: #"^-?(0|[1-9][0-9]*)?(\.[0-9]*)?([eE][+-]?[0-9]+)?$"#, options: .regularExpression) != nil else { return false }
         // Część przed wykładnikiem musi mieć cyfrę („E1”, „e5” to kody, nie liczby).
         let mantissa = s.prefix { $0 != "e" && $0 != "E" }
         guard mantissa.contains(where: \.isNumber) else { return false }

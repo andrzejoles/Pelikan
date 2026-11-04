@@ -66,6 +66,8 @@ final class PerfReportsModel {
         // Licencja i uprawnienia z tego wczytania (błąd połączenia przy ponownym — raporty niedostępne z tym błędem).
         license = nil
         packages = nil
+        serverMajor = nil
+        availability = nil
         do {
             let s = try await session()
             // Anulowana deklaracja licencji: dalej tylko raporty bez pakietów (wersja, uprawnienia, zaznaczenie — jak zwykle).

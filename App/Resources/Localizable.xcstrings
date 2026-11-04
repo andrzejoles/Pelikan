@@ -105141,34 +105141,6 @@
         }
       }
     },
-    "Wierszy z menu nie ma już w tabeli (odświeżona)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The rows from the menu are no longer in the table (refreshed)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Zeilen aus dem Menü sind nicht mehr in der Tabelle (aktualisiert)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Las filas del menú ya no están en la tabla (actualizada)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Рядків із меню вже немає в таблиці (оновлено)"
-          }
-        }
-      }
-    },
     "Wierszy: %@" : {
       "localizations" : {
         "en" : {
@@ -135769,6 +135741,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "nur Lesen"
+          }
+        }
+      }
+    },
+    "tylko po lewej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "left only"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nur links"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "solo a la izquierda"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "лише ліворуч"
+          }
+        }
+      }
+    },
+    "tylko po prawej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "right only"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nur rechts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "solo a la derecha"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "лише праворуч"
           }
         }
       }
