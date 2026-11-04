@@ -29,8 +29,8 @@ public enum BuiltinCommands {
         )) { ctx in
             let text = kind == .sql ? ctx.arguments.string("text") ?? "" : ""
             let doc = ctx.workspace.newDocument(kind, text: text)
-            // Okno z tekstem od agenta — w dzienniku zmian agenta („Cofnij sesję agenta” je zamyka), jak agent.openEditor.
-            if !text.isEmpty, ctx.invoker.isAgent { ctx.workspace.recordAgentEdit(ctx, doc, before: "", created: true) }
+            // Okno otwarte przez agenta — w dzienniku zmian agenta („Cofnij sesję agenta” je zamyka), jak agent.openEditor.
+            if ctx.invoker.isAgent { ctx.workspace.recordAgentEdit(ctx, doc, before: "", created: true) }
             return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
         }
     }

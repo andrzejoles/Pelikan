@@ -387,7 +387,11 @@ public enum ResultExporter {
     /// Cyfry znaczące zapisu liczby (bez znaku, kropki, zer wiodących i wykładnika) — liczby do 15 cyfr arkusz zapisuje
     /// jako liczby bez straty (jak `TableExport.isNumber`).
     static func significantDigits(_ n: String) -> Int {
-        n.prefix { $0 != "e" && $0 != "E" }.filter(\.isNumber).drop { $0 == "0" }.count
+        let mantissa = n.prefix { $0 != "e" && $0 != "E" }
+        var digits = Substring(mantissa.filter(\.isNumber).drop { $0 == "0" })
+        // Liczba całkowita: zera końcowe nie są cyframi znaczącymi (10^18 zapisuje się dokładnie).
+        if !mantissa.contains(".") { while digits.last == "0" { digits = digits.dropLast() } }
+        return digits.count
     }
 
     public static func xlsx(_ sheets: [ExportData], includeSQL: Bool = false, options: ExportOptions = ExportOptions()) -> Data {

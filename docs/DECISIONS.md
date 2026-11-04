@@ -3736,3 +3736,7 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   przestawienie), a „#n” tylko dla identyfikatorów z tytułów; `file.new.sql` z tekstem od agenta zapisuje okno
   w dzienniku zmian agenta (bez drugiej bramki zgody przez `agent.openEditor`). Odrzucone: „bez tej wartości” miałoby
   zostawiać puste komórki — filtr ma składnię i znaczenie SQL (wymaganie D214), `<>` pomija puste jak NULL.
+- Trzecia runda medium (bez poważnych błędów — koniec pętli): granice `between` w apostrofach mogą zawierać „and”;
+  zera końcowe liczby całkowitej nie są cyframi znaczącymi (10^18 eksportuje się jako liczba); każde okno otwarte przez
+  agenta przez `file.new.sql` trafia do dziennika zmian agenta. Pozostałe uwagi (porządki, wydajność migawek, rejestracja
+  tabel SwiftUI geometrią) — nieistotne, bez zmian.

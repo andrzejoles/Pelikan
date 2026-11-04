@@ -43,7 +43,8 @@ public struct ValueFilter: Sendable, Hashable {
         if lower == "is not null" || lower == "not null" { return ValueFilter(condition: .notNull, text: t) }
         if lower.hasPrefix("between ") {
             let body = String(t.dropFirst(8))
-            if let r = body.range(of: " and ", options: .caseInsensitive) {
+            // „ and ” poza apostrofami (granica w apostrofach może zawierać „and”: 'Rock and Roll').
+            if let r = Self.separator(" and ", in: body) {
                 // W apostrofach — tekst dosłownie (jak przy =, <, >).
                 func bound(_ raw: String) -> Value? {
                     let v = unquote(raw)
@@ -66,6 +67,18 @@ public struct ValueFilter: Sendable, Hashable {
             return ValueFilter(condition: v.isEmpty ? (op == .eq ? .isNull : .notNull) : .compare(op, quoted ? .exact(v) : value(v)), text: t)
         }
         return ValueFilter(condition: .like(unquote(t), negated: false), text: t)
+    }
+
+    /// Pierwsze wystąpienie `separator` (bez wielkości liter) poza tekstem w apostrofach.
+    static func separator(_ separator: String, in s: String) -> Range<String.Index>? {
+        var quoted = false
+        var i = s.startIndex
+        while i < s.endIndex {
+            if s[i] == "'" { quoted.toggle() }
+            if !quoted, let r = s.range(of: separator, options: [.caseInsensitive, .anchored], range: i..<s.endIndex) { return r }
+            i = s.index(after: i)
+        }
+        return nil
     }
 
     static func unquote(_ s: String) -> String {

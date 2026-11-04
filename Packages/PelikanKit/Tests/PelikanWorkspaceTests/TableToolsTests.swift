@@ -236,6 +236,8 @@ struct TableToolsReviewTests {
         // Komórka bez klucza, ale z opisem (kolumna postępu) — nie jest pusta.
         #expect(ValueFilter.parse(TableExport.condition("Łączenie…", exclude: false))!.matches(text: "Łączenie…", key: .none))
         #expect(TableExport.isNumber("5."))
+        #expect(TableExport.isNumber("1000000000000000000"))
+        #expect(ValueFilter.parse("between 'Rock and Roll' and 'Z'")!.matches(text: "Sabbath", key: .text("Sabbath")))
         // Liczba z zerami po przecinku (16 znaków, 8 cyfr znaczących) — liczba; kolumna zostaje liczbowa.
         #expect(TableExport.isNumber("-0.0000012345678"))
         #expect(ResultExporter.significantDigits("-123456789012.34") == 14)
