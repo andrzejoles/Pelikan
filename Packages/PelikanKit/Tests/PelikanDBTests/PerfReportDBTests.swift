@@ -57,7 +57,9 @@ struct PerfReportDBTests {
             } catch { failures.append("\(id) [\(f.rawValue)]: \(error.localizedDescription)") }
         }
         await run("sql.planCursor", .text)
-        await run("sql.planAWR", .text)
+        // Plan trafia do DBA_HIST_SQL_PLAN nie przy każdej migawce — raport sprawdzany, gdy plan już jest w AWR.
+        let awrPlans = try await s.scalar("select count(*) from dba_hist_sql_plan where sql_id = :i", binds: [BindVariable(name: "i", value: .text(sqlID))]) ?? "0"
+        if awrPlans != "0" { await run("sql.planAWR", .text) }
         await run("sql.monitor", .active) { $0.source = .sqlMonitor; $0.execution = a.executions.first }
         await run("sql.monitor", .text) { $0.source = .sqlMonitor; $0.execution = a.executions.first }
         await run("sql.monitorList", .html)
