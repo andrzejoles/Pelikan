@@ -90301,6 +90301,34 @@
         }
       }
     },
+    "Tabela (menu tabeli; domyślnie tabela z fokusem)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Table (table menu; default: the focused table)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabelle (Tabellenmenü; Standard: Tabelle mit Fokus)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabla (menú de la tabla; por defecto, la tabla con el foco)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Таблиця (меню таблиці; типово таблиця у фокусі)"
+          }
+        }
+      }
+    },
     "Tabela albo widok (NAZWA lub SCHEMAT.NAZWA)" : {
       "localizations" : {
         "en" : {

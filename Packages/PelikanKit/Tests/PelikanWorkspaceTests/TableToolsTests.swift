@@ -242,5 +242,14 @@ struct TableToolsReviewTests {
         #expect(ui.clipboard == "błąd")
         #expect(ws.registry.command("file.new.sql")?.descriptor.parameters.map(\.name) == ["text"])
         #expect(ws.registry.command("file.new.program")?.descriptor.parameters.isEmpty == true)
+        // Menu tabeli wskazuje ją identyfikatorem — działa na niej, choć fokus ma inna tabela; bez tabeli — przełącznik nagłówka.
+        let other = FakeTableHandle(rows: [["9", "q"]], selected: [0])
+        ui.table = other
+        try await run("table.copyCell", ["column": "b", "row": 2, "table": .string(TableRegistry.id(for: t))])
+        #expect(ui.clipboard == "y")
+        ui.table = nil
+        let before = TableExport.copyHeader
+        try await run("table.toggleCopyHeader")
+        #expect(TableExport.copyHeader == !before)
     }
 }

@@ -66,6 +66,7 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
     /// Tekst komórki wiersza widoku (po filtrze i sortowaniu) w kolumnie o identyfikatorze.
     private let cell: (Int, String) -> String
     private var baseItems: [NSMenuItem] = []
+    private var selectionObserver: (any NSObjectProtocol)?
 
     init(table: NSTableView, title: @escaping () -> String, total: @escaping () -> Int, cell: @escaping (Int, String) -> String,
          onFilterChange: @escaping () -> Void) {
@@ -83,6 +84,10 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         menu.delegate = self
         table.menu = menu
         TableFocus.register(table, self)
+        // Pasek nad tabelą (liczba i pozycje „zaznaczone”) po każdej zmianie zaznaczenia.
+        selectionObserver = NotificationCenter.default.addObserver(forName: NSTableView.selectionDidChangeNotification, object: table, queue: .main) {
+            [weak self] _ in MainActor.assumeIsolated { self?.model.revision += 1 }
+        }
     }
 
     var columns: [(id: String, title: String)] {
@@ -128,16 +133,13 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         let colIndex = table.clickedColumn
         let column = colIndex >= 0 && colIndex < table.tableColumns.count ? table.tableColumns[colIndex] : nil
         let rows: [Int] = row < 0 ? c.selectedRows : (table.selectedRowIndexes.contains(row) ? c.selectedRows : [row])
-        // Wiersz spod kursora w chwili wyboru pozycji: dołączany do zaznaczenia (jak w siatce wyników), więc komendy
-        // biorą zaznaczenie z tej chwili — bez indeksów sprzed ewentualnego przeładowania tabeli.
+        // Wiersz spod kursora liczony w chwili wyboru pozycji (bez zmiany zaznaczenia — zaznaczenie bywa nawigacją,
+        // np. wybór pliku dziennika); tylko komendy wierszy dostają go w argumencie.
         func item(_ title: String, state: Bool = false, enabled: Bool = true, _ id: String,
                   _ args: @escaping (Int?) -> [String: JSONValue] = { _ in [:] }) -> NSMenuItem {
             BlockMenuItem(title, state: state, enabled: enabled) { [weak self] in
                 guard let self else { return }
                 let clicked = self.table.clickedRow >= 0 && self.table.clickedRow < self.table.numberOfRows ? self.table.clickedRow : nil
-                if let clicked, !self.table.selectedRowIndexes.contains(clicked) {
-                    self.table.selectRowIndexes([clicked], byExtendingSelection: false)
-                }
                 TableActions.perform(self, id, args(clicked))
             }
         }
@@ -153,7 +155,11 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
             menu.addItem(item(L10n.tr("Kopiuj komórkę"), "table.copyCell") { rowArg($0).merging(["column": .string(id)]) { a, _ in a } })
         }
         if !rows.isEmpty {
-            menu.addItem(item(rows.count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(rows.count))"), "table.copyRows"))
+            menu.addItem(item(rows.count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(rows.count))"), "table.copyRows") { [weak self] r in
+                // Wiersz spod kursora poza zaznaczeniem — tylko on; inaczej zaznaczenie.
+                guard let self, let r, !self.table.selectedRowIndexes.contains(r) else { return [:] }
+                return ["rows": .string(String(r + 1))]
+            })
         }
         if let column {
             let id = column.identifier.rawValue

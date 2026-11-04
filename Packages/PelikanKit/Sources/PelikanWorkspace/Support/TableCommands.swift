@@ -28,14 +28,34 @@ public struct TableContents {
     public var all: [Int] { Array(0..<rowCount) }
 }
 
-/// Tabela narzędzia, na której działają komendy `table.*` (D214): ostatnio używana tabela okna z fokusem
-/// (`UIServices.focusedTable()`).
+/// Tabela narzędzia, na której działają komendy `table.*` (D214): wskazana argumentem `table` (menu i pasek tabeli)
+/// albo tabela z fokusem (`UIServices.focusedTable()` — paleta, skrót, makro).
 @MainActor
 public protocol TableHandle: AnyObject {
     var contents: TableContents { get }
     var filter: TableFilter { get set }
     /// Kolumny zaznaczone do kopii (identyfikatory, w kolejności zaznaczania).
     var markedColumns: [String] { get set }
+}
+
+/// Tabele widoczne w oknach po identyfikatorze (argument `table` komend z menu i paska tabeli). Słabe odwołania —
+/// zamknięta tabela znika z rejestru.
+@MainActor
+public enum TableRegistry {
+    private final class Weak { weak var handle: (any TableHandle)?; init(_ h: any TableHandle) { handle = h } }
+    private static var tables: [String: Weak] = [:]
+
+    /// Identyfikator tabeli (ten sam przez cały czas życia obiektu).
+    public static func id(for handle: any TableHandle) -> String {
+        let id = String(UInt(bitPattern: ObjectIdentifier(handle).hashValue), radix: 36)
+        if tables[id]?.handle !== handle {
+            tables = tables.filter { $0.value.handle != nil }
+            tables[id] = Weak(handle)
+        }
+        return id
+    }
+
+    public static func handle(_ id: String) -> (any TableHandle)? { tables[id]?.handle }
 }
 
 extension TableExport {
@@ -63,7 +83,10 @@ enum TableCommands {
     static let rowsParam = CommandParameter("rows", .string, L10n.tr("Numery wierszy widoku od 1, po przecinku (domyślnie zaznaczone)"))
     static let columnParam = CommandParameter("column", .string, L10n.tr("Kolumna: identyfikator albo tytuł (bez argumentu — wybór z listy)"))
 
+    static let tableParam = CommandParameter("table", .string, L10n.tr("Tabela (menu tabeli; domyślnie tabela z fokusem)"))
+
     static func handle(_ ctx: CommandContext) throws -> any TableHandle {
+        if let id = ctx.arguments.string("table"), let h = TableRegistry.handle(id) { return h }
         guard let h = ctx.ui?.focusedTable() else { throw CommandError.notAvailable(L10n.tr("Brak tabeli okna narzędzia z fokusem")) }
         return h
     }
@@ -113,10 +136,11 @@ enum TableCommands {
     }
 
     static func command(_ id: String, _ title: String, _ summary: String, parameters: [CommandParameter] = [], effect: CommandEffect = .none,
-                        state: StateHandler? = nil, run: @escaping CommandHandler) -> Command {
-        Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .edit, submenu: submenu, parameters: parameters,
+                        state: StateHandler? = nil, needsTable: Bool = true, run: @escaping CommandHandler) -> Command {
+        Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .edit, submenu: submenu,
+                                  parameters: needsTable ? parameters + [tableParam] : parameters,
                                   agent: .none, effect: effect, summary: summary, feature: "PD-UI-015"),
-                validate: hasTable, state: state, run: run)
+                validate: needsTable ? hasTable : nil, state: state, run: run)
     }
 
     static var all: [Command] {
@@ -170,7 +194,7 @@ enum TableCommands {
                 return .ok
             },
             command("table.toggleCopyHeader", L10n.tr("Kopiuj tabele z nagłówkiem"), L10n.tr("Włącza albo wyłącza nagłówki kolumn przy kopiowaniu z tabel."),
-                    effect: .settings, state: { _ in TableExport.copyHeader }) { _ in
+                    effect: .settings, state: { _ in TableExport.copyHeader }, needsTable: false) { _ in
                 TableExport.copyHeader.toggle()
                 return .ok
             },

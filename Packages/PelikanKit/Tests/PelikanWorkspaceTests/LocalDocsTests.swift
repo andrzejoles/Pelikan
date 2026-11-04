@@ -11,6 +11,8 @@ final class FakeDocsServer: URLProtocol {
     nonisolated(unsafe) static var sessionHeaders: [String?] = []
     /// Tyle następnych tools/call z identyfikatorem sesji dostaje 404 (sesja wygasła po restarcie serwera).
     nonisolated(unsafe) static var expireSession = 0
+    /// Kod odpowiedzi dla wygasłej sesji (404 albo 400 z komunikatem o sesji).
+    nonisolated(unsafe) static var expiredStatus = 404
     static let lock = NSLock()
 
     override class func canInit(with request: URLRequest) -> Bool { request.url?.host == "127.0.0.1" }
@@ -35,9 +37,10 @@ final class FakeDocsServer: URLProtocol {
             return true
         }
         if expired {
-            client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: 404, httpVersion: "HTTP/1.1", headerFields: [:])!,
+            let status = Self.lock.withLock { Self.expiredStatus }
+            client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: "HTTP/1.1", headerFields: [:])!,
                                 cacheStoragePolicy: .notAllowed)
-            client?.urlProtocol(self, didLoad: Data())
+            client?.urlProtocol(self, didLoad: Data("Bad Request: No valid session ID provided".utf8))
             client?.urlProtocolDidFinishLoading(self)
             return
         }
@@ -166,6 +169,10 @@ struct LocalDocsTests {
         #expect(both.0.count == 1 && both.1.count == 1)
         methods = FakeDocsServer.lock.withLock { FakeDocsServer.requests.map { $0["method"] as? String } }
         #expect(methods.filter { $0 == "initialize" }.count == 1)
+        // Serwer odpowiadający 400 „No valid session ID” — też nowa sesja.
+        FakeDocsServer.lock.withLock { FakeDocsServer.requests = []; FakeDocsServer.expireSession = 1; FakeDocsServer.expiredStatus = 400 }
+        defer { FakeDocsServer.lock.withLock { FakeDocsServer.expiredStatus = 404 } }
+        #expect(try await c.search("NVL", version: "19c").count == 1)
         #expect(LocalDocsClient.shared(for: URL(string: "http://127.0.0.1:1/mcp")!) === LocalDocsClient.shared(for: URL(string: "http://127.0.0.1:1/mcp")!))
     }
 }

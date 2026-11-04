@@ -73,11 +73,12 @@ public enum LocalDocsError: Error, LocalizedError, Equatable {
     case badAddress(String)
     case unreachable(String)
     case server(String)
-    case http(Int)
+    /// Kod HTTP i początek treści odpowiedzi (rozpoznanie wygasłej sesji).
+    case http(Int, String)
 
     public var errorDescription: String? {
         switch self {
-        case .http(let code): L10n.tr("Błąd serwera dokumentacji: HTTP \(code)")
+        case .http(let code, _): L10n.tr("Błąd serwera dokumentacji: HTTP \(code)")
         case .badAddress(let a): L10n.tr("Niedozwolony adres serwera dokumentacji: \(a) (HTTPS albo HTTP na tym komputerze)")
         case .unreachable(let m): L10n.tr("Serwer dokumentacji lokalnej nie odpowiada: \(m)")
         case .server(let m): L10n.tr("Błąd serwera dokumentacji: \(m)")
@@ -128,20 +129,21 @@ public actor LocalDocsClient {
     }
 
     private func callTool(_ name: String, _ arguments: [String: Any]) async throws -> String {
-        try await ensureInitialized()
-        let used = session
         do {
             return try await callToolOnce(name, arguments)
-        } catch LocalDocsError.http(404) where used != nil {
-            // Sesja wygasła albo serwer uruchomiono ponownie (MCP: 404 dla nieznanej sesji) — nowa sesja i jedno
-            // ponowienie. Sesję kasuje tylko pierwsze wywołanie, które ją zobaczyło; równoczesne dołączają do nowej.
-            if session == used {
+        } catch let expired as SessionExpired {
+            // Sesja wygasła albo serwer uruchomiono ponownie — nowa sesja i jedno ponowienie. Sesję kasuje tylko
+            // pierwsze wywołanie, które ją zobaczyło; równoczesne dołączają do nowej inicjalizacji.
+            if session == expired.session {
                 session = nil
                 initialization = nil
             }
             return try await callToolOnce(name, arguments)
         }
     }
+
+    /// Odpowiedź serwera na nieznaną sesję: 404 (MCP) albo 400 z komunikatem o sesji (część serwerów).
+    private struct SessionExpired: Error { let session: String }
 
     /// Inicjalizacja sesji MCP raz — równoczesne pierwsze wywołania (aktor jest współbieżny przy `await`) czekają na
     /// to samo zadanie zamiast inicjować po kilka sesji.
@@ -163,7 +165,15 @@ public actor LocalDocsClient {
 
     private func callToolOnce(_ name: String, _ arguments: [String: Any]) async throws -> String {
         try await ensureInitialized()
-        let result = try await rpc("tools/call", ["name": name, "arguments": arguments])
+        // Sesja odczytana bez zawieszenia przed zbudowaniem żądania — ta sama, którą żądanie wysyła.
+        let used = session
+        let result: [String: Any]
+        do {
+            result = try await rpc("tools/call", ["name": name, "arguments": arguments])
+        } catch LocalDocsError.http(let code, let body) where used != nil
+                    && (code == 404 || (code == 400 && body.range(of: "session", options: .caseInsensitive) != nil)) {
+            throw SessionExpired(session: used!)
+        }
         let content = (result["content"] as? [[String: Any]]) ?? []
         let text = content.compactMap { $0["type"] as? String == "text" || $0["type"] == nil ? $0["text"] as? String : nil }.joined(separator: "\n")
         if result["isError"] as? Bool == true { throw LocalDocsError.server(text) }
@@ -198,7 +208,9 @@ public actor LocalDocsClient {
         }
         if let http = response as? HTTPURLResponse {
             if let s = http.value(forHTTPHeaderField: "Mcp-Session-Id") { session = s }
-            guard (200..<300).contains(http.statusCode) else { throw LocalDocsError.http(http.statusCode) }
+            guard (200..<300).contains(http.statusCode) else {
+                throw LocalDocsError.http(http.statusCode, String(decoding: data.prefix(500), as: UTF8.self))
+            }
         }
         guard let message = Self.message(data, id: id) else { throw LocalDocsError.server(L10n.tr("nieczytelna odpowiedź")) }
         if let e = message["error"] as? [String: Any] { throw LocalDocsError.server(e["message"] as? String ?? "\(e)") }

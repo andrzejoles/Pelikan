@@ -127,27 +127,22 @@ protocol FocusTable: TableHandle {
 }
 
 /// Tabela SwiftUI: jeden obiekt na widok (`@State`), odświeżany przy każdym rysowaniu — komenda wywołana później
-/// (skrót, makro) widzi bieżące wiersze. Po zniknięciu widoku domknięcia są czyszczone (bez cyklu widok ↔ uchwyt).
+/// (skrót, makro) widzi bieżące wiersze. Domknięcia trzymają tylko wartości tabeli (wiersze, teksty kolumn,
+/// zaznaczenie), nie widok — bez cyklu widok ↔ uchwyt.
 @MainActor
 final class SwiftUITableHandle: FocusTable {
     private var provider: () -> TableContents = { TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []) }
     private var target: () -> SQLReportTarget? = { nil }
+    private var indexer: ([AnyHashable]) -> [Int] = { _ in [] }
     private var state: Binding<TableToolsState>?
-    private var shownIDs: [AnyHashable] = []
     weak var tableView: NSTableView?
 
     func update(contents: @escaping () -> TableContents, sqlTarget: @escaping () -> SQLReportTarget?, state: Binding<TableToolsState>,
-                ids: [AnyHashable]) {
+                indexes: @escaping ([AnyHashable]) -> [Int]) {
         provider = contents
         target = sqlTarget
+        indexer = indexes
         self.state = state
-        shownIDs = ids
-    }
-
-    func clear() {
-        update(contents: { TableContents(title: "", columns: [], rowCount: 0, cell: { _, _ in "" }, selectedRows: []) }, sqlTarget: { nil },
-               state: .constant(TableToolsState()), ids: [])
-        state = nil
     }
 
     var contents: TableContents { provider() }
@@ -161,9 +156,14 @@ final class SwiftUITableHandle: FocusTable {
         set { state?.wrappedValue.markedColumns = newValue }
     }
 
-    func indexes(of ids: [AnyHashable]) -> [Int] {
-        let set = Set(ids)
-        return shownIDs.indices.filter { set.contains(shownIDs[$0]) }
+    func indexes(of ids: [AnyHashable]) -> [Int] { indexer(ids) }
+
+    /// Indeksy wierszy widoku o identyfikatorach (liczone przy wyborze pozycji menu).
+    static func indexer<Row: Identifiable>(_ shown: [Row]) -> ([AnyHashable]) -> [Int] {
+        { ids in
+            let set = Set(ids)
+            return shown.indices.filter { set.contains(AnyHashable(shown[$0].id)) }
+        }
     }
 }
 
@@ -199,16 +199,25 @@ struct TableViewLocator: NSViewRepresentable {
             DispatchQueue.main.async { [weak self] in self?.locate() }
         }
 
+        /// Tabela o ramce najbliższej ramce sondy (stosunek części wspólnej do sumy — tabela obejmująca sondę nie
+        /// remisuje z właściwą); widoki ukryte (np. nieaktywne narzędzia doku) pomijane.
         func locate() {
-            guard let handle, handle.tableView == nil, let window, let root = window.contentView else { return }
+            guard let handle, let window, let root = window.contentView, !isHiddenOrHasHiddenAncestor else { return }
+            if let tv = handle.tableView, tv.window === window, !tv.isHiddenOrHasHiddenAncestor { return }
             let mine = convert(bounds, to: nil)
+            guard mine.width > 0, mine.height > 0 else { return }
             var best: (NSTableView, CGFloat)?
             func walk(_ v: NSView) {
+                guard !v.isHidden else { return }
                 if let tv = v as? NSTableView, !(tv is GridTableView) {
-                    let frame = (tv.enclosingScrollView ?? tv).convert((tv.enclosingScrollView ?? tv).bounds, to: nil)
+                    let outer = tv.enclosingScrollView ?? tv
+                    let frame = outer.convert(outer.bounds, to: nil)
                     let i = frame.intersection(mine)
-                    let area = i.isNull ? 0 : i.width * i.height
-                    if area > (best?.1 ?? 0) { best = (tv, area) }
+                    if !i.isNull {
+                        let u = frame.union(mine)
+                        let score = (i.width * i.height) / max(1, u.width * u.height)
+                        if score > (best?.1 ?? 0.5) { best = (tv, score) }
+                    }
                 }
                 v.subviews.forEach(walk)
             }
@@ -227,17 +236,18 @@ struct TableViewLocator: NSViewRepresentable {
 
     func updateNSView(_ p: Probe, context: Context) {
         p.handle = handle
-        if handle.tableView == nil { DispatchQueue.main.async { p.locate() } }
+        DispatchQueue.main.async { p.locate() }
     }
 }
 
-/// Czynności tabel (D214): menu i pasek wywołują komendy `table.*` — najpierw fokus na tej tabeli, więc komenda
-/// działa na niej (także gdy fokus miała inna tabela).
+/// Czynności tabel (D214): menu i pasek wywołują komendy `table.*` ze wskazaniem tej tabeli (argument `table`) —
+/// działają na niej niezależnie od fokusu i okna kluczowego.
 @MainActor
 enum TableActions {
     static func perform(_ handle: any FocusTable, _ id: String, _ args: [String: JSONValue] = [:]) {
-        if let tv = handle.tableView, tv.window?.firstResponder !== tv { tv.window?.makeFirstResponder(tv) }
-        (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(args))
+        var a = args
+        a["table"] = .string(TableRegistry.id(for: handle))
+        (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(a))
     }
 
     /// Argument `rows` (numery od 1) tylko, gdy wiersze menu różnią się od zaznaczenia (inaczej komenda bierze zaznaczenie).
@@ -296,7 +306,9 @@ struct TableCopyMenu: View {
             Menu(L10n.tr("Kopiuj komórkę")) {
                 ForEach(contents.columns, id: \.id) { c in Button(c.title) { run("table.copyCell", ["column": .string(c.id)]) } }
             }
+            .disabled(contents.selectedRows.isEmpty)
             Button(L10n.tr("Kopiuj zaznaczone wiersze")) { run("table.copyRows") }
+                .disabled(contents.selectedRows.isEmpty)
         }
         Menu(L10n.tr("Kopiuj kolumnę")) {
             ForEach(contents.columns, id: \.id) { c in Button(c.title) { run("table.copyColumn", ["column": .string(c.id)]) } }
@@ -519,27 +531,44 @@ struct DataTable<Row: Identifiable>: View {
             .map { SQLReportTarget(target: $0, origin: L10n.tr("zaznaczony wiersz tabeli"), connection: reportConnection) }
     }
 
-    /// Cel raportów z zaznaczonego wiersza (nil — tabela bez kolumny SQL albo bez zaznaczenia).
-    private func focusedTarget(_ shown: [Row], _ ids: Set<Row.ID>) -> SQLReportTarget? {
-        guard hasSQLColumn else { return nil }
-        return shown.first { ids.contains($0.id) }.flatMap(sqlTarget)
+    /// Wartości tabeli dla uchwytu (bez widoku — uchwyt w `@State` nie może trzymać widoku, który trzyma uchwyt).
+    struct Snapshot {
+        let texts: [(id: String, title: String, text: (Row) -> String)]
+        let title: String?
+        let connection: UUID?
+        let selected: () -> Set<Row.ID>
+        weak var handle: SwiftUITableHandle?
+
+        func contents(_ shown: [Row]) -> TableContents {
+            let byID = Dictionary(texts.map { ($0.id, $0.text) }, uniquingKeysWith: { a, _ in a })
+            let selected = selected()
+            return TableContents(title: TableActions.title(title, window: handle?.tableView?.window), columns: texts.map { ($0.id, $0.title) },
+                                 rowCount: shown.count, cell: { r, id in r < shown.count ? byID[id]?(shown[r]) ?? "" : "" },
+                                 selectedRows: selected.isEmpty ? [] : shown.indices.filter { selected.contains(shown[$0].id) })
+        }
+
+        func sqlTarget(_ shown: [Row]) -> SQLReportTarget? {
+            let names = texts.map { SQLIdentity.columnKind($0.title) != nil ? $0.title : $0.id }
+            guard names.contains(where: { SQLIdentity.columnKind($0) != nil }) else { return nil }
+            let selected = selected()
+            guard let row = shown.first(where: { selected.contains($0.id) }) else { return nil }
+            return SQLIdentity.target(columns: names, values: texts.map { $0.text(row) })
+                .map { SQLReportTarget(target: $0, origin: L10n.tr("zaznaczony wiersz tabeli"), connection: connection) }
+        }
     }
 
-    private func contents(_ shown: [Row]) -> TableContents {
-        let byID = Dictionary(columns.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        let selected = selection.ids
-        return TableContents(title: TableActions.title(title, window: handle.tableView?.window), columns: columns.map { ($0.id, $0.title) }, rowCount: shown.count,
-                             cell: { r, id in r < shown.count ? byID[id]?.text(shown[r]) ?? "" : "" },
-                             selectedRows: selected.isEmpty ? [] : shown.indices.filter { selected.contains(shown[$0].id) })
+    static func snapshot(columns: [DataColumn<Row>], title: String?, connection: UUID?, selection: DataTableSelection<Row.ID>,
+                         handle: SwiftUITableHandle) -> Snapshot {
+        Snapshot(texts: columns.map { ($0.id, $0.title, $0.text) }, title: title, connection: connection, selected: { selection.ids }, handle: handle)
     }
 
     var body: some View {
         let shown = viewRows()
-        let contents = contents(shown)
         // Uchwyt widzi wiersze z tego rysowania (komendy wywołane później — bieżące dane, bez ponownego filtrowania).
-        let view = self
-        let _ = handle.update(contents: { view.contents(shown) }, sqlTarget: { view.focusedTarget(shown, view.selection.ids) }, state: $tools,
-                              ids: shown.map { AnyHashable($0.id) })
+        let snapshot = Self.snapshot(columns: columns, title: title, connection: reportConnection, selection: selection, handle: handle)
+        let contents = snapshot.contents(shown)
+        let _ = handle.update(contents: { snapshot.contents(shown) }, sqlTarget: { snapshot.sqlTarget(shown) }, state: $tools,
+                              indexes: SwiftUITableHandle.indexer(shown))
         VStack(spacing: 3) {
             TableToolsBar(contents: contents, handle: handle, state: $tools, total: rows.count)
             table(shown)
@@ -557,8 +586,6 @@ struct DataTable<Row: Identifiable>: View {
                 }
         }
         .onChange(of: shown.map(\.id), initial: true) { _, ids in onViewRowsChange?(ids) }
-        // Domknięcia uchwytu trzymają widok (a widok — uchwyt): po zniknięciu tabeli czyszczone, bez wycieku.
-        .onDisappear { handle.clear() }
         // Inny zestaw kolumn (np. inne zapytanie w tej samej tabeli) — filtr i sortowanie dotyczyły starych kolumn.
         .onChange(of: columns.map { $0.id + "\u{1}" + $0.title }) {
             tools = TableToolsState()
@@ -577,8 +604,9 @@ struct DataTable<Row: Identifiable>: View {
             rowMenu(ids)
             Divider()
         }
+        // Klik poza wierszami — menu jak na pasku (zaznaczenie w chwili komendy).
         TableCopyMenu(contents: contents, handle: handle, marked: tools.markedColumns,
-                      rows: .context(ids: idx.map { AnyHashable(shown[$0].id) }, count: idx.count, first: idx.first ?? 0))
+                      rows: idx.isEmpty ? .selection : .context(ids: idx.map { AnyHashable(shown[$0].id) }, count: idx.count, first: idx[0]))
         if let r = idx.first {
             Divider()
             TableValueFilterMenu(columns: contents.columns, handle: handle, rowID: AnyHashable(shown[r].id))

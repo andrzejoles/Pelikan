@@ -87,11 +87,13 @@ struct PlanPanel: View {
         }
     }
 
+    /// Zawartość tabeli planu: domknięcie komórek trzyma tylko teksty kolumn (nie widok z uchwytem w `@State`).
     private func planContents(_ lines: [PlanLine]) -> TableContents {
         let cols = planColumns
+        let texts = Dictionary(cols.map { ($0.id, $0.text) }, uniquingKeysWith: { a, _ in a })
         let shown = lines.sorted(by: sortPlan)
         return TableContents(title: L10n.tr("Plan wykonania"), columns: cols.map { ($0.id, $0.title) }, rowCount: shown.count,
-                             cell: { r, id in r < shown.count ? cols.first { $0.id == id }?.text(shown[r]) ?? "" : "" },
+                             cell: { r, id in r < shown.count ? texts[id]?(shown[r]) ?? "" : "" },
                              selectedRows: shown.indices.filter { shown[$0].id == selection })
     }
 
@@ -155,7 +157,7 @@ struct PlanPanel: View {
                 let shownLines = (lines ?? document.plan?.lines ?? []).sorted(by: sortPlan)
                 let contents = planContents(lines ?? document.plan?.lines ?? [])
                 let handle = tableHandle
-                let _ = handle.update(contents: { contents }, sqlTarget: { nil }, state: $tools, ids: shownLines.map { AnyHashable($0.id) })
+                let _ = handle.update(contents: { contents }, sqlTarget: { nil }, state: $tools, indexes: SwiftUITableHandle.indexer(shownLines))
                 TableToolsBar(contents: contents, handle: handle, state: $tools, total: document.plan?.lines.count ?? 0)
                 ScrollViewReader { proxy in
                     Table(of: PlanLine.self, selection: $selection, sortOrder: $sortPlan) {
@@ -174,11 +176,10 @@ struct PlanPanel: View {
                         }
                     }
                     .background(TableViewLocator(handle: handle))
-                    .onDisappear { handle.clear() }
                     .contextMenu(forSelectionType: PlanLine.ID.self) { ids in
                         let rows = shownLines.indices.filter { ids.contains(shownLines[$0].id) }
                         TableCopyMenu(contents: contents, handle: handle, marked: tools.markedColumns,
-                                      rows: .context(ids: rows.map { AnyHashable(shownLines[$0].id) }, count: rows.count, first: rows.first ?? 0))
+                                      rows: rows.isEmpty ? .selection : .context(ids: rows.map { AnyHashable(shownLines[$0].id) }, count: rows.count, first: rows[0]))
                         if let r = rows.first {
                             Divider()
                             TableValueFilterMenu(columns: contents.columns, handle: handle, rowID: AnyHashable(shownLines[r].id))

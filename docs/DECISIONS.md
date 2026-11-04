@@ -3623,7 +3623,7 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
 **Zlecenie właściciela:** dogłębny code review zmian od #133 do #142, poprawki i kolejne przeglądy aż do braku uwag.
 
 - **Licencja i wersja bazy sprawdzane przy wykonaniu raportu** (`PerfReportRunner.run(…, license:)`, `PerfLicense.blockReason`):
-  raport albo źródło spoza licencji i raport z nowszej wersji Oracle nie wywołują bazy. Licencja nieznana (przed
+  raport albo źródło (podane albo pierwsze raportu) spoza licencji i raport z nowszej wersji Oracle nie wywołują bazy. Licencja nieznana (przed
   wczytaniem, anulowana deklaracja) — tylko raporty bez pakietów. Okno raportów bazy bierze wersję z sesji. Domyślny
   drugi okres tylko w raportach porównania.
 - **Cel raportów SQL:** menu siatki z wiersza spod kursora (jedna logika `SQLTargetFinder.fromGrid(_:row:column:)`);
@@ -3640,17 +3640,18 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   wyszukiwania albo sekcji pomijany; wersja z argumentu agenta w dzienniku tylko jako znana wartość.
 - **Raport ACTIVE:** WebKit z dostępem tylko do pliku tego raportu (skrypty raportu są zdalne).
 - Przy okazji: „Otwórz przebieg profilera” bez numeru pyta o niego (wykryte testem wstążki).
-- **Tabela bieżąca (rundy 2–3):** komendy `table.*` i „Raporty dla SQL_ID” działają na tabeli z fokusem w oknie
-  bieżącym (pod paletą — w oknie pod nią). Każda tabela (AppKit i SwiftUI) jest zarejestrowana z własnym widokiem
-  `NSTableView` (SwiftUI — `TableViewLocator` po ramce tabeli), bez globalnego stanu „ostatniej tabeli”; menu i pasek
-  tabeli najpierw dają jej fokus. Uchwyt tabeli SwiftUI jest obiektem widoku odświeżanym przy rysowaniu (bieżące
-  wiersze), czyszczonym po zniknięciu widoku. Menu kontekstowe wskazuje wiersze identyfikatorami — indeksy liczone
-  przy wyborze pozycji; argument `rows` tylko, gdy wiersze różnią się od zaznaczenia; menu tabel AppKit dołącza wiersz
-  spod kursora do zaznaczenia. Pusty identyfikator kolumny (kolumna bez tytułu) jest kolumną, nie brakiem argumentu.
+- **Tabela komendy (rundy 2–4):** menu i pasek tabeli wskazują swoją tabelę argumentem `table` (rejestr tabel
+  `TableRegistry`, słabe odwołania) — komenda działa na niej niezależnie od fokusu i okna kluczowego. Paleta, skrót
+  i makro — tabela z fokusem w oknie bieżącym (pod paletą — w oknie pod nią), wyszukiwana po widoku `NSTableView`
+  (SwiftUI — `TableViewLocator`: tabela o ramce najbliższej ramce tabeli, bez widoków ukrytych). Uchwyt tabeli
+  SwiftUI jest obiektem widoku odświeżanym przy rysowaniu i trzyma tylko wartości tabeli (bez cyklu z widokiem).
+  Menu kontekstowe wskazuje wiersze identyfikatorami (indeksy liczone przy wyborze pozycji); klik poza wierszami —
+  pozycje jak na pasku. Menu tabel AppKit nie zmienia zaznaczenia (wiersz spod kursora w argumencie). Pusty
+  identyfikator kolumny (kolumna bez tytułu) jest kolumną. „Kopiuj z nagłówkiem” — ustawienie, dostępne bez tabeli.
 - Komendy `table.*` w menu Edycja › Tabela i w palecie (poza wstążką — działają w oknach narzędzi). Liczba w filtrze
   porównywana z liczbą pokazaną w komórce; tekst kolumn całkowitych bez przejścia przez Double. Zapis pliku (arkusz)
   w oknie, z którego go wywołano; nazwa pliku z tytułu okna tabeli.
-- Klient MCP inicjuje sesję raz także przy równoczesnych wywołaniach; ponowienie tylko po 404 i tylko raz na sesję
+- Klient MCP inicjuje sesję raz także przy równoczesnych wywołaniach; ponowienie po 404 (albo 400 o sesji) i tylko raz na sesję
   (równoczesne wywołania dołączają do nowej); okno dokumentacji pomija wyniki starszych żądań po numerze żądania.
   Wzorce LIKE z pamięci wzorców (filtr siatki i tabel).
 - Okno raportów po anulowaniu deklaracji licencji działa dalej z raportami bez pakietów. `file.new.sql` przyjmuje

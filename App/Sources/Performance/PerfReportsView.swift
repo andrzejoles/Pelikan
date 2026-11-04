@@ -62,6 +62,7 @@ final class PerfReportsModel {
         loading = true
         defer { loading = false }
         message = ""
+        cancelledLicense = false
         do {
             let s = try await session()
             // Anulowana deklaracja licencji: dalej tylko raporty bez pakietów (wersja, uprawnienia, zaznaczenie — jak zwykle).

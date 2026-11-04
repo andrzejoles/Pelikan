@@ -100,8 +100,9 @@ public enum PerfReportRunner {
         guard let report = PerfReportCatalog.report(q.reportID) else { throw CommandError.invalidArgument("report", q.reportID) }
         let major = s.info.server.major > 0 ? s.info.server.major : 19
         if let reason = license.blockReason(report, major: major) { throw CommandError.notAvailable(reason) }
-        if let src = q.source, !license.allows(src.need) {
-            throw CommandError.notAvailable(L10n.tr("Źródło „\(src.displayName)” wymaga licencji \(src.need.displayName)"))
+        // Źródło: podane albo pierwsze raportu (raport z samym źródłem AWR wymaga Diagnostics Pack także bez wyboru).
+        if let src = q.source ?? report.sources.first, !license.allows(report.need(for: src)) {
+            throw CommandError.notAvailable(L10n.tr("Źródło „\(src.displayName)” wymaga licencji \(report.need(for: src).displayName)"))
         }
         let dbid = SQLProbe.dbid(major)
         for p in packages(q.reportID) { try await ManagementPacks.requireExecute(p, in: s, report: report.title) }

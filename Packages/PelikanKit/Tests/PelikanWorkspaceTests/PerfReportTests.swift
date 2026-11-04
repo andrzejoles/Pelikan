@@ -106,6 +106,9 @@ struct PerfReportTests {
         q = PerfReportRequest(reportID: "sql.planCursor", sqlID: "ghkw1782vah43", format: .text)
         q.source = .awr
         await #expect(throws: CommandError.self) { _ = try await PerfReportRunner.run(q, availability: nil, license: .unlicensed, in: s19) }
+        // Raport z jedynym źródłem AWR — bez licencji zablokowany także bez wybranego źródła.
+        q = PerfReportRequest(reportID: "sql.planAWR", sqlID: "ghkw1782vah43", format: .text)
+        await #expect(throws: CommandError.self) { _ = try await PerfReportRunner.run(q, availability: nil, license: .unlicensed, in: s19) }
         #expect(s.all.isEmpty && s19.all.isEmpty)
         #expect(PerfLicense.unlicensed.blockReason(PerfReportCatalog.report("perf.awr")!, major: 19) != nil)
         #expect(PerfLicense.all.blockReason(PerfReportCatalog.report("perf.ashAnalytics")!, major: 12)!.contains("19"))
