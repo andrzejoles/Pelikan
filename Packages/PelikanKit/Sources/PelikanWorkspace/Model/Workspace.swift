@@ -127,7 +127,8 @@ public protocol UIServices: AnyObject {
     /// Fragment wybrany w oknie dokumentacji lokalnej (tekst — fragment albo cała sekcja, adres online) — D216.
     func localDocsFragment() -> (text: String, link: URL?)?
     /// Okno dokumentacji lokalnej: cała sekcja wybranego fragmentu albo z powrotem sam fragment; zapytanie okna.
-    func localDocsToggleSection() async
+    /// `false` — nie udało się (adres, serwer); komunikat w oknie.
+    func localDocsToggleSection() async -> Bool
     func localDocsShowsSection() -> Bool
     func localDocsQuery() -> String?
     /// Okno druku dla dokumentu HTML (PD-SQLW-016).
@@ -277,7 +278,7 @@ extension UIServices {
     public func focusIsInTable() -> Bool { false }
     public func focusedTable() -> (any TableHandle)? { nil }
     public func localDocsFragment() -> (text: String, link: URL?)? { nil }
-    public func localDocsToggleSection() async {}
+    public func localDocsToggleSection() async -> Bool { false }
     public func localDocsShowsSection() -> Bool { false }
     public func localDocsQuery() -> String? { nil }
     public func saveFile(suggestedName: String, fileExtension: String, data: Data, table: any TableHandle) async -> Bool {
@@ -877,7 +878,7 @@ public final class Workspace {
         // Stan menu obowiązuje wszystkich wywołujących (także agenta): komenda wyłączona nie wykonuje się. Komenda
         // wywołana z argumentami (np. obiekt wskazany nazwą zamiast zaznaczenia) albo z celem z interfejsu (`target`)
         // sama sprawdza swój cel. Klucze wewnętrzne („__…”, np. znacznik run_command) nie są argumentami.
-        let explicit = target != nil || arguments.values.keys.contains { !$0.hasPrefix("__") }
+        let explicit = (target != nil && command.acceptsTarget) || arguments.values.keys.contains { !$0.hasPrefix("__") }
         if !explicit, let validate = command.validate, !validate(self) {
             throw CommandError.notAvailable(L10n.tr("„\(command.descriptor.title)” jest teraz niedostępne"))
         }

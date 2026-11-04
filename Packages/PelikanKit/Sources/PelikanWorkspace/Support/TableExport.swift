@@ -39,7 +39,8 @@ public enum TableExport {
         let mantissa = s.prefix { $0 != "e" && $0 != "E" }
         guard mantissa.contains(where: \.isNumber) else { return false }
         let digits = mantissa.filter(\.isNumber).drop { $0 == "0" }
-        return digits.count <= 15
+        // Do 15 cyfr znaczących i 15 znaków — tak jak liczby w arkuszu xlsx (dłuższe zapisuje jako tekst).
+        return digits.count <= 15 && s.count <= 15
     }
 
     /// Plik eksportu w formacie.

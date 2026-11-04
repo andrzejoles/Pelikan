@@ -969,7 +969,9 @@ public enum BuiltinCommands {
                 guard let ui = ctx.ui, ui.localDocsFragment() != nil else { throw CommandError.notAvailable(L10n.tr("Wybierz fragment dokumentacji")) }
                 // `whole` — stan docelowy (makro odtwarza stan, nie przełączenie).
                 let whole = ctx.arguments.bool("whole") ?? !ui.localDocsShowsSection()
-                if whole != ui.localDocsShowsSection() { await ui.localDocsToggleSection() }
+                if whole != ui.localDocsShowsSection(), await !ui.localDocsToggleSection() {
+                    throw CommandError.notAvailable(L10n.tr("Nie udało się pobrać sekcji dokumentacji (szczegóły w oknie)"))
+                }
                 return CommandResult(resolvedArguments: CommandArguments(["whole": .bool(whole)]))
             },
             Command(CommandDescriptor(id: "help.localDocsSearchOnline", title: L10n.tr("Szukaj w dokumentacji online"), category: .help,

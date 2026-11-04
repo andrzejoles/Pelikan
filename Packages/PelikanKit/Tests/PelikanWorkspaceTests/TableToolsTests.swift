@@ -262,6 +262,12 @@ struct TableToolsReviewTests {
         #expect(ui.clipboard == "1\tx\n3\tz")
         try await run("table.markColumn", ["column": "b"])
         try await run("table.copyMarkedColumns")
+        // Kolejność zaznaczania kolumn (b, potem a) — w kopii b przed a.
+        try await run("table.markColumn", ["column": "a"])
+        try await run("table.copyMarkedColumns", ["rows": "1"])
+        #expect(ui.clipboard == "x\t1")
+        try await run("table.markColumn", ["column": "a", "marked": false])
+        try await run("table.copyMarkedColumns")
         #expect(ui.clipboard == "x\ny\nz")
         try await run("table.filterByValue", ["column": "a", "exclude": true])
         #expect(t.filter.columns["a"] == "<> 2")

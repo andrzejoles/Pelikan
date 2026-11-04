@@ -199,12 +199,13 @@ struct PlanPanel: View {
                     }
                     .registersTable(handle)
                     .contextMenu(forSelectionType: PlanLine.ID.self) { ids in
-                        // Migawka z chwili otwarcia menu (jak w DataTable).
-                        let frozen = FrozenTable(handle, contents: contents, indexes: SwiftUITableHandle.indexer(shownLines))
-                        TableCopyMenu(contents: contents, handle: frozen, marked: tools.markedColumns, rows: .from(ids, shown: shownLines))
-                        if let id = ids.first {
+                        // Migawka z chwili otwarcia menu, wiersze menu jako jej zaznaczenie (jak w DataTable).
+                        let idx = TableMenuRows.indices(ids, shown: shownLines)
+                        let frozen = FrozenTable(handle, contents: contents, indexes: SwiftUITableHandle.indexer(shownLines), menuRows: idx)
+                        TableCopyMenu(contents: frozen.contents, handle: idx.isEmpty ? handle : frozen, marked: tools.markedColumns, rows: .from(idx))
+                        if !idx.isEmpty {
                             Divider()
-                            TableValueFilterMenu(columns: contents.columns, handle: frozen, rowID: AnyHashable(id))
+                            TableValueFilterMenu(columns: contents.columns, handle: frozen)
                         }
                         Divider()
                         Menu(L10n.tr("Eksportuj")) { TableExportMenu(handle: handle) }

@@ -299,14 +299,18 @@ public struct Command: Sendable {
     /// Stan komendy-przełącznika (zaznaczenie w menu, wyróżnienie na wstążce, pasku wyniku i pasku narzędzi); nil —
     /// komenda bez stanu.
     let state: StateHandler?
+    /// Komenda przyjmuje cel z interfejsu (`CommandContext.target`, np. tabela z menu) i sama go sprawdza — przy celu
+    /// walidacja stanu menu (cel z fokusu) jej nie blokuje. Inne komendy z celem walidują się jak zwykle.
+    let acceptsTarget: Bool
 
     public init(_ descriptor: CommandDescriptor, validate: ValidationHandler? = nil, state: StateHandler? = nil,
-                preview: PreviewHandler? = nil, run: @escaping CommandHandler) {
+                preview: PreviewHandler? = nil, acceptsTarget: Bool = false, run: @escaping CommandHandler) {
         self.descriptor = descriptor
         self.run = run
         self.preview = preview
         self.validate = validate
         self.state = state
+        self.acceptsTarget = acceptsTarget
     }
 
     public var id: CommandID { descriptor.id }

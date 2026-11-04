@@ -21,7 +21,8 @@ public struct TableContents {
     }
 
     public func data(rows: [Int], columns ids: [String]? = nil) -> ExportData {
-        let cols = ids.map { set in columns.filter { set.contains($0.id) } } ?? columns
+        // Kolumny w podanej kolejności (np. kolejność zaznaczania do kopii).
+        let cols = ids.map { ids in ids.compactMap { id in columns.first { $0.id == id } } } ?? columns
         return TableExport.data(title: title, columns: cols.map(\.title), rows: rows.map { r in cols.map { cell(r, $0.id) } })
     }
 
@@ -38,14 +39,15 @@ public protocol TableHandle: AnyObject {
     var markedColumns: [String] { get set }
     /// Tabela nadal istnieje (migawka z menu po zamknięciu okna — nie).
     var isAvailable: Bool { get }
-    /// Zawartość, która nie zmieni się do końca komendy (komenda czeka na wybór kolumny, a tabela może się przeładować):
-    /// tekst wierszy `rows` (nil — wszystkich) przepisany na starcie.
-    func stableContents(rows: [Int]?) -> TableContents
+    /// Zawartość, która nie zmieni się do końca komendy (tabela może się przeładować w trakcie): z `live` — tekst
+    /// wierszy `rows` i kolumn `columns` (nil — wszystkich) przepisany teraz. Tabele z niezmienną zawartością (migawka,
+    /// SwiftUI — wiersze liczone przy wywołaniu) zwracają `live`.
+    func stableContents(_ live: TableContents, rows: [Int]?, columns: [String]?) -> TableContents
 }
 
 extension TableHandle {
     public var isAvailable: Bool { true }
-    public func stableContents(rows: [Int]?) -> TableContents { contents }
+    public func stableContents(_ live: TableContents, rows: [Int]?, columns: [String]?) -> TableContents { live }
 }
 
 extension TableExport {
@@ -155,7 +157,7 @@ enum TableCommands {
         Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .edit, submenu: submenu,
                                   parameters: parameters,
                                   agent: .none, effect: effect, summary: summary, feature: "PD-UI-015"),
-                validate: needsTable ? hasTable : nil, state: state, run: run)
+                validate: needsTable ? hasTable : nil, state: state, acceptsTarget: needsTable, run: run)
     }
 
     static var all: [Command] {
@@ -163,8 +165,9 @@ enum TableCommands {
             command("table.copyCell", L10n.tr("Kopiuj komórkę tabeli"), L10n.tr("Kopiuje tekst komórki wiersza (domyślnie pierwszego zaznaczonego) w kolumnie."),
                     parameters: [rowParam, columnParam]) { ctx in
                 let h = try handle(ctx)
-                let r = try row(ctx, h.contents)
-                let c = h.stableContents(rows: [r])
+                let live = h.contents
+                let r = try row(ctx, live)
+                let c = h.stableContents(live, rows: [r], columns: nil)
                 let col = try await column(ctx, c)
                 ctx.ui?.copyToClipboard(c.cell(r, col), html: nil)
                 return .ok
@@ -172,15 +175,19 @@ enum TableCommands {
             command("table.copyRows", L10n.tr("Kopiuj wiersze tabeli"), L10n.tr("Kopiuje zaznaczone wiersze tabeli (tekst z tabulatorami i HTML)."),
                     parameters: [rowsParam]) { ctx in
                 let h = try handle(ctx)
-                let rows = try rows(ctx, h.contents)
-                let c = h.stableContents(rows: rows)
+                let live = h.contents
+                let rows = try rows(ctx, live)
+                let c = h.stableContents(live, rows: rows, columns: nil)
                 guard !rows.isEmpty else { throw CommandError.notAvailable(L10n.tr("Zaznacz wiersze tabeli")) }
                 return put(ctx, c.data(rows: rows), header: TableExport.copyHeader)
             },
             command("table.copyColumn", L10n.tr("Kopiuj kolumnę tabeli"), L10n.tr("Kopiuje całą kolumnę tabeli (wiersze widoku)."),
                     parameters: [columnParam]) { ctx in
-                let c = try handle(ctx).stableContents(rows: nil)
-                return put(ctx, c.data(rows: c.all, columns: [try await column(ctx, c)]), header: TableExport.copyHeader)
+                let h = try handle(ctx)
+                let live = h.contents
+                let col = try await column(ctx, live)
+                let c = h.stableContents(live, rows: nil, columns: [col])
+                return put(ctx, c.data(rows: c.all, columns: [col]), header: TableExport.copyHeader)
             },
             command("table.markColumn", L10n.tr("Zaznacz kolumnę do kopii"), L10n.tr("Dodaje kolumnę do kolumn kopiowanych razem albo ją z nich usuwa."),
                     parameters: [columnParam, CommandParameter("marked", .boolean, L10n.tr("Zaznaczona (domyślnie — przełączenie)"))],
@@ -206,12 +213,13 @@ enum TableCommands {
                 guard !h.markedColumns.isEmpty else { throw CommandError.notAvailable(L10n.tr("Zaznacz kolumny do kopii")) }
                 let live = h.contents
                 let rows = ctx.arguments.values["rows"] != nil || ctx.arguments.bool("selected") == true ? try rows(ctx, live) : live.all
-                let c = h.stableContents(rows: rows)
+                let c = h.stableContents(live, rows: rows, columns: h.markedColumns)
                 guard !rows.isEmpty else { throw CommandError.notAvailable(L10n.tr("Zaznacz wiersze tabeli")) }
                 return put(ctx, c.data(rows: rows, columns: h.markedColumns), header: TableExport.copyHeader)
             },
             command("table.copyAll", L10n.tr("Kopiuj całą tabelę"), L10n.tr("Kopiuje wszystkie wiersze widoku tabeli (po filtrze, w kolejności sortowania).")) { ctx in
-                let c = try handle(ctx).stableContents(rows: nil)
+                let h = try handle(ctx)
+                let c = h.stableContents(h.contents, rows: nil, columns: nil)
                 return put(ctx, c.data(rows: c.all), header: TableExport.copyHeader)
             },
             command("table.copyHeaders", L10n.tr("Kopiuj nagłówki tabeli"), L10n.tr("Kopiuje tytuły kolumn tabeli.")) { ctx in
@@ -231,8 +239,9 @@ enum TableCommands {
                 let h = try handle(ctx)
                 // Wiersz (albo wartość) przed wyborem kolumny — bez zaznaczenia błąd od razu, nie po wyborze.
                 let given = ctx.arguments.string("value")
-                let r = given == nil ? try row(ctx, h.contents) : nil
-                let c = h.stableContents(rows: r.map { [$0] })
+                let live = h.contents
+                let r = given == nil ? try row(ctx, live) : nil
+                let c = h.stableContents(live, rows: r.map { [$0] } ?? [], columns: nil)
                 let col = try await column(ctx, c)
                 // Wartość podana wprost (makro) albo z wiersza (menu, paleta).
                 let value = given ?? c.cell(r ?? 0, col)
@@ -249,7 +258,7 @@ enum TableCommands {
                     parameters: [CommandParameter("format", .string, L10n.tr("Format (bez argumentu — wybór z listy)"), allowed: TableExport.formats.map(\.rawValue))],
                     effect: .external) { ctx in
                 let table = try handle(ctx)
-                let c = table.stableContents(rows: nil)
+                let c = table.stableContents(table.contents, rows: nil, columns: nil)
                 let format: ExportFormat
                 if let raw = ctx.arguments.string("format") {
                     guard let f = TableExport.formats.first(where: { $0.rawValue == raw }) else { throw CommandError.invalidArgument("format", raw) }

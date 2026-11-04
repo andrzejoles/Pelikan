@@ -70,10 +70,15 @@ final class LocalDocsModel {
     }
 
     /// „Cała sekcja” albo z powrotem „Tylko fragment”.
-    func toggleSection(settings: LocalDocsSettings) async {
-        guard let f = selected else { return }
-        if detail != nil { detail = nil; return }
-        guard let endpoint = settings.endpoint else { return }
+    /// Wynik: czy okno pokazuje teraz to, o co poproszono (błąd serwera albo adresu — komunikat, `false`).
+    @discardableResult
+    func toggleSection(settings: LocalDocsSettings) async -> Bool {
+        guard let f = selected else { return false }
+        if detail != nil { detail = nil; return true }
+        guard let endpoint = settings.endpoint else {
+            message = LocalDocsError.badAddress(settings.url).localizedDescription
+            return false
+        }
         sectionRequest += 1
         let request = sectionRequest
         pending += 1
@@ -81,10 +86,12 @@ final class LocalDocsModel {
         do {
             let text = try await LocalDocsClient.shared(for: endpoint).section(f.chunk)
             // W międzyczasie wybrano inny fragment albo pobrano inną sekcję — ten wynik jest nieaktualny.
-            guard request == sectionRequest, selection == f.id else { return }
+            guard request == sectionRequest, selection == f.id else { return false }
             detail = text
+            return true
         } catch {
             if request == sectionRequest, selection == f.id { message = error.localizedDescription }
+            return false
         }
     }
 }

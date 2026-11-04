@@ -839,7 +839,8 @@ struct LocalDocsPreferences: View {
         guard let endpoint = s.endpoint else { status = LocalDocsError.badAddress(s.url).localizedDescription; return }
         status = L10n.tr("Sprawdzanie…")
         do {
-            let found = try await LocalDocsClient.shared(for: endpoint).search("SELECT statement", version: s.version, count: 1)
+            // Własny klient testu — sprawdzanie (także niezapisanego) adresu nie zastępuje klienta okna dokumentacji.
+            let found = try await LocalDocsClient(endpoint: endpoint).search("SELECT statement", version: s.version, count: 1)
             status = found.isEmpty ? L10n.tr("Serwer odpowiada, ale nic nie znalazł") : L10n.tr("Działa: \(found[0].title)")
         } catch { status = error.localizedDescription }
     }

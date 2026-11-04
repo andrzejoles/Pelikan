@@ -197,10 +197,17 @@ final class FrozenTable: FocusTable {
     }
 
     /// Migawka z zawartości już policzonej przy rysowaniu (menu kontekstowe — bez ponownego filtrowania i sortowania).
-    init(_ base: any FocusTable, contents: TableContents, indexes: @escaping ([AnyHashable]) -> [Int]) {
+    /// `menuRows` — wiersze menu kontekstowego (indeksy w `contents`): migawka ma je jako zaznaczenie, więc komendy
+    /// wierszy idą zwykłą ścieżką „zaznaczone” (bez numerów wierszy w argumentach).
+    init(_ base: any FocusTable, contents: TableContents, indexes: @escaping ([AnyHashable]) -> [Int], menuRows: [Int]? = nil) {
         self.base = base
         window = base.window
-        self.contents = contents
+        if let menuRows, !menuRows.isEmpty {
+            self.contents = TableContents(title: contents.title, columns: contents.columns, rowCount: contents.rowCount,
+                                          cell: contents.cell, selectedRows: menuRows)
+        } else {
+            self.contents = contents
+        }
         indexer = indexes
     }
 
@@ -219,19 +226,6 @@ final class FrozenTable: FocusTable {
         set { base?.markedColumns = newValue }
     }
     func indexes(of ids: [AnyHashable]) -> [Int] { indexer(ids) }
-
-    /// Numery wierszy menu od 1 (migawka z chwili otwarcia menu zawiera te wiersze).
-    func rowNumbers(_ ids: [AnyHashable]) -> String { indexes(of: ids).map { String($0 + 1) }.joined(separator: ",") }
-
-    /// Argument wierszy menu: brak — wiersze równe zaznaczeniu (komenda bierze zaznaczenie).
-    func rowsArgument(_ ids: [AnyHashable]) -> [String: JSONValue] {
-        indexes(of: ids) == contents.selectedRows ? [:] : ["rows": .string(rowNumbers(ids))]
-    }
-
-    /// Argument wiersza menu (numer od 1).
-    func rowArgument(_ ids: [AnyHashable]) -> [String: JSONValue] {
-        indexes(of: ids).first.map { ["row": .int(Int64($0 + 1))] } ?? [:]
-    }
 }
 
 /// Tabela SwiftUI: jeden obiekt na widok (`@State`), odświeżany przy każdym rysowaniu — komenda wywołana później
@@ -342,6 +336,7 @@ struct TableWindowProbe: NSViewRepresentable {
             }
             // Druga droga: zmiana zaznaczenia w tabeli z fokusem (np. fokus przeszedł z pola edycji komórki).
             NotificationCenter.default.removeObserver(self, name: NSTableView.selectionDidChangeNotification, object: nil)
+            observedTable = nil
             if window != nil {
                 NotificationCenter.default.addObserver(self, selector: #selector(selectionChanged(_:)), name: NSTableView.selectionDidChangeNotification, object: nil)
             }
@@ -388,15 +383,8 @@ struct TableWindowProbe: NSViewRepresentable {
 /// działają na niej niezależnie od fokusu i okna kluczowego.
 @MainActor
 enum TableActions {
-    /// Komenda na wierszach z menu: na migawce tabeli (`args` z niej — wiersze po identyfikatorach). Cel przekazany jako
-    /// `CommandContext.target`, poza argumentami (nie trafia do makr).
-    static func performOnRows(_ frozen: FrozenTable, _ id: String, _ args: (FrozenTable) -> [String: JSONValue]) {
-        let a = args(frozen)
-        (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(a), target: frozen)
-    }
-
-    /// Komenda na tej tabeli bez czytania wierszy w chwili kliknięcia (filtr, kolumny do kopii, cała tabela, eksport) —
-    /// bez migawki.
+    /// Komenda na tabeli — żywej (pasek, czynności bez wierszy) albo migawce menu (`FrozenTable`: wiersze menu jako
+    /// zaznaczenie). Cel przekazany jako `CommandContext.target`, poza argumentami (nie trafia do makr).
     static func perform(_ handle: any FocusTable, _ id: String, _ args: [String: JSONValue] = [:]) {
         (NSApp.delegate as? AppDelegate)?.workspace.perform(CommandID(rawValue: id), CommandArguments(args), target: handle)
     }
@@ -409,17 +397,16 @@ enum TableActions {
     }
 }
 
-/// Wiersze, do których odnosi się menu tabeli: z menu kontekstowego (identyfikatory — indeksy liczone przy wyborze
-/// pozycji) albo zaznaczone w chwili komendy (pasek).
+/// Menu tabeli: kontekstowe (migawka z chwili otwarcia, wiersze menu jako jej zaznaczenie — liczba i pierwszy do etykiet)
+/// albo pasek (zaznaczenie w chwili komendy).
 enum TableMenuRows {
-    case context(ids: [AnyHashable], count: Int, first: Int)
+    case context(count: Int, first: Int)
     case selection
 
-    /// Menu kontekstowe: wiersze o identyfikatorach `ids` w wierszach widoku; klik poza wierszami — jak pasek.
-    static func from<Row: Identifiable>(_ ids: Set<Row.ID>, shown: [Row]) -> TableMenuRows {
-        let idx = shown.indices.filter { ids.contains(shown[$0].id) }
-        return idx.isEmpty ? .selection : .context(ids: idx.map { AnyHashable(shown[$0].id) }, count: idx.count, first: idx[0])
-    }
+    /// Indeksy wierszy menu w wierszach widoku (klik poza wierszami — puste).
+    static func indices<Row: Identifiable>(_ ids: Set<Row.ID>, shown: [Row]) -> [Int] { shown.indices.filter { ids.contains(shown[$0].id) } }
+
+    static func from(_ rows: [Int]) -> TableMenuRows { rows.isEmpty ? .selection : .context(count: rows.count, first: rows[0]) }
 }
 
 /// Menu „Kopiuj” tabeli: komórka, wiersze, kolumny (pojedyncza i zaznaczone), cała tabela.
@@ -432,28 +419,16 @@ struct TableCopyMenu: View {
 
     private func run(_ id: String, _ args: [String: JSONValue] = [:]) { TableActions.perform(handle, id, args) }
 
-    /// Migawka menu kontekstowego (przekazana jako `handle`); na pasku menu nie ma czynności na wierszach menu.
-    private var frozen: FrozenTable { (handle as? FrozenTable) ?? FrozenTable(handle) }
-
-    /// Komenda z wierszami menu kontekstowego (indeksy z migawki w chwili wyboru pozycji).
-    private func runRows(_ id: String, _ extra: [String: JSONValue] = [:], cell: Bool = false) {
-        // Menu kontekstowe dostaje migawkę z chwili otwarcia; pasek (.selection) tej ścieżki nie używa.
-        TableActions.performOnRows(frozen, id) { f in
-            guard case .context(let ids, _, _) = rows else { return extra }
-            return extra.merging(cell ? f.rowArgument(ids) : f.rowsArgument(ids)) { a, _ in a }
-        }
-    }
-
     var body: some View {
         switch rows {
-        case .context(_, let count, let first):
+        case .context(let count, let first):
             Menu(L10n.tr("Kopiuj komórkę")) {
                 ForEach(contents.columns, id: \.id) { c in
                     let v = first < contents.rowCount ? contents.cell(first, c.id) : ""
-                    Button("\(c.title): \(v.count > 40 ? String(v.prefix(40)) + "…" : v)") { runRows("table.copyCell", ["column": .string(c.id)], cell: true) }
+                    Button("\(c.title): \(v.count > 40 ? String(v.prefix(40)) + "…" : v)") { run("table.copyCell", ["column": .string(c.id)]) }
                 }
             }
-            Button(count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(count))")) { runRows("table.copyRows") }
+            Button(count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(count))")) { run("table.copyRows") }
         case .selection:
             Menu(L10n.tr("Kopiuj komórkę")) {
                 ForEach(contents.columns, id: \.id) { c in Button(c.title) { run("table.copyCell", ["column": .string(c.id)]) } }
@@ -477,16 +452,8 @@ struct TableCopyMenu: View {
         Button(L10n.tr("Kopiuj zaznaczone kolumny (\(marked.count))")) { run("table.copyMarkedColumns") }
             .disabled(marked.isEmpty)
         if !marked.isEmpty {
-            switch rows {
-            case .context(let ids, _, _):
-                Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) {
-                    // Zawsze wiersze menu (bez argumentu komenda kopiowałaby wszystkie).
-                    TableActions.performOnRows(frozen, "table.copyMarkedColumns") { f in ["rows": .string(f.rowNumbers(ids))] }
-                }
-            case .selection:
-                Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) { run("table.copyMarkedColumns", ["selected": .bool(true)]) }
-                    .disabled(contents.selectedRows.isEmpty)
-            }
+            Button(L10n.tr("Kopiuj zaznaczone kolumny zaznaczonych wierszy")) { run("table.copyMarkedColumns", ["selected": .bool(true)]) }
+                .disabled(contents.selectedRows.isEmpty)
         }
         Button(L10n.tr("Kopiuj całą tabelę")) { run("table.copyAll") }
         Button(L10n.tr("Kopiuj nagłówki")) { run("table.copyHeaders") }
@@ -506,12 +473,11 @@ struct TableExportMenu: View {
     }
 }
 
-/// Filtr po wartości komórki z menu wiersza (wiersz po identyfikatorze — indeks liczony przy wyborze pozycji).
+/// Filtr po wartości komórki z menu wiersza (pierwszy wiersz menu — zaznaczenie migawki).
 struct TableValueFilterMenu: View {
     let columns: [(id: String, title: String)]
-    /// Migawka z chwili otwarcia menu.
+    /// Migawka z chwili otwarcia menu (wiersze menu jako zaznaczenie).
     let handle: FrozenTable
-    let rowID: AnyHashable
 
     var body: some View {
         Menu(L10n.tr("Filtruj: tylko ta wartość")) {
@@ -523,9 +489,7 @@ struct TableValueFilterMenu: View {
     }
 
     private func filter(_ column: String, exclude: Bool) {
-        TableActions.performOnRows(handle, "table.filterByValue") { f in
-            f.rowArgument([rowID]).merging(["column": .string(column), "exclude": .bool(exclude)]) { a, _ in a }
-        }
+        TableActions.perform(handle, "table.filterByValue", ["column": .string(column), "exclude": .bool(exclude)])
     }
 }
 
@@ -576,7 +540,7 @@ struct TableToolsBar: View {
                 .help(L10n.tr("Wyczyść filtr"))
             }
             Spacer(minLength: 2)
-            // „x z y”, gdy widok ma mniej wierszy niż tabela (filtr, zwinięte gałęzie planu) — kopia i eksport obejmują x.
+            // „x z y”, gdy widok ma mniej wierszy niż tabela (filtr) — kopia i eksport obejmują x.
             Text(state.filter.isActive || contents.rowCount != total ? (compact ? "\(contents.rowCount)/\(total)" : L10n.tr("Wierszy: \(contents.rowCount) z \(total)"))
                  : (compact ? "\(total)" : L10n.tr("Wierszy: \(total)")))
                 .foregroundStyle(.secondary)
@@ -778,11 +742,11 @@ struct DataTable<Row: Identifiable>: View {
         }
         // Migawka z chwili otwarcia menu: etykiety („Kolumna: wartość”) i czynność na tych samych danych, także gdy tabela
         // odświeży się przed wyborem pozycji. Klik poza wierszami — menu jak na pasku (zaznaczenie w chwili komendy).
-        let frozen = FrozenTable(handle, contents: contents, indexes: SwiftUITableHandle.indexer(shown))
-        TableCopyMenu(contents: frozen.contents, handle: frozen, marked: tools.markedColumns, rows: .from(ids, shown: shown))
-        if let r = idx.first {
+        let frozen = FrozenTable(handle, contents: contents, indexes: SwiftUITableHandle.indexer(shown), menuRows: idx)
+        TableCopyMenu(contents: frozen.contents, handle: idx.isEmpty ? handle : frozen, marked: tools.markedColumns, rows: .from(idx))
+        if !idx.isEmpty {
             Divider()
-            TableValueFilterMenu(columns: frozen.contents.columns, handle: frozen, rowID: AnyHashable(shown[r].id))
+            TableValueFilterMenu(columns: frozen.contents.columns, handle: frozen)
         }
         if tools.filter.isActive { Button(L10n.tr("Wyczyść filtr")) { TableActions.perform(handle, "table.clearFilter") } }
         Divider()

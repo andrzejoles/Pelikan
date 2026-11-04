@@ -47321,6 +47321,34 @@
         }
       }
     },
+    "Nie udało się pobrać sekcji dokumentacji (szczegóły w oknie)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not fetch the documentation section (details in the window)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Dokumentationsabschnitt konnte nicht geladen werden (Details im Fenster)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo obtener la sección de la documentación (detalles en la ventana)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося отримати розділ документації (подробиці у вікні)"
+          }
+        }
+      }
+    },
     "Nie udało się połączyć z „%@”" : {
       "localizations" : {
         "en" : {

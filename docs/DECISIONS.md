@@ -3640,30 +3640,26 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   wyszukiwania albo sekcji pomijany; wersja z argumentu agenta w dzienniku tylko jako znana wartość.
 - **Raport ACTIVE:** WebKit z dostępem tylko do pliku tego raportu (skrypty raportu są zdalne).
 - Przy okazji: „Otwórz przebieg profilera” bez numeru pyta o niego (wykryte testem wstążki); wpisany numer trafia do makra.
-- **Tabela komendy (rundy 2–9):** menu i pasek tabeli przekazują swoją tabelę jako typowany cel wywołania
-  (`CommandContext.target`, `Workspace.perform/invoke(…, target:)`) — poza argumentami, więc nie trafia do makr ani
-  historii, a walidacja „tabela z fokusem” go nie blokuje. Czynności na wierszach (komórka, wiersze, filtr wartością)
-  dostają migawkę tabeli: w SwiftUI z chwili wyboru pozycji (wiersze po identyfikatorach), w AppKit z chwili otwarcia
-  menu; pozostałe działają na żywej tabeli (bez kopiowania wierszy). Wiersze menu, które zniknęły (choćby część),
-  i zamknięta tabela — komunikat. Paleta, skrót i makro: tabela z fokusem w oknie bieżącym (pod paletą — w oknie, nad
-  którym ją otwarto). Tabele AppKit rejestrują swój `NSTableView` przy utworzeniu, SwiftUI — przy zdobyciu fokusu (bez
-  szukania po geometrii); sonda w tle zapisuje okno tabeli. Uchwyt tabeli SwiftUI trzyma wartości tabeli, nie widok,
-  i liczy wiersze przy wywołaniu. Makra nagrywają komendy zmieniające stan tabeli: filtr z wartością (nie numerem wiersza —
-  odtworzenie działa tak samo w każdej kolejności i tabeli), zaznaczenie kolumny jako stan docelowy (nie przełączenie),
-  kolumnę wybraną w oknie pytania; kopie — jak w siatce — nie. Kolumna w makrze to jej pozycja „#n” (tytuły zależą od języka).
-  Migawka menu z chwili jego otwarcia (etykiety i czynność na tych samych danych; SwiftUI — z wierszy już
-  policzonych przy rysowaniu, AppKit — tekst wierszy czynności w chwili wyboru pozycji; przeładowanie tabeli AppKit po
-  otwarciu menu — komunikat zamiast czynności na przesuniętych wierszach). Tabela SwiftUI rejestruje się, gdy widok
-  z fokusem leży w jej ramce (z ponowieniem, gdy fokus jeszcze przechodzi). „Raporty dla SQL_ID” z fokusem w tabeli
-  bez SQL_ID pyta o zapytanie (nie bierze polecenia z edytora w tle). Kolumny czynności (przyciski) nie trafiają do kopii, eksportu ani filtra.
-  Paleta przed wykonaniem komendy oddaje fokus (bez przestawiania okien) oknu, nad którym ją otwarto (każda komenda widzi to,
-  co przy sprawdzaniu dostępności). Rejestracja tabeli SwiftUI — wspólny
-  modyfikator `registersTable` (`DataTable`, plan). Menu tabel AppKit nie zmienia zaznaczenia. Pusty identyfikator
-  kolumny (kolumna bez tytułu) jest kolumną. „Kopiuj z nagłówkiem” — ustawienie, dostępne bez tabeli. ⌘C w tabeli to
-  systemowe Edycja › Kopiuj (zawartość od razu); w menu tabeli i palecie — „Kopiuj wiersze tabeli”. Kolumny liczbowe
-  i czasowe mają jedno formatowanie dla komórki i kopii (`DataColumn.digits`). Kopia, eksport, licznik i numery wierszy
-  planu — cały plan w kolejności drzewa (także gałęzie zwinięte). Pasek każdej tabeli pokazuje „Wierszy: x z y”, gdy
-  widok ma mniej wierszy niż tabela (filtr).
+- **Tabela komendy — stan końcowy (rundy 2–17):** menu i pasek tabeli przekazują swoją tabelę jako typowany cel
+  wywołania (`CommandContext.target`, `Workspace.perform/invoke(…, target:)`), poza argumentami — nie trafia do makr ani
+  historii; komendy `table.*` deklarują, że przyjmują cel (`Command.acceptsTarget`), więc przy celu walidacja „tabela
+  z fokusem” ich nie blokuje (inne komendy walidują się jak zwykle). Menu kontekstowe działa na migawce z chwili
+  otwarcia menu (`FrozenTable`: etykiety i czynność na tych samych danych; SwiftUI — z wierszy policzonych przy
+  rysowaniu, AppKit — tekst zaznaczonych wierszy i wiersza spod kursora), w której wiersze menu są zaznaczeniem —
+  komendy wierszy idą zwykłą ścieżką „zaznaczone”, bez numerów wierszy w argumentach. Pasek i czynności bez wierszy
+  działają na żywej tabeli. Zamknięta tabela — komunikat. Paleta, skrót i makro: tabela z fokusem w oknie bieżącym
+  (pod paletą — w oknie, nad którym ją otwarto; paleta przed wykonaniem oddaje mu fokus bez przestawiania okien);
+  komendy biorą na starcie tekst tylko wierszy i kolumn, których dotyczą (`stableContents(_:rows:columns:)` —
+  AppKit przepisuje je, bo tabela może się przeładować w trakcie wyboru kolumny). Tabele AppKit rejestrują swój
+  `NSTableView` przy utworzeniu; tabela SwiftUI — zdarzeniem zmiany widoku z fokusem okna (obserwacja `firstResponder`)
+  i zmiany zaznaczenia, gdy tabela z fokusem pokrywa większość ramki sondy w tle tabeli (sprawdzenie dopasowania, nie
+  wyszukiwanie widoków); wspólny modyfikator `registersTable` (`DataTable`, plan). Uchwyt tabeli SwiftUI trzyma wartości
+  kolumn (tekst, klucz), nie widoki, i liczy wiersze przy wywołaniu (cel SQL — tylko z zaznaczonych). Makra nagrywają
+  komendy zmieniające stan tabeli: filtr z wartością (nie numerem wiersza), zaznaczenie kolumny jako stan docelowy,
+  kolumnę jako pozycję „#n” (tytuły zależą od języka); kopie — jak w siatce — nie. „Raporty dla SQL_ID” z fokusem
+  w tabeli z kolumną SQL_ID/hash bez zaznaczonego zapytania pytają o nie; w innych tabelach — z okna i edytora jak
+  dotąd. Kolumny czynności (przyciski) nie trafiają do kopii, eksportu ani filtra. Menu tabel AppKit nie zmienia
+  zaznaczenia. Pusty identyfikator kolumny (kolumna bez tytułu) jest kolumną.
 - Komendy `table.*` w menu Edycja › Tabela i w palecie (poza wstążką — działają w oknach narzędzi). Liczba w filtrze
   — jedna wartość komórki dla wszystkich porównań (`=`, `<`, between): liczba pokazana w tekście, gdy zgadza się
   z kluczem z dokładnością do wyświetlonych cyfr („12.35” przy 12.345678), inaczej klucz („450 ms” obok „1.2 s”, „1,234”);
@@ -3713,3 +3709,6 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   (bez porównania cyfr wg wartości). `rows`/`row` innego typu — błąd argumentu. Kolumna stanu w porównaniu planów —
   tekst stanu. Okno dokumentacji „otwarte” = widoczne (także nie w ukrytej karcie doku). Eksport — „5.” to liczba.
   Wspólne: reguła kolumny SQL (`SQLReportTarget.hasSQLColumn`), kontrolki odświeżania (`AutoRefreshControls`).
+- Runda 17: „Cała sekcja” zgłasza błąd, gdy sekcji nie udało się pobrać (nic nie trafia do makra jako sukces);
+  „Kopiuj zaznaczone kolumny” — w kolejności zaznaczania; liczba w eksporcie do 15 cyfr i 15 znaków (jak w xlsx);
+  „Sprawdź” w Ustawieniach — własny klient (weto wobec jednego klienta MCP odrzucone; test nie zastępuje klienta okna).

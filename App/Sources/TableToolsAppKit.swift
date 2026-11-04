@@ -173,11 +173,13 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         }
         // Migawka z chwili otwarcia menu (to, co widział użytkownik) — czynności na wierszach działają na niej, także gdy
         // tabela przeładuje się, zanim użytkownik wybierze pozycję.
-        let frozen = row >= 0 || !rows.isEmpty ? FrozenTable(self) : nil
-        func rowItem(_ title: String, _ id: String, _ args: [String: JSONValue]) -> NSMenuItem {
-            BlockMenuItem(title) {
-                guard let frozen else { return }
-                TableActions.performOnRows(frozen, id) { _ in args }
+        // Migawka ma wiersze menu jako zaznaczenie (wiersz spod kursora poza zaznaczeniem — tylko on) — komendy wierszy
+        // idą zwykłą ścieżką „zaznaczone”; komórka i filtr wartością — wiersz spod kursora.
+        let snap = row >= 0 || !rows.isEmpty ? snapshot() : nil
+        func rowItem(_ title: String, _ id: String, menuRows: [Int], _ args: [String: JSONValue] = [:]) -> NSMenuItem {
+            BlockMenuItem(title) { [weak self] in
+                guard let self, let snap else { return }
+                TableActions.perform(FrozenTable(self, contents: snap.contents, indexes: snap.indexes, menuRows: menuRows), id, args)
             }
         }
         // Raporty SQL z wiersza z kolumną SQL_ID/hash (D217).
@@ -186,12 +188,10 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
             menu.addItem(.separator())
         }
         if row >= 0, let column {
-            menu.addItem(rowItem(L10n.tr("Kopiuj komórkę"), "table.copyCell", ["row": .int(Int64(row + 1)), "column": .string(column.identifier.rawValue)]))
+            menu.addItem(rowItem(L10n.tr("Kopiuj komórkę"), "table.copyCell", menuRows: [row], ["column": .string(column.identifier.rawValue)]))
         }
         if !rows.isEmpty {
-            // Wiersz spod kursora poza zaznaczeniem — tylko on; inaczej zaznaczenie.
-            let args: [String: JSONValue] = row >= 0 && !table.selectedRowIndexes.contains(row) ? ["rows": .string(String(row + 1))] : [:]
-            menu.addItem(rowItem(rows.count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(rows.count))"), "table.copyRows", args))
+            menu.addItem(rowItem(rows.count == 1 ? L10n.tr("Kopiuj wiersz") : L10n.tr("Kopiuj zaznaczone wiersze (\(rows.count))"), "table.copyRows", menuRows: rows))
         }
         if let column {
             let id = column.identifier.rawValue
@@ -206,10 +206,10 @@ final class AppKitTableTools: NSObject, NSMenuDelegate, FocusTable {
         if row >= 0, let column {
             let id = column.identifier.rawValue
             menu.addItem(.separator())
-            menu.addItem(rowItem(L10n.tr("Filtruj „\(column.title)”: tylko ta wartość"), "table.filterByValue",
-                                 ["row": .int(Int64(row + 1)), "column": .string(id), "exclude": .bool(false)]))
-            menu.addItem(rowItem(L10n.tr("Filtruj „\(column.title)”: bez tej wartości"), "table.filterByValue",
-                                 ["row": .int(Int64(row + 1)), "column": .string(id), "exclude": .bool(true)]))
+            menu.addItem(rowItem(L10n.tr("Filtruj „\(column.title)”: tylko ta wartość"), "table.filterByValue", menuRows: [row],
+                                 ["column": .string(id), "exclude": .bool(false)]))
+            menu.addItem(rowItem(L10n.tr("Filtruj „\(column.title)”: bez tej wartości"), "table.filterByValue", menuRows: [row],
+                                 ["column": .string(id), "exclude": .bool(true)]))
         }
         if model.state.filter.isActive {
             menu.addItem(item(L10n.tr("Wyczyść filtr"), "table.clearFilter"))

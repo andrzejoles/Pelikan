@@ -857,7 +857,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     func focusIsInTable() -> Bool { TableFocus.current()?.hasSQLColumn == true }
 
     func localDocsFragment() -> (text: String, link: URL?)? { LocalDocsModel.shared.fragment }
-    func localDocsToggleSection() async { await LocalDocsModel.shared.toggleSection(settings: workspace.settings.localDocs) }
+    func localDocsToggleSection() async -> Bool { await LocalDocsModel.shared.toggleSection(settings: workspace.settings.localDocs) }
     func localDocsShowsSection() -> Bool { LocalDocsModel.shared.detail != nil }
 
     func localDocsQuery() -> String? { LocalDocsModel.shared.isOpen ? LocalDocsModel.shared.query : nil }
