@@ -232,7 +232,7 @@ struct SessionQueriesEditor: View {
     }
 }
 
-/// Plan bieżącego zapytania sesji (D220): z pamięci kursorów (DBMS_XPLAN), format wyniku Tekst/HTML/Active/XML i format
+/// Plan bieżącego zapytania sesji (D220, D221): z pamięci kursorów (DBMS_XPLAN), format wyniku HTML/tekst/XML i format
 /// planu do wyboru; raporty dla SQL_ID jednym przyciskiem.
 struct SessionPlanView: View {
     let workspace: Workspace
@@ -247,14 +247,15 @@ struct SessionPlanView: View {
     @State private var message = ""
     @State private var busy = false
 
-    private var format: ReportFormat { ReportFormat(rawValue: formatRaw) ?? .text }
+    /// Bez ACTIVE: Oracle nie udostępnia już przeglądarki aktywnego raportu planu (xplan — błąd 404 na serwerze Oracle; D221).
+    private var format: ReportFormat { ReportFormat(rawValue: formatRaw).flatMap { $0 == .active ? nil : $0 } ?? .html }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
                 Text(previous ? L10n.tr("Poprzednie zapytanie \(sqlID)") : L10n.tr("Bieżące zapytanie \(sqlID)")).font(.code).textSelection(.enabled)
                 Picker(L10n.tr("Wynik"), selection: $formatRaw) {
-                    ForEach([ReportFormat.html, .active, .text, .xml], id: \.self) { Text($0.displayName).tag($0.rawValue) }
+                    ForEach([ReportFormat.html, .text, .xml], id: \.self) { Text($0.displayName).tag($0.rawValue) }
                 }
                 .fixedSize()
                 Picker(L10n.tr("Plan"), selection: $planFormat) {

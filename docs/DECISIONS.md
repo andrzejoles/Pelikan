@@ -3572,3 +3572,14 @@ wysyła dane pod adres http i ramka ich nie dostaje („Błąd podczas pobierani
   kursorów: HTML (domyślnie, jak w PL/SQL Developerze), Active, tekst albo XML, format planu do wyboru, „Raporty dla
   SQL_ID…”. Raport „Plan z pamięci kursorów” ma te same formaty (HTML/ACTIVE/XML — DBMS_XPLAN.DISPLAY_PLAN na
   V$SQL_PLAN_STATISTICS_ALL, filtr z SQL_ID sprawdzonego wzorcem i numeru kursora).
+
+### D221 · 2026-11-04 — Plan bez formatu Active
+
+**Zgłoszenie właściciela:** karta „Plan wykonania” z wynikiem Active pokazuje stronę Oracle „We're sorry, the page you
+requested was not found (404)”. Plik raportu (DBMS_XPLAN.DISPLAY_PLAN, `type => 'ACTIVE'`, baza 19c właściciela) jest
+poprawny i ładuje ten sam skrypt startowy co działające raporty SQL Monitor (`https://download.oracle.com/otn_software/
+omx/…/activeReportInit.js`), ale dla komponentu `xplan` przeglądarka Oracle wczytuje w ramce stronę, której na serwerze
+Oracle już nie ma — odtworzone na kopii pliku właściciela. Tego nie da się naprawić po stronie Pelikana.
+
+- Plan (karta sesji i raport „Plan z pamięci kursorów”): HTML (domyślnie), tekst, XML — bez Active; zapamiętany wybór
+  Active traktowany jak HTML. Interaktywny widok wykonania: SQL Monitor i SQL Detail ACTIVE („Raporty dla SQL_ID…”).

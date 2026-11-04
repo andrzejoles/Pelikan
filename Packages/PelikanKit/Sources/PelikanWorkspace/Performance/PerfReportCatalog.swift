@@ -136,7 +136,7 @@ public enum PerfReportCatalog {
     static let activeNote = L10n.tr("Raport ACTIVE pobiera przy oglądaniu skrypty z serwerów Oracle — wyświetla się w oknie Pelikana (wymaga internetu); bez internetu wybierz HTML, tekst albo XML.")
 
     public static let sqlReports: [PerfReport] = [
-        PerfReport("sql.planCursor", L10n.tr("Plan z pamięci kursorów"), group: L10n.tr("Plan"), scope: .sql, need: .none, formats: [.active, .html, .text, .xml],
+        PerfReport("sql.planCursor", L10n.tr("Plan z pamięci kursorów"), group: L10n.tr("Plan"), scope: .sql, need: .none, formats: [.html, .text, .xml],
                    sources: [.cursorCache], parameters: [.child, .planFormat], api: "DBMS_XPLAN.DISPLAY_CURSOR / DISPLAY_PLAN (V$SQL_PLAN_STATISTICS_ALL)",
                    summary: L10n.tr("Plan wykonania z V$SQL_PLAN z rzeczywistymi statystykami (ALLSTATS LAST) i wartościami podejrzanymi przy parsowaniu (+PEEKED_BINDS).")),
         PerfReport("sql.planAWR", L10n.tr("Plany z AWR"), group: L10n.tr("Plan"), scope: .sql, need: .none, formats: [.text],

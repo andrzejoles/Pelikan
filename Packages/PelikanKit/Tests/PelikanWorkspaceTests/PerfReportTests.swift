@@ -36,6 +36,8 @@ struct PerfReportTests {
         #expect(Set(all.map(\.id)).count == all.count)
         #expect(all.allSatisfy { !$0.formats.isEmpty })
         #expect(all.filter { $0.formats.contains(.active) }.allSatisfy { $0.formats.first == .active })
+        // Aktywny raport planu (xplan) — przeglądarka Oracle odpowiada 404 (D221).
+        #expect(PerfReportCatalog.report("sql.planCursor")?.formats == [.html, .text, .xml])
         let ws = Workspace()
         for r in PerfReportCatalog.globalReports { #expect(ws.registry.command(CommandID(rawValue: r.id)) != nil, "\(r.id)") }
         #expect(ws.registry.command("perf.sqlReports")?.descriptor.agentAccess == AgentAccess.none)
