@@ -2,6 +2,22 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.20.6 — instrukcja dla początkujących
+
+- **Instrukcja przebudowana dla juniora:** każda funkcja ma wyjaśnienie, do czego służy i kiedy jej użyć, ćwiczenie krok
+  po kroku z oczekiwanym wynikiem po każdym kroku i ostrzeżenia przed typowymi pomyłkami. Rozdział 1 wprowadza
+  podstawowe pojęcia i zawiera skrypt schematu ćwiczeniowego, na którym działają wszystkie ćwiczenia.
+- **Rozdział o Ustawieniach** opisuje każdą opcję: wartość domyślną, skutek włączenia, wyłączenia albo każdego wyboru,
+  moment zadziałania i ryzyko.
+- **Najczęstsze błędy Oracle** (ORA-00942, ORA-01403, ORA-00054 i inne) — co znaczą i co zrobić.
+- Instrukcja we wszystkich pięciu językach; okno pomocy pokazuje ćwiczenia w wyróżnionych ramkach.
+
+## 1.20.5 — poprawki po przeglądzie kodu
+
+- **Filtr „tylko ta wartość”** w tabelach dopasowuje dokładnie tekst komórki, z wielkością liter.
+- Kopiowanie i eksport z tabel biorą zawartość z chwili wywołania komendy; eksport liczb do 15 cyfr znaczących.
+- Makra zapisują kolumny stałym identyfikatorem i stan docelowy; poprawki dokumentacji lokalnej i agentów.
+
 ## 1.20.4 — czytelne wykresy Instance Viewera, raporty wydajności sprawdzone na produkcji
 
 - **Instance Viewer:** wykresy oczekiwań i SGA z nazwami w osobnej kolumnie, słupkami i wartościami obok — słupki nie

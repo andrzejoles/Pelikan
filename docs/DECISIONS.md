@@ -3758,3 +3758,11 @@ użytkownika na poziomie junior, który może nie wiedzieć, do czego funkcja s�
   i ryzyko. Opisy z kodu (nie z samych etykiet).
 - Kolejność: wersja polska całości (commit na rozdział), potem tłumaczenia en/de/es/uk (test kompletu rozdziałów),
   nowe zrzuty w tle (`scripts/screenshots.sh`), jeden PR i wydanie na końcu.
+- Wykonanie: polska wersja całości (15 rozdziałów, ok. 35 tys. słów), schemat ćwiczeniowy sprawdzony na lokalnej bazie
+  testowej (utworzenie, pakiet, test utPLSQL, usunięcie). Właściciel wybrał pełne tłumaczenia od razu: en/de/es/uk —
+  rozdziały 1 i 13 przetłumaczone w całości, w pozostałych wstawki nowych części do istniejących tłumaczeń; nazwy
+  pozycji menu i opcji z String Catalog. Dane przykładowe (nazwy działów i pracowników) zostają polskie we wszystkich
+  językach — ćwiczenia odwołują się do nich dosłownie. Renderer instrukcji obsługuje ramki ćwiczeń (cytaty `>` z listą
+  i kodem), kod wcięty w punkcie listy i numerację po przerwie (`start`); test pilnuje, by żaden rozdział nie zawierał
+  nieobsłużonego Markdown ani odnośników do kotwic.
+
