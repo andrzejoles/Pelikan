@@ -3740,3 +3740,21 @@ tylko lokalnie (dane bazy właściciela nie trafiają do repozytorium).
   zera końcowe liczby całkowitej nie są cyframi znaczącymi (10^18 eksportuje się jako liczba); każde okno otwarte przez
   agenta przez `file.new.sql` trafia do dziennika zmian agenta. Pozostałe uwagi (porządki, wydajność migawek, rejestracja
   tabel SwiftUI geometrią) — nieistotne, bez zmian.
+
+### D225 · 2026-11-05 — Instrukcja dla juniora: ćwiczenia krok po kroku i opis każdej opcji Ustawień
+
+**Zlecenie właściciela:** przebudować instrukcję tak, by zawierała szczegółowe objaśnienie okna Ustawień z opisem
+konsekwencji wyboru, włączenia i wyłączenia każdej opcji, oraz szczegółowe omówienie użycia każdej funkcji programu dla
+użytkownika na poziomie junior, który może nie wiedzieć, do czego funkcja służy — z elementami tutorialu
+(prowadzenie „za rękę”). Nazwa aplikacji zostaje „Pelikan” (właściciel odrzucił „PelikanDB”).
+
+**Decyzje (D1 — bez pytań):**
+- Każda funkcja w stałym układzie: *Do czego to służy* (pojęcie wyjaśnione od podstaw), *Kiedy użyć*, *Ćwiczenie krok
+  po kroku* (numerowane kroki z oczekiwanym wynikiem po każdym), *Na co uważać*, *Zobacz też*.
+- Ćwiczenia na wspólnym schemacie przykładowym: skrypt w rozdziale 1 (tabele działów i pracowników, pakiet, test
+  utPLSQL), uruchamiany przez juniora na własnym schemacie deweloperskim — nigdy na produkcji (ostrzeżenie w tekście).
+- Ustawienia: osobny podrozdział każdej karty; dla każdej opcji — działanie, wartość domyślna, skutek każdego wyboru
+  (włączone / wyłączone, każda pozycja listy), kiedy zaczyna działać (od razu, nowe okna, nowe połączenie, restart)
+  i ryzyko. Opisy z kodu (nie z samych etykiet).
+- Kolejność: wersja polska całości (commit na rozdział), potem tłumaczenia en/de/es/uk (test kompletu rozdziałów),
+  nowe zrzuty w tle (`scripts/screenshots.sh`), jeden PR i wydanie na końcu.
