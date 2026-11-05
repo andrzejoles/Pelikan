@@ -123,7 +123,12 @@ public enum ProCLexer {
             while j < end, text[j] == 32 || text[j] == 9 || text[j] == 10 || text[j] == 13 { j += 1 }
             // Blok PL/SQL tylko po BEGIN albo DECLARE; `EXECUTE IMMEDIATE …;` i dynamiczny SQL `EXECUTE s USING …;`
             // kończą się średnikiem.
-            block = matches(j, "BEGIN") || matches(j, "DECLARE")
+            func word(_ w: String) -> Bool {
+                guard matches(j, w) else { return false }
+                let n = at(j + w.utf16.count)
+                return !((n >= 65 && n <= 90) || (n >= 97 && n <= 122) || (n >= 48 && n <= 57) || n == 95 || n == 36 || n == 35)
+            }
+            block = word("BEGIN") || word("DECLARE")
         }
         var i = start
         while i < end {

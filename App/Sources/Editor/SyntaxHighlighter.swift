@@ -124,7 +124,9 @@ final class SyntaxHighlighter {
     private var fontsScheme: String?
 
     private func styledFont(_ style: SyntaxStyle, base: NSFont) -> NSFont? {
-        let key = SyntaxTheme.current.id
+        // Klucz: motyw i jego kroje — zmiana pogrubienia/kursywy w motywie własnym (ten sam identyfikator) też odświeża.
+        let cur = SyntaxTheme.current
+        let key = cur.id + "|" + SyntaxStyle.allCases.map { st in let t = cur.style(st); return "\(t.bold ? 1 : 0)\(t.italic ? 1 : 0)" }.joined()
         if fontsBase != base || fontsScheme != key {
             fonts = [:]
             fontsBase = base
@@ -138,7 +140,7 @@ final class SyntaxHighlighter {
     func highlightAll(_ storage: NSTextStorage, font: NSFont) {
         let text = Self.utf16(of: storage)
         storage.beginEditing()
-        storage.addAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
+        storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
         if proC {
             lexer.lexAll(text, onLine: { _ in }, onToken: { _ in })
             applyProC(text, storage: storage, font: font)
@@ -158,8 +160,8 @@ final class SyntaxHighlighter {
     }
 
     private func applyProC(_ text: [UInt16], storage: NSTextStorage, font: NSFont) {
-        // addAttributes — bez kasowania podkreśleń diagnostyk i innych atrybutów magazynu (kolorowanie przy każdej zmianie).
-        storage.addAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
+        // Jak przy edycji linii SQL: atrybuty od nowa (także podkreślenia — analiza po zmianie nakłada je ponownie).
+        storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
         for s in ProCLexer.spans(text) { apply(s.style, NSRange(location: s.start, length: s.length), in: storage, font: font) }
     }
 

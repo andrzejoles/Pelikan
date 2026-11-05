@@ -153,8 +153,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
                 self.highlighter.proC = proC
                 // Pierwsze przejście: tekst wczytany przed ustaleniem trybu Pro*C trzeba pokolorować od nowa.
                 if !first || proC { self.rehighlightAll() }
-            } else if colors != self.appliedColorsKey, let tlm = self.textView.textLayoutManager {
-                tlm.invalidateLayout(for: tlm.documentRange)
+            } else if colors != self.appliedColorsKey, let tlm = self.textView.textLayoutManager,
+                      let viewport = tlm.textViewportLayoutController.viewportRange {
+                // Tylko widoczny fragment — reszta dostaje nowe kolory przy przewinięciu (kolory dynamiczne).
+                tlm.invalidateLayout(for: viewport)
             }
             self.appliedColorsKey = colors
             self.textView.needsDisplay = true

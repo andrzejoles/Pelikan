@@ -53,5 +53,10 @@ struct SyntaxClassifierTests {
         var d: [String: SyntaxStyle] = [:]
         for sp in ProCLexer.spans(dyn) { d[String(decoding: dyn[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
         #expect(d["return"] == .keyword && d[":a"] == .variable && d["1"] == .number)
+        // Nazwa polecenia zaczynająca się od „begin” nie jest blokiem PL/SQL.
+        let named = Array("EXEC SQL EXECUTE begin_stmt USING :a;\nreturn 2;\n".utf16)
+        var n: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(named) { n[String(decoding: named[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(n["return"] == .keyword && n["2"] == .number)
     }
 }

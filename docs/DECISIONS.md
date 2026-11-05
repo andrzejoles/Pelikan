@@ -3838,10 +3838,11 @@ kolor tekstu albo tła z Edytor › Kolory czcionek przesłania motyw.
 
 - **Pro*C:** `EXEC SQL EXECUTE s USING …;` (dynamiczny SQL) kończy się średnikiem — blokiem do `END-EXEC` jest tylko
   `EXECUTE BEGIN|DECLARE …` (wcześniej cały dalszy kod C był kolorowany jak SQL).
-- **Podkreślenia diagnostyk** zostają przy zmianie motywu, trybu systemu i przy każdej zmianie pliku Pro*C (pełne
-  kolorowanie dodaje atrybuty zamiast je zastępować, po ponownym kolorowaniu podkreślenia są nakładane od nowa).
+- **Podkreślenia diagnostyk** nakładane od nowa po ponownym kolorowaniu przy zmianie motywu i trybu systemu (przy
+  edycji — jak dotąd: analiza po zmianie). Kroje (pogrubienie, kursywa) buforowane według motywu i jego krojów —
+  zmiana pogrubienia w aktywnym motywie własnym działa od razu. `EXECUTE begin_stmt USING …` nie jest blokiem.
 - **Tło w kolorze połączenia** liczone dynamicznie z tła motywu (wcześniej zostawało tło motywu z chwili otwarcia).
-- **Zmiana samego koloru** w motywie (przeciąganie w polu koloru) nie leksuje tekstu — tylko odświeża rysowanie;
+- **Zmiana samego koloru** w motywie (przeciąganie w polu koloru) nie leksuje tekstu — tylko odświeża widoczny fragment;
   ponowne kolorowanie przy zmianie motywu, pogrubienia/kursywy albo trybu Pro*C. Otwarcie okna koloruje tekst raz.
 - **Import VS Code:** przecinek na końcu z komentarzem przed zamknięciem nie psuje JSONC.
 - **Podglądy kodu** odświeżają się po zmianie motywu i trybu systemu.
