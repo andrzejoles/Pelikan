@@ -329,8 +329,8 @@ itp. Przydatne przy strojeniu zapytań. Wymaga prawa odczytu widoków `V$MYSTAT`
 `DBMS_OUTPUT.PUT_LINE` to sposób, w jaki kod PL/SQL „wypisuje” tekst — odpowiednik `print`.
 
 - **Włączone** — *domyślnie: włączone*. Pelikan włącza bufor DBMS_OUTPUT w sesji i po wykonaniu pokazuje tekst na karcie
-  **Wyjście**. Wyłączone — tekst z PUT_LINE przepada.
-- **Czyść przed wykonaniem** — *domyślnie: włączone*. Włączone — przed każdym wykonaniem karta Wyjście jest czyszczona.
+  **Output** okna SQL (w oknie testu — **Wyjście**). Wyłączone — tekst z PUT_LINE przepada.
+- **Czyść przed wykonaniem** — *domyślnie: włączone*. Włączone — przed każdym wykonaniem karta jest czyszczona.
   Wyłączone — nowe wiersze dopisują się do starych.
 - **Rozmiar bufora** — *domyślnie: bez limitu (0)*, krok 10 000 bajtów. Limit ilości tekstu w buforze. Po przekroczeniu
   Oracle zgłosi błąd `ORU-10027`. Bez limitu — błąd nie wystąpi.
