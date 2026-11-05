@@ -15,6 +15,9 @@ enum SyntaxTheme {
     private nonisolated static let store = Mutex(Schemes())
     private nonisolated static let customPlainStore = Mutex<NSColor?>(nil)
 
+    /// Numer zmiany motywów (każde `apply` ze zmianą) — tani klucz bufora krojów.
+    @MainActor static private(set) var generation = 0
+
     nonisolated static var schemes: Schemes {
         get { store.withLock { $0 } }
         set { store.withLock { $0 = newValue } }
@@ -43,6 +46,7 @@ enum SyntaxTheme {
         let old = schemes
         guard old.light != new.light || old.dark != new.dark else { return false }
         schemes = new
+        generation += 1
         return true
     }
 
@@ -130,8 +134,7 @@ final class SyntaxHighlighter {
 
     /// Bufor krojów odświeżany raz na kolorowanie (nie przy każdym tokenie): klucz — motyw i jego kroje.
     private func refreshFonts(_ base: NSFont) {
-        let cur = SyntaxTheme.current
-        let key = cur.id + "|" + SyntaxTheme.fontSignature(cur)
+        let key = "\(SyntaxTheme.generation)|\(NSApp.effectiveAppearance.isDark)"
         guard fontsBase != base || fontsScheme != key else { return }
         fonts = [:]
         fontsBase = base

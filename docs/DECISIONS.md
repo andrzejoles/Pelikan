@@ -3841,7 +3841,8 @@ kolor tekstu albo tła z Edytor › Kolory czcionek przesłania motyw.
 - **Podkreślenia diagnostyk** nakładane od nowa po ponownym kolorowaniu przy zmianie motywu i trybu systemu (przy
   edycji — jak dotąd: analiza po zmianie). Kroje (pogrubienie, kursywa) buforowane według motywu i jego krojów —
   zmiana pogrubienia w aktywnym motywie własnym działa od razu; bufor odświeżany raz na kolorowanie, nie przy tokenie.
-  `EXECUTE begin_stmt USING …` nie jest blokiem, a komentarz albo etykieta `<<blk>>` przed BEGIN go nie przerywa.
+  `EXECUTE begin_stmt USING …` nie jest blokiem, a komentarz, etykieta `<<blk>>` przed BEGIN
+  ani klauzula `AT :db` przed EXECUTE go nie przerywają. Zmiana wielkości czcionki zachowuje podkreślenia.
   Zakresy diagnostyk nakładane po ponownym kolorowaniu tylko dla tekstu, dla którego je policzono.
 - **Tło w kolorze połączenia** liczone dynamicznie z tła motywu (wcześniej zostawało tło motywu z chwili otwarcia).
 - **Zmiana samego koloru** w motywie (przeciąganie w polu koloru) nie leksuje tekstu — tylko unieważnia układ (TextKit 2 układa leniwie widoczny fragment);
@@ -3849,5 +3850,6 @@ kolor tekstu albo tła z Edytor › Kolory czcionek przesłania motyw.
 - **Import VS Code:** przecinek na końcu z komentarzem przed zamknięciem nie psuje JSONC.
 - **Podglądy kodu** odświeżają się po zmianie motywu i trybu systemu.
 - **Raporty:** wykrywanie błędu Oracle w treści raportu bez przeglądania megabajtowych raportów AWR.
+- Świadomie bez zmian: plik Pro*C kolorowany w całości przy każdej zmianie (D227), więc podkreślenia wracają po analizie.
 - Pominięte (nie błędy działania): znacznik uprawnień systemowych w zbiorze pakietów, osobne rozwiązywanie stylów
   w podglądzie motywu.

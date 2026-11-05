@@ -115,10 +115,18 @@ public enum ProCLexer {
             for u in s.utf16 { guard k < end, up(text[k]) == u else { return false }; k += 1 }
             return true
         }
-        var k = start
-        while k < end, text[k] == 32 || text[k] == 9 || text[k] == 10 || text[k] == 13 { k += 1 }
+        func blank(_ k: Int) -> Int { var k = k; while k < end, text[k] == 32 || text[k] == 9 || text[k] == 10 || text[k] == 13 { k += 1 }; return k }
+        func isWord(_ c: UInt16) -> Bool { (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c <= 57) || c == 95 || c == 36 || c == 35 }
+        var k = blank(start)
+        // `EXEC SQL AT :db EXECUTE …` / `AT nazwa` — klauzula bazy przed poleceniem.
+        if matches(k, "AT"), !isWord(at(k + 2)) {
+            k = blank(k + 2)
+            if at(k) == 58 { k += 1 }
+            while k < end, isWord(text[k]) { k += 1 }
+            k = blank(k)
+        }
         var block = false
-        if matches(k, "EXECUTE") {
+        if matches(k, "EXECUTE"), !isWord(at(k + 7)) {
             var j = k + 7
             // Białe znaki, komentarze i etykiety <<nazwa>> przed BEGIN/DECLARE.
             while j < end {

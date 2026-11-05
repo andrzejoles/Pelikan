@@ -136,6 +136,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             } else {
                 self.textView.backgroundColor = base
             }
+            // Kolor tekstu z Preferencji jest w dynamicznym kolorze — ułożone fragmenty trzeba unieważnić.
+            if let tlm = self.textView.textLayoutManager { tlm.invalidateLayout(for: tlm.documentRange) }
             self.textView.needsDisplay = true
         })
         // Motywy kolorowania składni (D227) i kolorowanie Pro*C według rozszerzenia pliku.
@@ -149,12 +151,12 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             let key = Self.schemeKey(proC: proC)
             let colors = "\(SyntaxTheme.schemes.light.hashValue)|\(SyntaxTheme.schemes.dark.hashValue)"
             let first = self.appliedSchemeKey == nil
-            if first { self.appearanceSchemeID = SyntaxTheme.scheme(for: self.effectiveAppearance).id }
             if key != self.appliedSchemeKey {
                 self.appliedSchemeKey = key
                 self.highlighter.proC = proC
                 // Pierwsze przejście: tekst wczytany przed ustaleniem trybu Pro*C trzeba pokolorować od nowa.
                 if !first || proC { self.rehighlightAll() }
+                self.appearanceSchemeID = SyntaxTheme.current.id
             } else if colors != self.appliedColorsKey, let tlm = self.textView.textLayoutManager {
                 // Bez leksowania: unieważnienie układu (leniwe — TextKit 2 układa od nowa tylko to, co widać, a resztę
                 // przy przewinięciu; bez tego wcześniej ułożone fragmenty zachowałyby stare kolory).
@@ -473,7 +475,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     /// Zmiana trybu systemu: kolory są dynamiczne, ale pogrubienie i kursywa zależą od motywu trybu (D227).
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        let key = SyntaxTheme.scheme(for: effectiveAppearance).id
+        // Ten sam tryb co kolorowanie (krój z motywu trybu aplikacji, SyntaxTheme.current).
+        let key = SyntaxTheme.current.id
         guard key != appearanceSchemeID else { return }
         appearanceSchemeID = key
         rehighlightAll()
@@ -1177,7 +1180,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
                              ligatures: ligatures)
         textView.font = font
         textView.typingAttributes[.font] = font
-        if let storage = textView.textStorage { highlighter.highlightAll(storage, font: font) }
+        rehighlightAll()
         ruler.needsDisplay = true
     }
 
