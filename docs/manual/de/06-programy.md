@@ -1,5 +1,17 @@
 # Program Window und Codeeditor
 
+## Wozu es dient
+
+Ein **Programm** in Oracle ist in der Datenbank gespeicherter PL/SQL-Code: ein Paket, eine Prozedur, Funktion, ein Typ
+oder Trigger. Anders als ein Skript im SQL Window muss ein Programm **kompiliert** werden — Oracle prüft dabei die
+Syntax, die Existenz von Tabellen und Spalten und die Typen und speichert den Code in der Datenbank, von wo andere
+Programme und Anwendungen ihn aufrufen können. Das **Program Window** dient zum Schreiben und Kompilieren von Programmen,
+der **Codeeditor** (gemeinsam für alle Fenster) hilft beim schnellen und fehlerfreien Schreiben: Er schlägt Namen vor,
+zeigt Fehler beim Tippen an und formatiert Code.
+
+**Wann verwenden:** bei jeder Änderung eines Pakets, einer Prozedur oder eines Triggers — von der Korrektur einer Zeile
+bis zum neuen Modul.
+
 ## Program Window
 
 Das Program Window dient zum Schreiben und Kompilieren von PL/SQL-Einheiten: Paketen, Prozeduren, Funktionen, Typen und
@@ -50,6 +62,47 @@ mit **Bearbeiten** auf einem Objekt im Object Browser (der Code wird direkt aus 
   Datenträger geändert (anderes Programm, `git checkout`), fragt **Speichern** vor dem Überschreiben. Erweiterungen und das Öffnen des Paars stellen Sie unter
   **Einstellungen › Allgemein › Spezifikation und Body in getrennten Dateien** ein.
 
+> **Übung: eine Funktion zum Paket hinzufügen und es kompilieren.**
+> 1. Klicken Sie im Object Browser mit der rechten Maustaste auf das Paket **PEL_EMP_API** und wählen Sie **Bearbeiten**.
+>    *Ergebnis:* ein Program Window mit zwei Tabs: Spezifikation und Body des Pakets.
+> 2. Fügen Sie im Tab der Spezifikation vor `END pel_emp_api;` die Deklaration ein:
+>
+>    ```sql
+>    FUNCTION department_name(p_emp_id IN NUMBER) RETURN VARCHAR2;
+>    ```
+>
+> 3. Wechseln Sie zum Tab des Bodys und fügen Sie vor `END pel_emp_api;` die Funktion ein — absichtlich mit einem Fehler
+>    (kein Semikolon nach `WHERE`):
+>
+>    ```sql
+>    FUNCTION department_name(p_emp_id IN NUMBER) RETURN VARCHAR2 IS
+>      l_name pel_departments.name%TYPE;
+>    BEGIN
+>      SELECT d.name INTO l_name
+>        FROM pel_employees e JOIN pel_departments d ON d.dept_id = e.dept_id
+>       WHERE e.emp_id = p_emp_id
+>      RETURN l_name;
+>    END department_name;
+>    ```
+>
+> 4. Drücken Sie **F8** (kompilieren).
+>    *Ergebnis:* Die Spezifikation kompiliert ohne Fehler, und unter dem Editor erscheint ein Kompilierungsfehler des
+>    Bodys (z. B. `PLS-00103`) mit Zeilennummer.
+> 5. Klicken Sie auf den Fehler in der Liste.
+>    *Ergebnis:* Der Cursor springt in die Zeile mit dem Fehler. Ergänzen Sie `;` am Ende der Zeile mit `WHERE` und
+>    drücken Sie erneut **F8**.
+>    *Ergebnis:* Die Fehlerliste ist leer, das Paket ist gültig (VALID).
+> 6. Prüfen Sie die Funktion in einem SQL Window: `SELECT pel_emp_api.department_name(2) FROM dual;`.
+>    *Ergebnis:* `Informatyka`.
+> 7. Speichern Sie das Paket in Dateien: **⌘S**.
+>    *Ergebnis:* Pelikan fragt nach Namen und Ordner und speichert dann zwei Dateien: `pel_emp_api.pks` und
+>    `pel_emp_api.pkb`.
+>
+> ⚠️ **Achtung.** Die Kompilierung **ersetzt** den Code in der Datenbank sofort — andere Benutzer, die das Paket aufrufen,
+> erhalten die neue Version (und ihre Sitzungen sehen eventuell den Fehler `ORA-04068` über einen geänderten
+> Paketzustand). Eine Kompilierung mit Fehler hinterlässt das Paket ungültig (INVALID), bis Sie es korrigieren. Verwenden
+> Sie auf gemeinsamen Datenbanken die **Probekompilierung** (unten).
+
 ### Sicheres Arbeiten mit Code in der Datenbank
 
 - **Sitzung › Probekompilierung** kompiliert die Einheiten unter einem temporären Namen und zeigt Fehler, ohne die
@@ -64,6 +117,16 @@ mit **Bearbeiten** auf einem Objekt im Object Browser (der Code wird direkt aus 
   mit einer Testdatenbank) öffnen die Vergleichsansicht.
 - **Sitzung › Block im Test Window ausführen** führt den ausgewählten anonymen Block in einem neuen Test Window mit
   DBMS_OUTPUT aus.
+
+> **Übung: Probekompilierung und Vergleich mit der Datenbank.**
+> 1. Ändern Sie im Program Window mit dem Paket **PEL_EMP_API** im Body den Text `'Razem: '` in `'Suma: '`.
+> 2. Wählen Sie **Sitzung › Probekompilierung**.
+>    *Ergebnis:* Pelikan kompiliert den Code unter einem temporären Namen und zeigt eventuelle Fehler — das Paket in der
+>    Datenbank ändert sich nicht.
+> 3. Wählen Sie **Datei › Vergleichen › Mit Quelle in der Datenbank vergleichen**.
+>    *Ergebnis:* eine Vergleichsanzeige mit beiden Versionen; die geänderte Zeile ist hervorgehoben.
+> 4. Wählen Sie **Datei › Wiederherstellen**.
+>    *Ergebnis:* Der Text kehrt zum Stand beim Öffnen zurück.
 
 ### Compiler-Einstellungen
 
@@ -80,6 +143,17 @@ Derselbe Editor arbeitet in SQL-, Programm- und Testfenstern sowie in der SQL*Pl
 von Zeilen ohne Verzögerung.
 
 ### Vorschläge und Navigation
+
+> **Übung: Vorschläge und Sprung zur Deklaration.**
+> 1. Geben Sie in einem neuen SQL Window `SELECT  FROM pel_employees e;` ein (zwei Leerzeichen nach `SELECT`), setzen Sie
+>    den Cursor zwischen die Leerzeichen und tippen Sie `e.`.
+>    *Ergebnis:* Nach einem Moment erscheint die Spaltenliste von `PEL_EMPLOYEES` (Alias `e`). Wählen Sie `LAST_NAME` mit
+>    den Pfeiltasten und Enter.
+> 2. Tippen Sie in einer neuen Zeile `pel_emp_api.`.
+>    *Ergebnis:* eine Liste der Funktionen und Prozeduren des Pakets mit ihren Parametern.
+> 3. Schreiben Sie `BEGIN pel_emp_api.print_department(20); END;`, setzen Sie den Cursor auf `print_department` und
+>    drücken Sie **⌃⌘J** (oder ⌘+Klick).
+>    *Ergebnis:* Der Body des Pakets öffnet sich an der Stelle, an der die Prozedur definiert ist.
 
 - Der **Codevorschlag** erscheint von selbst nach einem Punkt (z. B. `paket.`, `alias.`, `sequenz.`) oder auf
   Anforderung: ⌥⎋ (im Profil PL/SQL Developer ⌃Leertaste). Er schlägt Schemaobjekte vor, Spalten (auch über
@@ -198,6 +272,13 @@ nächsten Änderung) hervorgehoben, ein roter Strich markiert entfernte Zeilen; 
 Beispiel, in dem sie sichtbar ist, und scrollt dorthin, ein Klick auf eine Option zeigt ihr Beispiel. Ein Bereich ohne
 Formatierung lässt sich auch mit den Kommentaren `-- @formatter:off` und `-- @formatter:on` markieren; bedingte
 Kompilierung `$IF … $END` lässt der Formatierer unverändert. Ein Wort nach einem Punkt behandelt der Formatierer als Bezeichner (`E.ENAME` bei Bezeichnern in Großbuchstaben); JSON-Schlüssel in Punktnotation unterscheiden Groß-/Kleinschreibung, daher solchen Code mit Bezeichnern „unverändert“ oder in einem NoFormat-Bereich formatieren.
+
+> **Übung: Formatieren mit einem Kurzbefehl.**
+> 1. Geben Sie in einem SQL Window in einer Zeile ein: `select first_name,last_name from pel_employees where dept_id=20 and salary>9000 order by last_name;`
+> 2. Drücken Sie **⇧⌘F**.
+>    *Ergebnis:* Schlüsselwörter sind groß, jede Spalte und jede Bedingung steht in einer eigenen Zeile, die Klauselwörter
+>    sind ausgerichtet. **⌘Z** macht die Formatierung rückgängig. Die Regeln ändern Sie unter **Einstellungen ›
+>    Formatierer** (Kapitel 13).
 
 ### Vorlagen, Snippets und Makros
 
