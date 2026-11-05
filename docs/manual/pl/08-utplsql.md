@@ -1,5 +1,17 @@
 # Testy utPLSQL
 
+## Do czego to służy
+
+**Test jednostkowy** to mały program, który wywołuje Twój kod i sprawdza, czy wynik jest taki, jak oczekiwany — np.
+„po podwyżce o 10% pensja 9500 wynosi 10450”. Testy uruchamiasz po każdej zmianie: jeśli coś zepsułeś, test od razu to
+pokaże, zanim błąd trafi do użytkowników. **utPLSQL** to najpopularniejsza biblioteka testów dla PL/SQL: testy pisze
+się jako pakiety z komentarzami-adnotacjami (`--%suite`, `--%test`), a sprawdzenia — wywołaniami
+`ut.expect(…).to_equal(…)`. utPLSQL automatycznie wycofuje zmiany danych zrobione przez test, więc testy nie psują
+danych.
+
+**Kiedy użyć:** dla każdego pakietu z logiką biznesową. Dobry zwyczaj: najpierw test, który pokazuje błąd, potem
+poprawka, po której test przechodzi.
+
 Pelikan ma wbudowaną obsługę utPLSQL — biblioteki testów jednostkowych dla PL/SQL: uruchamianie testów z wynikami na
 żywo, pokrycie kodu, generowanie szkieletów testów i nawigację między pakietem a jego testami. Komendy są w menu
 **Narzędzia › utPLSQL**.
@@ -26,6 +38,28 @@ nie zna, a jego konto jest od razu blokowane. Na bazach współdzielonych instal
   `--%context`/`--%endcontext`.
 - **utPLSQL: przejdź do testu / testowanego pakietu** (⌃⌘T) przełącza między pakietem a jego pakietem testowym (według
   nazwy `test_nazwa` albo zależności).
+
+> **Ćwiczenie: uruchom testy pakietu ćwiczeniowego.**
+>
+> Wymaga utPLSQL w bazie (sprawdź **utPLSQL: wersja w bazie**) i pakietu `PEL_EMP_API_TEST` ze skryptu w rozdziale 1.
+>
+> 1. W Przeglądarce obiektów otwórz **Edytuj** na pakiecie **PEL_EMP_API_TEST** i obejrzyj specyfikację.
+>    *Wynik:* adnotacja `--%suite` nazywa zestaw testów, każda `--%test` — jeden test, a `--%throws(-20001)` mówi, że
+>    test ma się zakończyć tym błędem.
+> 2. Postaw kursor w specyfikacji i naciśnij **⌃⌘U** (uruchom test pod kursorem).
+>    *Wynik:* otwiera się okno wyników z paskiem postępu; trzy testy na zielono — **Sukces**.
+> 3. W ciele testu zmień oczekiwaną wartość w `raise_salary_ten_percent` z `10450` na `10000` i skompiluj (F8).
+> 4. Uruchom testy jeszcze raz (**⌃⌘U**).
+>    *Wynik:* jeden test na czerwono (**Niepowodzenia**). W szczegółach testu: **Oczekiwane** 10000, **Otrzymane**
+>    10450 — od razu widać, co się nie zgadza.
+> 5. Przywróć `10450`, skompiluj i uruchom **Ponownie nieudane**.
+>    *Wynik:* wszystko na zielono.
+> 6. Sprawdź w oknie SQL `SELECT salary FROM pel_employees WHERE emp_id = 2;`.
+>    *Wynik:* 9500 — utPLSQL wycofał podwyżkę zrobioną przez test.
+>
+> **Ćwiczenie: test dla nowej funkcji.** Jeśli w rozdziale 6 dopisałeś funkcję `department_name`, dopisz do pakietu
+> testowego test (deklaracja w specyfikacji z `--%test(…)` i procedura w ciele) z
+> `ut.expect(pel_emp_api.department_name(2)).to_equal('Informatyka');` i uruchom go.
 
 ## Uruchamianie testów
 
@@ -68,6 +102,11 @@ więc okna Pelikana pozostają dostępne.
 - W oknie programu linie są oznaczone na marginesie: zielone — pokryte, żółte — częściowo, czerwone — niepokryte.
 - Pasek stanu pokazuje procent pokrycia obiektu i schematu.
 - **Raport pokrycia** otwiera raport HTML utPLSQL w przeglądarce.
+
+**Jak czytać pokrycie:** czerwone linie to kod, którego żaden test nie wykonał — błąd w nim nie zostanie wykryty.
+Pokrycie 100% nie znaczy, że kod jest bezbłędny, ale niskie pokrycie znaczy, że testy sprawdzają niewiele. Uruchom
+testy `PEL_EMP_API_TEST` z pokryciem i otwórz ciało `PEL_EMP_API`: procedury `hire` i `print_department` będą
+czerwone — nie mają testów.
 
 Pokrycie korzysta z danych profilera — przed pierwszym takim przebiegiem w sesji Pelikan przypomina o wymaganych
 uprawnieniach.
