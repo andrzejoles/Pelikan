@@ -1,5 +1,15 @@
 # Okno programu i edytor kodu
 
+## Do czego to służy
+
+**Program** w Oracle to kod PL/SQL zapisany w bazie: pakiet, procedura, funkcja, typ albo wyzwalacz. W odróżnieniu od
+skryptu w oknie SQL, program trzeba **skompilować** — Oracle sprawdza wtedy składnię, istnienie tabel i kolumn oraz
+typy, a potem zapisuje kod w bazie, skąd mogą go wywoływać inne programy i aplikacje. **Okno programu** służy do
+pisania i kompilowania programów, a **edytor kodu** (wspólny dla wszystkich okien) pomaga pisać szybko i bez błędów:
+podpowiada nazwy, pokazuje błędy na bieżąco, formatuje kod.
+
+**Kiedy użyć:** przy każdej zmianie pakietu, procedury czy wyzwalacza — od poprawki jednej linii po nowy moduł.
+
 ## Okno programu
 
 Okno programu służy do pisania i kompilowania jednostek PL/SQL: pakietów, procedur, funkcji, typów i wyzwalaczy, a
@@ -46,6 +56,43 @@ także źródeł Java i modułów MLE (JavaScript). Otworzysz je przez **Plik �
   pary zmienił się na dysku od otwarcia (inny program, `git checkout`), **Zapisz** pyta przed nadpisaniem. Rozszerzenia i otwieranie pary ustawisz w **Ustawienia › Ogólne › Specyfikacja i ciało w osobnych
   plikach**.
 
+> **Ćwiczenie: dopisz funkcję do pakietu i skompiluj go.**
+> 1. W Przeglądarce obiektów prawym klikiem na pakiecie **PEL_EMP_API** wybierz **Edytuj**.
+>    *Wynik:* okno programu z dwiema kartami: specyfikacja i ciało pakietu.
+> 2. Na karcie specyfikacji, przed `END pel_emp_api;`, dopisz deklarację:
+>
+>    ```sql
+>    FUNCTION department_name(p_emp_id IN NUMBER) RETURN VARCHAR2;
+>    ```
+>
+> 3. Przejdź na kartę ciała i przed `END pel_emp_api;` dopisz funkcję — celowo z błędem (brak średnika po `INTO`):
+>
+>    ```sql
+>    FUNCTION department_name(p_emp_id IN NUMBER) RETURN VARCHAR2 IS
+>      l_name pel_departments.name%TYPE;
+>    BEGIN
+>      SELECT d.name INTO l_name
+>        FROM pel_employees e JOIN pel_departments d ON d.dept_id = e.dept_id
+>       WHERE e.emp_id = p_emp_id
+>      RETURN l_name;
+>    END department_name;
+>    ```
+>
+> 4. Naciśnij **F8** (kompiluj).
+>    *Wynik:* specyfikacja kompiluje się bez błędów, a pod edytorem pojawia się błąd kompilacji ciała (np. `PLS-00103`)
+>    z numerem linii.
+> 5. Kliknij błąd na liście.
+>    *Wynik:* kursor przechodzi do linii z błędem. Dopisz `;` na końcu linii z `WHERE` i naciśnij **F8** jeszcze raz.
+>    *Wynik:* lista błędów jest pusta, pakiet jest poprawny (VALID).
+> 6. Sprawdź funkcję w oknie SQL: `SELECT pel_emp_api.department_name(2) FROM dual;`.
+>    *Wynik:* `Informatyka`.
+> 7. Zapisz pakiet do plików: **⌘S**.
+>    *Wynik:* Pelikan pyta o nazwę i katalog, a potem zapisuje dwa pliki: `pel_emp_api.pks` i `pel_emp_api.pkb`.
+>
+> ⚠️ **Na co uważać.** Kompilacja **od razu zastępuje** kod w bazie — inni użytkownicy wywołujący pakiet dostaną nową
+> wersję (a ich sesje mogą zobaczyć błąd `ORA-04068` o zmienionym stanie pakietu). Kompilacja z błędem zostawia pakiet
+> nieprawidłowy (INVALID), dopóki go nie poprawisz. Na bazach współdzielonych używaj **Kompilacji próbnej** (niżej).
+
 ### Bezpieczna praca z kodem w bazie
 
 - **Sesja › Kompilacja próbna** kompiluje jednostki pod tymczasową nazwą i pokazuje błędy, nie zastępując obiektów w
@@ -57,6 +104,15 @@ także źródeł Java i modułów MLE (JavaScript). Otworzysz je przez **Plik �
 - **Plik › Porównaj › Porównaj z plikiem…** i **Porównaj z obiektami w innej bazie…** (np. z bazą testową) otwierają
   przeglądarkę różnic.
 - **Sesja › Uruchom blok w oknie testu** wykonuje zaznaczony blok anonimowy w nowym oknie testu z DBMS_OUTPUT.
+
+> **Ćwiczenie: kompilacja próbna i porównanie z bazą.**
+> 1. W oknie programu z pakietem **PEL_EMP_API** zmień w ciele tekst `'Razem: '` na `'Suma: '`.
+> 2. Wybierz **Sesja › Kompilacja próbna**.
+>    *Wynik:* Pelikan kompiluje kod pod tymczasową nazwą i pokazuje ewentualne błędy — pakiet w bazie się nie zmienia.
+> 3. Wybierz **Plik › Porównaj › Porównaj ze źródłem w bazie**.
+>    *Wynik:* przeglądarka różnic z dwiema wersjami; zmieniona linia jest wyróżniona.
+> 4. Wybierz **Plik › Przywróć**.
+>    *Wynik:* tekst wraca do stanu z chwili otwarcia.
 
 ### Ustawienia kompilatora
 
@@ -72,6 +128,17 @@ Ten sam edytor działa w oknach SQL, programu, testu i poleceń. Edytuje bez op�
 kilkadziesiąt tysięcy linii.
 
 ### Podpowiedzi i nawigacja
+
+> **Ćwiczenie: podpowiedzi i przejście do deklaracji.**
+> 1. W nowym oknie SQL wpisz `SELECT e.` po słowie `FROM pel_employees e` — najpierw napisz całość
+>    `SELECT  FROM pel_employees e;`, postaw kursor po `SELECT ` i wpisz `e.`.
+>    *Wynik:* po chwili pojawia się lista kolumn tabeli `PEL_EMPLOYEES` (alias `e`). Wybierz `LAST_NAME` strzałkami
+>    i Enterem.
+> 2. W nowej linii wpisz `pel_emp_api.`.
+>    *Wynik:* lista funkcji i procedur pakietu z parametrami.
+> 3. Napisz `BEGIN pel_emp_api.print_department(20); END;`, postaw kursor na `print_department` i naciśnij **⌃⌘J**
+>    (albo ⌘+klik).
+>    *Wynik:* otwiera się ciało pakietu w miejscu, gdzie procedura jest zdefiniowana.
 
 - **Podpowiedź kodu** pojawia się sama po kropce (np. `pakiet.`, `alias.`, `sekwencja.`) albo na żądanie: ⌥⎋ (w
   profilu PL/SQL Developer ⌃Spacja). Podpowiada obiekty schematu, kolumny (także przez aliasy tabel), elementy
@@ -182,6 +249,12 @@ kolorami składni, numerami linii i pionową linią prawego marginesu; przełąc
 zmiany), miejsce usuniętych linii oznacza czerwona kreska; zmiana opcji przełącza na przykład, w którym ją widać, i
 przewija do niej, a kliknięcie opcji pokazuje jej przykład. Region bez formatowania można też oznaczyć komentarzami
 `-- @formatter:off` i `-- @formatter:on`; fragmenty kompilacji warunkowej `$IF … $END` formater zostawia bez zmian. Słowo po kropce formater traktuje jak identyfikator (`E.ENAME` przy wielkich literach identyfikatorów); klucze JSON w notacji z kropką rozróżniają wielkość liter, więc kod z nimi formatuj z identyfikatorami „bez zmian” albo w regionie NoFormat.
+
+> **Ćwiczenie: formatowanie jednym skrótem.**
+> 1. W oknie SQL wpisz w jednej linii: `select first_name,last_name from pel_employees where dept_id=20 and salary>9000 order by last_name;`
+> 2. Naciśnij **⇧⌘F**.
+>    *Wynik:* słowa kluczowe są wielkimi literami, każda kolumna i każdy warunek w osobnej linii, słowa klauzul
+>    wyrównane. **⌘Z** cofa formatowanie. Reguły zmienisz w **Ustawienia › Formater** (rozdział 13).
 
 ### Szablony, fragmenty kodu i makra
 
