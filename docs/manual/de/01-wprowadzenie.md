@@ -6,8 +6,47 @@ sowie für Werkzeuge zum Vergleichen, Exportieren und Administrieren. Fensterauf
 Developer, sodass dessen Benutzer vertraute Fenster wiederfinden: **SQL Window**, **SQL*Plus-Konsole**, **Program
 Window**, **Test Window**, **Explain Plan Window** und **Object Browser** (Tab **Objekte**).
 
-Diese Anleitung beschreibt, wie Sie typische Aufgaben erledigen. Die vollständige Liste der Befehle mit ihren aktuellen
-Tastenkürzeln steht im letzten Kapitel, **Tastaturkurzbefehle**, das von der Anwendung erzeugt wird.
+Die vollständige Liste der Befehle mit ihren aktuellen Tastenkürzeln steht im letzten Kapitel,
+**Tastaturkurzbefehle**, das von der Anwendung erzeugt wird.
+
+## So verwenden Sie diese Anleitung
+
+Die Anleitung ist so geschrieben, dass auch jemand, der gerade erst mit Oracle beginnt, ihr folgen kann. Jede Funktion
+ist im selben Aufbau beschrieben:
+
+- **Wozu es dient** — welche Aufgabe sie löst und welche Begriffe Sie kennen müssen;
+- **Wann verwenden** — typische Situationen aus der täglichen Arbeit;
+- **Übung Schritt für Schritt** — nummerierte Schritte; nach jedem Schritt sagt *Ergebnis:*, was Sie sehen sollten.
+  Sehen Sie etwas anderes, halten Sie an und gehen Sie zum vorigen Schritt zurück;
+- **Achtung** — typische Fehler und ihre Folgen (mit ⚠️ markiert).
+
+Die Übungen verwenden das **Übungsschema** — einige Tabellen und ein Paket, die Sie mit dem Skript aus dem Abschnitt
+**Übungsschema** weiter unten anlegen. Lesen Sie die Kapitel am besten der Reihe nach: 1 (dieses), 2 (Verbindungen),
+3 (SQL Window), danach nach Bedarf. Ein unbekanntes Wort finden Sie unter **Grundbegriffe** oder im Glossar am Ende von
+Kapitel 15.
+
+## Grundbegriffe
+
+Einige Wörter, die in der ganzen Anleitung vorkommen:
+
+| Begriff | Was er bedeutet |
+|---|---|
+| **Datenbank** (Oracle-Instanz) | Der Server, der Daten speichert und Befehle ausführt. Sie verbinden sich über das Netzwerk mit ihm. |
+| **Benutzer** und **Schema** | Ein Konto in der Datenbank (z. B. `SCOTT`). Von einem Benutzer angelegte Objekte gehören zum gleichnamigen Schema. |
+| **Objekt** | Etwas, das in einem Schema lebt: Tabelle, View, Index, Sequenz, Paket, Prozedur, Funktion, Trigger, Typ … |
+| **Tabelle** | Daten in Zeilen und Spalten, z. B. `PEL_EMPLOYEES`. |
+| **View** | Eine gespeicherte Abfrage, die man wie eine Tabelle lesen kann. |
+| **SQL** | Die Befehlssprache der Datenbank: `SELECT` (Lesen), `INSERT`, `UPDATE`, `DELETE`, `MERGE` (Daten ändern), `CREATE`, `ALTER`, `DROP` (Objekte ändern — DDL). |
+| **PL/SQL** | Die Programmiersprache von Oracle: Blöcke `BEGIN … END`, Variablen, Schleifen, Ausnahmen. In der Datenbank gespeicherter PL/SQL-Code ist ein **Programm** (Paket, Prozedur, Funktion, Trigger). |
+| **Paket** | Eine Sammlung zusammengehöriger Prozeduren und Funktionen: **Spezifikation** (was es anbietet) und **Body** (wie es das tut). |
+| **Sitzung** | Eine Verbindung zur Datenbank. Pelikan kann mehrere Sitzungen gleichzeitig haben (Kapitel 13, *Sitzungsmodus*). |
+| **Transaktion** | Datenänderungen in einer Sitzung, die noch nicht dauerhaft sind. **COMMIT** macht sie dauerhaft (andere sehen sie), **ROLLBACK** macht sie rückgängig. DDL-Befehle (`CREATE`, `ALTER`, `DROP`) schreiben die offene Transaktion selbst fest. |
+| **Kompilierung** | Speichern eines PL/SQL-Programms in der Datenbank und seine Prüfung durch Oracle. Ein Programm mit Fehler hat den Zustand *INVALID*. |
+| **Verbindung** (in Pelikan) | Ein gespeicherter Satz von Anmeldedaten: Benutzer, Datenbank, Umgebung. |
+| **Umgebung** | Die Kennzeichnung einer Datenbank: Entwicklung, Test, Produktion. Davon hängen Farben und Warnungen ab. |
+
+> ⚠️ **Die wichtigste Regel:** Üben und experimentieren Sie nur auf einer **Entwicklungs-** oder **Testdatenbank**. Auf
+> der Produktion (echte Daten des Unternehmens) führen Sie nur aus, was Sie verstehen und was abgesprochen ist.
 
 ## Voraussetzungen
 
@@ -65,15 +104,238 @@ Authentifizierung, kein Ändern eines abgelaufenen Passworts und kein Unterbrech
 
 ## Erste Schritte
 
-1. Klicken Sie in der linken Spalte auf den Tab **Verbindungen** und dann auf die Schaltfläche **+** (oder wählen Sie
-   **Sitzung › Verbindungen › Neue Verbindung …**).
-2. Geben Sie Name, Benutzer, Passwort und Datenbank ein (`host:port/dienst` oder einen Alias aus `tnsnames.ora`), wählen
-   Sie die Umgebung und klicken Sie auf **Testen** und dann auf **Speichern**.
-3. Doppelklicken Sie auf die Verbindung in der Liste — sie wird zur **Hauptverbindung** (fett dargestellt).
-4. Öffnen Sie ein neues SQL Window (**Datei › Neu › SQL Window**, ⌘N), geben Sie eine Abfrage ein und führen Sie sie mit
-   F8 oder ⌘↩ aus.
+### Wozu es dient
 
-![Hauptfenster: Verbindungsliste links, SQL Window mit einem Abfrageergebnis](../img/okno-glowne.png)
+Bevor Sie mit der Arbeit beginnen, muss Pelikan wissen, mit welcher Datenbank es sich verbinden soll. Diese kurze
+Einführung führt Sie vom leeren Programm zum ersten Abfrageergebnis. Vom Administrator oder einem Teamkollegen brauchen
+Sie: einen **Benutzernamen**, ein **Passwort** und die **Adresse der Datenbank** — in der Form `host:port/dienst`
+(z. B. `dbdev.firma.local:1521/DEVPDB`) oder einen **Alias** aus der Datei `tnsnames.ora` (z. B. `DEV`).
+
+### Übung: erste Verbindung und erste Abfrage
+
+1. Klicken Sie in der linken Spalte des Fensters auf den Tab **Verbindungen** und dann auf **+** (oder wählen Sie
+   **Sitzung › Verbindungen › Neue Verbindung …**).
+   *Ergebnis:* Das Fenster **Neue Verbindung** öffnet sich.
+2. Geben Sie im Feld **Name** einen Namen ein, an dem Sie die Datenbank erkennen, z. B. `dev_meine_db`. Geben Sie
+   **Benutzer**, **Passwort** und **Datenbank** (Adresse oder Alias) ein. Als **Umgebung** wählen Sie **Entwicklung**.
+3. Klicken Sie auf **Testen**.
+   *Ergebnis:* eine Meldung „Verbunden:“ mit einer Beschreibung der Datenbankversion. Sehen Sie einen Fehler, prüfen Sie
+   die Angaben — die häufigsten Ursachen und Lösungen stehen in Kapitel 15 (`ORA-01017` — falsches Passwort oder falscher
+   Benutzer, `ORA-12154` — unbekannter Alias, `ORA-12541` — falscher Host oder Port).
+4. Haken Sie **Passwort im Schlüsselbund sichern** an, wenn Sie das Passwort nicht bei jeder Verbindung eingeben
+   möchten — es kommt in den macOS-Schlüsselbund, nicht in eine Datei. Klicken Sie auf **Speichern**.
+   *Ergebnis:* Die Verbindung steht in der Liste.
+5. Doppelklicken Sie auf die Verbindung in der Liste.
+   *Ergebnis:* Der Name der Verbindung ist fett — sie ist jetzt die **Hauptverbindung**. Neue Fenster verwenden sie. Ihr
+   Name steht auch im Titel des Pelikan-Fensters.
+6. Öffnen Sie ein neues SQL Window: **Datei › Neu › SQL Window** oder **⌘N**.
+   *Ergebnis:* ein neuer Tab mit dem Buchstaben **S** und einem leeren Editor. Die Statusleiste unter dem Editor zeigt den
+   Namen der Verbindung.
+7. Geben Sie die Abfrage ein:
+
+   ```sql
+   SELECT sysdate, user FROM dual;
+   ```
+
+8. Drücken Sie **F8** (oder **⌘↩**).
+   *Ergebnis:* Unter dem Editor erscheint ein Ergebnis-Tab mit einer Zeile: das aktuelle Datum und die Uhrzeit des
+   Servers sowie Ihr Benutzername. Die Statusleiste zeigt die Zahl der Zeilen und die Ausführungszeit.
+
+Fertig — Sie können sich verbinden und eine Abfrage ausführen. Nächster Schritt: das Übungsschema anlegen.
+
+![Hauptfenster: Verbindungsliste links, SQL Window mit Abfrageergebnis](../img/okno-glowne.png)
+
+## Übungsschema
+
+### Wozu es dient
+
+Die Übungen der Anleitung arbeiten mit einigen kleinen Objekten: der Abteilungstabelle `PEL_DEPARTMENTS`, der
+Mitarbeitertabelle `PEL_EMPLOYEES`, der View `PEL_EMP_DETAILS` und dem Paket `PEL_EMP_API` (Gehalt, Erhöhung, Einstellung,
+Liste der Mitarbeiter einer Abteilung). Das Präfix `PEL_` macht sie leicht von Ihren Objekten unterscheidbar und nach dem
+Lernen leicht zu entfernen. Die Beispieldaten (Namen von Abteilungen und Mitarbeitern) sind polnisch — die Übungen
+beziehen sich genau so darauf.
+
+> ⚠️ Das Skript legt Objekte im Schema des Benutzers an, mit dem Sie angemeldet sind. Führen Sie es auf **Ihrem eigenen
+> Entwicklungs- oder Testschema** aus — nie auf der Produktion oder auf einem mit anderen geteilten Schema ohne Zustimmung
+> des Teams. Zum Anlegen der Objekte brauchen Sie die Rechte `CREATE TABLE`, `CREATE VIEW` und `CREATE PROCEDURE` sowie
+> Platz in einem Tablespace (auf einem Entwicklungsschema haben Sie sie meist).
+
+### Übung: das Übungsschema anlegen
+
+1. Verbinden Sie sich mit der Entwicklungsdatenbank (vorige Übung) und öffnen Sie ein neues SQL Window (**⌘N**).
+2. Kopieren Sie das ganze Skript unten in das Fenster.
+3. Markieren Sie den ganzen Text (**⌘A**) und drücken Sie **F8**.
+   *Ergebnis:* Pelikan führt die Befehle nacheinander aus, und der Tab **Output** unter dem Editor zeigt zu jedem eine
+   Meldung. Befehle trennt das Semikolon, Pakete ein Schrägstrich `/` in einer eigenen Zeile.
+4. Prüfen Sie das Ergebnis mit der Abfrage:
+
+   ```sql
+   SELECT * FROM pel_emp_details;
+   ```
+
+   *Ergebnis:* 9 Zeilen — Mitarbeiter mit Abteilungsname und Stadt. Ewa Woźniak hat keine Abteilung, deshalb sind diese
+   Spalten leer.
+5. Öffnen Sie in der linken Spalte den Tab **Objekte** und klappen Sie den Ordner **Tabellen** auf.
+   *Ergebnis:* Sie sehen `PEL_DEPARTMENTS` und `PEL_EMPLOYEES`.
+
+Das Skript schreibt die Daten selbst fest (COMMIT nach INSERT), daher sind sie auch in anderen Fenstern sichtbar.
+
+```sql
+-- Übungsschema der Pelikan-Anleitung.
+-- Auf IHREM EIGENEN Entwicklungs- oder Testschema ausführen — nie auf der Produktion.
+CREATE TABLE pel_departments (
+  dept_id  NUMBER(4)    CONSTRAINT pel_departments_pk PRIMARY KEY,
+  name     VARCHAR2(50) NOT NULL,
+  city     VARCHAR2(50)
+);
+
+CREATE TABLE pel_employees (
+  emp_id      NUMBER(6) GENERATED BY DEFAULT AS IDENTITY (START WITH 100)
+              CONSTRAINT pel_employees_pk PRIMARY KEY,
+  first_name  VARCHAR2(30) NOT NULL,
+  last_name   VARCHAR2(30) NOT NULL,
+  email       VARCHAR2(60) CONSTRAINT pel_employees_email_uk UNIQUE,
+  hire_date   DATE DEFAULT SYSDATE NOT NULL,
+  salary      NUMBER(8,2) CONSTRAINT pel_employees_salary_ck CHECK (salary > 0),
+  dept_id     NUMBER(4) CONSTRAINT pel_employees_dept_fk REFERENCES pel_departments,
+  manager_id  NUMBER(6) CONSTRAINT pel_employees_mgr_fk REFERENCES pel_employees
+);
+
+CREATE INDEX pel_employees_dept_ix ON pel_employees (dept_id);
+
+CREATE OR REPLACE VIEW pel_emp_details AS
+  SELECT e.emp_id, e.first_name || ' ' || e.last_name AS full_name, e.salary,
+         d.name AS department, d.city
+    FROM pel_employees e
+    LEFT JOIN pel_departments d ON d.dept_id = e.dept_id;
+
+INSERT INTO pel_departments VALUES (10, 'Księgowość', 'Warszawa');
+INSERT INTO pel_departments VALUES (20, 'Informatyka', 'Kraków');
+INSERT INTO pel_departments VALUES (30, 'Sprzedaż', 'Gdańsk');
+INSERT INTO pel_departments VALUES (40, 'Kadry', NULL);
+
+INSERT INTO pel_employees VALUES (1, 'Anna', 'Nowak', 'anna.nowak@example.com', DATE '2019-03-01', 12000, 20, NULL);
+INSERT INTO pel_employees VALUES (2, 'Piotr', 'Kowalski', 'piotr.kowalski@example.com', DATE '2020-06-15', 9500, 20, 1);
+INSERT INTO pel_employees VALUES (3, 'Maria', 'Wiśniewska', 'maria.wisniewska@example.com', DATE '2021-01-10', 8700, 20, 1);
+INSERT INTO pel_employees VALUES (4, 'Tomasz', 'Wójcik', 'tomasz.wojcik@example.com', DATE '2018-09-03', 11000, 10, NULL);
+INSERT INTO pel_employees VALUES (5, 'Katarzyna', 'Kamińska', 'katarzyna.kaminska@example.com', DATE '2022-02-14', 7200, 10, 4);
+INSERT INTO pel_employees VALUES (6, 'Michał', 'Lewandowski', 'michal.lewandowski@example.com', DATE '2017-11-20', 13500, 30, NULL);
+INSERT INTO pel_employees VALUES (7, 'Agnieszka', 'Zielińska', 'agnieszka.zielinska@example.com', DATE '2023-04-01', 6800, 30, 6);
+INSERT INTO pel_employees VALUES (8, 'Paweł', 'Szymański', NULL, DATE '2024-07-08', 6500, 30, 6);
+INSERT INTO pel_employees VALUES (9, 'Ewa', 'Woźniak', 'ewa.wozniak@example.com', DATE '2025-01-02', 7000, NULL, NULL);
+COMMIT;
+
+CREATE OR REPLACE PACKAGE pel_emp_api AS
+  -- Gehalt eines Mitarbeiters; kein solcher Mitarbeiter — NO_DATA_FOUND.
+  FUNCTION get_salary(p_emp_id IN NUMBER) RETURN NUMBER;
+  -- Erhöhung um p_percent Prozent; negativer Prozentsatz — Fehler -20001. Ohne COMMIT.
+  PROCEDURE raise_salary(p_emp_id IN NUMBER, p_percent IN NUMBER);
+  -- Neuer Mitarbeiter; gibt seine Kennung zurück. Ohne COMMIT.
+  FUNCTION hire(p_first_name IN VARCHAR2, p_last_name IN VARCHAR2, p_salary IN NUMBER,
+                p_dept_id IN NUMBER) RETURN NUMBER;
+  -- Listet die Mitarbeiter einer Abteilung über DBMS_OUTPUT.
+  PROCEDURE print_department(p_dept_id IN NUMBER);
+END pel_emp_api;
+/
+
+CREATE OR REPLACE PACKAGE BODY pel_emp_api AS
+  FUNCTION get_salary(p_emp_id IN NUMBER) RETURN NUMBER IS
+    l_salary pel_employees.salary%TYPE;
+  BEGIN
+    SELECT salary INTO l_salary FROM pel_employees WHERE emp_id = p_emp_id;
+    RETURN l_salary;
+  END get_salary;
+
+  PROCEDURE raise_salary(p_emp_id IN NUMBER, p_percent IN NUMBER) IS
+  BEGIN
+    IF p_percent < 0 THEN
+      raise_application_error(-20001, 'Podwyżka nie może być ujemna');
+    END IF;
+    UPDATE pel_employees
+       SET salary = ROUND(salary * (1 + p_percent / 100), 2)
+     WHERE emp_id = p_emp_id;
+    IF SQL%ROWCOUNT = 0 THEN
+      RAISE NO_DATA_FOUND;
+    END IF;
+  END raise_salary;
+
+  FUNCTION hire(p_first_name IN VARCHAR2, p_last_name IN VARCHAR2, p_salary IN NUMBER,
+                p_dept_id IN NUMBER) RETURN NUMBER IS
+    l_emp_id pel_employees.emp_id%TYPE;
+  BEGIN
+    INSERT INTO pel_employees (first_name, last_name, salary, dept_id)
+    VALUES (p_first_name, p_last_name, p_salary, p_dept_id)
+    RETURNING emp_id INTO l_emp_id;
+    RETURN l_emp_id;
+  END hire;
+
+  PROCEDURE print_department(p_dept_id IN NUMBER) IS
+    l_total NUMBER := 0;
+  BEGIN
+    FOR r IN (SELECT first_name, last_name, salary
+                FROM pel_employees
+               WHERE dept_id = p_dept_id
+               ORDER BY last_name) LOOP
+      dbms_output.put_line(r.last_name || ' ' || r.first_name || ': ' || r.salary);
+      l_total := l_total + r.salary;
+    END LOOP;
+    dbms_output.put_line('Razem: ' || l_total);
+  END print_department;
+END pel_emp_api;
+/
+```
+
+Für die Übungen mit Tests (Kapitel 8) wird auch ein utPLSQL-Testpaket gebraucht. Legen Sie es erst an, wenn das
+Framework utPLSQL in der Datenbank installiert ist (Kapitel 8, *utPLSQL in der Datenbank installieren*):
+
+```sql
+CREATE OR REPLACE PACKAGE pel_emp_api_test AS
+  --%suite(Testy pakietu pel_emp_api)
+
+  --%test(get_salary zwraca pensję pracownika)
+  PROCEDURE get_salary_returns_salary;
+
+  --%test(raise_salary podnosi pensję o 10%)
+  PROCEDURE raise_salary_ten_percent;
+
+  --%test(Ujemna podwyżka zgłasza błąd -20001)
+  --%throws(-20001)
+  PROCEDURE raise_salary_negative;
+END pel_emp_api_test;
+/
+
+CREATE OR REPLACE PACKAGE BODY pel_emp_api_test AS
+  PROCEDURE get_salary_returns_salary IS
+  BEGIN
+    ut.expect(pel_emp_api.get_salary(1)).to_equal(12000);
+  END get_salary_returns_salary;
+
+  PROCEDURE raise_salary_ten_percent IS
+  BEGIN
+    pel_emp_api.raise_salary(2, 10);
+    ut.expect(pel_emp_api.get_salary(2)).to_equal(10450);
+  END raise_salary_ten_percent;
+
+  PROCEDURE raise_salary_negative IS
+  BEGIN
+    pel_emp_api.raise_salary(2, -5);
+  END raise_salary_negative;
+END pel_emp_api_test;
+/
+```
+
+### Übungsschema entfernen
+
+Wenn Sie mit dem Lernen fertig sind, entfernen Sie die Übungsobjekte (der erste Befehl meldet einen Fehler, wenn Sie das
+Testpaket nicht angelegt haben — das schadet nicht):
+
+```sql
+DROP PACKAGE pel_emp_api_test;
+DROP PACKAGE pel_emp_api;
+DROP VIEW pel_emp_details;
+DROP TABLE pel_employees PURGE;
+DROP TABLE pel_departments PURGE;
+```
 
 ## Hauptfenster
 
