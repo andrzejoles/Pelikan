@@ -4,9 +4,18 @@ Dieses Kapitel beschreibt die Werkzeuge aus den Menüs **Werkzeuge**, **Berichte
 Vergleichen und Ausrollen von Änderungen, Export und Import, Berichte, Notizbücher, Projekte und Dateien. Die Werkzeuge
 für Performance und Administration beschreibt das Kapitel *Ausführungsplan, Sitzungen und Administration*.
 
+Sie müssen nicht alle Werkzeuge sofort kennen. Am Anfang sind am nützlichsten: **Lokaler Verlauf** (eine frühere Version
+von Code zurückholen), **Export der Benutzerobjekte** (eine Kopie des Codes in Dateien), **Textimport** (eine CSV-Datei
+laden) und **Benutzerobjekte vergleichen** (was sich zwischen Entwicklungs- und Testdatenbank unterscheidet). Jeder
+Abschnitt beginnt mit einer Erklärung, wozu das Werkzeug dient.
+
 ## Schemata vergleichen und Änderungen ausrollen
 
 ### Benutzerobjekte vergleichen
+
+**Wozu es dient:** Änderungen nehmen Sie zuerst auf der Entwicklungsdatenbank vor, danach müssen sie auf die Test- und
+Produktionsdatenbank. Der Vergleich zeigt, welche Objekte sich unterscheiden, und erzeugt ein Skript, das die
+Zieldatenbank angleicht.
 
 **Werkzeuge › Benutzerobjekte vergleichen …** vergleicht die DDL der Objekte eines Schemas mit einem Zielschema — auf
 derselben oder einer anderen Verbindung (z. B. `dev_test` mit der Datenbank für Abnahmetests).
@@ -31,6 +40,8 @@ es `ALTER TABLE`-Befehle, die Spalten hinzufügen, ändern und löschen. Ausgew�
 Schaltfläche **In den Korb** hinzu.
 
 **Werkzeuge › Deployment-Korb …** sammelt Objekte (DDL) und Tabellendaten (mit WHERE-Filter) zu einem Änderungspaket.
+Es ist Ihre „Liste der auszurollenden Änderungen“ — Sie fügen während der Arbeit Objekte hinzu und erhalten am Ende ein
+Skript.
 Das im Object Browser ausgewählte Objekt fügen Sie über **Werkzeuge › Korb › Objekt in den Korb legen** hinzu, und
 **Korb › Deployment-Skript des Korbs** erzeugt ein Skript in Abhängigkeitsreihenfolge in einem neuen SQL Window — mit
 `WHENEVER SQLERROR EXIT` und `COMMIT` am Ende.
@@ -71,11 +82,37 @@ Werkzeuge, die in die Datenbank schreiben, durchlaufen dieselben Schutzmechanism
 Produktionsverbindung fragen sie nach einer Bestätigung, auf einer schreibgeschützten Verbindung sind sie gesperrt.
 Keine gespeicherte Definition (einer Übertragung, eines Jobs, eines Imports) enthält Passwörter.
 
+> **Übung: eine Kopie des Codes in Dateien und ein CSV-Import.**
+> 1. Wählen Sie **Werkzeuge › Export der Benutzerobjekte …**, markieren Sie die Objekte mit dem Präfix `PEL_` und wählen
+>    Sie das Speichern „eine Datei pro Objekt“ in einen neuen Ordner.
+>    *Ergebnis:* Im Ordner liegen `.sql`-Dateien mit den Tabellen und der View sowie das Paar `pel_emp_api.pks` /
+>    `pel_emp_api.pkb` — Code, bereit für git.
+> 2. Bereiten Sie in einem Texteditor die Datei `abteilungen.csv` vor:
+>
+>    ```
+>    dept_id;name;city
+>    60;Marketing;Wrocław
+>    70;Prawny;Łódź
+>    ```
+>
+> 3. Wählen Sie **Werkzeuge › Textimport …**, zeigen Sie auf die Datei und wählen Sie `PEL_DEPARTMENTS` als Zieltabelle.
+>    *Ergebnis:* Pelikan hat das Trennzeichen `;` und die Kopfzeile erkannt und die Felder den gleichnamigen Spalten
+>    zugeordnet.
+> 4. Starten Sie den Import und führen Sie dann in einem SQL Window `SELECT * FROM pel_departments;` aus.
+>    *Ergebnis:* 6 Abteilungen.
+>
+> ⚠️ **Achtung.** Der Import läuft in einer eigenen Sitzung und **schreibt** die Zeilen **selbst fest** (COMMIT alle
+> angegebene Anzahl Zeilen und am Ende) — ROLLBACK im SQL Window macht ihn nicht rückgängig. Fehlerhafte Zeilen (z. B. ein
+> doppelter Schlüssel) kommen in den Importbericht. Die neuen Abteilungen entfernen Sie mit
+> `DELETE FROM pel_departments WHERE dept_id IN (60, 70);` und COMMIT.
+
 ## Berichte
 
 ### Vordefinierte Berichte
 
-**Berichte › Vordefinierte Berichte …** öffnet eine Sammlung fertiger Berichte über die Datenbank in den Kategorien
+**Berichte › Vordefinierte Berichte …** öffnet eine Sammlung fertiger Berichte über die Datenbank — Sie müssen die Views
+des Data Dictionary nicht kennen, um z. B. die größten Tabellen oder ungültige Objekte zu prüfen. Die Berichte liegen in
+den Kategorien
 *Über die Datenbank*, *Objekte*, *Tabellen*, *PL/SQL*, *Sicherheit* und weiteren. Ein Bericht kann ein Raster, ein
 Diagramm oder eine DBMS_OUTPUT-Ausgabe zeigen, nach Variablen fragen und Zeilendetails haben. **Bericht im SQL Window
 öffnen** ermöglicht es, die Abfrage anzupassen; das Ergebnis exportieren Sie als CSV, HTML oder XLSX.
@@ -100,6 +137,21 @@ geänderte Objekte**, **Tabellengrößen**, **Tabellenspalten**, **Benutzerberec
    **Berichte › Meine Berichte** ab.
 
 ![Bericht mit Gruppen und Summen im Stil „Grün“](../img/raport-styl.png)
+
+> **Übung: ein Bericht der Gehälter nach Abteilung.**
+> 1. Öffnen Sie **Datei › Neu › Report Window** und geben Sie ein:
+>
+>    ```sql
+>    SELECT department, full_name, salary FROM pel_emp_details ORDER BY department, full_name
+>    ```
+>
+> 2. Drücken Sie **F8**.
+>    *Ergebnis:* eine HTML-Tabelle mit den Mitarbeitern.
+> 3. Haken Sie im Tab **Layout** für die Spalte **DEPARTMENT** **Gruppe** an und für **SALARY** — **Summe** und das Format
+>    `#,##0.00`.
+> 4. Führen Sie den Bericht erneut aus.
+>    *Ergebnis:* Mitarbeiter nach Abteilungen gruppiert, mit der Gehaltssumme unter jeder Abteilung und einer
+>    Gesamtsumme.
 
 **Bericht › Bericht als HTML speichern …**, **Berichtsdaten exportieren …** (CSV, TSV, XML, Excel) und **Bericht drucken
 …** (auch als PDF) geben das Ergebnis weiter. **Berichtsdefinition sperren** verbirgt Abfrage und Layout — der Bericht
@@ -146,6 +198,9 @@ ausgewähltes einfaches SELECT öffnen Sie zur Bearbeitung im Query Builder.
 
 ## Lokaler Verlauf
 
+**Wozu es dient:** Er ist die „Zeitmaschine“ Ihres Codes. Auch wenn Sie kein git verwenden und eine Prozedur kaputt
+gemacht und kompiliert haben, finden Sie die vorige Version im lokalen Verlauf.
+
 Pelikan speichert bei jedem Speichern, Kompilieren, Refactoring und Wiederherstellen eine Version der Datei oder des
 Objekts — unabhängig von Git und ohne Datenbankverbindung. **Datei › Lokaler Verlauf › Lokaler Verlauf** zeigt die
 Versionen des aktiven Fensters; **Mit aktuellem vergleichen** öffnet die Unterschiede, **Wiederherstellen** fügt die
@@ -154,13 +209,23 @@ Beschreibung hinzu. Der Verlauf speichert bis zu 50 Versionen der letzten 30 Tag
 
 ![Lokaler Verlauf einer Datei](../img/historia-lokalna.png)
 
+> **Übung: die vorige Version zurückholen.**
+> 1. Öffnen Sie **Bearbeiten** auf dem Paket **PEL_EMP_API** und ändern Sie im Tab des Bodys einen beliebigen Kommentar.
+>    Kompilieren Sie (F8).
+> 2. Wählen Sie **Datei › Lokaler Verlauf › Lokaler Verlauf**.
+>    *Ergebnis:* eine Liste der Versionen mit Datum — die neueste ist Ihre Kompilierung.
+> 3. Markieren Sie eine frühere Version und klicken Sie auf **Mit aktuellem vergleichen**.
+>    *Ergebnis:* Die Vergleichsanzeige zeigt den geänderten Kommentar.
+> 4. Klicken Sie auf **Wiederherstellen** und kompilieren Sie dann (F8).
+>    *Ergebnis:* In der Datenbank ist wieder die vorige Version; die Version mit dem Kommentar bleibt auch im Verlauf.
+
 ## Projekte, Worksets und Dateien
 
 - Ein **Projekt** gruppiert Dateien und Datenbankobjekte (mit Notizen und Gruppen) in einer `.prj`-Datei. **Projekt ›
   Projekt bauen** kompiliert alles in der Reihenfolge der Elemente, **Projekt-Make** nur die seit dem letzten Bauen
   geänderten Dateien und ungültige Objekte. Zu den Projektoptionen gehören u. a. die Verbindung, das Anhalten nach dem
   ersten Fehler und die Formatierung. **Projekt-Desktop speichern** merkt sich die offenen Fenster.
-- Ein **Workset** merkt sich die offenen Fenster — auch mit nicht gespeicherten Änderungen und Variablenwerten — und
+- Ein **Workset** — wie eine „Arbeitssitzung“ an einer Aufgabe — merkt sich die offenen Fenster — auch mit nicht gespeicherten Änderungen und Variablenwerten — und
   stellt sie beim nächsten Start wieder her (**Datei › Workset**: neu, öffnen, speichern, wiederherstellen, schließen,
   vergleichen, automatisch speichern). Das Layout des Hauptfensters speichern Sie mit **Ansicht › Fensterlayout
   speichern**.
