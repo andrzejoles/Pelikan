@@ -41,8 +41,9 @@ dwukrotne kliknięcie wskaźnika przełącza ustawienie.
 > 4. Naciśnij **F8**.
 >    *Wynik:* w karcie Dialog widać tekst z PROMPT, listę z `print_department` (DBMS_OUTPUT), tabelę tekstową
 >    z nagłówkiem „Nazwisko” i czas wykonania każdego polecenia (TIMING). Pasek stanu pokazuje włączone TIMING.
-> 5. W linii poleceń wpisz `SPOOL ~/Desktop/pracownicy.txt`, potem `SELECT * FROM pel_departments;` i `SPOOL OFF`.
->    *Wynik:* na biurku jest plik `pracownicy.txt` z wynikiem zapytania.
+> 5. W linii poleceń wpisz `DIR`, żeby zobaczyć bieżący katalog konsoli (zmienisz go poleceniem `CD katalog`). Potem
+>    wpisz kolejno `SPOOL pracownicy.txt`, `SELECT * FROM pel_departments;` i `SPOOL OFF`.
+>    *Wynik:* w bieżącym katalogu jest plik `pracownicy.txt` z wynikiem zapytania.
 >
 > ⚠️ **Na co uważać.** Skrypt wdrożeniowy zaczynaj od `WHENEVER SQLERROR EXIT SQL.SQLCODE` — inaczej po błędzie
 > jednego polecenia kolejne wykonują się dalej i baza zostaje „w połowie” zmiany. Przed uruchomieniem cudzego skryptu
@@ -95,5 +96,5 @@ trafiają do historii poleceń.
 ## Krokowe wykonanie skryptu
 
 `SET EXECPAUSE ON` albo **Sesja › Wstrzymaj wykonanie** sprawia, że przed każdym poleceniem skryptu Pelikan pyta, czy
-je wykonać, wykonać resztę skryptu, czy przerwać. To bezpieczny sposób na pierwsze uruchomienie skryptu, którego nie znasz: widzisz
-każde polecenie, zanim trafi do bazy.
+je wykonać, wykonać resztę skryptu, czy przerwać. To bezpieczny sposób na pierwsze uruchomienie skryptu, którego nie
+znasz: widzisz każde polecenie, zanim trafi do bazy.
