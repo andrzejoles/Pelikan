@@ -1,5 +1,17 @@
 # Pruebas utPLSQL
 
+## Para qué sirve
+
+Una **prueba unitaria** es un pequeño programa que llama a tu código y comprueba si el resultado es el esperado; p. ej.
+«tras un aumento del 10 %, un salario de 9500 pasa a 10450». Las pruebas se ejecutan tras cada cambio: si rompiste algo,
+una prueba lo muestra enseguida, antes de que el error llegue a los usuarios. **utPLSQL** es la biblioteca de pruebas más
+popular para PL/SQL: las pruebas se escriben como paquetes con comentarios de anotación (`--%suite`, `--%test`) y las
+comprobaciones como llamadas a `ut.expect(…).to_equal(…)`. utPLSQL revierte automáticamente los cambios de datos hechos
+por una prueba, así que las pruebas no estropean los datos.
+
+**Cuándo usarlo:** para cada paquete con lógica de negocio. Una buena costumbre: primero una prueba que muestre el error,
+después la corrección con la que la prueba pasa.
+
 Pelikan incorpora compatibilidad con utPLSQL, la biblioteca de pruebas unitarias para PL/SQL: ejecución de pruebas con
 resultados en directo, cobertura de código, generación de esqueletos de pruebas y navegación entre un paquete y sus
 pruebas. Los comandos están en el menú **Herramientas › utPLSQL**.
@@ -27,6 +39,30 @@ instalación suele hacerla un administrador.
   de `--%context`/`--%endcontext` sin pareja.
 - **utPLSQL: ir a la prueba / al paquete probado** (⌃⌘T) alterna entre un paquete y su paquete de pruebas (según el
   nombre `test_nombre` o las dependencias).
+
+> **Ejercicio: ejecuta las pruebas del paquete de práctica.**
+>
+> Requiere utPLSQL en la base (compruébalo con **utPLSQL: versión en la base de datos**) y el paquete `PEL_EMP_API_TEST`
+> del script del capítulo 1.
+>
+> 1. En el Object Browser abre **Editar** sobre el paquete **PEL_EMP_API_TEST** y mira la especificación.
+>    *Resultado:* la anotación `--%suite` da nombre a la suite de pruebas, cada `--%test` es una prueba y
+>    `--%throws(-20001)` indica que la prueba debe terminar con ese error.
+> 2. Pon el cursor en la especificación y pulsa **⌃⌘U** (ejecutar la prueba bajo el cursor).
+>    *Resultado:* se abre la ventana de resultados con una barra de progreso; tres pruebas en verde: **Correcto**.
+> 3. En el cuerpo de la prueba cambia el valor esperado en `raise_salary_ten_percent` de `10450` a `10000` y compila
+>    (F8).
+> 4. Ejecuta las pruebas otra vez (**⌃⌘U**).
+>    *Resultado:* una prueba en rojo (**Fallos**). En los detalles: **Esperado** 10000, **Obtenido** 10450: ves enseguida
+>    qué no coincide.
+> 5. Restaura `10450`, compila y ejecuta **Fallidos de nuevo**.
+>    *Resultado:* todo en verde.
+> 6. Comprueba en una SQL Window: `SELECT salary FROM pel_employees WHERE emp_id = 2;`.
+>    *Resultado:* 9500: utPLSQL revirtió el aumento hecho por la prueba.
+>
+> **Ejercicio: una prueba para la función nueva.** Si en el capítulo 6 añadiste la función `department_name`, añade al
+> paquete de pruebas una prueba (declaración en la especificación con `--%test(…)` y procedimiento en el cuerpo) con
+> `ut.expect(pel_emp_api.department_name(2)).to_equal('Informatyka');` y ejecútala.
 
 ## Ejecutar pruebas
 
@@ -71,6 +107,11 @@ la ventana **ejecutar con opciones…** indicas otros esquemas y los objetos inc
 - En la Program Window las líneas se marcan en el margen: verde, cubiertas; amarillo, parcialmente; rojo, sin cubrir.
 - La barra de estado muestra el porcentaje de cobertura del objeto y del esquema.
 - **Informe de cobertura** abre el informe HTML de utPLSQL en el navegador.
+
+**Cómo leer la cobertura:** las líneas rojas son código que ninguna prueba ejecutó: un error en ellas no se detectará. Una
+cobertura del 100 % no significa que el código no tenga errores, pero una cobertura baja significa que las pruebas
+comprueban poco. Ejecuta las pruebas `PEL_EMP_API_TEST` con cobertura y abre el cuerpo de `PEL_EMP_API`: los
+procedimientos `hire` y `print_department` saldrán en rojo, porque no tienen pruebas.
 
 La cobertura usa los datos del profiler: antes de la primera ejecución de este tipo en una sesión, Pelikan recuerda los
 privilegios necesarios.

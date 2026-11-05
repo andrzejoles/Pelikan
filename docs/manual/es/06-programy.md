@@ -1,5 +1,17 @@
 # Program Window y editor de código
 
+## Para qué sirve
+
+Un **programa** en Oracle es código PL/SQL guardado en la base de datos: un paquete, procedimiento, función, tipo o
+disparador. A diferencia de un script de la SQL Window, un programa hay que **compilarlo**: Oracle comprueba entonces la
+sintaxis, que existan las tablas y columnas y los tipos, y guarda el código en la base, desde donde lo pueden llamar otros
+programas y aplicaciones. La **Program Window** sirve para escribir y compilar programas, y el **editor de código** (común
+a todas las ventanas) ayuda a escribir rápido y sin errores: sugiere nombres, muestra los errores mientras escribes y
+formatea el código.
+
+**Cuándo usarla:** en cada cambio de un paquete, procedimiento o disparador, desde corregir una línea hasta un módulo
+nuevo.
+
 ## Program Window
 
 La Program Window sirve para escribir y compilar unidades PL/SQL: paquetes, procedimientos, funciones, tipos y
@@ -51,6 +63,45 @@ o con **Editar** sobre un objeto en el Object Browser (el código se carga direc
   sobrescribirlo. Las extensiones y la apertura del par se
   configuran en **Ajustes › General › Especificación y cuerpo en archivos separados**.
 
+> **Ejercicio: añade una función al paquete y compílalo.**
+> 1. En el Object Browser haz clic derecho en el paquete **PEL_EMP_API** y elige **Editar**.
+>    *Resultado:* una Program Window con dos pestañas: la especificación y el cuerpo del paquete.
+> 2. En la pestaña de la especificación, antes de `END pel_emp_api;`, añade la declaración:
+>
+>    ```sql
+>    FUNCTION department_name(p_emp_id IN NUMBER) RETURN VARCHAR2;
+>    ```
+>
+> 3. Pasa a la pestaña del cuerpo y antes de `END pel_emp_api;` añade la función, a propósito con un error (sin punto y
+>    coma tras `WHERE`):
+>
+>    ```sql
+>    FUNCTION department_name(p_emp_id IN NUMBER) RETURN VARCHAR2 IS
+>      l_name pel_departments.name%TYPE;
+>    BEGIN
+>      SELECT d.name INTO l_name
+>        FROM pel_employees e JOIN pel_departments d ON d.dept_id = e.dept_id
+>       WHERE e.emp_id = p_emp_id
+>      RETURN l_name;
+>    END department_name;
+>    ```
+>
+> 4. Pulsa **F8** (compilar).
+>    *Resultado:* la especificación compila sin errores y bajo el editor aparece un error de compilación del cuerpo (p. ej.
+>    `PLS-00103`) con el número de línea.
+> 5. Haz clic en el error de la lista.
+>    *Resultado:* el cursor va a la línea del error. Añade `;` al final de la línea con `WHERE` y pulsa **F8** otra vez.
+>    *Resultado:* la lista de errores está vacía y el paquete es válido (VALID).
+> 6. Comprueba la función en una SQL Window: `SELECT pel_emp_api.department_name(2) FROM dual;`.
+>    *Resultado:* `Informatyka`.
+> 7. Guarda el paquete en archivos: **⌘S**.
+>    *Resultado:* Pelikan pide un nombre y una carpeta y guarda dos archivos: `pel_emp_api.pks` y `pel_emp_api.pkb`.
+>
+> ⚠️ **Atención.** La compilación **sustituye** el código en la base de inmediato: los demás usuarios que llaman al
+> paquete reciben la nueva versión (y sus sesiones pueden ver el error `ORA-04068` por un estado de paquete cambiado). Una
+> compilación con error deja el paquete no válido (INVALID) hasta que lo corrijas. En bases compartidas usa la
+> **Compilación de prueba** (más abajo).
+
 ### Trabajar con seguridad con el código de la base de datos
 
 - **Sesión › Compilación de prueba** compila las unidades con un nombre temporal y muestra los errores sin sustituir los
@@ -64,6 +115,16 @@ o con **Editar** sobre un objeto en el Object Browser (el código se carga direc
   de datos de pruebas) abren el visor de diferencias.
 - **Sesión › Ejecutar bloque en Test Window** ejecuta el bloque anónimo seleccionado en una Test Window nueva con
   DBMS_OUTPUT.
+
+> **Ejercicio: compilación de prueba y comparación con la base.**
+> 1. En la Program Window con el paquete **PEL_EMP_API** cambia en el cuerpo el texto `'Razem: '` por `'Suma: '`.
+> 2. Elige **Sesión › Compilación de prueba**.
+>    *Resultado:* Pelikan compila el código con un nombre temporal y muestra los posibles errores; el paquete de la base
+>    no cambia.
+> 3. Elige **Archivo › Comparar › Comparar con el código fuente de la base de datos**.
+>    *Resultado:* un visor de diferencias con ambas versiones; la línea cambiada aparece resaltada.
+> 4. Elige **Archivo › Restaurar**.
+>    *Resultado:* el texto vuelve a su estado al abrirlo.
 
 ### Ajustes del compilador
 
@@ -80,6 +141,17 @@ El mismo editor funciona en las ventanas SQL, de programa, de prueba y de comand
 de varias decenas de miles de líneas.
 
 ### Sugerencias y navegación
+
+> **Ejercicio: sugerencias e ir a la declaración.**
+> 1. En una SQL Window nueva escribe `SELECT  FROM pel_employees e;` (dos espacios tras `SELECT`), pon el cursor entre
+>    los espacios y escribe `e.`.
+>    *Resultado:* al momento aparece la lista de columnas de `PEL_EMPLOYEES` (alias `e`). Elige `LAST_NAME` con las
+>    flechas e Intro.
+> 2. En una línea nueva escribe `pel_emp_api.`.
+>    *Resultado:* una lista de las funciones y procedimientos del paquete con sus parámetros.
+> 3. Escribe `BEGIN pel_emp_api.print_department(20); END;`, pon el cursor sobre `print_department` y pulsa **⌃⌘J** (o
+>    ⌘+clic).
+>    *Resultado:* se abre el cuerpo del paquete en el lugar donde está definido el procedimiento.
 
 - La **Sugerencia de código** aparece sola tras un punto (p. ej., `paquete.`, `alias.`, `secuencia.`) o a petición: ⌥⎋
   (en el perfil PL/SQL Developer, ⌃Espacio). Sugiere objetos del esquema, columnas (también a través de alias de
@@ -200,6 +272,12 @@ cambio se resaltan durante 5 s (o hasta el siguiente cambio) y una barra roja ma
 cambiar una opción se pasa al ejemplo en el que se ve y se desplaza hasta el cambio, y al hacer clic en una opción se
 muestra su ejemplo. Una región sin formato también se puede marcar con los comentarios `-- @formatter:off` y
 `-- @formatter:on`; el formateador deja sin cambios la compilación condicional `$IF … $END`. El formateador trata una palabra tras un punto como identificador (`E.ENAME` con identificadores en mayúsculas); las claves JSON en notación de punto distinguen mayúsculas y minúsculas, así que formatee ese código con identificadores «sin cambios» o en una región NoFormat.
+
+> **Ejercicio: formatear con un atajo.**
+> 1. En una SQL Window escribe en una línea: `select first_name,last_name from pel_employees where dept_id=20 and salary>9000 order by last_name;`
+> 2. Pulsa **⇧⌘F**.
+>    *Resultado:* las palabras clave están en mayúsculas, cada columna y cada condición en su línea y las palabras de
+>    cláusula alineadas. **⌘Z** deshace el formateo. Las reglas se cambian en **Ajustes › Formateador** (capítulo 13).
 
 ### Plantillas, fragmentos y macros
 
