@@ -1,7 +1,16 @@
 # Konsola SQL*Plus
 
-Konsola SQL*Plus działa jak SQL*Plus: wykonuje polecenia linia po linii i skrypty, a wyniki zapytań pokazuje jako tekst w
-kolumnach. Otworzysz ją przez **Plik › Nowy › Konsola SQL*Plus** albo z menu połączenia na liście połączeń.
+## Do czego to służy
+
+**SQL*Plus** to klasyczne, tekstowe narzędzie Oracle do wykonywania skryptów. Wiele zespołów wdraża zmiany w bazie
+właśnie skryptami SQL*Plus — z poleceniami `SET`, `PROMPT`, `SPOOL` (zapis wyniku do pliku) czy `WHENEVER SQLERROR`
+(zatrzymanie przy błędzie). Okno SQL ich nie rozumie, a **Konsola SQL*Plus** w Pelikanie — tak: wykonuje polecenia
+linia po linii i skrypty, a wyniki zapytań pokazuje jako tekst w kolumnach, jak SQL*Plus. Otworzysz ją przez **Plik ›
+Nowy › Konsola SQL*Plus** albo z menu połączenia na liście połączeń.
+
+**Kiedy użyć:** do uruchamiania gotowych skryptów wdrożeniowych (`@instaluj.sql`), do skryptów, które zapisują wynik do
+pliku, i gdy chcesz zobaczyć, jak skrypt zachowa się w SQL*Plus u administratora. Do zwykłych zapytań i przeglądania
+danych wygodniejsze jest okno SQL z siatką wyników (rozdział 3).
 
 Konsola ma dwie karty:
 
@@ -12,6 +21,32 @@ Konsola ma dwie karty:
 
 Pasek stanu pokazuje bieżące ustawienia `ECHO`, `TERMOUT`, `FEEDBACK`, `VERIFY`, `AUTOPRINT`, `HEADING` i `TIMING`;
 dwukrotne kliknięcie wskaźnika przełącza ustawienie.
+
+> **Ćwiczenie: pierwszy skrypt SQL*Plus.**
+> 1. Otwórz **Plik › Nowy › Konsola SQL*Plus**.
+>    *Wynik:* okno z literą **C**, karta **Dialog** z linią poleceń na dole.
+> 2. W linii poleceń wpisz `DESCRIBE pel_employees` i naciśnij ↩.
+>    *Wynik:* lista kolumn tabeli z typami i informacją, czy mogą być puste (NULL).
+> 3. Przejdź do karty **Edytor** i wpisz skrypt:
+>
+>    ```sql
+>    SET SERVEROUTPUT ON
+>    SET TIMING ON
+>    PROMPT Pracownicy działu Informatyka:
+>    EXECUTE pel_emp_api.print_department(20)
+>    COLUMN last_name HEADING 'Nazwisko' FORMAT A15
+>    SELECT last_name, salary FROM pel_employees WHERE dept_id = 20;
+>    ```
+>
+> 4. Naciśnij **F8**.
+>    *Wynik:* w karcie Dialog widać tekst z PROMPT, listę z `print_department` (DBMS_OUTPUT), tabelę tekstową
+>    z nagłówkiem „Nazwisko” i czas wykonania każdego polecenia (TIMING). Pasek stanu pokazuje włączone TIMING.
+> 5. W linii poleceń wpisz `SPOOL ~/Desktop/pracownicy.txt`, potem `SELECT * FROM pel_departments;` i `SPOOL OFF`.
+>    *Wynik:* na biurku jest plik `pracownicy.txt` z wynikiem zapytania.
+>
+> ⚠️ **Na co uważać.** Skrypt wdrożeniowy zaczynaj od `WHENEVER SQLERROR EXIT SQL.SQLCODE` — inaczej po błędzie
+> jednego polecenia kolejne wykonują się dalej i baza zostaje „w połowie” zmiany. Przed uruchomieniem cudzego skryptu
+> przeczytaj go i sprawdź, na jakim połączeniu jest konsola.
 
 ## Obsługiwane polecenia SQL*Plus
 
@@ -60,4 +95,5 @@ trafiają do historii poleceń.
 ## Krokowe wykonanie skryptu
 
 `SET EXECPAUSE ON` albo **Sesja › Wstrzymaj wykonanie** sprawia, że przed każdym poleceniem skryptu Pelikan pyta, czy
-je wykonać, wykonać resztę skryptu, czy przerwać.
+je wykonać, wykonać resztę skryptu, czy przerwać. To bezpieczny sposób na pierwsze uruchomienie skryptu, którego nie znasz: widzisz
+każde polecenie, zanim trafi do bazy.
