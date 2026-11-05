@@ -1,5 +1,15 @@
 # Consola SQL*Plus
 
+## Para qué sirve
+
+**SQL*Plus** es la herramienta clásica de texto de Oracle para ejecutar scripts. Muchos equipos despliegan los cambios
+en la base con scripts de SQL*Plus: con `SET`, `PROMPT`, `SPOOL` (escribir la salida en un archivo) o `WHENEVER SQLERROR`
+(detenerse ante un error). La SQL Window no los entiende, pero la **consola SQL*Plus** de Pelikan sí.
+
+**Cuándo usarla:** para ejecutar scripts de despliegue ya preparados (`@instalar.sql`), para scripts que escriben la
+salida en un archivo y cuando quieras ver cómo se comportará un script en el SQL*Plus del administrador. Para consultas
+normales y para revisar datos es más cómoda la SQL Window con su cuadrícula de resultados (capítulo 3).
+
 La consola SQL*Plus funciona como SQL*Plus: ejecuta sentencias línea a línea y scripts, y muestra los resultados de las
 consultas como texto en columnas. La abres con **Archivo › Nuevo › Consola SQL*Plus** o desde el menú de la conexión en la
 lista de conexiones.
@@ -14,6 +24,34 @@ La ventana tiene dos pestañas:
 
 La barra de estado muestra los ajustes actuales de `ECHO`, `TERMOUT`, `FEEDBACK`, `VERIFY`, `AUTOPRINT`, `HEADING` y
 `TIMING`; un doble clic en un indicador cambia el ajuste.
+
+> **Ejercicio: tu primer script de SQL*Plus.**
+> 1. Abre **Archivo › Nuevo › Consola SQL*Plus**.
+>    *Resultado:* una ventana con la letra **C** y la pestaña **Diálogo** con una línea de comandos abajo.
+> 2. En la línea de comandos escribe `DESCRIBE pel_employees` y pulsa ↩.
+>    *Resultado:* la lista de columnas de la tabla con sus tipos y si pueden estar vacías (NULL).
+> 3. Pasa a la pestaña **Editor** y escribe el script:
+>
+>    ```sql
+>    SET SERVEROUTPUT ON
+>    SET TIMING ON
+>    PROMPT Empleados del departamento Informatyka:
+>    EXECUTE pel_emp_api.print_department(20)
+>    COLUMN last_name HEADING 'Apellido' FORMAT A15
+>    SELECT last_name, salary FROM pel_employees WHERE dept_id = 20;
+>    ```
+>
+> 4. Pulsa **F8**.
+>    *Resultado:* la pestaña Diálogo muestra el texto de PROMPT, la lista de `print_department` (DBMS_OUTPUT), una tabla de
+>    texto con el encabezado «Apellido» y el tiempo de ejecución de cada sentencia (TIMING). La barra de estado muestra
+>    TIMING activado.
+> 5. En la línea de comandos escribe `DIR` para ver el directorio actual de la consola (lo cambias con
+>    `CD directorio`). Después escribe `SPOOL empleados.txt`, `SELECT * FROM pel_departments;` y `SPOOL OFF`.
+>    *Resultado:* en el directorio actual está el archivo `empleados.txt` con el resultado de la consulta.
+>
+> ⚠️ **Atención.** Empieza un script de despliegue con `WHENEVER SQLERROR EXIT SQL.SQLCODE`: si no, tras fallar una
+> sentencia las siguientes siguen ejecutándose y la base queda «a medias». Antes de ejecutar un script ajeno, léelo y
+> comprueba en qué conexión está la consola.
 
 ## Comandos de SQL*Plus admitidos
 
@@ -63,4 +101,5 @@ DATABASE LINK`) no van al historial de comandos.
 ## Ejecución paso a paso de un script
 
 `SET EXECPAUSE ON` o **Sesión › Pausar ejecución** hacen que, antes de cada sentencia del script, Pelikan pregunte si
-ejecutarla, ejecutar el resto del script o interrumpir.
+ejecutarla, ejecutar el resto del script o interrumpir. Es una forma segura de ejecutar por primera vez un script que
+no conoces: ves cada sentencia antes de que llegue a la base.

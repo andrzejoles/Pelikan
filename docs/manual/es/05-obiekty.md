@@ -1,5 +1,16 @@
 # Object Browser y editores de objetos
 
+## Para qué sirve
+
+Una base de datos contiene cientos o miles de objetos: tablas, vistas, paquetes, índices. El **Object Browser** los
+muestra en un árbol, como el Finder muestra los archivos: puedes recorrerlos, buscarlos, abrirlos para editarlos y ver sus
+datos y su estructura. Los **editores de objetos** permiten crear y modificar objetos con un formulario, sin escribir a
+mano sentencias `CREATE` y `ALTER`: Pelikan muestra el SQL generado antes de ejecutarlo, así que de paso aprendes la
+sintaxis.
+
+**Cuándo usarlo:** cuando quieras comprobar qué columnas tiene una tabla, quién usa un paquete, qué objetos quedaron no
+válidos tras un despliegue, o añadir una columna o un índice.
+
 ## Object Browser
 
 La pestaña **Objetos** de la columna izquierda muestra los objetos de la base de datos de las conexiones abiertas en
@@ -55,6 +66,20 @@ requiere una confirmación aparte (**Cancelar** por defecto), porque puede inval
 El árbol funciona con fluidez incluso en esquemas con decenas de miles de objetos: el diccionario se lee en segundo
 plano.
 
+> **Ejercicio: conoce la tabla de práctica.**
+> 1. Haz clic en la pestaña **Objetos** de la columna izquierda.
+>    *Resultado:* un árbol con la conexión principal arriba y debajo las carpetas de tipos de objetos.
+> 2. Escribe `pel` en el campo **Filtro**.
+>    *Resultado:* en las carpetas quedan solo los objetos con «PEL» en el nombre.
+> 3. Despliega **Tablas › PEL_EMPLOYEES**.
+>    *Resultado:* ves las columnas con sus tipos, las restricciones (clave primaria `PEL_EMPLOYEES_PK`, correo único, CHECK
+>    del salario, claves ajenas), los índices y las dependencias.
+> 4. Despliega **Usado por**.
+>    *Resultado:* la vista `PEL_EMP_DETAILS` y el paquete `PEL_EMP_API`: los objetos que dejan de funcionar si eliminas o
+>    cambias esta tabla.
+> 5. Escribe `status=invalid` en el campo **Filtro**.
+>    *Resultado:* la lista de objetos no válidos; justo después de crear el esquema de práctica debería estar vacía.
+
 ### Menú del objeto
 
 Haz clic con el botón derecho en un objeto (o con ⌃). Según el tipo de objeto, el menú contiene:
@@ -80,6 +105,18 @@ Haz clic con el botón derecho en un objeto (o con ⌃). Según el tipo de objet
 En una columna o una restricción de una tabla, el menú tiene **Cambiar el nombre del elemento…**. Si seleccionas varios
 objetos (⌘+clic o ⇧+clic), el menú propone acciones comunes: **Copiar nombres separados por comas** (también ⌘C), **DDL
 de los seleccionados**, **Recompilar los seleccionados** y **Eliminar los seleccionados…**.
+
+> **Ejercicio: datos, DDL y código listo desde el menú.**
+> 1. Haz clic derecho en **PEL_DEPARTMENTS** y elige **Mostrar datos**.
+>    *Resultado:* una SQL Window nueva con la consulta y su resultado: 4 departamentos.
+> 2. Haz clic derecho en **PEL_EMPLOYEES** y elige **DDL**.
+>    *Resultado:* una ventana nueva con la sentencia `CREATE TABLE` que vuelve a crear la tabla: así compruebas la
+>    definición exacta de un objeto.
+> 3. Haz clic derecho en **PEL_EMPLOYEES** y elige **Generar código › INSERT**.
+>    *Resultado:* aparece una sentencia INSERT con todas las columnas: basta con completar los valores.
+>
+> ⚠️ **Atención.** **Eliminar objeto…** y **Recompilar** actúan en la base de inmediato (tras confirmar). Eliminar una tabla
+> no se deshace con ROLLBACK: solo puede ayudar la papelera de reciclaje (más abajo), si está activada en la base.
 
 Las demás operaciones sobre el objeto seleccionado están en el menú **Herramientas › Objeto**: entre otras, **Añadir
 información de depuración**, **Editar definición de la tabla**, **Editor de vista**, **Comparar con la ventana activa**,
@@ -115,6 +152,15 @@ En **Ajustes › Object Browser** configuras:
 - **Herramientas › Compilar objetos no válidos…** muestra los objetos no válidos del esquema y los compila en orden de
   dependencias hasta que ya no cambia nada; los errores de compilación aparecen en la lista.
 
+> **Ejercicio: ¿quién usa la columna SALARY?**
+> 1. Pulsa **⇧⌘O** (Buscar objetos de la base de datos), escribe `salary` e inicia la búsqueda.
+>    *Resultado:* una lista de lugares en el código y las definiciones donde aparece la palabra `salary`, entre ellos el
+>    cuerpo del paquete `PEL_EMP_API`.
+> 2. Haz doble clic en el resultado de `PEL_EMP_API`.
+>    *Resultado:* una Program Window con el cuerpo del paquete y el cursor en la línea del resultado.
+>
+> Así compruebas, antes de cambiar una columna, qué código habrá que corregir.
+
 ## Editor de tablas
 
 Creas una tabla nueva con **Archivo › Nuevo › Tabla…**, y abres una existente con **Editar** en el menú de la tabla (o
@@ -143,6 +189,19 @@ Pestañas del editor:
 **Aplicar** ejecuta los cambios como `ALTER` y se detiene en el primer error; **Actualizar** vuelve a leer la definición
 de la base de datos. En una conexión de producción se necesita confirmación.
 
+> **Ejercicio: añade una columna en el editor de tablas.**
+> 1. Haz clic derecho en **PEL_EMPLOYEES** y elige **Editar**.
+>    *Resultado:* el editor de tablas en la pestaña **General**.
+> 2. Pasa a la pestaña **Columnas** y añade la columna `PHONE` de tipo `VARCHAR2(20)`, que admite NULL.
+> 3. Pasa a la pestaña **SQL**.
+>    *Resultado:* la sentencia `ALTER TABLE … ADD (PHONE VARCHAR2(20))`: exactamente lo que ejecutará Pelikan.
+> 4. Haz clic en **Aplicar**.
+>    *Resultado:* la columna está en la tabla; en el Object Browser (tras **Actualizar**) aparece en la lista de columnas.
+>
+> ⚠️ **Atención.** El DDL (ALTER) confirma la transacción abierta y no se deshace con ROLLBACK. Los cambios que requieren
+> **Recreate table** reconstruyen la tabla con sus datos: en una tabla grande tarda mucho y la bloquea. En una base
+> compartida acuerda los cambios de estructura con el equipo.
+
 ## Otros editores de objetos
 
 En **Archivo › Nuevo** encontrarás los editores: **Secuencia…**, **Sinónimo…**, **Índice…**, **Vista (editor)…**
@@ -166,6 +225,10 @@ archivos ni al historial.
 Restaurar de la papelera de reciclaje…** restaura un objeto con su nombre antiguo o con uno nuevo, y **Papelera de
 reciclaje › Vaciar la papelera de reciclaje…** elimina los objetos definitivamente (tras confirmación).
 
+**Para qué sirve:** en Oracle `DROP TABLE` sin `PURGE` no elimina la tabla en el acto, sino que la mueve a la papelera de
+reciclaje (si está activada en la base: parámetro `RECYCLEBIN`). Gracias a ello, una tabla eliminada por error se puede
+recuperar con sus datos.
+
 ## Diagramas
 
 - **Herramientas › Diagrama › Diagrama ER del esquema…** dibuja las tablas del esquema (o las que coinciden con una
@@ -174,6 +237,15 @@ reciclaje › Vaciar la papelera de reciclaje…** elimina los objetos definitiv
   Browser o con el comando **Herramientas › Diagrama › Añadir al diagrama**.
 
 ![Diagrama ER de un esquema](../img/diagram-er.png)
+
+**Para qué sirve:** un diagrama ER (entidades y relaciones) muestra las tablas como rectángulos y las claves ajenas como
+líneas entre ellas. Es la forma más rápida de entender un esquema desconocido.
+
+> **Ejercicio: diagrama del esquema de práctica.**
+> 1. Elige **Herramientas › Diagrama › Diagrama ER del esquema…**. En la primera pregunta deja el esquema propuesto (el
+>    tuyo) y en la segunda, **Máscara de nombres de tabla (LIKE)**, escribe `PEL%`.
+>    *Resultado:* un diagrama con las tablas `PEL_DEPARTMENTS` y `PEL_EMPLOYEES` unidas por una línea de clave ajena, y
+>    una línea de `PEL_EMPLOYEES` a sí misma (el jefe de un empleado).
 
 En la ventana de diagrama: **Relacionados** añade las tablas unidas por claves ajenas, **Dependencias**, las líneas de
 dependencia; **Nota** y **Grupo** ordenan el dibujo, **Columnas** muestra u oculta las columnas, **Cuadrícula** activa
