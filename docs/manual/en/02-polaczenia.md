@@ -1,7 +1,15 @@
 # Connections
 
-A connection is a saved definition: where to connect, as whom and with which security rules. Definitions are saved
-without passwords — passwords go only to the macOS Keychain.
+## What it is for
+
+A **connection** is a saved definition: where to connect (the database address), as whom (the user) and with which
+security rules (environment, read-only, AI agent access). Thanks to definitions you do not type the address and user
+name every time, and Pelikan knows which databases are production ones and require care. Definitions are saved
+**without passwords** — passwords go only to the macOS Keychain.
+
+A typical developer has several connections: their own development database, the team's test database and —
+sometimes — read access to production. This chapter shows how to set them up, organize them and how Pelikan protects
+you from the “wrong database” mistake.
 
 ## Connection list
 
@@ -30,6 +38,14 @@ You can also use the logon window: **Session › Log on…** (⇧⌘L). It shows
 you create a new connection or edit an existing one. **Session › Log off main connection** ends the sessions of the main
 connection.
 
+> **Exercise: organize connections in folders.**
+> 1. In the connection list click the new folder button and name the folder `Development`.
+>    *Result:* an empty folder appears in the list.
+> 2. Drag the `dev_my_db` connection (from chapter 1) onto the folder.
+>    *Result:* the connection is in the folder; the **Recent** folder still shows it among the recently used ones.
+> 3. Right-click the connection and choose **New window › SQL Window**.
+>    *Result:* a SQL Window opens on this connection, and the window is listed under the connection.
+
 ## New connection
 
 Choose **Session › Connections › New connection…** or click **+** in the connection list. The definition window has four
@@ -41,7 +57,8 @@ tabs.
   well, e.g. `dev_test`.
 - **Folder** and **Environment**: *Development*, *Test*, *Production* or *Other*. The environment determines the
   indicator color (test — orange, production — red), confirmation of changes and what the AI agent is allowed to do.
-  **Custom indicator color** replaces the environment color.
+  **Custom indicator color** replaces the environment color. ⚠️ Always set the environment truthfully — the warnings
+  before changes on production depend on it.
 - **User**, **Password** and **Remember password in Keychain**. Without remembering, Pelikan asks for the password on
   the first connection and keeps it only in memory until the application quits. When a saved password stops matching
   (ORA-01017), Pelikan asks for it again.
@@ -95,6 +112,13 @@ agents* chapter.
 
 ## Environments and protection against mistakes
 
+### What it is for
+
+A developer's most dangerous mistake is executing a statement “just to try” on production. Pelikan helps you avoid it
+in three ways: with **color** (you see which database you are working on), **confirmation** of changes on a production
+database and a **lock** on changes on a read-only connection.
+
+
 - The connection color is visible in the connection list, on the window tab (a dot before the name), in the window list and in the status bar.
   The **Editor background in connection color** option (**Settings › General**) also tints the editor background. On
   the same tab you can add color rules by a `user@database` pattern (e.g. `sys@*`) — they take precedence over the
@@ -111,6 +135,32 @@ agents* chapter.
 - Pelikan never commits a transaction by itself. When you close a window or the application with an open transaction, it
   asks whether to commit (COMMIT) or roll back (ROLLBACK); you change the behavior on logoff in **Settings › General
   › Logoff with an open transaction**.
+
+### Exercise: see the protection at work (without risk)
+
+The exercise uses your development database pretending to be production — it changes nothing on real production.
+
+1. Right-click `dev_my_db`, choose **Copy Under Another Name…** and name the copy `dev_fake_production`.
+   *Result:* there is a second definition of the same database in the list.
+2. Right-click the copy, choose **Edit…**, set the **Environment** to *Production* on the **General** tab and click
+   **Save**.
+   *Result:* the dot next to the connection is red.
+3. Right-click the copy, choose **New window › SQL Window** and type:
+
+   ```sql
+   UPDATE pel_employees SET salary = salary WHERE emp_id = 1;
+   ```
+
+4. Press **F8**.
+   *Result:* instead of executing, the “Changes on production connection” window appears. Click **Cancel** — the
+   statement does not reach the database.
+5. Edit the copy once more, check **Read-only** on the **Advanced** tab and save. Execute the same UPDATE.
+   *Result:* Pelikan rejects the statement with the message “Connection … is read-only — modifying statement
+   blocked”, and the window's status bar shows “read-only”.
+6. Finally delete the copy: right-click › **Delete…**.
+
+> ⚠️ **Watch out.** The protection works only when the environment is set correctly. When you set up a connection to
+> production, choose *Production*, and if you only need to read — check **Read-only** as well.
 
 ## Passwords and Touch ID
 
@@ -131,7 +181,7 @@ the new one in the Keychain if the connection remembers its password.
 
 ## Oracle Wallet
 
-Pelikan supports two kinds of wallet:
+A **wallet** (Oracle Wallet) is an encrypted file that stores passwords or certificates. Pelikan supports two kinds:
 
 - **Password store** (Secure External Password Store) — logging on without a password in Pelikan (`/@alias`). You set
   the wallet directory and the Oracle Net configuration directory in **Settings › Oracle › Oracle Net and Oracle
@@ -152,19 +202,52 @@ Passwords from the wallet never reach Pelikan.
 - **OAuth2 token from file** — a token prepared beforehand with an external tool (e.g. Azure CLI); you specify the token
   file or directory.
 
+These methods are usually configured by the administrator — if you do not know which to use, choose *Password*.
+
 ## Windows, sessions and the window connection
+
+### What it is for
+
 
 Each window has its own connection, visible in the status bar. Click it to switch the window to another connection; when
 the window has an open transaction, Pelikan first asks about COMMIT or ROLLBACK. A window with a **pinned** connection
 (📌) does not change it when you change the main connection; you enable pinning of new windows by default in
 **Settings › General**.
 
-Session mode (**Settings › General › Session mode**):
+Session mode (**Settings › General › Session mode**; the consequences of each mode are described in chapter 13):
 
 - **Multi** (default) — each window has its own database session, so a long query in one window does not block others,
   and the windows' transactions are independent;
 - **Dual** — windows share one session, and compilation has a separate one;
 - **Single** — everything in one session.
+
+### Exercise: independent transactions of two windows
+
+This exercise shows what a transaction is and why COMMIT matters.
+
+1. Open two SQL Windows on the development database (**⌘N** twice). Let us call them A and B.
+2. In window A execute (F8):
+
+   ```sql
+   UPDATE pel_employees SET salary = 20000 WHERE emp_id = 1;
+   ```
+
+   *Result:* the status bar of window A shows “Rows: 1” and “● transaction open”.
+3. In window B execute:
+
+   ```sql
+   SELECT salary FROM pel_employees WHERE emp_id = 1;
+   ```
+
+   *Result:* 12000 — window B **does not see** the uncommitted change from window A (a separate session).
+4. Go back to window A and press **⇧F10** (ROLLBACK).
+   *Result:* the transaction mark disappears; the change is undone. Had you pressed **F10** (COMMIT), window B would
+   see 20000 after querying again.
+
+> ⚠️ Until you commit or roll back a change, the row is **locked** — other sessions that try to change it will wait.
+> Do not leave transactions open for long, especially on shared databases.
+
+### Lost connection and hanging queries
 
 Every 60 seconds Pelikan checks whether the connection is alive (you change the interval in Settings) and reacts when
 it is lost. Optionally it closes the sessions of windows idle for longer than a set time, if they have no open
@@ -174,13 +257,16 @@ When a query cannot be interrupted (**Break**, ⌘.), use **Session › Terminat
 window's session in the database from a separate session (requires the ALTER SYSTEM privilege) and reconnects the
 window.
 
+### Connection console
+
 **Session › Connection console** opens a SQL Window assigned to the connection (one per connection). Its content is
-saved automatically and comes back when reopened, also after Pelikan is restarted — a good place for handy queries.
+saved automatically and comes back when reopened, also after Pelikan is restarted — a good place for handy queries you
+often use on a given database.
 
 ## Exporting and importing definitions
 
 **Session › Connections › Export Connection Definitions…** saves the definitions with their folders to a JSON file
-without passwords. **Import Connection Definitions…** loads them on another Mac; you enter the passwords on the first
+without passwords — e.g. to give a new team member a ready list of databases. **Import Connection Definitions…** loads them on another Mac; you enter the passwords on the first
 connection.
 
 **Session › Connections › Export Connections with Passwords…** saves the definitions together with the database and
@@ -188,7 +274,7 @@ SSH tunnel passwords — for example to move connections to a new Mac or to read
 another tool. The export requires confirmation by the Mac owner (Touch ID or password). Passwords can be **encrypted
 with a passphrase** (without the passphrase they cannot be recovered) or in **plain text** — Pelikan then warns once
 more, and anyone who has the file can read them. **Import Connection Definitions…** recognizes a file with passwords,
-asks for the passphrase if it is encrypted, saves the passwords in the Keychain and **deletes the file**.
+asks for the passphrase if it is encrypted, saves the passwords in the Keychain and **deletes the file**. ⚠️ Never e-mail a file with passwords or put it in a repository.
 
 ## Oracle pack licenses
 
@@ -196,4 +282,5 @@ AWR, ASH and ADDM reports require the paid Oracle Diagnostics Pack, and SQL Moni
 Tuning Pack. The first time you use such a feature, Pelikan asks which license the database has (*Diagnostics and Tuning
 Pack*, *Diagnostics Pack only*, *No license*) and remembers the answer in the connection definition (you change it on
 the **Advanced** tab). The feature also does not work when the database parameter `CONTROL_MANAGEMENT_PACK_ACCESS` does
-not allow it.
+not allow it. If you do not know which license your company has, ask the administrator — using a feature without a license breaches the
+agreement with Oracle.
