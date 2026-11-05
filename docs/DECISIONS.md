@@ -3825,3 +3825,11 @@ gotowych, dobrze ocenianych wzorców jasnych i ciemnych; „może znajdziesz got
   `EXEC SQL|ORACLE|TOOLS … ;` i bloki `EXEC SQL EXECUTE … END-EXEC;` leksowane jak SQL/PL/SQL (zmienne hosta `:x` jak
   zmienne wiązane). Pliki .pc, .pcc, .c i .h; kolorowanie całego tekstu przy każdej zmianie (pliki Pro*C są małe wobec
   progu, przy którym przyrostowe ma znaczenie). Gotowych motywów dla Pro*C nie ma — kolory z motywu.
+
+### D228 · 2026-11-05 — Karta Kolory: kliknięcie motywu włącza go od razu
+
+**Zgłoszenie właściciela:** „Wybrałem w ustawieniach i nic”. Kliknięcie motywu na liście tylko go zaznaczało (podgląd);
+włączały go dopiero przyciski „Użyj w trybie jasnym/ciemnym”, a przycisk trybu innego niż bieżący nie zmienia nic
+widocznego. Teraz kliknięcie motywu włącza go od razu w trybie, w którym jest system (jak wybór motywu w Xcode),
+a przyciski przypisują motyw drugiemu trybowi. Karta mówi, w którym trybie jest system, i ostrzega, gdy własny
+kolor tekstu albo tła z Edytor › Kolory czcionek przesłania motyw.

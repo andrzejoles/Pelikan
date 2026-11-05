@@ -89909,6 +89909,62 @@
         }
       }
     },
+    "System jest teraz w trybie ciemnym — kliknięty motyw działa od razu w trybie ciemnym." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The system is in dark mode now — a theme you click applies at once in dark mode."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das System ist jetzt im dunklen Modus — ein angeklicktes Schema gilt sofort im dunklen Modus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El sistema está ahora en modo oscuro: el tema en el que haga clic se aplica al instante en modo oscuro."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Система зараз у темному режимі — клацнута тема одразу діє в темному режимі."
+          }
+        }
+      }
+    },
+    "System jest teraz w trybie jasnym — kliknięty motyw działa od razu w trybie jasnym." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The system is in light mode now — a theme you click applies at once in light mode."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das System ist jetzt im hellen Modus — ein angeklicktes Schema gilt sofort im hellen Modus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El sistema está ahora en modo claro: el tema en el que haga clic se aplica al instante en modo claro."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Система зараз у світлому режимі — клацнута тема одразу діє у світлому режимі."
+          }
+        }
+      }
+    },
     "Systemowa (SF Pro)" : {
       "localizations" : {
         "en" : {
@@ -115133,6 +115189,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eigen [µs]"
+          }
+        }
+      }
+    },
+    "Własny kolor tekstu lub tła z karty Edytor › Kolory czcionek przesłania motyw — przycisk Systemowe tam go usuwa." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A custom text or background color in Editor › Font colors overrides the theme — the System button there removes it."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine eigene Text- oder Hintergrundfarbe unter Editor › Schriftfarben überdeckt das Schema — die Schaltfläche System dort entfernt sie."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un color propio de texto o fondo en Editor › Colores de fuente tapa el tema; el botón Del sistema de allí lo quita."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Власний колір тексту або тла в Редактор › Кольори шрифтів перекриває тему — кнопка Системні там його прибирає."
           }
         }
       }

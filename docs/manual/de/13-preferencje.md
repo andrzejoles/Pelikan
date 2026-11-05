@@ -490,7 +490,10 @@ Ein ✓ markiert ein verwendetes Schema. **eigenes** markiert ein Schema, das Si
 ### Im hellen Modus verwenden / Im dunklen Modus verwenden
 
 macOS hat einen hellen und einen dunklen Modus (Systemeinstellungen › Erscheinungsbild oder **Allgemein › Darstellung**
-in Pelikan). Pelikan merkt sich **für jeden Modus ein eigenes Schema**. *Standard:* Pelikan hell und Pelikan dunkel.
+in Pelikan). Pelikan merkt sich **für jeden Modus ein eigenes Schema**. **Ein Klick auf ein Schema in der Liste schaltet es sofort in dem
+Modus ein, in dem das System gerade ist** (die Zeile unter den Schaltflächen zeigt, in welchem) — beim Durchsehen der
+Liste sehen Sie die Farben gleich in den offenen Fenstern. **Im hellen Modus verwenden** und **Im dunklen Modus
+verwenden** weisen das ausgewählte Schema einem Modus zu, auch dem gerade nicht sichtbaren. *Standard:* Pelikan hell und Pelikan dunkel.
 Wechselt das System den Modus (z. B. abends im automatischen Modus), wechselt der Editor von selbst zum anderen
 Schema. Die Farben ändern sich sofort in allen offenen Fenstern, ohne Dateien neu zu öffnen.
 
@@ -500,8 +503,8 @@ verwendet wird.
 
 ### Vorschau
 
-Der Umschalter **SQL / PL/SQL / Pro*C** zeigt Beispielcode in den Farben des ausgewählten Schemas. Das Schema muss
-nicht verwendet werden. So können Sie Schemata vergleichen, bevor Sie eines wählen.
+Der Umschalter **SQL / PL/SQL / Pro*C** zeigt Beispielcode in den Farben des ausgewählten Schemas, auch Pro*C-Code,
+den Sie gerade nicht geöffnet haben.
 
 ### Farbkategorien
 

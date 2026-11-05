@@ -494,7 +494,10 @@ coinciden con lo escrito.
 ### Usar en modo claro / Usar en modo oscuro
 
 macOS tiene un modo claro y uno oscuro (Ajustes del Sistema › Apariencia, o **General › Aspecto** en Pelikan). Pelikan
-recuerda **un tema distinto para cada modo**. *Por defecto:* Pelikan claro y Pelikan oscuro. Cuando el sistema cambia de
+recuerda **un tema distinto para cada modo**. **Al hacer clic en un tema de la lista, se activa al instante en el modo en
+que está ahora el sistema** (la línea bajo los botones indica cuál), así que al recorrer la lista ve los colores enseguida
+en las ventanas abiertas. **Usar en modo claro** y **Usar en modo oscuro** asignan el tema seleccionado a un modo, también
+al que no se ve ahora. *Por defecto:* Pelikan claro y Pelikan oscuro. Cuando el sistema cambia de
 modo (por ejemplo, por la tarde con el modo automático), el editor pasa solo al otro tema. Los colores cambian al
 instante en todas las ventanas abiertas, sin volver a abrir los archivos.
 
@@ -503,8 +506,8 @@ independiente del resto de la ventana. La línea bajo los botones muestra qué t
 
 ### Vista previa
 
-El selector **SQL / PL/SQL / Pro*C** muestra código de ejemplo con los colores del tema seleccionado. El tema no tiene
-que estar en uso. Así puede comparar temas antes de elegir uno.
+El selector **SQL / PL/SQL / Pro*C** muestra código de ejemplo con los colores del tema seleccionado, también código Pro*C
+que no tenga abierto.
 
 ### Categorías de colores
 

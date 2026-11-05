@@ -459,7 +459,10 @@ match what you type.
 ### Use in Light Mode / Use in Dark Mode
 
 macOS has a light and a dark mode (System Settings › Appearance, or **General › Appearance** in Pelikan). Pelikan
-remembers **a separate theme for each mode**. *Default:* Pelikan light and Pelikan dark. When the system switches mode
+remembers **a separate theme for each mode**. **Clicking a theme in the list applies it at once in the mode the system
+is in now** (the line under the buttons tells you which), so while browsing the list you see the colors in open
+windows right away. **Use in Light Mode** and **Use in Dark Mode** assign the selected theme to a chosen mode — also the
+one not visible now. *Default:* Pelikan light and Pelikan dark. When the system switches mode
 (for example in the evening with automatic mode), the editor switches to the other theme by itself. Colors change at
 once in all open windows, without reopening files.
 
@@ -468,8 +471,8 @@ independent of the rest of the window. The line under the buttons shows which th
 
 ### Preview
 
-The **SQL / PL/SQL / Pro*C** switch shows sample code in the colors of the selected theme. The theme does not have to
-be in use. This way you can compare themes before choosing one.
+The **SQL / PL/SQL / Pro*C** switch shows sample code in the colors of the selected theme, including Pro*C code you
+may not have open.
 
 ### Color categories
 

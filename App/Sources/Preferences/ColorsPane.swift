@@ -35,6 +35,12 @@ struct ColorsPane: View {
                     Section(L10n.tr("Ciemne")) { ForEach(visible(dark: true)) { row($0).tag(Optional($0.id)) } }
                 }
                 .listStyle(.bordered(alternatesRowBackgrounds: false))
+                // Kliknięcie motywu włącza go od razu w trybie, w którym jest teraz system (podgląd na żywo w edytorach);
+                // drugi tryb — przyciskami „Użyj w trybie…”.
+                .onChange(of: selectedID) { _, id in
+                    guard let id else { return }
+                    if NSApp.effectiveAppearance.isDark { workspace.settings.syntaxSchemeDark = id } else { workspace.settings.syntaxSchemeLight = id }
+                }
                 HStack {
                     Button(L10n.tr("Importuj…")) { workspace.perform("editor.syntaxScheme.import") }
                         .help(L10n.tr("Motyw z pliku: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json"))
@@ -108,6 +114,15 @@ struct ColorsPane: View {
             .controlSize(.small)
             Text(L10n.tr("W trybie jasnym: \(settings.activeSyntaxScheme(dark: false).name) · w trybie ciemnym: \(settings.activeSyntaxScheme(dark: true).name)"))
                 .font(.uiSecondary).foregroundStyle(.secondary)
+            Text(NSApp.effectiveAppearance.isDark
+                 ? L10n.tr("System jest teraz w trybie ciemnym — kliknięty motyw działa od razu w trybie ciemnym.")
+                 : L10n.tr("System jest teraz w trybie jasnym — kliknięty motyw działa od razu w trybie jasnym."))
+                .font(.uiSecondary).foregroundStyle(.secondary)
+            if !settings.editorColors.isSystem {
+                Label(L10n.tr("Własny kolor tekstu lub tła z karty Edytor › Kolory czcionek przesłania motyw — przycisk Systemowe tam go usuwa."),
+                      systemImage: "exclamationmark.triangle")
+                    .font(.uiSecondary).foregroundStyle(.orange)
+            }
             Picker("", selection: $sample) {
                 ForEach(ColorsPreview.Sample.allCases, id: \.self) { Text($0.title).tag($0) }
             }
