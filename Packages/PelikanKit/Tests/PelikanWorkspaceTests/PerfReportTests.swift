@@ -96,7 +96,7 @@ struct PerfReportTests {
     }
 
     @Test("Baza 19c właściciela (D226): uprawnienia systemowe raportu statystyk, błąd Oracle w treści, pusty ASH Analytics")
-    func emptyAndRefusedReports() throws {
+    func emptyAndRefusedReports() async throws {
         // Bez znacznika SESSION_PRIVS — uprawnień systemowych nie sprawdzono, bez blokady.
         #expect(PerfReportRunner.missingPrivilege("perf.statsOps", accessible: ["DBMS_STATS"], user: "PERF_USER") == nil)
         let checked: Set<String> = ["DBMS_STATS", PerfReportRunner.privilegesChecked, PerfReportRunner.privilegesChecked + "ANALYZE ANY"]
@@ -105,6 +105,10 @@ struct PerfReportTests {
         #expect(PerfReportRunner.missingPrivilege("perf.statsOps", accessible: checked.union([PerfReportRunner.privilegesChecked + "ANALYZE ANY DICTIONARY"]), user: "PERF_USER") == nil)
         #expect(PerfReportRunner.missingPrivilege("perf.awr", accessible: checked.union(["DBMS_WORKLOAD_REPOSITORY"]), user: "PERF_USER") == nil)
 
+        // Wykonanie bez ANALYZE ANY DICTIONARY — zablokowane przed wywołaniem raportu (SESSION_PRIVS atrapy jest puste).
+        let s = PerfCaptureSession()
+        await #expect(throws: CommandError.self) { _ = try await PerfReportRunner.run(PerfReportRequest(reportID: "perf.statsOps", format: .html), availability: nil, license: .all, in: s) }
+        #expect(s.last(containing: "report_stats_operations") == nil && s.last(containing: "session_privs") != nil)
         #expect(PerfReportRunner.embeddedError("<report>ORA-20000: Insufficient privileges</report>\n") == "ORA-20000: Insufficient privileges")
         #expect(PerfReportRunner.embeddedError("<report><body>x</body></report>") == nil)
         #expect(PerfReportRunner.embeddedError("plain text") == nil)

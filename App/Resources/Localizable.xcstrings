@@ -57317,30 +57317,30 @@
         }
       }
     },
-    "Oracle odmówił raportu (%@) — raport wymaga uprawnień %@; administrator bazy może je nadać: %@" : {
+    "Oracle odmówił raportu (%@) — raport wymaga uprawnień %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oracle refused the report (%@) — the report requires the privileges %@; a database administrator can grant them: %@"
+            "value" : "Oracle refused the report (%@) — the report requires the privileges %@"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oracle hat den Bericht verweigert (%@) — der Bericht erfordert die Berechtigungen %@; ein Datenbankadministrator kann sie erteilen: %@"
+            "value" : "Oracle hat den Bericht verweigert (%@) — der Bericht erfordert die Berechtigungen %@"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oracle rechazó el informe (%@) — el informe requiere los privilegios %@; un administrador de la base de datos puede concederlos: %@"
+            "value" : "Oracle rechazó el informe (%@) — el informe requiere los privilegios %@"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oracle відмовив у звіті (%@) — звіт потребує привілеїв %@; адміністратор бази даних може їх надати: %@"
+            "value" : "Oracle відмовив у звіті (%@) — звіт потребує привілеїв %@"
           }
         }
       }

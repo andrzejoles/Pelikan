@@ -158,6 +158,17 @@ public enum PerfReportRunner {
         }
         let dbid = SQLProbe.dbid(major)
         for p in packages(q.reportID) { try await ManagementPacks.requireExecute(p, in: s, report: report.title) }
+        // Uprawnienia systemowe (SESSION_PRIVS, także z ról) — bez nich Oracle zwraca zamiast raportu ORA-20000.
+        let privs = systemPrivileges(q.reportID)
+        if !privs.isEmpty {
+            let list = privs.map { "'\($0)'" }.joined(separator: ", ")
+            if let (_, rows) = try? await s.queryAll("select privilege from session_privs where privilege in (\(list))", limit: 100) {
+                let have = Set([privilegesChecked] + rows.compactMap { $0.first?.displayText }.map { privilegesChecked + $0 })
+                if let reason = missingPrivilege(q.reportID, accessible: have.union(packages(q.reportID)), user: s.info.sessionUser) {
+                    throw CommandError.notAvailable(reason)
+                }
+            }
+        }
         let id = q.sqlID ?? ""
         let inst = q.instance ?? availability?.instance
         var content: String
@@ -320,10 +331,8 @@ public enum PerfReportRunner {
             throw CommandError.invalidArgument("report", q.reportID)
         }
         if let error = embeddedError(content) {
-            let privs = systemPrivileges(q.reportID)
             if error.contains("ORA-20000"), !privs.isEmpty {
-                let grants = privs.map { "GRANT \($0) TO \(ManagementPacks.grantee(s.info.sessionUser));" }.joined(separator: " ")
-                throw CommandError.notAvailable(L10n.tr("Oracle odmówił raportu (\(error)) — raport wymaga uprawnień \(privs.joined(separator: ", ")); administrator bazy może je nadać: \(grants)"))
+                throw CommandError.notAvailable(L10n.tr("Oracle odmówił raportu (\(error)) — raport wymaga uprawnień \(privs.joined(separator: ", "))"))
             }
             throw CommandError.notAvailable(L10n.tr("Oracle zwrócił zamiast raportu błąd: \(error)"))
         }
