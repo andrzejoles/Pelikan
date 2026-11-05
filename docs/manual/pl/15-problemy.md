@@ -24,6 +24,9 @@ ochrona** i kliknij **Otwórz mimo to** (zobacz rozdział *Wprowadzenie*).
   **Ustawienia › Oracle › Oracle Net i Oracle Wallet**) albo użyj adresu `host:port/usługa`.
 - **ORA-01017:** błędne hasło — Pelikan zapyta o nie ponownie; zaznacz zapamiętanie, żeby zastąpić hasło w Pęku
   kluczy.
+- **ORA-12541 / ORA-12170:** pod podanym adresem nikt nie odpowiada albo połączenie nie dochodzi — sprawdź host i port
+  (zwykle 1521), VPN i to, czy baza działa.
+- **ORA-12514:** serwer działa, ale nie zna podanej usługi — sprawdź nazwę usługi po ukośniku w `host:port/usługa`.
 - **ORA-28001:** hasło wygasło — Pelikan pokaże okno zmiany hasła.
 - **Oracle Wallet:** pole **Baza** musi być dokładnie aliasem zapisanym w portfelu, a portfel musi mieć plik
   `cwallet.sso` (automatyczne logowanie). Stan portfela widać w **Ustawienia › Oracle**. Zmiany w tej sekcji działają
@@ -96,6 +99,26 @@ Dziennik nigdy nie zawiera haseł, treści poleceń SQL ani danych z bazy. Nazwy
 plików są domyślnie ukryte albo zastąpione skrótem (te same nazwy mają ten sam skrót). W **Ustawienia › Ogólne ›
 Dziennik aplikacji** wybierzesz zakres wpisów (*Ostrzeżenia i błędy*, *Zdarzenia*, *Szczegóły — diagnostyka*) i
 możesz włączyć jawne nazwy — przydaje się, gdy szukasz przyczyny problemu na własnym komputerze.
+
+## Najczęstsze błędy Oracle przy nauce
+
+Komunikat błędu Oracle zaczyna się kodem `ORA-nnnnn`. **F1** na kodzie w edytorze albo dwukrotne kliknięcie błędu
+kompilacji otwiera jego opis w dokumentacji Oracle. Najczęstsze błędy na początku pracy:
+
+| Błąd | Co znaczy | Co zrobić |
+|---|---|---|
+| ORA-00942 | tabela lub widok nie istnieje | sprawdź nazwę i schemat (`schemat.tabela`), czy jesteś na właściwym połączeniu i czy masz uprawnienie SELECT |
+| ORA-00904 | nieprawidłowy identyfikator | literówka w nazwie kolumny albo kolumna z innej tabeli niż w FROM |
+| ORA-00933 / ORA-00936 | polecenie SQL niepoprawnie zakończone / brak wyrażenia | brakujący przecinek, nawias albo słowo kluczowe; średnik w środku polecenia |
+| ORA-01403 | nie znaleziono danych (NO_DATA_FOUND) | `SELECT … INTO` nie znalazł wiersza — obsłuż wyjątek albo sprawdź warunek |
+| ORA-01422 | `SELECT … INTO` zwrócił więcej niż jeden wiersz (TOO_MANY_ROWS) | zawęź warunek WHERE |
+| ORA-00001 | naruszenie unikalności | wstawiasz wartość, która już jest w kolumnie z kluczem głównym albo unikalnym |
+| ORA-02291 / ORA-02292 | brak wiersza nadrzędnego / są wiersze podrzędne | klucz obcy: najpierw dodaj wiersz nadrzędny (np. dział), a usuwaj najpierw podrzędne |
+| ORA-01722 | nieprawidłowa liczba | porównujesz tekst z liczbą albo tekst nie da się zamienić na liczbę |
+| ORA-06502 | błąd liczby lub wartości w PL/SQL | wartość za długa dla zmiennej (np. `VARCHAR2(10)`) albo zła konwersja |
+| ORA-00054 / czekanie bez końca | zasób zajęty — wiersz albo tabela zablokowana przez inną sesję | ktoś (także Ty w innym oknie) ma niezatwierdzoną zmianę; zobacz ćwiczenie z blokadą w rozdziale 10 |
+| ORA-04068 | stan pakietu został wyczyszczony | pakiet zrekompilowano w trakcie Twojej sesji — wykonaj polecenie ponownie |
+| PLS-00201 | identyfikator musi być zadeklarowany | nazwa zmiennej, procedury albo pakietu jest nieznana albo brak uprawnienia EXECUTE |
 
 ## Znane ograniczenia
 
