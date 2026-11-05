@@ -104,7 +104,7 @@ zaznaczone** i **Usuń zaznaczone…**.
 > 2. Prawym klikiem na **PEL_EMPLOYEES** wybierz **DDL**.
 >    *Wynik:* nowe okno z poleceniem `CREATE TABLE`, które odtworzy tabelę — tak sprawdzisz dokładną definicję obiektu.
 > 3. Prawym klikiem na **PEL_EMPLOYEES** wybierz **Generuj kod › INSERT**.
->    *Wynik:* w edytorze pojawia się polecenie INSERT ze wszystkimi kolumnami — wystarczy uzupełnić wartości.
+>    *Wynik:* pojawia się polecenie INSERT ze wszystkimi kolumnami — wystarczy uzupełnić wartości.
 >
 > ⚠️ **Na co uważać.** **Usuń obiekt…** i **Rekompiluj** działają od razu na bazie (po potwierdzeniu). Usunięcia tabeli
 > nie cofniesz ROLLBACKiem — pomóc może tylko Kosz (niżej), jeśli jest włączony w bazie.
@@ -227,7 +227,8 @@ z danymi.
 nimi. To najszybszy sposób, żeby zrozumieć nieznany schemat.
 
 > **Ćwiczenie: diagram schematu ćwiczeniowego.**
-> 1. Wybierz **Narzędzia › Diagram › Diagram ER ze schematu…** i jako maskę podaj `PEL%`.
+> 1. Wybierz **Narzędzia › Diagram › Diagram ER ze schematu…**. W pierwszym pytaniu zostaw podpowiedziany schemat
+>    (Twój), w drugim — **Maska nazw tabel (LIKE)** — wpisz `PEL%`.
 >    *Wynik:* diagram z tabelami `PEL_DEPARTMENTS` i `PEL_EMPLOYEES` połączonymi linią klucza obcego, oraz linią
 >    `PEL_EMPLOYEES` do samej siebie (kierownik pracownika).
 
