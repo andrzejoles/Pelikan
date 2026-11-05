@@ -2,6 +2,20 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.21.1 — motywy kolorowania składni, kolorowanie Pro*C
+
+- **98 motywów kolorów:** domyślny Pelikan, Klasyczny i 95 znanych motywów jasnych i ciemnych (Solarized, Gruvbox,
+  Dracula, Monokai, Nord, One, GitHub, Catppuccin, Tokyo Night, Rosé Pine, Kanagawa, Dark+ i inne), z czytelnym
+  kontrastem. Osobny motyw dla trybu jasnego i ciemnego systemu — **Ustawienia › Kolory**.
+- **Nowe kategorie kolorów:** typy danych, funkcje wbudowane, pakiety `DBMS_…` i dyrektywy kompilacji.
+- **Własne motywy:** „Zapisz jako własny…” i zmiana koloru, pogrubienia i kursywy każdej kategorii oraz kolorów
+  edytora; import motywów base16/base24, Xcode, TextMate i Visual Studio Code, eksport do pliku.
+- **Pro*C:** pliki `.pc`, `.c` i `.h` kolorowane jak C, a wstawki `EXEC SQL` i bloki `EXECUTE … END-EXEC` jak SQL
+  i PL/SQL.
+- **Raporty wydajności:** raport operacji statystyk bez uprawnień ANALYZE ANY / ANALYZE ANY DICTIONARY jest zablokowany
+  z poleceniem GRANT; błąd Oracle zwrócony zamiast raportu jest komunikatem; ASH Analytics bez danych wskazuje
+  Performance Hub zamiast pustej strony.
+
 ## 1.20.6 — instrukcja dla początkujących
 
 - **Instrukcja przebudowana dla juniora:** każda funkcja ma wyjaśnienie, do czego służy i kiedy jej użyć, ćwiczenie krok
