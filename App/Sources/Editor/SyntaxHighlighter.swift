@@ -91,6 +91,11 @@ enum SyntaxTheme {
         }
     }
 
+    /// Kroje motywu (pogrubienie, kursywa kategorii) — ich zmiana wymaga ponownego kolorowania, zmiana koloru nie.
+    nonisolated static func fontSignature(_ s: SyntaxScheme) -> String {
+        SyntaxStyle.allCases.map { st in let t = s.style(st); return "\(t.bold ? 1 : 0)\(t.italic ? 1 : 0)" }.joined()
+    }
+
     /// Krój z pogrubieniem/kursywą stylu w motywie bieżącego trybu (nil — bez zmiany kroju).
     @MainActor static func font(for style: SyntaxStyle, base: NSFont) -> NSFont? {
         let t = current.style(style)
@@ -123,21 +128,20 @@ final class SyntaxHighlighter {
     private var fontsBase: NSFont?
     private var fontsScheme: String?
 
-    private func styledFont(_ style: SyntaxStyle, base: NSFont) -> NSFont? {
-        // Klucz: motyw i jego kroje — zmiana pogrubienia/kursywy w motywie własnym (ten sam identyfikator) też odświeża.
+    /// Bufor krojów odświeżany raz na kolorowanie (nie przy każdym tokenie): klucz — motyw i jego kroje.
+    private func refreshFonts(_ base: NSFont) {
         let cur = SyntaxTheme.current
-        let key = cur.id + "|" + SyntaxStyle.allCases.map { st in let t = cur.style(st); return "\(t.bold ? 1 : 0)\(t.italic ? 1 : 0)" }.joined()
-        if fontsBase != base || fontsScheme != key {
-            fonts = [:]
-            fontsBase = base
-            fontsScheme = key
-            for s in SyntaxStyle.allCases { if let f = SyntaxTheme.font(for: s, base: base) { fonts[s] = f } }
-        }
-        return fonts[style]
+        let key = cur.id + "|" + SyntaxTheme.fontSignature(cur)
+        guard fontsBase != base || fontsScheme != key else { return }
+        fonts = [:]
+        fontsBase = base
+        fontsScheme = key
+        for s in SyntaxStyle.allCases { if let f = SyntaxTheme.font(for: s, base: base) { fonts[s] = f } }
     }
 
     /// Pełne przeliczenie (otwarcie pliku, zmiana całego tekstu albo motywu).
     func highlightAll(_ storage: NSTextStorage, font: NSFont) {
+        refreshFonts(font)
         let text = Self.utf16(of: storage)
         storage.beginEditing()
         storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
@@ -167,6 +171,7 @@ final class SyntaxHighlighter {
 
     /// Po edycji: `editedRange` (w nowym tekście) i `delta` (zmiana długości).
     func highlight(_ storage: NSTextStorage, editedRange: NSRange, delta: Int, font: NSFont) {
+        refreshFonts(font)
         let text = Self.utf16(of: storage)
         storage.beginEditing()
         if proC {
@@ -189,7 +194,7 @@ final class SyntaxHighlighter {
 
     private func apply(_ style: SyntaxStyle, _ range: NSRange, in storage: NSTextStorage, font: NSFont) {
         if style != .plain { storage.addAttribute(.foregroundColor, value: SyntaxTheme.color(for: style), range: range) }
-        if let f = styledFont(style, base: font) { storage.addAttribute(.font, value: f, range: range) }
+        if let f = fonts[style] { storage.addAttribute(.font, value: f, range: range) }
     }
 
     /// Bufor UTF-16 tekstu (getCharacters = kopia pamięci, bez iterowania po znakach mostkowanego NSString).

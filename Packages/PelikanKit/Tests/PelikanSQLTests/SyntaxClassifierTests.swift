@@ -58,5 +58,10 @@ struct SyntaxClassifierTests {
         var n: [String: SyntaxStyle] = [:]
         for sp in ProCLexer.spans(named) { n[String(decoding: named[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
         #expect(n["return"] == .keyword && n["2"] == .number)
+        // Komentarz i etykieta przed BEGIN — nadal blok do END-EXEC.
+        let labeled = Array("EXEC SQL EXECUTE\n  -- aktualizacja\n  <<blk>> BEGIN x := 1; y := 2; END;\nEND-EXEC;\nreturn 3;\n".utf16)
+        var b: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(labeled) { b[String(decoding: labeled[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(b["END-EXEC"] == .keyword && b["y"] == nil && b["return"] == .keyword && b["END"] == .keyword)
     }
 }

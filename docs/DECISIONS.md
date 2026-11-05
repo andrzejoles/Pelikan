@@ -3840,9 +3840,11 @@ kolor tekstu albo tła z Edytor › Kolory czcionek przesłania motyw.
   `EXECUTE BEGIN|DECLARE …` (wcześniej cały dalszy kod C był kolorowany jak SQL).
 - **Podkreślenia diagnostyk** nakładane od nowa po ponownym kolorowaniu przy zmianie motywu i trybu systemu (przy
   edycji — jak dotąd: analiza po zmianie). Kroje (pogrubienie, kursywa) buforowane według motywu i jego krojów —
-  zmiana pogrubienia w aktywnym motywie własnym działa od razu. `EXECUTE begin_stmt USING …` nie jest blokiem.
+  zmiana pogrubienia w aktywnym motywie własnym działa od razu; bufor odświeżany raz na kolorowanie, nie przy tokenie.
+  `EXECUTE begin_stmt USING …` nie jest blokiem, a komentarz albo etykieta `<<blk>>` przed BEGIN go nie przerywa.
+  Zakresy diagnostyk nakładane po ponownym kolorowaniu tylko dla tekstu, dla którego je policzono.
 - **Tło w kolorze połączenia** liczone dynamicznie z tła motywu (wcześniej zostawało tło motywu z chwili otwarcia).
-- **Zmiana samego koloru** w motywie (przeciąganie w polu koloru) nie leksuje tekstu — tylko odświeża widoczny fragment;
+- **Zmiana samego koloru** w motywie (przeciąganie w polu koloru) nie leksuje tekstu — tylko unieważnia układ (TextKit 2 układa leniwie widoczny fragment);
   ponowne kolorowanie przy zmianie motywu, pogrubienia/kursywy albo trybu Pro*C. Otwarcie okna koloruje tekst raz.
 - **Import VS Code:** przecinek na końcu z komentarzem przed zamknięciem nie psuje JSONC.
 - **Podglądy kodu** odświeżają się po zmianie motywu i trybu systemu.

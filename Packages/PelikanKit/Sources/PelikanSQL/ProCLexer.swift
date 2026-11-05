@@ -120,7 +120,20 @@ public enum ProCLexer {
         var block = false
         if matches(k, "EXECUTE") {
             var j = k + 7
-            while j < end, text[j] == 32 || text[j] == 9 || text[j] == 10 || text[j] == 13 { j += 1 }
+            // Białe znaki, komentarze i etykiety <<nazwa>> przed BEGIN/DECLARE.
+            while j < end {
+                if text[j] == 32 || text[j] == 9 || text[j] == 10 || text[j] == 13 { j += 1 }
+                else if text[j] == 45, at(j + 1) == 45 { while j < end, text[j] != 10 { j += 1 } }
+                else if text[j] == 47, at(j + 1) == 42 {
+                    j += 2
+                    while j < end, !(text[j] == 42 && at(j + 1) == 47) { j += 1 }
+                    j += 2
+                } else if text[j] == 60, at(j + 1) == 60 {
+                    j += 2
+                    while j < end, !(text[j] == 62 && at(j + 1) == 62) { j += 1 }
+                    j += 2
+                } else { break }
+            }
             // Blok PL/SQL tylko po BEGIN albo DECLARE; `EXECUTE IMMEDIATE …;` i dynamiczny SQL `EXECUTE s USING …;`
             // kończą się średnikiem.
             func word(_ w: String) -> Bool {
