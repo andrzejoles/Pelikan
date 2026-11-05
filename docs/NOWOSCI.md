@@ -2,6 +2,12 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.21.2 — motyw kolorów włącza się kliknięciem
+
+- **Ustawienia › Kolory:** kliknięcie motywu na liście od razu włącza go w bieżącym trybie systemu (jasnym albo
+  ciemnym); przyciski „Użyj w trybie…” przypisują motyw drugiemu trybowi. Ostrzeżenie, gdy własny kolor tekstu
+  albo tła z karty Edytor przesłania motyw.
+
 ## 1.21.1 — motywy kolorowania składni, kolorowanie Pro*C
 
 - **98 motywów kolorów:** domyślny Pelikan, Klasyczny i 95 znanych motywów jasnych i ciemnych (Solarized, Gruvbox,

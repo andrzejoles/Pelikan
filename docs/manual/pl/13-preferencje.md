@@ -470,7 +470,10 @@ tekstu.
 ### Użyj w trybie jasnym / Użyj w trybie ciemnym
 
 macOS ma tryb jasny i ciemny (Ustawienia systemowe › Wygląd albo karta **Ogólne › Wygląd** w Pelikanie). Pelikan
-pamięta **osobny motyw dla każdego trybu**. *Domyślnie:* Pelikan jasny i Pelikan ciemny. Gdy system zmienia tryb
+pamięta **osobny motyw dla każdego trybu**. **Kliknięcie motywu na liście od razu włącza go w trybie, w którym
+jest teraz system** (napis pod przyciskami podpowiada, w którym), więc przeglądając listę, widzisz kolory od razu
+w otwartych oknach. Przyciski **Użyj w trybie jasnym** i **Użyj w trybie ciemnym** przypisują zaznaczony motyw
+wybranemu trybowi — także temu, którego teraz nie widać. *Domyślnie:* Pelikan jasny i Pelikan ciemny. Gdy system zmienia tryb
 (np. wieczorem przy trybie automatycznym), edytor sam przełącza się na drugi motyw. Kolory zmieniają się od razu we
 wszystkich otwartych oknach, bez ponownego otwierania plików.
 
@@ -479,8 +482,8 @@ okna. Wiersz pod przyciskami pokazuje, który motyw jest teraz w użyciu w każd
 
 ### Podgląd
 
-Przełącznik **SQL / PL/SQL / Pro*C** pokazuje przykład kodu w kolorach zaznaczonego motywu. Motyw nie musi być
-w użyciu. Tak możesz porównać motywy, zanim któryś wybierzesz.
+Przełącznik **SQL / PL/SQL / Pro*C** pokazuje przykład kodu w kolorach zaznaczonego motywu, także kodu Pro*C,
+którego nie masz akurat otwartego.
 
 ### Kategorie kolorów
 
