@@ -57345,34 +57345,6 @@
         }
       }
     },
-    "Oracle odmówił raportu (%@). %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Oracle refused the report (%@). %@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Oracle hat den Bericht verweigert (%@). %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Oracle rechazó el informe (%@). %@"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Oracle відмовив у звіті (%@). %@"
-          }
-        }
-      }
-    },
     "Oracle przechwytuje tylko bindy w WHERE/HAVING, bez LOB, LONG i typów obiektowych." : {
       "localizations" : {
         "en" : {
