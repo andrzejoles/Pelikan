@@ -178,7 +178,14 @@ public enum SQLProbe {
     public static func accessiblePackages(in s: any DatabaseSession) async -> Set<String>? {
         let names = PerfReportRunner.allPackages.map { "'\($0)'" }.joined(separator: ", ")
         guard let (_, rows) = try? await s.queryAll("select object_name from all_objects where owner = 'SYS' and object_type = 'PACKAGE' and object_name in (\(names))", limit: 100) else { return nil }
-        return Set(rows.compactMap { $0.first?.displayText })
+        var out = Set(rows.compactMap { $0.first?.displayText })
+        // Uprawnienia systemowe (także z ról) — oznaczone przedrostkiem, gdy SESSION_PRIVS dało się przeczytać.
+        let privs = PerfReportRunner.allSystemPrivileges.map { "'\($0)'" }.joined(separator: ", ")
+        if let (_, p) = try? await s.queryAll("select privilege from session_privs where privilege in (\(privs))", limit: 100) {
+            out.insert(PerfReportRunner.privilegesChecked)
+            for r in p { if let v = r.first?.displayText { out.insert(PerfReportRunner.privilegesChecked + v) } }
+        }
+        return out
     }
 
     /// SQL_ID polecenia o tym tekście w pamięci kursorów (SQL_TEXT to pierwsze 1000 znaków) — gdy SQL_ID policzony

@@ -3766,3 +3766,20 @@ użytkownika na poziomie junior, który może nie wiedzieć, do czego funkcja s�
   i kodem), kod wcięty w punkcie listy i numerację po przerwie (`start`); test pilnuje, by żaden rozdział nie zawierał
   nieobsłużonego Markdown ani odnośników do kotwic.
 
+
+### D226 · 2026-11-05 — Raporty wydajności po nadaniu EXECUTE na DBMS_WORKLOAD_REPOSITORY
+
+**Zlecenie właściciela:** powtórzyć przebieg raportów D223 na bazie 19c po nadaniu uprawnienia i naprawić błędy.
+Przebieg: 54 wywołania. Wszystkie 11 raportów wcześniej zablokowanych brakiem EXECUTE działa (AWR i ASH dla SQL, AWR
+globalny i dla RAC, porównanie AWR, ADDM, ASH, ASH Analytics). Wynik tylko lokalnie. Dwa raporty zgłaszały
+poprawny wynik bez danych:
+
+- **Raport operacji statystyk bez uprawnień:** DBMS_STATS.REPORT_STATS_OPERATIONS przy braku ANALYZE ANY DICTIONARY
+  zwraca zamiast raportu `<report>ORA-20000: Insufficient privileges</report>`. Pelikan sprawdza teraz przy otwarciu
+  okna uprawnienia systemowe (SESSION_PRIVS, także z ról) i blokuje raport z poleceniem GRANT. Każdy błąd Oracle
+  zwrócony jako treść raportu jest komunikatem, a nie raportem.
+- **ASH Analytics bez danych:** DBMS_WORKLOAD_REPOSITORY.ASH_REPORT_ANALYTICS w 19c zwraca sam szkielet. Zawiera
+  parametry i opis procesora, a `<body/>` jest puste, choć ASH ma próbki z tego okresu. Dopuszczalnych wartości
+  `report_level` dokumentacja nie podaje: wypróbowane ('ALL', nazwy wymiarów) kończą się ORA-13721. Pelikan rozpakowuje
+  dane raportu aktywnego (base64 + zlib) i przy pustym `<body/>` wskazuje Performance Hub, który ma kartę ASH
+  Analytics z danymi. Poza macOS (bez frameworku Compression) raport jest pokazywany jak dotąd.
