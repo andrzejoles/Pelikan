@@ -1,5 +1,15 @@
 # Test Window, debugger and profiler
 
+## What it is for
+
+Writing a program is half the job — you still have to check that it works. The **Test Window** calls a procedure or
+function with chosen parameters and shows what it returned. The **debugger** lets you execute a program line by line
+and watch variable values — the best way to understand someone else's code or find the cause of a bug. The
+**profiler** measures how much time each line takes — it shows where a program is slow.
+
+**When to use it:** the Test Window — after every change of a program; the debugger — when a program gives a wrong
+result and you do not know why; the profiler — when a program works correctly but too slowly.
+
 ## Test Window
 
 The Test Window runs a PL/SQL block with bind variables and lets you debug and profile it. The simplest way to open it
@@ -14,6 +24,22 @@ You open an empty window with **File › New › Test Window**.
    yellow. The status bar shows the execution time.
 3. Commit or roll back the changes: F10 / ⇧F10 (the **AutoCommit after Test Window execution** option in **Settings ›
    SQL Window** commits automatically).
+
+> **Exercise: test a function and a procedure.**
+> 1. In the Object Browser expand the **PEL_EMP_API** package, right-click the **GET_SALARY** function and choose
+>    **Test**.
+>    *Result:* a Test Window (letter **T**) with the block `begin :result := ….pel_emp_api.get_salary(p_emp_id =>
+>    :p_emp_id); end;` and a table of the variables `result` and `p_emp_id`.
+> 2. In the variables table type `1` as the value of `p_emp_id` and press **F8**.
+>    *Result:* `result` = 12000, highlighted in yellow (the value changed).
+> 3. Type `999` and press **F8** again.
+>    *Result:* error `ORA-01403` — no data found (the NO_DATA_FOUND exception), and the **Error stack** tab shows the
+>    line in the package where it occurred.
+> 4. Open **Test** in the same way for the **RAISE_SALARY** procedure, type `p_emp_id` = 2, `p_percent` = 10 and press
+>    **F8**.
+>    *Result:* no error; the status bar shows an open transaction. The SQL Window (a separate session) still sees the
+>    old salary of employee 2 — it will see the new one only after COMMIT in the Test Window.
+> 5. Press **⇧F10** (ROLLBACK) so as not to leave the change in the database.
 
 The other tabs:
 
@@ -69,6 +95,29 @@ The debugger uses the Oracle DBMS_DEBUG package and works on 19c–26ai database
 
 Focus stays in the main window, so you can step with shortcuts while looking at the code.
 
+> **Exercise: follow a loop in the debugger.**
+>
+> Requires the `DEBUG CONNECT SESSION` privilege (check **Debug › Debugger Privileges…**).
+>
+> 1. In the Object Browser select the **PEL_EMP_API** package and choose **Tools › Object › Add debug information**.
+>    *Result:* the package is recompiled with debug information.
+> 2. Right-click **PRINT_DEPARTMENT**, choose **Test** and type `p_dept_id` = 20.
+> 3. Choose **Debug › Start debugging** (F9).
+>    *Result:* the **Debugger** window opens and execution stops on the first line of the block.
+> 4. Press **⌃N** (step into).
+>    *Result:* the debugger enters the package body, the `print_department` procedure.
+> 5. Keep pressing **⌃O** (step over) and watch the **Variables** tab.
+>    *Result:* with each turn of the loop `l_total` grows, and the record `r` shows the next employee. Hover the mouse
+>    over `l_total` in the code — a tooltip shows its value.
+> 6. Click the margin next to the line `dbms_output.put_line('Razem: ' || l_total);` (a breakpoint) and press **⌃R**
+>    (continue).
+>    *Result:* the debugger stops on that line; `l_total` = 30200.
+> 7. Press **⌃R** once more.
+>    *Result:* the program ends, and the **Output** tab of the Test Window shows the list of employees and the total.
+>
+> ⚠️ **Watch out.** The debugged session is paused — it holds locks and an open transaction. Do not leave the debugger
+> paused for long on a shared database; end it with **⇧F9**. Do not debug on production.
+
 ### Variables, watches, stack
 
 - **Variables** — local, parameters, package globals (private and public), records, collections and objects as a tree,
@@ -104,6 +153,12 @@ be one breakpoint per line.
 
 utPLSQL tests can also be debugged: **Debug › utPLSQL: debug test under cursor**.
 
+> **Exercise: a conditional breakpoint.**
+> 1. In the **Debug › Breakpoints…** window select the breakpoint from the previous exercise (or set a new one on the
+>    line `l_total := l_total + r.salary;`) and type `r.salary > 10000` in the **Condition** column.
+> 2. Start debugging (F9) and press **⌃R**.
+>    *Result:* the debugger stops only for Anna Nowak (12000) — it skips the other employees.
+
 ## Profiler
 
 1. On the **Profiler** tab of the Test Window, choose the kind in the **Profiler on execution** field: **Line
@@ -113,6 +168,9 @@ utPLSQL tests can also be debugged: **Debug › utPLSQL: debug test under cursor
 3. The **Profiler** tab shows the report: for the line profiler — the time, number of executions and share of each line
    with a bar chart; for the hierarchical one — functions with their own time and time including calls, and the call
    tree. You set the time unit and the share threshold on this tab.
+
+**How to read the report:** the lines with the largest share of time are the ones worth speeding up. Often they are SQL
+queries executed in a loop — instead of a thousand single queries, one query for all rows is better.
 
 The **Runs** menu on the tab (and **Debug › Profiler runs**) opens the reports of earlier runs. Pelikan creates
 missing profiler tables in your schema (on a production connection after confirmation, on a read-only connection — not
