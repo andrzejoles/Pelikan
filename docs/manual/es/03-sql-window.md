@@ -1,5 +1,17 @@
 # SQL Window y cuadrícula de resultados
 
+## Para qué sirve
+
+En la **SQL Window** hablas con la base de datos: escribes una sentencia SQL (p. ej. una consulta `SELECT`), la ejecutas y
+miras el resultado. Es la ventana más usada de Pelikan: en ella compruebas datos, corriges una fila, preparas un informe o
+ejecutas un script de despliegue.
+
+**Cuándo usarla:** siempre que quieras ejecutar SQL o un bloque PL/SQL corto. Para escribir paquetes y procedimientos
+sirve la Program Window (capítulo 6), para probar programas con parámetros la Test Window (capítulo 7) y para scripts de
+SQL*Plus con `SET`, `SPOOL`, `PROMPT` la consola SQL*Plus (capítulo 4).
+
+Los ejercicios de este capítulo usan el esquema de práctica del capítulo 1.
+
 La SQL Window sirve para ejecutar consultas y scripts. El resultado de cada consulta aparece en una pestaña aparte bajo
 el editor, y los mensajes de la base de datos y la salida de DBMS_OUTPUT, en la pestaña **Output**. Abres una ventana
 nueva con **Archivo › Nuevo › SQL Window** (⌘N); la ventana trabaja en la conexión principal o en la conexión elegida en
@@ -32,6 +44,26 @@ operaciones de la base de datos no responden a la interrupción), usa **Sesión 
 
 Pelikan nunca confirma cambios automáticamente (la opción **AutoCommit de sentencias SQL** de **Ajustes › SQL
 Window** está desactivada por omisión). La barra de estado indica una transacción abierta («● transacción abierta»).
+
+> **Ejercicio: una sentencia o todo el script.**
+> 1. Abre una SQL Window nueva (⌘N) y escribe tres consultas, cada una en su línea:
+>
+>    ```sql
+>    SELECT * FROM pel_departments;
+>    SELECT * FROM pel_employees WHERE dept_id = 20;
+>    SELECT COUNT(*) FROM pel_employees;
+>    ```
+>
+> 2. Haz clic en la segunda línea y pulsa **F8**.
+>    *Resultado:* solo se ejecuta la segunda consulta: una pestaña de resultado con los tres empleados del departamento
+>    20 (AutoSelect).
+> 3. Pulsa **⇧⌘↩** (ejecutar al contrario de AutoSelect).
+>    *Resultado:* se ejecutan las tres consultas; bajo el editor hay tres pestañas de resultados.
+> 4. Selecciona con el ratón las dos primeras líneas y pulsa **F8**.
+>    *Resultado:* se ejecutan las dos consultas seleccionadas: la selección siempre tiene prioridad sobre AutoSelect.
+>
+> ⚠️ **Atención.** Con AutoSelect desactivado, F8 sin selección ejecuta todo el script, incluidas las sentencias
+> `DELETE` o `DROP` que dejaste en la ventana «para luego». Deja en la ventana solo lo que quieres ejecutar.
 
 ## Contenido del código
 
@@ -66,6 +98,24 @@ Los valores de las variables se recuerdan en la ventana. El botón **&** de la b
 Sustitución de variables**) desactiva la sustitución cuando el texto contiene los caracteres `&` y `:` con otro
 significado.
 
+**Para qué sirve:** una variable permite escribir una consulta una vez y ejecutarla con valores distintos, sin reescribir
+la condición. Las **variables de enlace** (`:nombre`) son además más seguras y rápidas para la base que pegar los valores
+en el texto.
+
+> **Ejercicio: una consulta con parámetro.**
+> 1. En una SQL Window escribe y ejecuta (F8):
+>
+>    ```sql
+>    SELECT first_name, last_name, salary FROM pel_employees WHERE dept_id = :dzial;
+>    ```
+>
+>    *Resultado:* aparece la ventana **Variables** con un campo `dzial`.
+> 2. Escribe `30` y confirma.
+>    *Resultado:* tres filas: los empleados del departamento Sprzedaż (ventas).
+> 3. Ejecuta la consulta otra vez.
+>    *Resultado:* la ventana Variables recuerda el valor `30`; cámbialo a `10` y verás el departamento Księgowość
+>    (contabilidad).
+
 ## Directivas en comentarios
 
 Un comentario justo antes de una sentencia puede controlar su resultado:
@@ -81,6 +131,14 @@ Un comentario justo antes de una sentencia puede controlar su resultado:
 
 En los nombres de archivo funcionan `%dbuser%`, `%dbname%`, `%date%`, `%time%` y `%&variable%`. Una ruta relativa se
 cuenta desde el directorio del archivo de la ventana.
+
+Ejemplo: una pestaña de resultado con nombre y la suma de salarios bajo la cuadrícula:
+
+```sql
+-- Tab=Empleados (&Count)
+-- Totals=sum:SALARY
+SELECT first_name, last_name, salary FROM pel_employees;
+```
 
 ## Cuadrícula de resultados
 
@@ -127,6 +185,23 @@ sobre la cuadrícula. Con resultados muy grandes, Pelikan pregunta antes de supe
 La mayoría de estas acciones están en el menú contextual de la cuadrícula y en **Edición › Resultado** o **Sesión ›
 Resultado**.
 
+> **Ejercicio: trabajar con un resultado.**
+> 1. Ejecuta `SELECT * FROM pel_emp_details;`.
+>    *Resultado:* 9 filas.
+> 2. Haz clic dos veces en el encabezado de la columna **SALARY**.
+>    *Resultado:* el primer clic ordena de forma ascendente y el segundo descendente; arriba está Michał Lewandowski
+>    (13500).
+> 3. Haz clic derecho en la celda `Informatyka` de la columna **DEPARTMENT** y elige **Filtrar por el valor de la celda**.
+>    *Resultado:* quedan las tres filas del departamento Informatyka (informática). El filtro actúa sobre las filas
+>    obtenidas, sin volver a consultar la base; lo quitas en la barra sobre la cuadrícula.
+> 4. Haz clic derecho en la columna **SALARY**, elige **Totales de columna…** y marca suma y media.
+>    *Resultado:* bajo la cuadrícula se ven la suma y la media de los salarios de las filas visibles.
+> 5. Selecciona algunas filas, pulsa **⇧⌘C** (copiar con encabezado) y pega en Numbers o Excel.
+>    *Resultado:* los datos en columnas, con encabezados.
+>
+> ⚠️ **Atención.** Ordenar, filtrar y los totales actúan sobre las filas **obtenidas**. Si el resultado muestra «(más…)»,
+> parte de las filas aún no se ha obtenido: obténlas todas (⇧⌘⇟) o añade una condición a la consulta.
+
 ## Editar datos en la cuadrícula
 
 Para editar un resultado, la consulta debe devolver la columna `ROWID`, p. ej.:
@@ -151,6 +226,23 @@ mismo.
 
 En una conexión de producción, guardar requiere confirmación, y en una conexión de solo lectura está bloqueado.
 
+> **Ejercicio: añade un departamento desde la cuadrícula.**
+> 1. Ejecuta `SELECT t.*, t.rowid FROM pel_departments t;`.
+>    *Resultado:* 4 departamentos.
+> 2. Haz clic en el candado sobre la cuadrícula (o ⌥⌘E).
+>    *Resultado:* el candado está abierto y las celdas se pueden editar.
+> 3. Elige **Insertar registro** (⌥⌘I) y escribe `50`, `Logistyka`, `Poznań`.
+>    *Resultado:* la fila nueva tiene un **+** en su encabezado, y el contador sobre la cuadrícula muestra 1 cambio
+>    pendiente.
+> 4. Elige **Copiar SQL de los cambios**.
+>    *Resultado:* en el portapapeles hay una sentencia `INSERT INTO … PEL_DEPARTMENTS …`: así guardará Pelikan el cambio.
+> 5. Pulsa **⌥⌘S** (Confirmar cambios).
+>    *Resultado:* el **+** desaparece y la barra de estado muestra «● transacción abierta»: el cambio está en la base,
+>    pero aún sin confirmar.
+> 6. Pulsa **⇧F10** (ROLLBACK) y después **⇧⌘R** (actualizar resultado).
+>    *Resultado:* el departamento 50 ya no está: el cambio se ha revertido. Para conservarlo, pulsa F10 (COMMIT) en lugar
+>    de ROLLBACK.
+
 ## Copiar y exportar
 
 - **Edición › Resultado › Copiar con encabezado** (⇧⌘C), **Copiar encabezado**, **Copiar como lista de expresiones**
@@ -167,6 +259,12 @@ En una conexión de producción, guardar requiere confirmación, y en una conexi
 - **Archivo › Imprimir…** (⌘P) imprime el código de la ventana con colores de sintaxis y la cuadrícula (las filas
   seleccionadas o todas las obtenidas).
 
+> **Ejercicio: exportar a Excel.**
+> 1. Ejecuta `SELECT * FROM pel_emp_details;`.
+> 2. Elige **Archivo › Exportar resultado…**, el formato Excel (xlsx) y guarda el archivo en el escritorio.
+>    *Resultado:* el archivo se abre en Excel o Numbers; los salarios son números (se pueden sumar) y los encabezados son
+>    los nombres de las columnas.
+
 ## Gráficos
 
 **Sesión › Resultado › Gráfico…** abre una ventana de gráfico a partir de la pestaña de resultados actual. Elige el tipo
@@ -176,12 +274,32 @@ exportar el gráfico a PNG, PDF o al portapapeles. **Actualizar** vuelve a ejecu
 
 ![Ventana de gráfico a partir del resultado de una consulta](../img/wykres.png)
 
+> **Ejercicio: salarios por departamento en un gráfico.**
+> 1. Ejecuta:
+>
+>    ```sql
+>    SELECT department, SUM(salary) AS total FROM pel_emp_details GROUP BY department;
+>    ```
+>
+> 2. Elige **Sesión › Resultado › Gráfico…**, tipo de barras, categoría **DEPARTMENT**, serie **TOTAL**.
+>    *Resultado:* una barra por departamento; la más alta es la de Informatyka.
+
 ## Query By Example
 
 **Sesión › Resultado › Query By Example…** (⇧⌘E) permite acotar un resultado sin escribir WHERE: escribe criterios bajo
 los nombres de las columnas (un valor, un patrón con `%`, un operador (`>`, `<>`…), `in (…)`, `between … and …` o
 `null`) y Pelikan vuelve a ejecutar la consulta con las condiciones. La comparación de texto no distingue mayúsculas de
 minúsculas y las fechas se comparan sin la hora. **Borrar Query By Example** restaura la consulta original.
+
+> **Ejercicio: QBE.**
+> 1. Ejecuta `SELECT * FROM pel_employees;` y pulsa **⇧⌘E**.
+> 2. Bajo la columna **SALARY** escribe `> 10000` y bajo **LAST_NAME**, `%ski`.
+>    *Resultado:* al confirmar queda una fila: Michał Lewandowski (13500). Piotr Kowalski también termina en «ski», pero
+>    gana 9500. QBE añadió ambas condiciones a la consulta a la vez (unidas con AND).
+> 3. Elige **Borrar Query By Example**.
+>    *Resultado:* de nuevo todas las filas.
+
+Cómo compara QBE los textos y las fechas se ajusta en **Ajustes › SQL Window › Query By Example** (capítulo 13).
 
 ## Estadísticas y plan
 
