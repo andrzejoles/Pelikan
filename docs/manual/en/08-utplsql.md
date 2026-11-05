@@ -1,5 +1,16 @@
 # utPLSQL tests
 
+## What it is for
+
+A **unit test** is a small program that calls your code and checks whether the result is as expected — e.g. “after a
+10% raise a salary of 9500 is 10450”. You run tests after every change: if you broke something, a test shows it at
+once, before the bug reaches users. **utPLSQL** is the most popular test library for PL/SQL: tests are written as
+packages with annotation comments (`--%suite`, `--%test`), and checks as calls of `ut.expect(…).to_equal(…)`. utPLSQL
+automatically rolls back data changes made by a test, so tests do not spoil data.
+
+**When to use it:** for every package with business logic. A good habit: first a test that shows the bug, then the fix
+after which the test passes.
+
 Pelikan has built-in support for utPLSQL — the unit testing library for PL/SQL: running tests with live results, code
 coverage, generating test skeletons and navigating between a package and its tests. The commands are in the **Tools ›
 utPLSQL** menu.
@@ -26,6 +37,29 @@ locked right away. On shared databases the installation is usually performed by 
   `--%context`/`--%endcontext`.
 - **utPLSQL: go to test / package under test** (⌃⌘T) switches between a package and its test package (by the name
   `test_name` or by dependencies).
+
+> **Exercise: run the tests of the practice package.**
+>
+> Requires utPLSQL in the database (check **utPLSQL: version in database**) and the `PEL_EMP_API_TEST` package from the
+> script in chapter 1.
+>
+> 1. In the Object Browser open **Edit** on the **PEL_EMP_API_TEST** package and look at the specification.
+>    *Result:* the `--%suite` annotation names the test suite, each `--%test` is one test, and `--%throws(-20001)` says
+>    the test must end with that error.
+> 2. Put the cursor in the specification and press **⌃⌘U** (run test under cursor).
+>    *Result:* the results window opens with a progress bar; three tests in green — **Success**.
+> 3. In the test body change the expected value in `raise_salary_ten_percent` from `10450` to `10000` and compile (F8).
+> 4. Run the tests again (**⌃⌘U**).
+>    *Result:* one test in red (**Failures**). In the test details: **Expected** 10000, **Actual** 10450 — you see at
+>    once what does not match.
+> 5. Restore `10450`, compile and run **Failed again**.
+>    *Result:* everything in green.
+> 6. Check in a SQL Window: `SELECT salary FROM pel_employees WHERE emp_id = 2;`.
+>    *Result:* 9500 — utPLSQL rolled back the raise made by the test.
+>
+> **Exercise: a test for the new function.** If you added the `department_name` function in chapter 6, add a test to the
+> test package (a declaration in the specification with `--%test(…)` and a procedure in the body) with
+> `ut.expect(pel_emp_api.department_name(2)).to_equal('Informatyka');` and run it.
 
 ## Running tests
 
@@ -67,6 +101,11 @@ with options…** window you specify other schemas and the included and excluded
 - In the Program Window, lines are marked in the margin: green — covered, yellow — partially, red — not covered.
 - The status bar shows the coverage percentage of the object and the schema.
 - **Coverage report** opens the utPLSQL HTML report in the browser.
+
+**How to read coverage:** red lines are code that no test executed — a bug in it will not be detected. 100% coverage
+does not mean the code is bug-free, but low coverage means the tests check little. Run the `PEL_EMP_API_TEST` tests with
+coverage and open the body of `PEL_EMP_API`: the `hire` and `print_department` procedures will be red — they have no
+tests.
 
 Coverage uses profiler data — before the first such run in a session, Pelikan reminds you about the required privileges.
 

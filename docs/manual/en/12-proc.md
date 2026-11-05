@@ -7,6 +7,16 @@ directly, does not do a `merge` or `reset` on the server and does not run `git p
 
 The commands are in the **Tools › Pro*C remote build** menu.
 
+**What it is for:** **Pro*C** programs are C programs with embedded SQL statements, compiled with the Oracle
+precompiler on the server they run on (often older systems, e.g. AIX). This chapter is useful only if your team develops
+such programs — if you do not know whether it concerns you, you can skip it.
+
+**When to use it:** when you change a Pro*C program in a git repository and want to build and install it on a test
+(UAT) or production (PROD) server without logging in over SSH by hand.
+
+> ⚠️ **Watch out.** Deploying to a **PROD** target replaces running programs. First build and check the change on
+> **UAT**, and agree the production deployment with the team.
+
 ## SSH targets
 
 **Tools › Pro*C remote build › SSH targets…** opens the target manager — the servers you deploy to. You can group

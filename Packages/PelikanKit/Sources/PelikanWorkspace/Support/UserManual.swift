@@ -74,6 +74,8 @@ public enum UserManual {
         figure { margin: 12px 0 16px; } figcaption { font-size: 12px; color: rgba(127,127,127,1); margin-top: 4px; }
         figure img { max-width: 100%; height: auto; border: 1px solid rgba(127,127,127,.3); border-radius: 6px; }
         p.missing { color: rgba(127,127,127,1); font-style: italic; }
+        blockquote { margin: 12px 0; padding: 4px 14px; border-left: 3px solid rgba(10,132,255,.7); background: rgba(10,132,255,.07); border-radius: 0 6px 6px 0; }
+        li pre code { margin: 6px 0; }
         </style></head><body>
         \(chapter.html)
         </body></html>
@@ -125,19 +127,40 @@ public enum UserManual {
         return t.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "\u{1}", with: "|") }
     }
 
-    /// Markdown (podzbiór: nagłówki, akapity, listy punktowane i numerowane z kontynuacją wcięciem, bloki kodu ```,
-    /// tabele z wierszem nagłówka i obrazki w osobnej linii — `imageBase` to katalog pliku rozdziału).
+    /// Markdown (podzbiór: nagłówki, akapity, listy punktowane i numerowane z kontynuacją wcięciem, bloki kodu ``` —
+    /// także wcięte w punkcie listy, cytaty `>` (ramki ćwiczeń, z listami i kodem w środku), tabele z wierszem nagłówka
+    /// i obrazki w osobnej linii — `imageBase` to katalog pliku rozdziału). Lista numerowana przerwana akapitem zachowuje
+    /// numerację (`start`).
     public static func html(markdown: String, imageBase: URL? = nil) -> String {
+        /// Fragment punktu listy: tekst (łączony spacją i formatowany) albo gotowy HTML (blok kodu).
+        enum Piece { case text(String), html(String) }
         var out: [String] = []
         var paragraph: [String] = []
-        var list: (tag: String, items: [String])?
-        var code: [String]?
+        var list: (tag: String, start: Int, items: [[Piece]])?
+        // Blok kodu: linie i wcięcie znacznika otwierającego (wcięty blok należy do bieżącego punktu listy).
+        var code: (lines: [String], indent: Int, inItem: Bool)?
         var table: [String] = []
+        var quote: [String] = []
         func flushParagraph() {
             if !paragraph.isEmpty { out.append("<p>" + inline(paragraph.joined(separator: " ")) + "</p>"); paragraph = [] }
         }
+        func render(_ item: [Piece]) -> String {
+            var html = "", text: [String] = []
+            func flushText() { if !text.isEmpty { html += inline(text.joined(separator: " ")); text = [] } }
+            for p in item {
+                switch p {
+                case .text(let t): text.append(t)
+                case .html(let h): flushText(); html += h
+                }
+            }
+            flushText()
+            return html
+        }
         func flushList() {
-            if let l = list { out.append("<\(l.tag)>" + l.items.map { "<li>" + inline($0) + "</li>" }.joined() + "</\(l.tag)>"); list = nil }
+            guard let l = list else { return }
+            let start = l.tag == "ol" && l.start != 1 ? " start=\"\(l.start)\"" : ""
+            out.append("<\(l.tag)\(start)>" + l.items.map { "<li>" + render($0) + "</li>" }.joined() + "</\(l.tag)>")
+            list = nil
         }
         func flushTable() {
             guard !table.isEmpty else { return }
@@ -148,16 +171,49 @@ public enum UserManual {
             for row in table.dropFirst(2) { h += "<tr>" + tableCells(row).map { "<td>" + inline($0) + "</td>" }.joined() + "</tr>" }
             out.append(h + "</tbody></table>")
         }
+        func flushQuote() {
+            guard !quote.isEmpty else { return }
+            out.append("<blockquote>" + html(markdown: quote.joined(separator: "\n"), imageBase: imageBase) + "</blockquote>")
+            quote = []
+        }
+        func flushCode() {
+            guard let c = code else { return }
+            let block = "<pre><code>" + escape(c.lines.joined(separator: "\n")) + "</code></pre>"
+            if c.inItem, list != nil, !list!.items.isEmpty { list!.items[list!.items.count - 1].append(.html(block)) } else { out.append(block) }
+            code = nil
+        }
         for line in markdown.components(separatedBy: "\n") {
-            if code != nil {
-                if line.hasPrefix("```") { out.append("<pre><code>" + escape(code!.joined(separator: "\n")) + "</code></pre>"); code = nil } else { code!.append(line) }
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if let c = code {
+                if trimmed.hasPrefix("```") { flushCode() } else {
+                    // Linie wciętego bloku bez wcięcia znacznika (kod w punkcie listy).
+                    let lead = line.prefix { $0 == " " }.count
+                    code!.lines.append(String(line.dropFirst(min(lead, c.indent))))
+                }
                 continue
             }
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix(">") {
+                flushParagraph(); flushList(); flushTable()
+                let body = trimmed.dropFirst()
+                quote.append(String(body.hasPrefix(" ") ? body.dropFirst() : body))
+                continue
+            }
+            flushQuote()
             if trimmed.hasPrefix("|") { flushParagraph(); flushList(); table.append(trimmed); continue }
             flushTable()
-            if line.hasPrefix("```") { flushParagraph(); flushList(); code = []; continue }
-            if trimmed.isEmpty { flushParagraph(); flushList(); continue }
+            if trimmed.hasPrefix("```") {
+                flushParagraph()
+                let indent = line.prefix { $0 == " " }.count
+                let inItem = indent > 0 && list != nil && !(list!.items.isEmpty)
+                if !inItem { flushList() }
+                code = ([], indent, inItem)
+                continue
+            }
+            if trimmed.isEmpty {
+                flushParagraph()
+                // Pusta linia między punktami albo przed wciętą kontynuacją nie kończy listy (kończy ją tekst bez wcięcia).
+                continue
+            }
             if let m = trimmed.firstMatch(of: #/^!\[([^\]]*)\]\(([^)\s]+)\)$/#) {
                 flushParagraph(); flushList()
                 out.append(image(alt: String(m.1), path: String(m.2), base: imageBase))
@@ -170,25 +226,26 @@ public enum UserManual {
             }
             if let m = line.firstMatch(of: #/^- (.+)$/#) {
                 flushParagraph()
-                if list?.tag != "ul" { flushList(); list = ("ul", []) }
-                list!.items.append(String(m.1))
+                if list?.tag != "ul" { flushList(); list = ("ul", 1, []) }
+                list!.items.append([.text(String(m.1))])
                 continue
             }
-            if let m = line.firstMatch(of: #/^\d+\. (.+)$/#) {
+            if let m = line.firstMatch(of: #/^(\d+)\. (.+)$/#) {
                 flushParagraph()
-                if list?.tag != "ol" { flushList(); list = ("ol", []) }
-                list!.items.append(String(m.1))
+                // Numer 1 przy otwartej liście numerowanej zaczyna nową listę.
+                if list?.tag != "ol" || m.1 == "1" { flushList(); list = ("ol", Int(m.1) ?? 1, []) }
+                list!.items.append([.text(String(m.2))])
                 continue
             }
             if line.hasPrefix("  "), list != nil, !list!.items.isEmpty {
-                list!.items[list!.items.count - 1] += " " + trimmed
+                list!.items[list!.items.count - 1].append(.text(trimmed))
                 continue
             }
             flushList()
             paragraph.append(trimmed)
         }
-        flushTable(); flushParagraph(); flushList()
-        if let c = code { out.append("<pre><code>" + escape(c.joined(separator: "\n")) + "</code></pre>") }
+        if code != nil { flushCode() }
+        flushQuote(); flushTable(); flushParagraph(); flushList()
         return out.joined(separator: "\n")
     }
 }

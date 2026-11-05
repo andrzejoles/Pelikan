@@ -3,6 +3,17 @@
 Dieses Kapitel fasst an einer Stelle zusammen, wie Pelikan Passwörter, Daten und Datenbanken schützt — auch vor Fehlern
 und vor KI-Agenten.
 
+**Für Einsteiger — fünf Regeln, die Sie vom ersten Tag an kennen sollten:**
+
+1. Speichern Sie Passwörter nur mit **Passwort im Schlüsselbund sichern** — nie in Skripten, Textdateien oder
+   Code-Kommentaren.
+2. Geben Sie jeder Verbindung ihre wahre **Umgebung**; für eine Produktion, aus der Sie nur lesen, haken Sie
+   **Schreibgeschützt** an.
+3. Prüfen Sie vor COMMIT mit einer Abfrage, was Sie geändert haben. Strukturänderungen (DDL) schreiben sich selbst fest
+   und lassen sich nicht mit ROLLBACK rückgängig machen.
+4. Schicken Sie niemandem ein Protokoll mit angezeigten Namen oder eine Exportdatei der Verbindungen mit Passwörtern.
+5. Geben Sie einem KI-Agenten zuerst nur Lesezugriff und lesen Sie die Vorschau im Zustimmungsfenster.
+
 ## Passwörter
 
 - Datenbankpasswörter, SSH-Passwörter (Tunnel und Pro*C-Ziele) und Passwörter von SSH-Schlüsseln werden **ausschließlich

@@ -27,6 +27,10 @@ und klicken Sie auf **Dennoch öffnen** (siehe Kapitel *Einführung*).
   **Einstellungen › Oracle › Oracle Net und Oracle Wallet**) oder verwenden Sie eine Adresse `host:port/dienst`.
 - **ORA-01017:** falsches Passwort — Pelikan fragt erneut danach; aktivieren Sie das Sichern, um das Passwort im
   Schlüsselbund zu ersetzen.
+- **ORA-12541 / ORA-12170:** Unter der angegebenen Adresse antwortet niemand oder die Verbindung kommt nicht durch —
+  prüfen Sie Host und Port (meist 1521), das VPN und ob die Datenbank läuft.
+- **ORA-12514:** Der Server läuft, kennt aber den angegebenen Dienst nicht — prüfen Sie den Dienstnamen nach dem
+  Schrägstrich in `host:port/dienst`.
 - **ORA-28001:** Das Passwort ist abgelaufen — Pelikan zeigt das Fenster zur Passwortänderung.
 - **Oracle Wallet:** Das Feld **Datenbank** muss genau der im Wallet gespeicherte Alias sein, und das Wallet muss die
   Datei `cwallet.sso` (Auto-Login) enthalten. Den Status des Wallets sehen Sie unter **Einstellungen › Oracle**.
@@ -105,6 +109,26 @@ Servern und Objekten sowie Dateipfade sind standardmäßig ausgeblendet oder dur
 immer denselben Hash). Unter **Einstellungen › Allgemein › Anwendungsprotokoll** wählen Sie den Umfang (*Warnungen und
 Fehler*, *Ereignisse*, *Details — Diagnose*) und können Namen anzeigen lassen — hilfreich bei der Fehlersuche auf dem
 eigenen Rechner.
+
+## Die häufigsten Oracle-Fehler beim Lernen
+
+Eine Oracle-Fehlermeldung beginnt mit einem Code `ORA-nnnnn`. **F1** auf dem Code im Editor oder ein Doppelklick auf einen
+Kompilierungsfehler öffnet seine Beschreibung in der Oracle-Dokumentation. Die häufigsten Fehler am Anfang:
+
+| Fehler | Was er bedeutet | Was tun |
+|---|---|---|
+| ORA-00942 | Tabelle oder View existiert nicht | Namen und Schema prüfen (`schema.tabelle`), ob Sie auf der richtigen Verbindung sind und das Recht SELECT haben |
+| ORA-00904 | ungültiger Bezeichner | Tippfehler im Spaltennamen oder eine Spalte aus einer anderen Tabelle als in FROM |
+| ORA-00933 / ORA-00936 | SQL-Befehl nicht korrekt beendet / Ausdruck fehlt | fehlendes Komma, Klammer oder Schlüsselwort; ein Semikolon mitten im Befehl |
+| ORA-01403 | keine Daten gefunden (NO_DATA_FOUND) | `SELECT … INTO` hat keine Zeile gefunden — Ausnahme behandeln oder Bedingung prüfen |
+| ORA-01422 | `SELECT … INTO` lieferte mehr als eine Zeile (TOO_MANY_ROWS) | WHERE-Bedingung einschränken |
+| ORA-00001 | Verletzung der Eindeutigkeit | Sie fügen einen Wert ein, der in einer Spalte mit Primär- oder eindeutigem Schlüssel schon vorhanden ist |
+| ORA-02291 / ORA-02292 | übergeordneter Schlüssel fehlt / untergeordnete Datensätze vorhanden | Fremdschlüssel: zuerst die übergeordnete Zeile (z. B. die Abteilung) anlegen, beim Löschen zuerst die untergeordneten |
+| ORA-01722 | ungültige Zahl | Sie vergleichen Text mit einer Zahl oder der Text lässt sich nicht in eine Zahl umwandeln |
+| ORA-06502 | numerischer oder Wertfehler in PL/SQL | Wert zu lang für eine Variable (z. B. `VARCHAR2(10)`) oder falsche Umwandlung |
+| ORA-00054 / endloses Warten | Ressource belegt — Zeile oder Tabelle durch eine andere Sitzung gesperrt | jemand (auch Sie in einem anderen Fenster) hat eine nicht festgeschriebene Änderung; siehe die Sperrübung in Kapitel 10 |
+| ORA-04068 | Paketzustand wurde verworfen | das Paket wurde während Ihrer Sitzung neu kompiliert — führen Sie den Befehl erneut aus |
+| PLS-00201 | Bezeichner muss deklariert werden | Name einer Variable, Prozedur oder eines Pakets ist unbekannt oder das Recht EXECUTE fehlt |
 
 ## Bekannte Einschränkungen
 

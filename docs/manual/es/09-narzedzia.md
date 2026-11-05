@@ -4,9 +4,17 @@ Este capítulo describe las herramientas de los menús **Herramientas**, **Infor
 comparar y desplegar cambios, exportar e importar, informes, cuadernos, proyectos y archivos. Las herramientas de
 rendimiento y administración se describen en el capítulo *Plan de ejecución, sesiones y administración*.
 
+No hace falta conocer todas las herramientas desde el principio. Al empezar, las más útiles son: el **Historial local**
+(recuperar una versión anterior del código), **Exportar objetos de usuario** (una copia del código en archivos),
+**Importar texto** (cargar un CSV) y **Comparar objetos de usuarios** (qué se diferencia entre la base de desarrollo y la
+de pruebas). Cada sección empieza explicando para qué sirve la herramienta.
+
 ## Comparar esquemas y desplegar cambios
 
 ### Comparar objetos de usuarios
+
+**Para qué sirve:** los cambios los haces primero en la base de desarrollo y después hay que llevarlos a las de pruebas y
+producción. La comparación muestra qué objetos difieren y crea un script que iguala la base de destino.
 
 **Herramientas › Comparar objetos de usuarios…** compara el DDL de los objetos de un esquema con un esquema de destino,
 en la misma conexión o en otra (p. ej., `dev_test` con la base de datos de pruebas de aceptación).
@@ -30,7 +38,7 @@ genera `ALTER TABLE` que añaden, modifican y eliminan columnas. Las diferencias
 cesta**.
 
 **Herramientas › Cesta de despliegue…** reúne objetos (DDL) y datos de tablas (con filtro WHERE) en un paquete de
-cambios. El objeto seleccionado en el Object Browser se añade con **Herramientas › Cesta › Añadir objeto a la cesta**, y
+cambios. Es tu «lista de cambios por desplegar»: le añades objetos mientras trabajas y al final obtienes un solo script. El objeto seleccionado en el Object Browser se añade con **Herramientas › Cesta › Añadir objeto a la cesta**, y
 **Cesta › Script de despliegue de la cesta** genera un script en orden de dependencias en una SQL Window nueva, con
 `WHENEVER SQLERROR EXIT` y `COMMIT` al final.
 
@@ -70,11 +78,36 @@ herramientas que escriben en la base de datos pasan por las mismas protecciones 
 producción piden confirmación y en una conexión de solo lectura están bloqueadas. Ninguna definición guardada (de
 traslados, trabajos o importaciones) contiene contraseñas.
 
+> **Ejercicio: una copia del código en archivos y una importación CSV.**
+> 1. Elige **Herramientas › Exportar objetos de usuario…**, selecciona los objetos con el prefijo `PEL_` y elige guardar
+>    «un archivo por objeto» en una carpeta nueva.
+>    *Resultado:* en la carpeta hay archivos `.sql` con las tablas y la vista y el par `pel_emp_api.pks` /
+>    `pel_emp_api.pkb`: código listo para git.
+> 2. Prepara en un editor de texto el archivo `departamentos.csv`:
+>
+>    ```
+>    dept_id;name;city
+>    60;Marketing;Wrocław
+>    70;Prawny;Łódź
+>    ```
+>
+> 3. Elige **Herramientas › Importar texto…**, indica el archivo y elige `PEL_DEPARTMENTS` como tabla de destino.
+>    *Resultado:* Pelikan reconoció el separador `;` y la cabecera y asignó los campos a las columnas con el mismo nombre.
+> 4. Inicia la importación y después ejecuta `SELECT * FROM pel_departments;` en una SQL Window.
+>    *Resultado:* 6 departamentos.
+>
+> ⚠️ **Atención.** La importación se ejecuta en una sesión aparte y **confirma** las filas ella misma (COMMIT cada cierto
+> número de filas y al final): un ROLLBACK en la SQL Window no la deshace. Las filas con error (p. ej. una clave repetida)
+> van al informe de importación. Los departamentos nuevos se eliminan con
+> `DELETE FROM pel_departments WHERE dept_id IN (60, 70);` y COMMIT.
+
 ## Informes
 
 ### Informes predefinidos
 
-**Informes › Informes predefinidos…** abre un conjunto de informes listos sobre la base de datos en las categorías
+**Informes › Informes predefinidos…** abre un conjunto de informes listos sobre la base de datos: no necesitas conocer
+las vistas del diccionario para comprobar, p. ej., las tablas más grandes o los objetos no válidos. Los informes están en
+las categorías
 *Acerca de la base de datos*, *Objetos*, *Tablas*, *PL/SQL*, *Seguridad* y otras. Un informe puede mostrar una
 cuadrícula, un gráfico o la salida de DBMS_OUTPUT, pedir variables y tener detalles de fila. **Abrir informe en SQL
 Window** permite modificar la consulta, y el resultado se exporta a CSV, HTML o XLSX.
@@ -99,6 +132,21 @@ modificados recientemente**, **Tamaños de tablas**, **Columnas de tablas**, **P
    informes**.
 
 ![Informe con grupos y sumas en el estilo Verde](../img/raport-styl.png)
+
+> **Ejercicio: un informe de salarios por departamento.**
+> 1. Abre **Archivo › Nuevo › Report Window** y escribe:
+>
+>    ```sql
+>    SELECT department, full_name, salary FROM pel_emp_details ORDER BY department, full_name
+>    ```
+>
+> 2. Pulsa **F8**.
+>    *Resultado:* una tabla HTML con los empleados.
+> 3. En la pestaña **Disposición** marca **Grupo** en la columna **DEPARTMENT** y, en **SALARY**, **Suma** y el formato
+>    `#,##0.00`.
+> 4. Ejecuta el informe otra vez.
+>    *Resultado:* los empleados agrupados por departamento, con la suma de salarios bajo cada departamento y un total
+>    general.
 
 **Informe › Guardar informe como HTML…**, **Exportar datos del informe…** (CSV, TSV, XML, Excel) e **Imprimir informe…**
 (también a PDF) comparten el resultado. **Bloquear definición del informe** oculta la consulta y la disposición: el
@@ -146,6 +194,9 @@ editor. Un SELECT sencillo seleccionado se abre en el Query Builder para modific
 
 ## Historial local
 
+**Para qué sirve:** es la «máquina del tiempo» de tu código. Aunque no uses git y hayas estropeado y compilado un
+procedimiento, en el historial local encontrarás la versión anterior.
+
 Pelikan guarda una versión del archivo o del objeto en cada guardado, compilación, refactorización y restauración, con
 independencia de Git y sin conexión a la base de datos. **Archivo › Historial local › Historial local** muestra las
 versiones de la ventana activa; **Comparar con el actual** abre las diferencias, y **Restaurar** inserta la versión
@@ -154,13 +205,24 @@ una descripción. El historial guarda hasta 50 versiones de los últimos 30 día
 
 ![Historial local de un archivo](../img/historia-lokalna.png)
 
+> **Ejercicio: recupera la versión anterior.**
+> 1. Abre **Editar** sobre el paquete **PEL_EMP_API** y cambia cualquier comentario en la pestaña del cuerpo. Compila
+>    (F8).
+> 2. Elige **Archivo › Historial local › Historial local**.
+>    *Resultado:* una lista de versiones con fechas; la más reciente es tu compilación.
+> 3. Selecciona una versión anterior y haz clic en **Comparar con el actual**.
+>    *Resultado:* el visor de diferencias muestra el comentario cambiado.
+> 4. Haz clic en **Restaurar** y después compila (F8).
+>    *Resultado:* en la base vuelve a estar la versión anterior; la versión con el comentario también se queda en el
+>    historial.
+
 ## Proyectos, worksets y archivos
 
 - Un **proyecto** agrupa archivos y objetos de la base de datos (con notas y grupos) en un archivo `.prj`. **Proyecto ›
   Compilar proyecto** compila todo en el orden de los elementos, y **Make del proyecto**, solo los archivos modificados
   desde la última compilación y los objetos no válidos. Las opciones del proyecto incluyen la conexión, la detención
   tras el primer error y el formato. **Guardar escritorio del proyecto** recuerda las ventanas abiertas.
-- Un **workset** (conjunto de trabajo) recuerda las ventanas abiertas, también con cambios sin guardar y valores de
+- Un **workset** (conjunto de trabajo), como una «sesión de trabajo» sobre una tarea, recuerda las ventanas abiertas, también con cambios sin guardar y valores de
   variables, y las restaura en el siguiente inicio (**Archivo › Workset**: nuevo, abrir, guardar, restaurar, cerrar,
   comparar, guardado automático). La disposición de la ventana principal se guarda con **Vista › Guardar disposición de
   la ventana**.

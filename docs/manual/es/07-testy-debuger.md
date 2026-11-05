@@ -1,5 +1,15 @@
 # Test Window, depurador y profiler
 
+## Para qué sirve
+
+Escribir un programa es la mitad del trabajo: aún hay que comprobar que funciona. La **Test Window** llama a un
+procedimiento o función con los parámetros elegidos y muestra lo que devolvió. El **depurador** ejecuta un programa línea
+a línea y muestra los valores de las variables: la mejor forma de entender código ajeno o encontrar la causa de un error.
+El **profiler** mide cuánto tiempo tarda cada línea: muestra dónde es lento un programa.
+
+**Cuándo usarlo:** la Test Window, tras cada cambio de un programa; el depurador, cuando un programa da un resultado
+erróneo y no sabes por qué; el profiler, cuando un programa funciona bien pero demasiado despacio.
+
 ## Test Window
 
 La Test Window ejecuta un bloque PL/SQL con variables de enlace y permite depurarlo y perfilarlo. Lo más sencillo es
@@ -14,6 +24,22 @@ parámetros y el resultado de la función. Abres una ventana vacía con **Archiv
    amarillo. La barra de estado muestra el tiempo de ejecución.
 3. Confirma o revierte los cambios: F10 / ⇧F10 (la opción **AutoCommit tras ejecutar la ventana de prueba** de
    **Ajustes › SQL Window** confirma automáticamente).
+
+> **Ejercicio: prueba una función y un procedimiento.**
+> 1. En el Object Browser despliega el paquete **PEL_EMP_API**, haz clic derecho en la función **GET_SALARY** y elige
+>    **Probar**.
+>    *Resultado:* una Test Window (letra **T**) con el bloque `begin :result := ….pel_emp_api.get_salary(p_emp_id =>
+>    :p_emp_id); end;` y una tabla con las variables `result` y `p_emp_id`.
+> 2. En la tabla de variables escribe `1` como valor de `p_emp_id` y pulsa **F8**.
+>    *Resultado:* `result` = 12000, resaltado en amarillo (el valor ha cambiado).
+> 3. Escribe `999` y pulsa **F8** de nuevo.
+>    *Resultado:* el error `ORA-01403`, no se han encontrado datos (excepción NO_DATA_FOUND), y la pestaña **Pila de
+>    errores** muestra la línea del paquete en la que se produjo.
+> 4. Abre del mismo modo **Probar** para el procedimiento **RAISE_SALARY**, escribe `p_emp_id` = 2, `p_percent` = 10 y
+>    pulsa **F8**.
+>    *Resultado:* sin error; la barra de estado muestra una transacción abierta. La SQL Window (otra sesión) sigue viendo
+>    el salario antiguo del empleado 2: verá el nuevo solo tras el COMMIT en la Test Window.
+> 5. Pulsa **⇧F10** (ROLLBACK) para no dejar el cambio en la base.
 
 Las demás pestañas:
 
@@ -72,6 +98,30 @@ El depurador usa el paquete de Oracle DBMS_DEBUG y funciona en bases de datos 19
 
 El foco se queda en la ventana principal, así que puedes avanzar con atajos mientras miras el código.
 
+> **Ejercicio: sigue un bucle en el depurador.**
+>
+> Requiere el privilegio `DEBUG CONNECT SESSION` (compruébalo en **Depuración › Privilegios del depurador…**).
+>
+> 1. En el Object Browser selecciona el paquete **PEL_EMP_API** y elige **Herramientas › Objeto › Añadir información de
+>    depuración**.
+>    *Resultado:* el paquete se recompila con información de depuración.
+> 2. Haz clic derecho en **PRINT_DEPARTMENT**, elige **Probar** y escribe `p_dept_id` = 20.
+> 3. Elige **Depuración › Iniciar depuración** (F9).
+>    *Resultado:* se abre la ventana **Depurador** y la ejecución se detiene en la primera línea del bloque.
+> 4. Pulsa **⌃N** (paso a paso por instrucciones).
+>    *Resultado:* el depurador entra en el cuerpo del paquete, en el procedimiento `print_department`.
+> 5. Pulsa varias veces **⌃O** (paso a paso por procedimientos) y mira la pestaña **Variables**.
+>    *Resultado:* en cada vuelta del bucle crece `l_total`, y el registro `r` muestra el siguiente empleado. Pasa el ratón
+>    sobre `l_total` en el código: un globo muestra su valor.
+> 6. Haz clic en el margen junto a la línea `dbms_output.put_line('Razem: ' || l_total);` (un punto de interrupción) y
+>    pulsa **⌃R** (continuar).
+>    *Resultado:* el depurador se detiene en esa línea; `l_total` = 30200.
+> 7. Pulsa **⌃R** una vez más.
+>    *Resultado:* el programa termina y la pestaña **Salida** de la Test Window muestra la lista de empleados y la suma.
+>
+> ⚠️ **Atención.** La sesión depurada está detenida: mantiene bloqueos y una transacción abierta. No dejes el depurador
+> detenido mucho tiempo en una base compartida; termínalo con **⇧F9**. No depures en producción.
+
 ### Variables, expresiones observadas, pila
 
 - **Variables**: locales, parámetros, globales del paquete (privadas y públicas), registros, colecciones y objetos como
@@ -108,6 +158,12 @@ línea puede haber un punto.
 
 Las pruebas utPLSQL también se pueden depurar: **Depuración › utPLSQL: depurar la prueba bajo el cursor**.
 
+> **Ejercicio: un punto de interrupción condicional.**
+> 1. En la ventana **Depuración › Puntos de interrupción…** elige el punto del ejercicio anterior (o pon uno nuevo en la
+>    línea `l_total := l_total + r.salary;`) y escribe `r.salary > 10000` en la columna **Condición**.
+> 2. Inicia la depuración (F9) y pulsa **⌃R**.
+>    *Resultado:* el depurador se detiene solo con Anna Nowak (12000): se salta a los demás empleados.
+
 ## Profiler
 
 1. En la pestaña **Profiler** de la Test Window, elige el tipo en el campo **Profiler durante la ejecución**: **Lineal
@@ -117,6 +173,9 @@ Las pruebas utPLSQL también se pueden depurar: **Depuración › utPLSQL: depur
 3. La pestaña **Profiler** muestra el informe: para el profiler lineal, el tiempo, el número de ejecuciones y la
    proporción de cada línea con un gráfico de barras; para el jerárquico, las funciones con su tiempo propio y con las
    llamadas, y el árbol de llamadas. La unidad de tiempo y el umbral de proporción se ajustan en esta pestaña.
+
+**Cómo leer el informe:** las líneas con mayor parte del tiempo son las que vale la pena acelerar. A menudo son consultas
+SQL ejecutadas dentro de un bucle: en lugar de mil consultas sueltas es mejor una sola consulta para todas las filas.
 
 El menú **Ejecuciones** de la pestaña (y **Depuración › Ejecuciones del profiler**) abre los informes de ejecuciones
 anteriores. Pelikan crea las tablas del profiler que falten en tu esquema (en una conexión de producción, tras

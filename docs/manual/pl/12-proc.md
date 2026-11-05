@@ -7,6 +7,16 @@ serwer bezpośrednio, nie robi na serwerze `merge` ani `reset` i nie wykonuje `g
 
 Komendy są w menu **Narzędzia › Zdalny build Pro*C**.
 
+**Do czego to służy:** **Pro*C** to programy w języku C z wbudowanymi poleceniami SQL, kompilowane prekompilatorem
+Oracle na serwerze, na którym działają (często starsze systemy, np. AIX). Ten rozdział przyda Ci się tylko wtedy, gdy
+Twój zespół rozwija takie programy — jeśli nie wiesz, czy to Ciebie dotyczy, możesz go pominąć.
+
+**Kiedy użyć:** gdy zmieniasz program Pro*C w repozytorium gita i chcesz go zbudować i zainstalować na serwerze testowym
+(UAT) albo produkcyjnym (PROD) bez ręcznego logowania przez SSH.
+
+> ⚠️ **Na co uważać.** Wdrożenie na cel **PROD** podmienia działające programy. Najpierw zbuduj i sprawdź zmianę na
+> **UAT**, a wdrożenie produkcyjne uzgodnij z zespołem.
+
 ## Cele SSH
 
 **Narzędzia › Zdalny build Pro*C › Cele SSH…** otwiera menedżer celów — serwerów, na które wdrażasz. Cele możesz

@@ -3,6 +3,17 @@
 Ten rozdział zbiera w jednym miejscu, jak Pelikan chroni hasła, dane i bazy — także przed pomyłkami i przed agentami
 AI.
 
+**Dla początkujących — pięć zasad, które warto znać od pierwszego dnia:**
+
+1. Hasła zapisuj tylko przez **Zapamiętaj hasło w Pęku kluczy** — nigdy w skryptach, plikach tekstowych ani
+   w komentarzach kodu.
+2. Każdemu połączeniu ustaw prawdziwe **środowisko**; do produkcji, z której tylko czytasz, zaznacz **Tylko do
+   odczytu**.
+3. Przed COMMIT sprawdź zapytaniem, co zmieniłeś. Zmiany struktury (DDL) zatwierdzają się same i nie da się ich cofnąć
+   ROLLBACKiem.
+4. Nie wysyłaj nikomu dziennika z jawnymi nazwami ani pliku eksportu połączeń z hasłami.
+5. Agentowi AI dawaj najpierw dostęp tylko do odczytu i czytaj podgląd w oknie zgody.
+
 ## Hasła
 
 - Hasła baz danych, hasła SSH (tunele i cele Pro*C) i hasła kluczy SSH są przechowywane **wyłącznie w Pęku kluczy

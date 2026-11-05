@@ -4,9 +4,17 @@ Ten rozdział opisuje narzędzia z menu **Narzędzia**, **Raporty**, **Projekt**
 zmian, eksport i import, raporty, notatniki, projekty i pliki. Narzędzia wydajności i administracji opisuje rozdział
 *Plan wykonania, sesje i administracja*.
 
+Nie musisz znać wszystkich narzędzi od razu. Na początek najprzydatniejsze są: **Historia lokalna** (odzyskanie
+wcześniejszej wersji kodu), **Eksport obiektów użytkownika** (kopia kodu do plików), **Import tekstu** (wczytanie CSV)
+i **Porównanie obiektów użytkowników** (co się różni między bazą deweloperską a testową). Każda sekcja zaczyna się od
+wyjaśnienia, do czego narzędzie służy.
+
 ## Porównywanie schematów i wdrażanie zmian
 
 ### Porównanie obiektów użytkowników
+
+**Do czego to służy:** zmiany robisz najpierw na bazie deweloperskiej, a potem trzeba je przenieść na testową
+i produkcyjną. Porównanie pokazuje, które obiekty się różnią, i tworzy skrypt, który wyrówna bazę docelową.
 
 **Narzędzia › Porównaj obiekty użytkowników…** porównuje DDL obiektów schematu ze schematem docelowym — na tym samym
 albo innym połączeniu (np. `dev_test` z bazą testów akceptacyjnych).
@@ -26,7 +34,8 @@ albo innym połączeniu (np. `dev_test` z bazą testów akceptacyjnych).
 **Narzędzia › Database Diff…** porównuje schematy według typów obiektów (także między połączeniami); dla tabel
 generuje `ALTER TABLE` dodające, zmieniające i usuwające kolumny. Wybrane różnice dodasz przyciskiem **Do koszyka**.
 
-**Narzędzia › Koszyk wdrożenia…** zbiera obiekty (DDL) i dane tabel (z filtrem WHERE) do pakietu zmian. Obiekt
+**Narzędzia › Koszyk wdrożenia…** zbiera obiekty (DDL) i dane tabel (z filtrem WHERE) do pakietu zmian. To
+Twoja „lista zmian do wdrożenia” — dodajesz do niej obiekty w trakcie pracy, a na końcu dostajesz jeden skrypt. Obiekt
 zaznaczony w Przeglądarce obiektów dodasz przez **Narzędzia › Koszyk › Dodaj obiekt do koszyka**, a **Koszyk › Skrypt
 wdrożenia koszyka** generuje skrypt w kolejności zależności w nowym oknie SQL — z `WHENEVER SQLERROR EXIT` i `COMMIT`
 na końcu.
@@ -66,11 +75,34 @@ bazy przechodzą przez te same zabezpieczenia co okno SQL: na połączeniu produ
 połączeniu tylko do odczytu są zablokowane. Żadna zapisana definicja (przenoszenia, zadania, importu) nie zawiera
 haseł.
 
+> **Ćwiczenie: kopia kodu do plików i import CSV.**
+> 1. Wybierz **Narzędzia › Eksport obiektów użytkownika…**, zaznacz obiekty z przedrostkiem `PEL_` i wybierz zapis
+>    „plik na obiekt” do nowego katalogu.
+>    *Wynik:* w katalogu są pliki `.sql` z tabelami i widokiem oraz para `pel_emp_api.pks` / `pel_emp_api.pkb` — kod
+>    gotowy do wrzucenia do gita.
+> 2. Przygotuj w edytorze tekstu plik `dzialy.csv`:
+>
+>    ```
+>    dept_id;name;city
+>    60;Marketing;Wrocław
+>    70;Prawny;Łódź
+>    ```
+>
+> 3. Wybierz **Narzędzia › Import tekstu…**, wskaż plik i jako tabelę docelową `PEL_DEPARTMENTS`.
+>    *Wynik:* Pelikan rozpoznał separator `;` i nagłówek, a pola przypisał do kolumn o tych samych nazwach.
+> 4. Uruchom import, a potem w oknie SQL wykonaj `SELECT * FROM pel_departments;`.
+>    *Wynik:* 6 działów.
+>
+> ⚠️ **Na co uważać.** Import działa w osobnej sesji i **sam zatwierdza** wiersze (COMMIT co zadaną liczbę wierszy
+> i na końcu) — ROLLBACK w oknie SQL go nie cofnie. Wiersze z błędem (np. powtórzony klucz) trafiają do raportu
+> importu. Nowe działy usuniesz poleceniem `DELETE FROM pel_departments WHERE dept_id IN (60, 70);` i COMMIT.
+
 ## Raporty
 
 ### Raporty predefiniowane
 
-**Raporty › Raporty predefiniowane…** otwiera zestaw gotowych raportów o bazie w kategoriach: *O bazie danych*,
+**Raporty › Raporty predefiniowane…** otwiera zestaw gotowych raportów o bazie — nie musisz znać widoków
+słownika, żeby sprawdzić np. największe tabele albo nieprawidłowe obiekty. Raporty są w kategoriach: *O bazie danych*,
 *Obiekty*, *Tabele*, *PL/SQL*, *Bezpieczeństwo* i innych. Raport może pokazywać siatkę, wykres albo wyjście
 DBMS_OUTPUT, pytać o zmienne i mieć szczegóły wiersza. **Otwórz raport w oknie SQL** pozwala zmodyfikować zapytanie, a
 wynik wyeksportujesz do CSV, HTML albo XLSX.
@@ -94,6 +126,19 @@ obiekty**, **Rozmiary tabel**, **Kolumny tabel**, **Uprawnienia użytkownika** i
    raporty**.
 
 ![Raport z grupami i sumami w stylu Zielony](../img/raport-styl.png)
+
+> **Ćwiczenie: raport pensji według działów.**
+> 1. Otwórz **Plik › Nowy › Okno raportu** i wpisz:
+>
+>    ```sql
+>    SELECT department, full_name, salary FROM pel_emp_details ORDER BY department, full_name
+>    ```
+>
+> 2. Naciśnij **F8**.
+>    *Wynik:* tabela HTML z pracownikami.
+> 3. W karcie **Układ** dla kolumny **DEPARTMENT** zaznacz **Grupa**, a dla **SALARY** — **Suma** i format `#,##0.00`.
+> 4. Wykonaj raport ponownie.
+>    *Wynik:* pracownicy pogrupowani według działów, z sumą pensji pod każdym działem i sumą końcową.
 
 **Raport › Zapisz raport jako HTML…**, **Eksportuj dane raportu…** (CSV, TSV, XML, Excel) i **Drukuj raport…** (także
 do PDF) udostępniają wynik. **Zablokuj definicję raportu** ukrywa zapytanie i układ — raport można wtedy tylko
@@ -139,6 +184,9 @@ modyfikacji.
 
 ## Historia lokalna
 
+**Do czego to służy:** to „wehikuł czasu” Twojego kodu. Nawet jeśli nie używasz gita, a zepsułeś procedurę i ją
+skompilowałeś, w historii lokalnej znajdziesz poprzednią wersję.
+
 Pelikan zapisuje wersję pliku albo obiektu przy każdym zapisie, kompilacji, refaktoryzacji i przywróceniu —
 niezależnie od Gita i bez połączenia z bazą. **Plik › Historia lokalna › Historia lokalna** pokazuje wersje aktywnego
 okna; **Porównaj z bieżącym** otwiera różnice, a **Przywróć** wstawia starą wersję (bieżący tekst zostaje w historii).
@@ -146,13 +194,22 @@ okna; **Porównaj z bieżącym** otwiera różnice, a **Przywróć** wstawia sta
 
 ![Historia lokalna pliku](../img/historia-lokalna.png)
 
+> **Ćwiczenie: odzyskaj poprzednią wersję.**
+> 1. Otwórz **Edytuj** na pakiecie **PEL_EMP_API** i na karcie ciała zmień dowolny komentarz. Skompiluj (F8).
+> 2. Wybierz **Plik › Historia lokalna › Historia lokalna**.
+>    *Wynik:* lista wersji z datami — najnowsza to Twoja kompilacja.
+> 3. Zaznacz wcześniejszą wersję i kliknij **Porównaj z bieżącym**.
+>    *Wynik:* przeglądarka różnic pokazuje zmieniony komentarz.
+> 4. Kliknij **Przywróć**, a potem skompiluj (F8).
+>    *Wynik:* w bazie jest znów poprzednia wersja; wersja z komentarzem też zostaje w historii.
+
 ## Projekty, worksety i pliki
 
 - **Projekt** grupuje pliki i obiekty bazy (z notatkami i grupami) w pliku `.prj`. **Projekt › Kompiluj projekt**
   kompiluje wszystko w kolejności elementów, a **Kompiluj zmienione** (Make) — tylko pliki zmienione od ostatniej
   kompilacji projektu i obiekty nieprawidłowe. Opcje projektu to m.in. połączenie, zatrzymanie po pierwszym błędzie i formatowanie. **Zapisz
   pulpit projektu** zapamiętuje otwarte okna.
-- **Workset** (zestaw roboczy) zapamiętuje otwarte okna — także z niezapisanymi zmianami i wartościami zmiennych — i
+- **Workset** (zestaw roboczy) zapamiętuje otwarte okna — jak „sesja pracy” nad jednym zadaniem — także z niezapisanymi zmianami i wartościami zmiennych — i
   przywraca je przy następnym uruchomieniu (**Plik › Workset**: nowy, otwórz, zapisz, przywróć, zamknij, porównaj,
   autozapis). Układ okna głównego zapisujesz w **Widok › Zapisz układ okna**.
 - Przy zamykaniu aplikacji z włączonym **autozapisem workseta** (domyślnie; **Ustawienia › Ogólne › Pliki › Przywracaj okna po ponownym uruchomieniu** albo **Plik › Workset ›

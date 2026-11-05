@@ -1,5 +1,17 @@
 # SQL Window und Ergebnisraster
 
+## Wozu es dient
+
+Im **SQL Window** sprechen Sie mit der Datenbank: Sie geben einen SQL-Befehl ein (z. B. eine `SELECT`-Abfrage), führen
+ihn aus und sehen sich das Ergebnis an. Es ist das meistgenutzte Fenster von Pelikan — darin prüfen Sie Daten,
+korrigieren eine Zeile, bereiten einen Bericht vor oder führen ein Rollout-Skript aus.
+
+**Wann verwenden:** immer, wenn Sie SQL oder einen kurzen PL/SQL-Block ausführen möchten. Zum Schreiben von Paketen und
+Prozeduren dient das Program Window (Kapitel 6), zum Testen von Programmen mit Parametern das Test Window (Kapitel 7) und
+für SQL*Plus-Skripte mit `SET`, `SPOOL`, `PROMPT` die SQL*Plus-Konsole (Kapitel 4).
+
+Die Übungen dieses Kapitels verwenden das Übungsschema aus Kapitel 1.
+
 Das SQL Window dient zum Ausführen von Abfragen und Skripten. Das Ergebnis jeder Abfrage erscheint in einem eigenen Tab
 unter dem Editor, Datenbankmeldungen und die DBMS_OUTPUT-Ausgabe im Tab **Output**. Ein neues Fenster öffnen Sie über
 **Datei › Neu › SQL Window** (⌘N); das Fenster arbeitet auf der Hauptverbindung oder auf der in der Statusleiste
@@ -33,6 +45,25 @@ langen Abfrage kann Pelikan einen Ton abspielen und das Symbol im Dock hüpfen l
 Pelikan schreibt Änderungen nie automatisch fest (die Option **AutoCommit für SQL-Befehle** unter **Einstellungen › SQL
 Window** ist standardmäßig deaktiviert). Eine offene Transaktion zeigt die Statusleiste an („● Transaktion offen“).
 
+> **Übung: ein Befehl oder das ganze Skript.**
+> 1. Öffnen Sie ein neues SQL Window (⌘N) und geben Sie drei Abfragen ein, jede in einer eigenen Zeile:
+>
+>    ```sql
+>    SELECT * FROM pel_departments;
+>    SELECT * FROM pel_employees WHERE dept_id = 20;
+>    SELECT COUNT(*) FROM pel_employees;
+>    ```
+>
+> 2. Klicken Sie in die zweite Zeile und drücken Sie **F8**.
+>    *Ergebnis:* Nur die zweite Abfrage läuft — ein Ergebnis-Tab mit den drei Mitarbeitern der Abteilung 20 (AutoSelect).
+> 3. Drücken Sie **⇧⌘↩** (entgegen AutoSelect ausführen).
+>    *Ergebnis:* Alle drei Abfragen laufen; unter dem Editor sind drei Ergebnis-Tabs.
+> 4. Markieren Sie mit der Maus die ersten beiden Zeilen und drücken Sie **F8**.
+>    *Ergebnis:* Die zwei markierten Abfragen laufen — eine Markierung hat immer Vorrang vor AutoSelect.
+>
+> ⚠️ **Achtung.** Bei ausgeschaltetem AutoSelect führt F8 ohne Markierung das ganze Skript aus — auch `DELETE`- oder
+> `DROP`-Befehle, die „für später“ im Fenster liegen. Lassen Sie im Fenster nur, was Sie ausführen wollen.
+
 ## Codeinhalt
 
 Links vom Editor zeigt der **Codeinhalt** die Struktur des ganzen Skripts: SQL-Anweisungen (erstes Wort und Anfang
@@ -62,6 +93,24 @@ Ausnahmebehandlungen — siehe Kapitel zum Programmfenster); die Verzweigungs-Ta
 Die Variablenwerte werden im Fenster gemerkt. Die Schaltfläche **&** in der Leiste unter dem Editor (**Sitzung ›
 Variablenersetzung**) schaltet die Ersetzung ab, wenn der Text die Zeichen `&` und `:` in anderer Bedeutung enthält.
 
+**Wozu es dient:** Mit einer Variable schreiben Sie eine Abfrage einmal und führen sie mit verschiedenen Werten aus — ohne
+die Bedingung umzuschreiben. **Bindevariablen** (`:name`) sind außerdem sicherer und für die Datenbank schneller, als
+Werte in den Text einzufügen.
+
+> **Übung: eine Abfrage mit Parameter.**
+> 1. Geben Sie in einem SQL Window ein und führen Sie aus (F8):
+>
+>    ```sql
+>    SELECT first_name, last_name, salary FROM pel_employees WHERE dept_id = :dzial;
+>    ```
+>
+>    *Ergebnis:* Das Fenster **Variablen** erscheint mit einem Feld `dzial`.
+> 2. Geben Sie `30` ein und bestätigen Sie.
+>    *Ergebnis:* drei Zeilen — die Mitarbeiter der Abteilung Sprzedaż (Vertrieb).
+> 3. Führen Sie die Abfrage erneut aus.
+>    *Ergebnis:* Das Fenster Variablen merkt sich den Wert `30`; ändern Sie ihn auf `10` — Sie sehen die Abteilung
+>    Księgowość (Buchhaltung).
+
 ## Direktiven in Kommentaren
 
 Ein Kommentar direkt vor einem Befehl kann das Ergebnis steuern:
@@ -77,6 +126,14 @@ Ein Kommentar direkt vor einem Befehl kann das Ergebnis steuern:
 
 In Dateinamen funktionieren `%dbuser%`, `%dbname%`, `%date%`, `%time%` und `%&variable%`. Ein relativer Pfad gilt ab dem
 Verzeichnis der Datei des Fensters.
+
+Beispiel — ein Ergebnis-Tab mit Namen und der Gehaltssumme unter dem Raster:
+
+```sql
+-- Tab=Mitarbeiter (&Count)
+-- Totals=sum:SALARY
+SELECT first_name, last_name, salary FROM pel_employees;
+```
 
 ## Ergebnisraster
 
@@ -124,6 +181,24 @@ Einstellungen überschritten wird.
 Die meisten dieser Aktionen finden Sie im Kontextmenü des Rasters und unter **Bearbeiten › Ergebnis** oder **Sitzung ›
 Ergebnis**.
 
+> **Übung: mit einem Ergebnis arbeiten.**
+> 1. Führen Sie `SELECT * FROM pel_emp_details;` aus.
+>    *Ergebnis:* 9 Zeilen.
+> 2. Klicken Sie zweimal auf die Spaltenüberschrift **SALARY**.
+>    *Ergebnis:* Der erste Klick sortiert aufsteigend, der zweite absteigend; oben steht Michał Lewandowski (13500).
+> 3. Klicken Sie mit der rechten Maustaste auf die Zelle `Informatyka` in der Spalte **DEPARTMENT** und wählen Sie **Nach
+>    Zellenwert filtern**.
+>    *Ergebnis:* Die drei Zeilen der Abteilung Informatyka (IT) bleiben. Der Filter wirkt auf die abgerufenen Zeilen, ohne
+>    die Datenbank erneut abzufragen; Sie entfernen ihn in der Leiste über dem Raster.
+> 4. Klicken Sie mit der rechten Maustaste auf die Spalte **SALARY**, wählen Sie **Spaltensummen …** und haken Sie Summe
+>    und Durchschnitt an.
+>    *Ergebnis:* Unter dem Raster stehen Summe und Durchschnitt der Gehälter der sichtbaren Zeilen.
+> 5. Markieren Sie einige Zeilen, drücken Sie **⇧⌘C** (mit Überschrift kopieren) und fügen Sie in Numbers oder Excel ein.
+>    *Ergebnis:* die Daten in Spalten, mit Überschriften.
+>
+> ⚠️ **Achtung.** Sortieren, Filter und Summen wirken auf die **abgerufenen** Zeilen. Zeigt das Ergebnis „(mehr …)“, sind
+> noch nicht alle Zeilen abgerufen — rufen Sie alle ab (⇧⌘⇟) oder ergänzen Sie die Abfrage um eine Bedingung.
+
 ## Daten im Raster bearbeiten
 
 Damit ein Ergebnis bearbeitet werden kann, muss die Abfrage die Spalte `ROWID` liefern, z. B.:
@@ -149,6 +224,24 @@ solche Abfrage selbst vor.
 Auf einer Produktionsverbindung erfordert das Speichern eine Bestätigung, auf einer schreibgeschützten Verbindung ist es
 gesperrt.
 
+> **Übung: eine Abteilung über das Raster hinzufügen.**
+> 1. Führen Sie `SELECT t.*, t.rowid FROM pel_departments t;` aus.
+>    *Ergebnis:* 4 Abteilungen.
+> 2. Klicken Sie auf das Schloss über dem Raster (oder ⌥⌘E).
+>    *Ergebnis:* Das Schloss ist offen, die Zellen lassen sich bearbeiten.
+> 3. Wählen Sie **Datensatz einfügen** (⌥⌘I) und geben Sie `50`, `Logistyka`, `Poznań` ein.
+>    *Ergebnis:* Die neue Zeile hat ein **+** in ihrer Kopfzeile, und der Zähler über dem Raster zeigt 1 ausstehende
+>    Änderung.
+> 4. Wählen Sie **SQL der Änderungen kopieren**.
+>    *Ergebnis:* In der Zwischenablage steht ein Befehl `INSERT INTO … PEL_DEPARTMENTS …` — so wird Pelikan die Änderung
+>    speichern.
+> 5. Drücken Sie **⌥⌘S** (Änderungen übernehmen).
+>    *Ergebnis:* Das **+** verschwindet und die Statusleiste zeigt „● Transaktion offen“ — die Änderung ist in der
+>    Datenbank, aber noch nicht festgeschrieben.
+> 6. Drücken Sie **⇧F10** (ROLLBACK) und dann **⇧⌘R** (Ergebnis aktualisieren).
+>    *Ergebnis:* Abteilung 50 ist weg — die Änderung wurde zurückgerollt. Um sie zu behalten, drücken Sie F10 (COMMIT)
+>    statt ROLLBACK.
+
 ## Kopieren und Exportieren
 
 - **Bearbeiten › Ergebnis › Mit Überschrift kopieren** (⇧⌘C), **Überschrift kopieren**, **Als Ausdrucksliste kopieren**
@@ -164,6 +257,13 @@ gesperrt.
 - **Datei › Drucken …** (⌘P) druckt den Code des Fensters mit Syntaxfarben und das Raster (ausgewählte oder alle
   abgerufenen Zeilen).
 
+> **Übung: Export nach Excel.**
+> 1. Führen Sie `SELECT * FROM pel_emp_details;` aus.
+> 2. Wählen Sie **Datei › Ergebnis exportieren …**, das Format Excel (xlsx) und speichern Sie die Datei auf dem
+>    Schreibtisch.
+>    *Ergebnis:* Die Datei öffnet sich in Excel oder Numbers; Gehälter sind Zahlen (man kann sie summieren), die
+>    Überschriften sind die Spaltennamen.
+
 ## Diagramme
 
 **Sitzung › Ergebnis › Diagramm …** öffnet ein Diagrammfenster mit dem aktuellen Ergebnis-Tab. Wählen Sie den Typ
@@ -174,6 +274,16 @@ aus.
 
 ![Diagrammfenster aus einem Abfrageergebnis](../img/wykres.png)
 
+> **Übung: Gehälter nach Abteilung als Diagramm.**
+> 1. Führen Sie aus:
+>
+>    ```sql
+>    SELECT department, SUM(salary) AS total FROM pel_emp_details GROUP BY department;
+>    ```
+>
+> 2. Wählen Sie **Sitzung › Ergebnis › Diagramm …**, Typ Balken, Kategorie **DEPARTMENT**, Reihe **TOTAL**.
+>    *Ergebnis:* ein Balken für jede Abteilung; den höchsten hat Informatyka.
+
 ## Query By Example
 
 **Sitzung › Ergebnis › Query By Example …** (⇧⌘E) schränkt ein Ergebnis ein, ohne dass Sie WHERE schreiben: Geben Sie
@@ -181,6 +291,17 @@ unter den Spaltennamen Kriterien ein — einen Wert, ein Muster mit `%`, einen O
 … and …` oder `null` — und Pelikan führt die Abfrage mit den Bedingungen erneut aus. Der Textvergleich unterscheidet
 keine Groß-/Kleinschreibung, Datumswerte werden ohne Uhrzeit verglichen. **Query By Example löschen** stellt die
 ursprüngliche Abfrage wieder her.
+
+> **Übung: QBE.**
+> 1. Führen Sie `SELECT * FROM pel_employees;` aus und drücken Sie **⇧⌘E**.
+> 2. Geben Sie unter der Spalte **SALARY** `> 10000` ein, unter **LAST_NAME** — `%ski`.
+>    *Ergebnis:* Nach dem Bestätigen bleibt eine Zeile — Michał Lewandowski (13500). Piotr Kowalski endet auch auf „ski“,
+>    verdient aber 9500. QBE hat beide Bedingungen gleichzeitig zur Abfrage hinzugefügt (mit AND verbunden).
+> 3. Wählen Sie **Query By Example löschen**.
+>    *Ergebnis:* wieder alle Zeilen.
+
+Wie QBE Texte und Datumswerte vergleicht, stellen Sie unter **Einstellungen › SQL Window › Query By Example** ein
+(Kapitel 13).
 
 ## Statistiken und Plan
 

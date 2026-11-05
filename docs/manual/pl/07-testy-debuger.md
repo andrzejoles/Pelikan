@@ -1,5 +1,15 @@
 # Okno testu, debuger i profiler
 
+## Do czego to służy
+
+Napisanie programu to połowa pracy — trzeba jeszcze sprawdzić, czy działa. **Okno testu** wywołuje procedurę albo
+funkcję z wybranymi parametrami i pokazuje, co zwróciła. **Debuger** pozwala wykonywać program linia po linii
+i podglądać wartości zmiennych — to najlepszy sposób, żeby zrozumieć cudzy kod albo znaleźć przyczynę błędu.
+**Profiler** mierzy, ile czasu zajmuje każda linia — pokazuje, gdzie program jest wolny.
+
+**Kiedy użyć:** okno testu — po każdej zmianie programu; debuger — gdy program daje zły wynik i nie wiesz dlaczego;
+profiler — gdy program działa poprawnie, ale za wolno.
+
 ## Okno testu
 
 Okno testu uruchamia blok PL/SQL ze zmiennymi wiązanymi i pozwala go debugować i profilować. Najprościej otworzyć je z
@@ -13,6 +23,21 @@ otworzysz przez **Plik › Nowy › Okno testu**.
    żółto. Pasek stanu pokazuje czas wykonania.
 3. Zatwierdź albo wycofaj zmiany: F10 / ⇧F10 (opcja **AutoCommit po wykonaniu okna testu** w **Ustawienia › Okno
    SQL** zatwierdza automatycznie).
+
+> **Ćwiczenie: przetestuj funkcję i procedurę.**
+> 1. W Przeglądarce obiektów rozwiń pakiet **PEL_EMP_API**, prawym klikiem na funkcji **GET_SALARY** wybierz **Testuj**.
+>    *Wynik:* okno testu (litera **T**) z blokiem `begin :result := ….pel_emp_api.get_salary(p_emp_id => :p_emp_id);
+>    end;` i tabelą zmiennych `result` i `p_emp_id`.
+> 2. W tabeli zmiennych wpisz `1` jako wartość `p_emp_id` i naciśnij **F8**.
+>    *Wynik:* `result` = 12000, wyróżnione na żółto (wartość się zmieniła).
+> 3. Wpisz `999` i naciśnij **F8** jeszcze raz.
+>    *Wynik:* błąd `ORA-01403` — nie znaleziono danych (wyjątek NO_DATA_FOUND), a karta **Stos błędu** pokazuje linię w pakiecie,
+>    w której wystąpił.
+> 4. Otwórz w ten sam sposób **Testuj** dla procedury **RAISE_SALARY**, wpisz `p_emp_id` = 2, `p_percent` = 10 i
+>    naciśnij **F8**.
+>    *Wynik:* bez błędu; pasek stanu pokazuje otwartą transakcję. Okno SQL (osobna sesja) nadal widzi starą pensję
+>    pracownika 2 — nową zobaczy dopiero po COMMIT w oknie testu.
+> 5. Naciśnij **⇧F10** (ROLLBACK), żeby nie zostawiać zmiany w bazie.
 
 Pozostałe karty:
 
@@ -68,6 +93,30 @@ Debuger używa pakietu Oracle DBMS_DEBUG i działa na bazach 19c–26ai.
 
 Fokus zostaje w oknie głównym, więc możesz krokować skrótami, patrząc na kod.
 
+> **Ćwiczenie: prześledź pętlę w debugerze.**
+>
+> Wymaga uprawnienia `DEBUG CONNECT SESSION` (sprawdź **Debugowanie › Uprawnienia debugera…**).
+>
+> 1. W Przeglądarce obiektów zaznacz pakiet **PEL_EMP_API** i wybierz **Narzędzia › Obiekt › Dodaj informację
+>    debugowania**.
+>    *Wynik:* pakiet jest skompilowany ponownie z informacją debugowania.
+> 2. Prawym klikiem na **PRINT_DEPARTMENT** wybierz **Testuj** i wpisz `p_dept_id` = 20.
+> 3. Wybierz **Debugowanie › Rozpocznij debugowanie** (F9).
+>    *Wynik:* otwiera się okno **Debuger**, a wykonanie zatrzymuje się na pierwszej linii bloku.
+> 4. Naciśnij **⌃N** (krok do).
+>    *Wynik:* debuger wchodzi do ciała pakietu, do procedury `print_department`.
+> 5. Naciskaj **⌃O** (krok przez) i patrz na kartę **Zmienne**.
+>    *Wynik:* przy każdym obrocie pętli rośnie `l_total`, a rekord `r` pokazuje kolejnego pracownika. Najedź myszą na
+>    `l_total` w kodzie — dymek pokaże wartość.
+> 6. Kliknij margines przy linii `dbms_output.put_line('Razem: ' || l_total);` (punkt przerwania) i naciśnij **⌃R**
+>    (kontynuuj).
+>    *Wynik:* debuger zatrzymuje się na tej linii; `l_total` = 30200.
+> 7. Naciśnij **⌃R** jeszcze raz.
+>    *Wynik:* program kończy się, a karta **Wyjście** okna testu pokazuje listę pracowników i sumę.
+>
+> ⚠️ **Na co uważać.** Debugowana sesja jest zatrzymana — trzyma blokady i otwartą transakcję. Nie zostawiaj debugera
+> zatrzymanego na długo na bazie współdzielonej; kończ go **⇧F9**. Nie debuguj na produkcji.
+
 ### Zmienne, obserwowane wyrażenia, stos
 
 - **Zmienne** — lokalne, parametry, globalne pakietu (prywatne i publiczne), rekordy, kolekcje i obiekty jako drzewo,
@@ -104,6 +153,12 @@ jeden punkt.
 
 Testy utPLSQL też można debugować: **Debugowanie › utPLSQL: debuguj test pod kursorem**.
 
+> **Ćwiczenie: punkt warunkowy.**
+> 1. W oknie **Debugowanie › Punkty przerwania…** wybierz punkt z poprzedniego ćwiczenia (albo ustaw nowy na linii
+>    `l_total := l_total + r.salary;`) i w kolumnie **Warunek** wpisz `r.salary > 10000`.
+> 2. Uruchom debugowanie (F9) i naciśnij **⌃R**.
+>    *Wynik:* debuger zatrzymuje się tylko dla Anny Nowak (12000) — pozostałych pracowników pomija.
+
 ## Profiler
 
 1. W karcie **Profiler** okna testu wybierz w polu **Profiler przy wykonaniu** rodzaj: **Liniowy (DBMS_PROFILER)**
@@ -113,6 +168,9 @@ Testy utPLSQL też można debugować: **Debugowanie › utPLSQL: debuguj test po
 3. Karta **Profiler** pokaże raport: dla profilera liniowego — czas, liczbę wykonań i udział każdej linii z wykresem
    słupkowym; dla hierarchicznego — funkcje z czasem własnym i z wywołaniami oraz drzewo wywołań. Jednostkę czasu i
    próg udziału ustawisz w tej karcie.
+
+**Jak czytać raport:** linie z największym udziałem czasu to te, które warto przyspieszyć. Często są to zapytania SQL
+wykonywane w pętli — zamiast tysiąca pojedynczych zapytań lepiej jedno zapytanie dla wszystkich wierszy.
 
 Menu **Przebiegi** w karcie (oraz **Debugowanie › Przebiegi profilera**) otwiera raporty wcześniejszych przebiegów.
 Brakujące tabele profilera Pelikan tworzy w Twoim schemacie (na połączeniu produkcyjnym po potwierdzeniu, na

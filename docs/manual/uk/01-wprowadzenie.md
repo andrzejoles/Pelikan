@@ -6,8 +6,46 @@ Pelikan — це нативне середовище macOS для роботи �
 користувачі знайдуть знайомі вікна: **SQL Window**, **Консоль SQL*Plus**, **Program Window**, **Test Window**, **Explain
 Plan Window** і **Object Browser** (вкладка **Об'єкти**).
 
-Ця довідка описує, як виконувати типові завдання. Повний список команд із поточними скороченнями наведено в останньому
-розділі, **Клавіатурні скорочення**, який генерує сама програма.
+Повний список команд із поточними скороченнями наведено в останньому розділі, **Клавіатурні скорочення**, який генерує
+сама програма.
+
+## Як користуватися цією довідкою
+
+Довідку написано так, щоб нею міг скористатися навіть той, хто лише починає працювати з Oracle. Кожну функцію описано
+за однаковою схемою:
+
+- **Для чого це** — яке завдання розв'язує і які поняття треба знати;
+- **Коли використовувати** — типові ситуації з щоденної роботи;
+- **Вправа крок за кроком** — пронумеровані кроки; після кожного кроку *Результат:* каже, що ви маєте побачити. Якщо
+  бачите щось інше, зупиніться й поверніться до попереднього кроку;
+- **На що зважати** — типові помилки та їхні наслідки (позначено ⚠️).
+
+Вправи використовують **навчальну схему** — кілька таблиць і пакет, які ви створите скриптом із розділу **Навчальна
+схема** нижче. Найкраще читати розділи по черзі: 1 (цей), 2 (з'єднання), 3 (SQL Window), далі — за потребою. Невідоме
+слово шукайте в **Основних поняттях** або в словнику наприкінці розділу 15.
+
+## Основні поняття
+
+Кілька слів, що трапляються в усій довідці:
+
+| Поняття | Що означає |
+|---|---|
+| **База даних** (екземпляр Oracle) | Сервер, що зберігає дані й виконує команди. Ви з'єднуєтеся з ним через мережу. |
+| **Користувач** і **схема** | Обліковий запис у базі (наприклад, `SCOTT`). Об'єкти, створені користувачем, належать до однойменної схеми. |
+| **Об'єкт** | Те, що живе в схемі: таблиця, подання, індекс, послідовність, пакет, процедура, функція, тригер, тип… |
+| **Таблиця** | Дані в рядках і стовпцях, наприклад `PEL_EMPLOYEES`. |
+| **Подання** (view) | Збережений запит, який можна читати як таблицю. |
+| **SQL** | Мова команд бази: `SELECT` (читання), `INSERT`, `UPDATE`, `DELETE`, `MERGE` (зміна даних), `CREATE`, `ALTER`, `DROP` (зміна об'єктів — DDL). |
+| **PL/SQL** | Мова програмування Oracle: блоки `BEGIN … END`, змінні, цикли, винятки. Код PL/SQL, збережений у базі, — це **програма** (пакет, процедура, функція, тригер). |
+| **Пакет** | Набір пов'язаних процедур і функцій: **специфікація** (що надає) і **тіло** (як це робить). |
+| **Сеанс** | Одне з'єднання з базою. Pelikan може мати кілька сеансів одночасно (розділ 13, *Режим сеансу*). |
+| **Транзакція** | Зміни даних у сеансі, які ще не є постійними. **COMMIT** робить їх постійними (їх бачать інші), **ROLLBACK** скасовує. Команди DDL (`CREATE`, `ALTER`, `DROP`) самі фіксують відкриту транзакцію. |
+| **Компіляція** | Збереження програми PL/SQL у базі та її перевірка Oracle. Програма з помилкою має стан *INVALID*. |
+| **З'єднання** (у Pelikan) | Збережений набір даних для входу: користувач, база, середовище. |
+| **Середовище** | Позначка бази: для розробки, тестова, продуктивна (робоча). Від нього залежать кольори й попередження. |
+
+> ⚠️ **Найважливіше правило:** вправляйтеся й експериментуйте лише на базі **для розробки** або **тестовій**. На робочій
+> базі (справжні дані компанії) виконуйте лише те, що розумієте і що погоджено.
 
 ## Вимоги
 
@@ -60,14 +98,235 @@ Thin не підтримує з'єднань TCPS і Oracle Wallet, зовніш
 
 ## Перші кроки
 
-1. Клацніть вкладку **З'єднання** в лівій колонці, а потім кнопку **+** (або виберіть **Сеанс › З'єднання › Нове
+### Для чого це
+
+Перш ніж почати роботу, Pelikan має знати, з якою базою з'єднуватися. Цей короткий посібник проведе вас від порожньої
+програми до першого результату запиту. Від адміністратора або колеги вам потрібні: **ім'я користувача**, **пароль** і
+**адреса бази** — у вигляді `host:port/служба` (наприклад, `dbdev.firma.local:1521/DEVPDB`) або **псевдонім** із файлу
+`tnsnames.ora` (наприклад, `DEV`).
+
+### Вправа: перше з'єднання й перший запит
+
+1. Клацніть вкладку **З'єднання** в лівому стовпці вікна, а потім кнопку **+** (або виберіть **Сеанс › З'єднання › Нове
    з'єднання…**).
-2. Введіть назву, користувача, пароль і базу (`хост:порт/служба` або псевдонім із `tnsnames.ora`), виберіть середовище й
-   натисніть **Тестувати**, а потім **Зберегти**.
-3. Двічі клацніть з'єднання в списку — воно стане **головним з'єднанням** (виділяється жирним).
-4. Відкрийте нове SQL Window (**Файл › Новий › SQL Window**, ⌘N), введіть запит і виконайте його клавішею F8 або ⌘↩.
+   *Результат:* відкривається вікно **Нове з'єднання**.
+2. У полі **Назва** введіть назву, за якою впізнаєте базу, наприклад `dev_moya_baza`. Введіть **Користувача**, **Пароль**
+   і **Базу** (адресу або псевдонім). Як **Середовище** виберіть **Для розробників**.
+3. Клацніть **Тестувати**.
+   *Результат:* повідомлення «З'єднано:» з описом версії бази. Якщо бачите помилку, перевірте дані — найчастіші причини й
+   розв'язання наведено в розділі 15 (`ORA-01017` — хибний пароль або користувач, `ORA-12154` — невідомий псевдонім,
+   `ORA-12541` — хибний хост або порт).
+4. Позначте **Запам'ятати пароль у В'язці ключів**, якщо не хочете вводити пароль під час кожного з'єднання, — він
+   потрапить до В'язки ключів macOS, а не до файлу. Клацніть **Зберегти**.
+   *Результат:* з'єднання є в списку.
+5. Двічі клацніть з'єднання в списку.
+   *Результат:* назва з'єднання жирна — тепер це **головне з'єднання**. Нові вікна використовуватимуть його. Його назву
+   видно також у заголовку вікна Pelikan.
+6. Відкрийте нове SQL Window: **Файл › Новий › SQL Window** або **⌘N**.
+   *Результат:* нова вкладка з літерою **S** і порожнім редактором. Рядок стану під редактором показує назву з'єднання.
+7. Введіть запит:
+
+   ```sql
+   SELECT sysdate, user FROM dual;
+   ```
+
+8. Натисніть **F8** (або **⌘↩**).
+   *Результат:* під редактором з'являється вкладка результату з одним рядком: поточні дата й час сервера та ваше ім'я
+   користувача. Рядок стану показує кількість рядків і час виконання.
+
+Готово — ви вмієте з'єднуватися й виконувати запит. Наступний крок: створіть навчальну схему.
 
 ![Головне вікно: список з'єднань ліворуч, SQL Window з результатом запиту](../img/okno-glowne.png)
+
+## Навчальна схема
+
+### Для чого це
+
+Вправи довідки працюють із кількома невеликими об'єктами: таблицею відділів `PEL_DEPARTMENTS`, таблицею працівників
+`PEL_EMPLOYEES`, поданням `PEL_EMP_DETAILS` і пакетом `PEL_EMP_API` (зарплата, підвищення, прийняття на роботу, список
+працівників відділу). Префікс `PEL_` дає змогу легко відрізнити їх від ваших об'єктів і видалити після навчання. Приклади
+даних (назви відділів і працівників) — польською; вправи посилаються на них саме так.
+
+> ⚠️ Скрипт створює об'єкти в схемі користувача, під яким ви ввійшли. Запускайте його на **власній схемі для розробки
+> або тестування** — ніколи на робочій базі чи на схемі, спільній з іншими, без згоди команди. Щоб створити об'єкти,
+> потрібні привілеї `CREATE TABLE`, `CREATE VIEW` і `CREATE PROCEDURE` та місце в табличному просторі (на схемі для
+> розробки вони зазвичай є).
+
+### Вправа: створення навчальної схеми
+
+1. З'єднайтеся з базою для розробки (попередня вправа) і відкрийте нове SQL Window (**⌘N**).
+2. Скопіюйте у вікно весь скрипт нижче.
+3. Виділіть увесь текст (**⌘A**) і натисніть **F8**.
+   *Результат:* Pelikan виконує команди по черзі, а вкладка **Output** під редактором показує повідомлення про кожну.
+   Команди розділяє крапка з комою, пакети — скісна риска `/` в окремому рядку.
+4. Перевірте результат запитом:
+
+   ```sql
+   SELECT * FROM pel_emp_details;
+   ```
+
+   *Результат:* 9 рядків — працівники з назвою відділу й містом. Ewa Woźniak не має відділу, тому ці стовпці порожні.
+5. Відкрийте вкладку **Об'єкти** в лівому стовпці й розгорніть теку **Таблиці**.
+   *Результат:* видно `PEL_DEPARTMENTS` і `PEL_EMPLOYEES`.
+
+Скрипт сам фіксує дані (COMMIT після INSERT), тож їх видно й в інших вікнах.
+
+```sql
+-- Навчальна схема довідки Pelikan.
+-- Запускайте на ВЛАСНІЙ схемі для розробки або тестування — ніколи на робочій базі.
+CREATE TABLE pel_departments (
+  dept_id  NUMBER(4)    CONSTRAINT pel_departments_pk PRIMARY KEY,
+  name     VARCHAR2(50) NOT NULL,
+  city     VARCHAR2(50)
+);
+
+CREATE TABLE pel_employees (
+  emp_id      NUMBER(6) GENERATED BY DEFAULT AS IDENTITY (START WITH 100)
+              CONSTRAINT pel_employees_pk PRIMARY KEY,
+  first_name  VARCHAR2(30) NOT NULL,
+  last_name   VARCHAR2(30) NOT NULL,
+  email       VARCHAR2(60) CONSTRAINT pel_employees_email_uk UNIQUE,
+  hire_date   DATE DEFAULT SYSDATE NOT NULL,
+  salary      NUMBER(8,2) CONSTRAINT pel_employees_salary_ck CHECK (salary > 0),
+  dept_id     NUMBER(4) CONSTRAINT pel_employees_dept_fk REFERENCES pel_departments,
+  manager_id  NUMBER(6) CONSTRAINT pel_employees_mgr_fk REFERENCES pel_employees
+);
+
+CREATE INDEX pel_employees_dept_ix ON pel_employees (dept_id);
+
+CREATE OR REPLACE VIEW pel_emp_details AS
+  SELECT e.emp_id, e.first_name || ' ' || e.last_name AS full_name, e.salary,
+         d.name AS department, d.city
+    FROM pel_employees e
+    LEFT JOIN pel_departments d ON d.dept_id = e.dept_id;
+
+INSERT INTO pel_departments VALUES (10, 'Księgowość', 'Warszawa');
+INSERT INTO pel_departments VALUES (20, 'Informatyka', 'Kraków');
+INSERT INTO pel_departments VALUES (30, 'Sprzedaż', 'Gdańsk');
+INSERT INTO pel_departments VALUES (40, 'Kadry', NULL);
+
+INSERT INTO pel_employees VALUES (1, 'Anna', 'Nowak', 'anna.nowak@example.com', DATE '2019-03-01', 12000, 20, NULL);
+INSERT INTO pel_employees VALUES (2, 'Piotr', 'Kowalski', 'piotr.kowalski@example.com', DATE '2020-06-15', 9500, 20, 1);
+INSERT INTO pel_employees VALUES (3, 'Maria', 'Wiśniewska', 'maria.wisniewska@example.com', DATE '2021-01-10', 8700, 20, 1);
+INSERT INTO pel_employees VALUES (4, 'Tomasz', 'Wójcik', 'tomasz.wojcik@example.com', DATE '2018-09-03', 11000, 10, NULL);
+INSERT INTO pel_employees VALUES (5, 'Katarzyna', 'Kamińska', 'katarzyna.kaminska@example.com', DATE '2022-02-14', 7200, 10, 4);
+INSERT INTO pel_employees VALUES (6, 'Michał', 'Lewandowski', 'michal.lewandowski@example.com', DATE '2017-11-20', 13500, 30, NULL);
+INSERT INTO pel_employees VALUES (7, 'Agnieszka', 'Zielińska', 'agnieszka.zielinska@example.com', DATE '2023-04-01', 6800, 30, 6);
+INSERT INTO pel_employees VALUES (8, 'Paweł', 'Szymański', NULL, DATE '2024-07-08', 6500, 30, 6);
+INSERT INTO pel_employees VALUES (9, 'Ewa', 'Woźniak', 'ewa.wozniak@example.com', DATE '2025-01-02', 7000, NULL, NULL);
+COMMIT;
+
+CREATE OR REPLACE PACKAGE pel_emp_api AS
+  -- Зарплата працівника; немає працівника — NO_DATA_FOUND.
+  FUNCTION get_salary(p_emp_id IN NUMBER) RETURN NUMBER;
+  -- Підвищення на p_percent відсотків; від’ємний відсоток — помилка -20001. Без COMMIT.
+  PROCEDURE raise_salary(p_emp_id IN NUMBER, p_percent IN NUMBER);
+  -- Новий працівник; повертає його ідентифікатор. Без COMMIT.
+  FUNCTION hire(p_first_name IN VARCHAR2, p_last_name IN VARCHAR2, p_salary IN NUMBER,
+                p_dept_id IN NUMBER) RETURN NUMBER;
+  -- Список працівників відділу через DBMS_OUTPUT.
+  PROCEDURE print_department(p_dept_id IN NUMBER);
+END pel_emp_api;
+/
+
+CREATE OR REPLACE PACKAGE BODY pel_emp_api AS
+  FUNCTION get_salary(p_emp_id IN NUMBER) RETURN NUMBER IS
+    l_salary pel_employees.salary%TYPE;
+  BEGIN
+    SELECT salary INTO l_salary FROM pel_employees WHERE emp_id = p_emp_id;
+    RETURN l_salary;
+  END get_salary;
+
+  PROCEDURE raise_salary(p_emp_id IN NUMBER, p_percent IN NUMBER) IS
+  BEGIN
+    IF p_percent < 0 THEN
+      raise_application_error(-20001, 'Podwyżka nie może być ujemna');
+    END IF;
+    UPDATE pel_employees
+       SET salary = ROUND(salary * (1 + p_percent / 100), 2)
+     WHERE emp_id = p_emp_id;
+    IF SQL%ROWCOUNT = 0 THEN
+      RAISE NO_DATA_FOUND;
+    END IF;
+  END raise_salary;
+
+  FUNCTION hire(p_first_name IN VARCHAR2, p_last_name IN VARCHAR2, p_salary IN NUMBER,
+                p_dept_id IN NUMBER) RETURN NUMBER IS
+    l_emp_id pel_employees.emp_id%TYPE;
+  BEGIN
+    INSERT INTO pel_employees (first_name, last_name, salary, dept_id)
+    VALUES (p_first_name, p_last_name, p_salary, p_dept_id)
+    RETURNING emp_id INTO l_emp_id;
+    RETURN l_emp_id;
+  END hire;
+
+  PROCEDURE print_department(p_dept_id IN NUMBER) IS
+    l_total NUMBER := 0;
+  BEGIN
+    FOR r IN (SELECT first_name, last_name, salary
+                FROM pel_employees
+               WHERE dept_id = p_dept_id
+               ORDER BY last_name) LOOP
+      dbms_output.put_line(r.last_name || ' ' || r.first_name || ': ' || r.salary);
+      l_total := l_total + r.salary;
+    END LOOP;
+    dbms_output.put_line('Razem: ' || l_total);
+  END print_department;
+END pel_emp_api;
+/
+```
+
+Для вправ із тестами (розділ 8) потрібен також тестовий пакет utPLSQL. Створюйте його лише тоді, коли в базі встановлено
+фреймворк utPLSQL (розділ 8, *Встановлення utPLSQL у базі*):
+
+```sql
+CREATE OR REPLACE PACKAGE pel_emp_api_test AS
+  --%suite(Testy pakietu pel_emp_api)
+
+  --%test(get_salary zwraca pensję pracownika)
+  PROCEDURE get_salary_returns_salary;
+
+  --%test(raise_salary podnosi pensję o 10%)
+  PROCEDURE raise_salary_ten_percent;
+
+  --%test(Ujemna podwyżka zgłasza błąd -20001)
+  --%throws(-20001)
+  PROCEDURE raise_salary_negative;
+END pel_emp_api_test;
+/
+
+CREATE OR REPLACE PACKAGE BODY pel_emp_api_test AS
+  PROCEDURE get_salary_returns_salary IS
+  BEGIN
+    ut.expect(pel_emp_api.get_salary(1)).to_equal(12000);
+  END get_salary_returns_salary;
+
+  PROCEDURE raise_salary_ten_percent IS
+  BEGIN
+    pel_emp_api.raise_salary(2, 10);
+    ut.expect(pel_emp_api.get_salary(2)).to_equal(10450);
+  END raise_salary_ten_percent;
+
+  PROCEDURE raise_salary_negative IS
+  BEGIN
+    pel_emp_api.raise_salary(2, -5);
+  END raise_salary_negative;
+END pel_emp_api_test;
+/
+```
+
+### Видалення навчальної схеми
+
+Коли закінчите навчання, видаліть навчальні об'єкти (перша команда повідомить про помилку, якщо ви не створювали тестовий
+пакет, — це не страшно):
+
+```sql
+DROP PACKAGE pel_emp_api_test;
+DROP PACKAGE pel_emp_api;
+DROP VIEW pel_emp_details;
+DROP TABLE pel_employees PURGE;
+DROP TABLE pel_departments PURGE;
+```
 
 ## Головне вікно
 

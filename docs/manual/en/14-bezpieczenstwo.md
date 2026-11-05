@@ -3,6 +3,15 @@
 This chapter gathers in one place how Pelikan protects passwords, data and databases — also against mistakes and against
 AI agents.
 
+**For beginners — five rules worth knowing from day one:**
+
+1. Save passwords only with **Remember password in Keychain** — never in scripts, text files or code comments.
+2. Give every connection its true **environment**; for production you only read from, check **Read-only**.
+3. Before COMMIT check with a query what you changed. Structure changes (DDL) commit by themselves and cannot be undone
+   with ROLLBACK.
+4. Do not send anyone a log with names shown or a connection export file with passwords.
+5. Give an AI agent read-only access first and read the preview in the consent window.
+
 ## Passwords
 
 - Database passwords, SSH passwords (tunnels and Pro*C targets) and SSH key passphrases are stored **only in the macOS

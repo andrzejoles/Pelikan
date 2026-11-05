@@ -1,7 +1,16 @@
 # Verbindungen
 
-Eine Verbindung ist eine gespeicherte Definition: wohin verbunden wird, als wer und mit welchen Sicherheitsregeln.
-Definitionen werden ohne Passwörter gespeichert — Passwörter landen ausschließlich im macOS-Schlüsselbund.
+## Wozu es dient
+
+Eine **Verbindung** ist eine gespeicherte Definition: wohin verbunden wird (die Adresse der Datenbank), als wer (der
+Benutzer) und mit welchen Sicherheitsregeln (Umgebung, schreibgeschützt, Zugriff von KI-Agenten). Dank der Definitionen
+geben Sie Adresse und Benutzernamen nicht jedes Mal ein, und Pelikan weiß, welche Datenbanken Produktionsdatenbanken
+sind und Vorsicht verlangen. Definitionen werden **ohne Passwörter** gespeichert — Passwörter landen ausschließlich im
+macOS-Schlüsselbund.
+
+Ein typischer Entwickler hat mehrere Verbindungen: seine eigene Entwicklungsdatenbank, die Testdatenbank des Teams und —
+manchmal — Lesezugriff auf die Produktion. Dieses Kapitel zeigt, wie Sie sie anlegen, ordnen und wie Pelikan Sie vor dem
+Fehler „falsche Datenbank“ schützt.
 
 ## Verbindungsliste
 
@@ -30,6 +39,14 @@ Sie können auch das Anmeldefenster verwenden: **Sitzung › Anmelden …** (⇧
 Suchfeld und ermöglicht es, eine neue Verbindung anzulegen oder eine vorhandene zu bearbeiten. **Sitzung ›
 Hauptverbindung abmelden** beendet die Sitzungen der Hauptverbindung.
 
+> **Übung: Verbindungen in Ordnern ordnen.**
+> 1. Klicken Sie in der Verbindungsliste auf die Schaltfläche für einen neuen Ordner und nennen Sie ihn `Entwicklung`.
+>    *Ergebnis:* Ein leerer Ordner erscheint in der Liste.
+> 2. Ziehen Sie die Verbindung `dev_meine_db` (aus Kapitel 1) auf den Ordner.
+>    *Ergebnis:* Die Verbindung ist im Ordner; der Ordner der zuletzt verwendeten zeigt sie weiterhin.
+> 3. Klicken Sie mit der rechten Maustaste auf die Verbindung und wählen Sie **Neues Fenster › SQL Window**.
+>    *Ergebnis:* Ein SQL Window öffnet sich auf dieser Verbindung, und das Fenster steht unter der Verbindung.
+
 ## Neue Verbindung
 
 Wählen Sie **Sitzung › Verbindungen › Neue Verbindung …** oder klicken Sie in der Verbindungsliste auf **+**. Das
@@ -41,7 +58,8 @@ Definitionsfenster hat vier Tabs.
   mit Präfix, z. B. `dev_test`.
 - **Ordner** und **Umgebung**: *Entwicklung*, *Test*, *Produktion* oder *Sonstige*. Die Umgebung bestimmt die Farbe des
   Zeigers (Test — orange, Produktion — rot), die Bestätigung von Änderungen und was der KI-Agent darf. **Eigene
-  Zeigerfarbe** ersetzt die Umgebungsfarbe.
+  Zeigerfarbe** ersetzt die Umgebungsfarbe. ⚠️ Stellen Sie die Umgebung immer wahrheitsgemäß ein — davon hängen
+  die Warnungen vor Änderungen auf der Produktion ab.
 - **Benutzer**, **Passwort** und **Passwort im Schlüsselbund sichern**. Ohne Sichern fragt Pelikan beim ersten Verbinden
   nach dem Passwort und behält es nur bis zum Beenden der Anwendung im Speicher. Passt ein gespeichertes Passwort nicht
   mehr (ORA-01017), fragt Pelikan erneut danach.
@@ -99,6 +117,14 @@ werden im Kapitel *KI-Agenten* beschrieben.
 
 ## Umgebungen und Schutz vor Fehlern
 
+### Wozu es dient
+
+Der gefährlichste Fehler eines Entwicklers ist es, einen Befehl „nur zum Ausprobieren“ auf der Produktion auszuführen.
+Pelikan hilft auf drei Arten, ihn zu vermeiden: mit **Farbe** (Sie sehen, auf welcher Datenbank Sie arbeiten), mit einer
+**Bestätigung** von Änderungen auf einer Produktionsdatenbank und mit einer **Sperre** von Änderungen auf einer
+schreibgeschützten Verbindung.
+
+
 - Die Farbe der Verbindung ist in der Verbindungsliste, auf dem Fenster-Tab (ein Punkt vor dem Namen), in der Fensterliste und in der Statusleiste
   zu sehen. Die Option **Editorhintergrund in Verbindungsfarbe** (**Einstellungen › Allgemein**) färbt auch den
   Hintergrund des Editors. Im selben Tab können Sie Farbregeln nach dem Muster `benutzer@datenbank` hinzufügen (z. B.
@@ -115,6 +141,34 @@ werden im Kapitel *KI-Agenten* beschrieben.
 - Pelikan schreibt eine Transaktion nie selbst fest. Beim Schließen eines Fensters oder der Anwendung mit offener
   Transaktion fragt es, ob festgeschrieben (COMMIT) oder zurückgerollt (ROLLBACK) werden soll; das Verhalten beim
   Abmelden ändern Sie unter **Einstellungen › Allgemein › Abmelden mit offener Transaktion**.
+
+### Übung: den Schutz in Aktion sehen (ohne Risiko)
+
+Die Übung verwendet Ihre Entwicklungsdatenbank, die die Produktion spielt — auf der echten Produktion ändert sie nichts.
+
+1. Klicken Sie mit der rechten Maustaste auf `dev_meine_db`, wählen Sie **Unter anderem Namen kopieren …** und nennen
+   Sie die Kopie `dev_schein_produktion`.
+   *Ergebnis:* In der Liste steht eine zweite Definition derselben Datenbank.
+2. Klicken Sie mit der rechten Maustaste auf die Kopie, wählen Sie **Bearbeiten …**, stellen Sie im Tab **Allgemein** die
+   **Umgebung** auf *Produktion* und klicken Sie auf **Speichern**.
+   *Ergebnis:* Der Punkt neben der Verbindung ist rot.
+3. Klicken Sie mit der rechten Maustaste auf die Kopie, wählen Sie **Neues Fenster › SQL Window** und geben Sie ein:
+
+   ```sql
+   UPDATE pel_employees SET salary = salary WHERE emp_id = 1;
+   ```
+
+4. Drücken Sie **F8**.
+   *Ergebnis:* Statt der Ausführung erscheint das Fenster „Änderungen auf der Produktionsverbindung“. Klicken Sie auf
+   **Abbrechen** — der Befehl erreicht die Datenbank nicht.
+5. Bearbeiten Sie die Kopie noch einmal, haken Sie im Tab **Erweitert** **Schreibgeschützt** an und speichern Sie. Führen
+   Sie dasselbe UPDATE aus.
+   *Ergebnis:* Pelikan weist den Befehl mit der Meldung „Verbindung … ist schreibgeschützt — ändernder Befehl blockiert“
+   ab, und die Statusleiste des Fensters zeigt „schreibgeschützt“.
+6. Löschen Sie zum Schluss die Kopie: Rechtsklick › **Löschen …**.
+
+> ⚠️ **Achtung.** Der Schutz funktioniert nur, wenn die Umgebung richtig eingestellt ist. Wenn Sie eine Verbindung zur
+> Produktion anlegen, wählen Sie *Produktion*, und wenn Sie nur lesen müssen — haken Sie auch **Schreibgeschützt** an.
 
 ## Passwörter und Touch ID
 
@@ -135,7 +189,8 @@ speichert das neue im Schlüsselbund, wenn die Verbindung ihr Passwort speichert
 
 ## Oracle Wallet
 
-Pelikan unterstützt zwei Arten von Wallets:
+Ein **Wallet** (Oracle Wallet) ist eine verschlüsselte Datei, die Passwörter oder Zertifikate speichert. Pelikan
+unterstützt zwei Arten:
 
 - **Passwortspeicher** (Secure External Password Store) — Anmeldung ohne Passwort in Pelikan (`/@alias`). Das
   Wallet-Verzeichnis und das Oracle-Net-Konfigurationsverzeichnis geben Sie unter **Einstellungen › Oracle › Oracle Net
@@ -157,19 +212,54 @@ Passwörter aus dem Wallet gelangen nie zu Pelikan.
 - **OAuth2-Token aus Datei** — ein vorab mit einem externen Werkzeug (z. B. Azure CLI) erzeugtes Token; Sie geben die
   Token-Datei oder das Token-Verzeichnis an.
 
+Diese Verfahren richtet meist der Administrator ein — wenn Sie nicht wissen, welches Sie verwenden sollen, wählen Sie
+*Passwort*.
+
 ## Fenster, Sitzungen und Fensterverbindung
+
+### Wozu es dient
+
 
 Jedes Fenster hat seine eigene Verbindung, die in der Statusleiste zu sehen ist. Klicken Sie darauf, um das Fenster auf
 eine andere Verbindung umzuschalten; hat das Fenster eine offene Transaktion, fragt Pelikan zuerst nach COMMIT oder
 ROLLBACK. Ein Fenster mit **angehefteter** Verbindung (📌) behält sie, wenn Sie die Hauptverbindung wechseln; das
 standardmäßige Anheften neuer Fenster aktivieren Sie unter **Einstellungen › Allgemein**.
 
-Sitzungsmodus (**Einstellungen › Allgemein › Sitzungsmodus**):
+Sitzungsmodus (**Einstellungen › Allgemein › Sitzungsmodus**; die Folgen jedes Modus beschreibt Kapitel 13):
 
 - **Multi** (Standard) — jedes Fenster hat eine eigene Datenbanksitzung, sodass eine lange Abfrage in einem Fenster die
   anderen nicht blockiert und die Transaktionen der Fenster unabhängig sind;
 - **Dual** — die Fenster teilen sich eine Sitzung, die Kompilierung hat eine eigene;
 - **Single** — alles in einer Sitzung.
+
+### Übung: unabhängige Transaktionen zweier Fenster
+
+Diese Übung zeigt, was eine Transaktion ist und warum COMMIT wichtig ist.
+
+1. Öffnen Sie zwei SQL Windows auf der Entwicklungsdatenbank (zweimal **⌘N**). Nennen wir sie A und B.
+2. Führen Sie in Fenster A aus (F8):
+
+   ```sql
+   UPDATE pel_employees SET salary = 20000 WHERE emp_id = 1;
+   ```
+
+   *Ergebnis:* Die Statusleiste von Fenster A zeigt „Zeilen: 1“ und „● Transaktion offen“.
+3. Führen Sie in Fenster B aus:
+
+   ```sql
+   SELECT salary FROM pel_employees WHERE emp_id = 1;
+   ```
+
+   *Ergebnis:* 12000 — Fenster B **sieht** die nicht festgeschriebene Änderung aus Fenster A **nicht** (eine eigene
+   Sitzung).
+4. Gehen Sie zurück zu Fenster A und drücken Sie **⇧F10** (ROLLBACK).
+   *Ergebnis:* Die Transaktionsmarkierung verschwindet; die Änderung ist rückgängig gemacht. Hätten Sie **F10** (COMMIT)
+   gedrückt, sähe Fenster B nach einer erneuten Abfrage 20000.
+
+> ⚠️ Solange Sie eine Änderung nicht festschreiben oder zurückrollen, ist die Zeile **gesperrt** — andere Sitzungen, die
+> sie ändern wollen, warten. Lassen Sie Transaktionen nicht lange offen, besonders auf gemeinsam genutzten Datenbanken.
+
+### Verbindungsverlust und hängende Abfragen
 
 Pelikan prüft alle 60 Sekunden, ob die Verbindung noch besteht (das Intervall ändern Sie in den Einstellungen), und
 reagiert auf ihren Verlust. Optional schließt es die Sitzungen von Fenstern, die länger als eine festgelegte Zeit
@@ -179,9 +269,11 @@ Lässt sich eine Abfrage nicht unterbrechen (**Unterbrechen**, ⌘.), verwenden 
 (Kill)** — Pelikan beendet die Sitzung des Fensters in der Datenbank aus einer separaten Sitzung (erfordert das Privileg
 ALTER SYSTEM) und verbindet das Fenster neu.
 
+### Verbindungskonsole
+
 **Sitzung › Verbindungskonsole** öffnet ein der Verbindung zugeordnetes SQL Window (eines pro Verbindung). Sein Inhalt
 wird automatisch gespeichert und kehrt beim erneuten Öffnen zurück, auch nach einem Neustart von Pelikan — ein guter Ort
-für griffbereite Abfragen.
+für griffbereite Abfragen, die Sie auf einer Datenbank oft verwenden.
 
 ## Export und Import von Definitionen
 
@@ -195,7 +287,8 @@ Passwort für ein anderes Werkzeug abzulesen. Der Export erfordert die Bestätig
 Passwort). Passwörter können **mit einer Passphrase verschlüsselt** (ohne Passphrase nicht wiederherstellbar) oder im
 **Klartext** gespeichert werden — dann warnt Pelikan zusätzlich, und jeder mit der Datei kann sie lesen. **Definitionen
 importieren …** erkennt eine Datei mit Passwörtern, fragt bei Verschlüsselung nach der Passphrase, speichert die
-Passwörter im Schlüsselbund und **löscht die Datei**.
+Passwörter im Schlüsselbund und **löscht die Datei**. ⚠️ Schicken Sie eine Datei mit Passwörtern nie per E-Mail und
+legen Sie sie nie in ein Repository.
 
 ## Lizenzen der Oracle-Packs
 
@@ -203,4 +296,5 @@ AWR-, ASH- und ADDM-Berichte erfordern das kostenpflichtige Oracle Diagnostics P
 das Tuning Pack. Bei der ersten Verwendung einer solchen Funktion fragt Pelikan, welche Lizenz die Datenbank hat
 (*Diagnostics und Tuning Pack*, *Nur Diagnostics Pack*, *Keine Lizenz*), und merkt sich die Antwort in der
 Verbindungsdefinition (ändern können Sie sie im Tab **Erweitert**). Die Funktion arbeitet auch dann nicht, wenn der
-Datenbankparameter `CONTROL_MANAGEMENT_PACK_ACCESS` sie nicht zulässt.
+Datenbankparameter `CONTROL_MANAGEMENT_PACK_ACCESS` sie nicht zulässt. Wenn Sie nicht wissen, welche Lizenz Ihr
+Unternehmen hat, fragen Sie den Administrator — die Verwendung einer Funktion ohne Lizenz verletzt den Vertrag mit Oracle.

@@ -1,5 +1,15 @@
 # Przeglądarka obiektów i edytory obiektów
 
+## Do czego to służy
+
+Baza zawiera setki albo tysiące obiektów: tabel, widoków, pakietów, indeksów. **Przeglądarka obiektów** pokazuje je
+w drzewie, jak Finder pliki — możesz je przeglądać, szukać, otwierać do edycji, oglądać ich dane i strukturę. **Edytory
+obiektów** pozwalają tworzyć i zmieniać obiekty w formularzu, bez ręcznego pisania poleceń `CREATE` i `ALTER` — Pelikan
+pokazuje wygenerowany SQL, zanim go wykona, więc przy okazji uczysz się składni.
+
+**Kiedy użyć:** gdy chcesz sprawdzić, jakie kolumny ma tabela, kto używa pakietu, które obiekty są nieprawidłowe po
+wdrożeniu, albo dodać kolumnę czy indeks.
+
 ## Przeglądarka obiektów
 
 Karta **Obiekty** w lewej kolumnie pokazuje obiekty baz otwartych połączeń w folderach według typu: **Funkcje**,
@@ -51,6 +61,20 @@ w całej bazie.
 
 Drzewo działa płynnie także w schematach z dziesiątkami tysięcy obiektów — słownik jest czytany w tle.
 
+> **Ćwiczenie: poznaj tabelę ćwiczeniową.**
+> 1. Kliknij kartę **Obiekty** w lewej kolumnie.
+>    *Wynik:* drzewo z połączeniem głównym na górze i folderami typów obiektów pod nim.
+> 2. W polu **Filtr** wpisz `pel`.
+>    *Wynik:* w folderach zostają tylko obiekty z „PEL” w nazwie.
+> 3. Rozwiń **Tabele › PEL_EMPLOYEES**.
+>    *Wynik:* widać kolumny z typami, więzy (klucz główny `PEL_EMPLOYEES_PK`, unikalny e-mail, CHECK pensji, klucze
+>    obce), indeksy i zależności.
+> 4. Rozwiń **Używany przez**.
+>    *Wynik:* widok `PEL_EMP_DETAILS` i pakiet `PEL_EMP_API` — to obiekty, które przestaną działać, jeśli usuniesz albo
+>    zmienisz tę tabelę.
+> 5. W polu **Filtr** wpisz `status=invalid`.
+>    *Wynik:* lista nieprawidłowych obiektów — po świeżym utworzeniu schematu ćwiczeniowego powinna być pusta.
+
 ### Menu obiektu
 
 Kliknij obiekt prawym przyciskiem myszy (albo z ⌃). W menu, zależnie od typu obiektu:
@@ -73,6 +97,17 @@ Kliknij obiekt prawym przyciskiem myszy (albo z ⌃). W menu, zależnie od typu 
 Na kolumnie albo więzie tabeli menu ma **Zmień nazwę elementu…**. Gdy zaznaczysz kilka obiektów (⌘+klik albo ⇧+klik),
 menu proponuje czynności wspólne: **Kopiuj nazwy po przecinku** (także ⌘C), **DDL zaznaczonych**, **Rekompiluj
 zaznaczone** i **Usuń zaznaczone…**.
+
+> **Ćwiczenie: dane, DDL i gotowy kod z menu.**
+> 1. Prawym klikiem na **PEL_DEPARTMENTS** wybierz **Pokaż dane**.
+>    *Wynik:* nowe okno SQL z zapytaniem i wynikiem — 4 działy.
+> 2. Prawym klikiem na **PEL_EMPLOYEES** wybierz **DDL**.
+>    *Wynik:* nowe okno z poleceniem `CREATE TABLE`, które odtworzy tabelę — tak sprawdzisz dokładną definicję obiektu.
+> 3. Prawym klikiem na **PEL_EMPLOYEES** wybierz **Generuj kod › INSERT**.
+>    *Wynik:* pojawia się polecenie INSERT ze wszystkimi kolumnami — wystarczy uzupełnić wartości.
+>
+> ⚠️ **Na co uważać.** **Usuń obiekt…** i **Rekompiluj** działają od razu na bazie (po potwierdzeniu). Usunięcia tabeli
+> nie cofniesz ROLLBACKiem — pomóc może tylko Kosz (niżej), jeśli jest włączony w bazie.
 
 Pozostałe operacje na zaznaczonym obiekcie są w menu **Narzędzia › Obiekt**: m.in. **Dodaj informację debugowania**,
 **Edytuj definicję tabeli**, **Edytor widoku**, **Porównaj z aktywnym oknem**, **Porównaj z obiektem w innej bazie…**,
@@ -106,6 +141,14 @@ W **Ustawienia › Przeglądarka obiektów** ustawisz:
 - **Narzędzia › Kompiluj nieprawidłowe obiekty…** pokazuje nieprawidłowe obiekty schematu i kompiluje je w kolejności
   zależności, aż przestanie to cokolwiek zmieniać; błędy kompilacji są na liście.
 
+> **Ćwiczenie: kto używa kolumny SALARY?**
+> 1. Naciśnij **⇧⌘O** (Znajdź obiekty bazy), wpisz `salary` i uruchom wyszukiwanie.
+>    *Wynik:* lista miejsc w źródłach i definicjach, gdzie pada słowo `salary` — m.in. ciało pakietu `PEL_EMP_API`.
+> 2. Kliknij dwukrotnie trafienie w `PEL_EMP_API`.
+>    *Wynik:* okno programu z ciałem pakietu, kursor w linii z trafieniem.
+>
+> Tak przed zmianą kolumny sprawdzasz, który kod trzeba będzie poprawić.
+
 ## Edytor tabeli
 
 Nową tabelę utworzysz przez **Plik › Nowy › Tabela…**, a istniejącą otworzysz poleceniem **Edytuj** z menu tabeli
@@ -133,6 +176,19 @@ Karty edytora:
 **Zastosuj** wykonuje zmiany jako `ALTER` i zatrzymuje się przy pierwszym błędzie; **Odśwież** wczytuje definicję z
 bazy ponownie. Na połączeniu produkcyjnym potrzebne jest potwierdzenie.
 
+> **Ćwiczenie: dodaj kolumnę w edytorze tabeli.**
+> 1. Prawym klikiem na **PEL_EMPLOYEES** wybierz **Edytuj**.
+>    *Wynik:* edytor tabeli na karcie **Ogólne**.
+> 2. Przejdź do karty **Kolumny** i dodaj kolumnę `PHONE` typu `VARCHAR2(20)`, z dopuszczalną wartością NULL.
+> 3. Przejdź do karty **SQL**.
+>    *Wynik:* polecenie `ALTER TABLE … ADD (PHONE VARCHAR2(20))` — dokładnie to, co Pelikan wykona.
+> 4. Kliknij **Zastosuj**.
+>    *Wynik:* kolumna jest w tabeli; w Przeglądarce obiektów (po **Odśwież**) widać ją na liście kolumn.
+>
+> ⚠️ **Na co uważać.** DDL (ALTER) zatwierdza otwartą transakcję i nie da się go cofnąć ROLLBACKiem. Zmiany, które
+> wymagają **Recreate table**, przebudowują tabelę z danymi — na dużej tabeli trwa to długo i blokuje ją. Na
+> współdzielonej bazie uzgodnij zmianę struktury z zespołem.
+
 ## Inne edytory obiektów
 
 W **Plik › Nowy** znajdziesz edytory: **Sekwencja…**, **Synonim…**, **Indeks…**, **Widok (edytor)…** (zapytanie,
@@ -154,6 +210,10 @@ Hasła wpisane w edytorach użytkowników i łączy są tylko w pamięci okna �
 **Narzędzia › Kosz** pokazuje usunięte tabele (USER_RECYCLEBIN). **Kosz › Przywróć z kosza…** przywraca obiekt pod
 starą albo nową nazwą, a **Kosz › Opróżnij kosz…** usuwa obiekty trwale (po potwierdzeniu).
 
+**Do czego to służy:** w Oracle `DROP TABLE` bez `PURGE` nie usuwa tabeli od razu, tylko przenosi ją do kosza (jeśli
+kosz jest włączony w bazie — parametr `RECYCLEBIN`). Dzięki temu omyłkowo usuniętą tabelę można przywrócić razem
+z danymi.
+
 ## Diagramy
 
 - **Narzędzia › Diagram › Diagram ER ze schematu…** rysuje tabele schematu (albo pasujące do maski) z kluczami obcymi
@@ -162,6 +222,15 @@ starą albo nową nazwą, a **Kosz › Opróżnij kosz…** usuwa obiekty trwale
   komendą **Narzędzia › Diagram › Dodaj do diagramu**.
 
 ![Diagram ER schematu](../img/diagram-er.png)
+
+**Do czego to służy:** diagram ER (encje i związki) pokazuje tabele jako prostokąty, a klucze obce jako linie między
+nimi. To najszybszy sposób, żeby zrozumieć nieznany schemat.
+
+> **Ćwiczenie: diagram schematu ćwiczeniowego.**
+> 1. Wybierz **Narzędzia › Diagram › Diagram ER ze schematu…**. W pierwszym pytaniu zostaw podpowiedziany schemat
+>    (Twój), w drugim — **Maska nazw tabel (LIKE)** — wpisz `PEL%`.
+>    *Wynik:* diagram z tabelami `PEL_DEPARTMENTS` i `PEL_EMPLOYEES` połączonymi linią klucza obcego, oraz linią
+>    `PEL_EMPLOYEES` do samej siebie (kierownik pracownika).
 
 W oknie diagramu: **Powiązane** dodaje tabele połączone kluczami obcymi, **Zależności** — linie zależności,
 **Notatka** i **Grupa** porządkują rysunek, **Kolumny** pokazuje lub ukrywa kolumny, **Siatka** włącza przyciąganie do

@@ -26,6 +26,10 @@ clic en **Abrir igualmente** (consulta el capítulo *Introducción*).
   **Ajustes › Oracle › Oracle Net y Oracle Wallet**) o usa una dirección `host:puerto/servicio`.
 - **ORA-01017:** contraseña incorrecta; Pelikan vuelve a pedirla. Marca que se recuerde para sustituir la contraseña en
   el Llavero.
+- **ORA-12541 / ORA-12170:** nadie responde en la dirección indicada o la conexión no llega: comprueba el host y el
+  puerto (normalmente 1521), la VPN y que la base esté en marcha.
+- **ORA-12514:** el servidor funciona pero no conoce el servicio indicado: comprueba el nombre del servicio tras la barra
+  en `host:puerto/servicio`.
 - **ORA-28001:** la contraseña ha caducado; Pelikan muestra la ventana de cambio de contraseña.
 - **Oracle Wallet:** el campo **Base de datos** debe ser exactamente el alias guardado en la cartera, y la cartera debe
   tener el archivo `cwallet.sso` (inicio de sesión automático). El estado de la cartera se ve en **Ajustes ›
@@ -101,6 +105,26 @@ conexiones, servidores y objetos y las rutas de archivos están ocultos o sustit
 predeterminada (el mismo nombre tiene siempre el mismo hash). En **Ajustes › General › Registro de la
 aplicación** eliges cuánto se registra (*Advertencias y errores*, *Eventos*, *Detalles — diagnóstico*) y puedes
 mostrar los nombres, algo útil para buscar la causa de un problema en tu propio equipo.
+
+## Los errores de Oracle más frecuentes al aprender
+
+Un mensaje de error de Oracle empieza con un código `ORA-nnnnn`. **F1** sobre el código en el editor o un doble clic en
+un error de compilación abre su descripción en la documentación de Oracle. Los errores más comunes al principio:
+
+| Error | Qué significa | Qué hacer |
+|---|---|---|
+| ORA-00942 | la tabla o vista no existe | comprueba el nombre y el esquema (`esquema.tabla`), si estás en la conexión correcta y si tienes el privilegio SELECT |
+| ORA-00904 | identificador no válido | errata en el nombre de una columna o una columna de otra tabla distinta de las del FROM |
+| ORA-00933 / ORA-00936 | sentencia SQL mal terminada / falta una expresión | falta una coma, un paréntesis o una palabra clave; un punto y coma en mitad de la sentencia |
+| ORA-01403 | no se han encontrado datos (NO_DATA_FOUND) | `SELECT … INTO` no encontró ninguna fila: trata la excepción o revisa la condición |
+| ORA-01422 | `SELECT … INTO` devolvió más de una fila (TOO_MANY_ROWS) | restringe la condición WHERE |
+| ORA-00001 | violación de restricción única | insertas un valor que ya existe en una columna con clave primaria o única |
+| ORA-02291 / ORA-02292 | no existe la clave padre / existen registros hijos | clave ajena: añade primero la fila padre (p. ej. el departamento) y al borrar, primero las hijas |
+| ORA-01722 | número no válido | comparas texto con un número o el texto no se puede convertir en número |
+| ORA-06502 | error numérico o de valor en PL/SQL | valor demasiado largo para una variable (p. ej. `VARCHAR2(10)`) o conversión errónea |
+| ORA-00054 / espera sin fin | recurso ocupado: fila o tabla bloqueada por otra sesión | alguien (también tú en otra ventana) tiene un cambio sin confirmar; mira el ejercicio de bloqueos del capítulo 10 |
+| ORA-04068 | el estado del paquete se ha descartado | el paquete se recompiló durante tu sesión: vuelve a ejecutar la sentencia |
+| PLS-00201 | el identificador debe declararse | el nombre de una variable, procedimiento o paquete es desconocido o falta el privilegio EXECUTE |
 
 ## Limitaciones conocidas
 

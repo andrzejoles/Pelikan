@@ -8,6 +8,16 @@ Pelikan nunca envía el código fuente al servidor directamente, no hace `merge`
 
 Los comandos están en el menú **Herramientas › Build remoto de Pro*C**.
 
+**Para qué sirve:** los programas **Pro*C** son programas en C con sentencias SQL incrustadas, compilados con el
+precompilador de Oracle en el servidor donde se ejecutan (a menudo sistemas antiguos, p. ej. AIX). Este capítulo solo te
+sirve si tu equipo desarrolla esos programas: si no sabes si te afecta, puedes saltártelo.
+
+**Cuándo usarlo:** cuando cambias un programa Pro*C en un repositorio git y quieres compilarlo e instalarlo en un servidor
+de pruebas (UAT) o de producción (PROD) sin entrar a mano por SSH.
+
+> ⚠️ **Atención.** Un despliegue en un destino **PROD** sustituye programas en funcionamiento. Compila y comprueba primero
+> el cambio en **UAT** y acuerda el despliegue en producción con el equipo.
+
 ## Destinos SSH
 
 **Herramientas › Build remoto de Pro*C › Destinos SSH…** abre el gestor de destinos: los servidores en los que

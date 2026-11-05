@@ -1,5 +1,15 @@
 # Object Browser und Objekteditoren
 
+## Wozu es dient
+
+Eine Datenbank enthält Hunderte oder Tausende Objekte: Tabellen, Views, Pakete, Indizes. Der **Object Browser** zeigt sie
+in einem Baum, wie der Finder Dateien — Sie können sie durchsehen, suchen, zum Bearbeiten öffnen, ihre Daten und Struktur
+ansehen. Mit **Objekteditoren** legen Sie Objekte in einem Formular an und ändern sie, ohne `CREATE`- und `ALTER`-Befehle
+von Hand zu schreiben — Pelikan zeigt das erzeugte SQL vor der Ausführung, sodass Sie nebenbei die Syntax lernen.
+
+**Wann verwenden:** wenn Sie prüfen möchten, welche Spalten eine Tabelle hat, wer ein Paket verwendet, welche Objekte
+nach einem Rollout ungültig sind, oder um eine Spalte oder einen Index hinzuzufügen.
+
 ## Object Browser
 
 Der Tab **Objekte** in der linken Spalte zeigt die Datenbankobjekte der geöffneten Verbindungen in Ordnern nach Typ:
@@ -54,6 +64,20 @@ eine eigene Bestätigung (standardmäßig **Abbrechen**), weil es Objekte in der
 
 Der Baum arbeitet auch in Schemata mit Zehntausenden von Objekten flüssig — das Dictionary wird im Hintergrund gelesen.
 
+> **Übung: die Übungstabelle kennenlernen.**
+> 1. Klicken Sie in der linken Spalte auf den Tab **Objekte**.
+>    *Ergebnis:* ein Baum mit der Hauptverbindung oben und darunter den Ordnern der Objekttypen.
+> 2. Geben Sie im Feld **Filter** `pel` ein.
+>    *Ergebnis:* In den Ordnern bleiben nur Objekte mit „PEL“ im Namen.
+> 3. Klappen Sie **Tabellen › PEL_EMPLOYEES** auf.
+>    *Ergebnis:* Sie sehen die Spalten mit Typen, die Constraints (Primärschlüssel `PEL_EMPLOYEES_PK`, eindeutige
+>    E-Mail, CHECK des Gehalts, Fremdschlüssel), Indizes und Abhängigkeiten.
+> 4. Klappen Sie **Verwendet von** auf.
+>    *Ergebnis:* die View `PEL_EMP_DETAILS` und das Paket `PEL_EMP_API` — die Objekte, die nicht mehr funktionieren, wenn
+>    Sie diese Tabelle löschen oder ändern.
+> 5. Geben Sie im Feld **Filter** `status=invalid` ein.
+>    *Ergebnis:* die Liste der ungültigen Objekte — direkt nach dem Anlegen des Übungsschemas sollte sie leer sein.
+
 ### Objektmenü
 
 Klicken Sie mit der rechten Maustaste auf ein Objekt (oder mit ⌃). Je nach Objekttyp enthält das Menü:
@@ -78,6 +102,19 @@ Klicken Sie mit der rechten Maustaste auf ein Objekt (oder mit ⌃). Je nach Obj
 Auf einer Spalte oder einem Constraint einer Tabelle hat das Menü **Element umbenennen…**. Wenn Sie mehrere Objekte
 auswählen (⌘+Klick oder ⇧+Klick), bietet das Menü gemeinsame Aktionen an: **Namen kommagetrennt kopieren** (auch ⌘C),
 **DDL der ausgewählten**, **Ausgewählte neu kompilieren** und **Ausgewählte löschen…**.
+
+> **Übung: Daten, DDL und fertiger Code aus dem Menü.**
+> 1. Klicken Sie mit der rechten Maustaste auf **PEL_DEPARTMENTS** und wählen Sie **Daten anzeigen**.
+>    *Ergebnis:* ein neues SQL Window mit Abfrage und Ergebnis — 4 Abteilungen.
+> 2. Klicken Sie mit der rechten Maustaste auf **PEL_EMPLOYEES** und wählen Sie **DDL**.
+>    *Ergebnis:* ein neues Fenster mit dem Befehl `CREATE TABLE`, der die Tabelle neu anlegt — so prüfen Sie die genaue
+>    Definition eines Objekts.
+> 3. Klicken Sie mit der rechten Maustaste auf **PEL_EMPLOYEES** und wählen Sie **Code generieren › INSERT**.
+>    *Ergebnis:* ein INSERT-Befehl mit allen Spalten erscheint — Sie müssen nur die Werte ergänzen.
+>
+> ⚠️ **Achtung.** **Objekt löschen …** und **Rekompilieren** wirken sofort auf die Datenbank (nach Bestätigung). Das
+> Löschen einer Tabelle lässt sich nicht mit ROLLBACK rückgängig machen — helfen kann nur der Papierkorb (unten), wenn er
+> in der Datenbank aktiviert ist.
 
 Weitere Operationen mit dem ausgewählten Objekt stehen im Menü **Werkzeuge › Objekt**: u. a. **Debug-Informationen
 hinzufügen**, **Tabellendefinition bearbeiten**, **Sichteditor**, **Mit aktivem Fenster vergleichen**, **Mit Objekt in
@@ -114,6 +151,15 @@ Unter **Einstellungen › Object Browser** legen Sie fest:
 - **Werkzeuge › Ungültige Objekte kompilieren …** zeigt die ungültigen Objekte des Schemas und kompiliert sie in
   Abhängigkeitsreihenfolge, bis sich nichts mehr ändert; Kompilierungsfehler stehen in der Liste.
 
+> **Übung: Wer verwendet die Spalte SALARY?**
+> 1. Drücken Sie **⇧⌘O** (Datenbankobjekte suchen), geben Sie `salary` ein und starten Sie die Suche.
+>    *Ergebnis:* eine Liste der Stellen in Quellen und Definitionen, an denen das Wort `salary` vorkommt — unter anderem
+>    der Body des Pakets `PEL_EMP_API`.
+> 2. Doppelklicken Sie auf den Treffer in `PEL_EMP_API`.
+>    *Ergebnis:* ein Program Window mit dem Body des Pakets, der Cursor in der Zeile mit dem Treffer.
+>
+> So prüfen Sie vor der Änderung einer Spalte, welcher Code angepasst werden muss.
+
 ## Tabelleneditor
 
 Eine neue Tabelle legen Sie über **Datei › Neu › Tabelle …** an, eine vorhandene öffnen Sie mit **Bearbeiten** aus dem
@@ -143,6 +189,19 @@ Tabs des Editors:
 **Anwenden** führt die Änderungen als `ALTER` aus und hält beim ersten Fehler an; **Aktualisieren** lädt die Definition
 erneut aus der Datenbank. Auf einer Produktionsverbindung ist eine Bestätigung nötig.
 
+> **Übung: eine Spalte im Tabelleneditor hinzufügen.**
+> 1. Klicken Sie mit der rechten Maustaste auf **PEL_EMPLOYEES** und wählen Sie **Bearbeiten**.
+>    *Ergebnis:* der Tabelleneditor im Tab **Allgemein**.
+> 2. Wechseln Sie zum Tab **Spalten** und fügen Sie die Spalte `PHONE` vom Typ `VARCHAR2(20)` hinzu, die NULL erlaubt.
+> 3. Wechseln Sie zum Tab **SQL**.
+>    *Ergebnis:* der Befehl `ALTER TABLE … ADD (PHONE VARCHAR2(20))` — genau das, was Pelikan ausführen wird.
+> 4. Klicken Sie auf **Anwenden**.
+>    *Ergebnis:* Die Spalte ist in der Tabelle; im Object Browser (nach **Aktualisieren**) steht sie in der Spaltenliste.
+>
+> ⚠️ **Achtung.** DDL (ALTER) schreibt die offene Transaktion fest und lässt sich nicht mit ROLLBACK rückgängig machen.
+> Änderungen, die **Recreate table** erfordern, bauen die Tabelle samt Daten neu auf — bei einer großen Tabelle dauert das
+> lange und sperrt sie. Stimmen Sie Strukturänderungen auf einer gemeinsamen Datenbank mit dem Team ab.
+
 ## Weitere Objekteditoren
 
 Unter **Datei › Neu** finden Sie die Editoren **Sequenz …**, **Synonym …**, **Index …**, **Sicht (Editor)…** (Abfrage,
@@ -167,6 +226,10 @@ Dateien noch in den Verlauf.
 …** stellt ein Objekt unter dem alten oder einem neuen Namen wieder her, **Papierkorb › Papierkorb leeren …** löscht
 Objekte endgültig (nach Bestätigung).
 
+**Wozu es dient:** In Oracle löscht `DROP TABLE` ohne `PURGE` die Tabelle nicht sofort, sondern verschiebt sie in den
+Papierkorb (wenn er in der Datenbank aktiviert ist — Parameter `RECYCLEBIN`). So lässt sich eine versehentlich gelöschte
+Tabelle samt Daten wiederherstellen.
+
 ## Diagramme
 
 - **Werkzeuge › Diagramm › ER-Diagramm aus Schema …** zeichnet die Tabellen des Schemas (oder die zu einer Maske
@@ -175,6 +238,15 @@ Objekte endgültig (nach Bestätigung).
   Browser ziehen oder mit dem Befehl **Werkzeuge › Diagramm › Zum Diagramm hinzufügen**.
 
 ![ER-Diagramm eines Schemas](../img/diagram-er.png)
+
+**Wozu es dient:** Ein ER-Diagramm (Entitäten und Beziehungen) zeigt Tabellen als Rechtecke und Fremdschlüssel als Linien
+dazwischen. Es ist der schnellste Weg, ein unbekanntes Schema zu verstehen.
+
+> **Übung: Diagramm des Übungsschemas.**
+> 1. Wählen Sie **Werkzeuge › Diagramm › ER-Diagramm aus Schema …**. In der ersten Frage lassen Sie das vorgeschlagene
+>    Schema (Ihres), in der zweiten — **Maske für Tabellennamen (LIKE)** — geben Sie `PEL%` ein.
+>    *Ergebnis:* ein Diagramm mit den Tabellen `PEL_DEPARTMENTS` und `PEL_EMPLOYEES`, verbunden durch eine
+>    Fremdschlüssellinie, und einer Linie von `PEL_EMPLOYEES` zu sich selbst (der Vorgesetzte eines Mitarbeiters).
 
 Im Diagrammfenster: **Verknüpft** fügt über Fremdschlüssel verbundene Tabellen hinzu, **Abhängigkeiten**
 Abhängigkeitslinien, **Notiz** und **Gruppe** ordnen die Zeichnung, **Spalten** blendet Spalten ein oder aus, **Raster**

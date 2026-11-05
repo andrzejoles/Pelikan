@@ -4,6 +4,36 @@ import Testing
 
 @Suite("Instrukcja użytkownika")
 struct UserManualTests {
+    @Test("Ramka ćwiczenia: cytat z listą numerowaną, kodem w punkcie i wynikiem; numeracja po przerwie")
+    func exerciseBox() {
+        let md = """
+        > **Ćwiczenie.**
+        > 1. Wpisz:
+        >
+        >    ```sql
+        >    SELECT 1
+        >      FROM dual;
+        >    ```
+        >
+        >    *Wynik:* jeden wiersz.
+        > 2. Drugi krok.
+
+        Akapit.
+
+        1. a
+        2. b
+
+        Przerwa.
+
+        3. c
+        """
+        let h = UserManual.html(markdown: md)
+        #expect(h.contains("<blockquote><p><strong>Ćwiczenie.</strong></p>"))
+        #expect(h.contains("<ol><li>Wpisz:<pre><code>SELECT 1\n  FROM dual;</code></pre><em>Wynik:</em> jeden wiersz.</li><li>Drugi krok.</li></ol></blockquote>"))
+        #expect(h.contains("<ol><li>a</li><li>b</li></ol>") && h.contains("<ol start=\"3\"><li>c</li></ol>"))
+        #expect(!h.contains("&gt;"))
+    }
+
     @Test("Markdown: nagłówki, akapity, listy z kontynuacją, kod, pogrubienie, kursywa, odnośniki; HTML escapowany")
     func markdown() {
         let md = """
@@ -101,6 +131,11 @@ struct UserManualTests {
             #expect(Set(files) == Set(pl), "Rozdziały \(lang): brak \(Set(pl).subtracting(files).sorted()), nadmiarowe \(Set(files).subtracting(pl).sorted())")
             for f in files {
                 let text = try String(contentsOf: dir.appendingPathComponent(f), encoding: .utf8)
+                // Wszystko, co rozdział zapisuje, ma odpowiednik w rendererze: bez dosłownych znaczników kodu, cytatów
+                // i odnośników do kotwic (renderer przepuszcza tylko http/https).
+                let html = UserManual.html(markdown: text)
+                #expect(!html.contains("```") && !html.contains("<p>&gt;") && !html.contains("<li>&gt;"), "\(lang)/\(f): nieobsłużony Markdown")
+                #expect(!text.contains("](#"), "\(lang)/\(f): odnośnik do kotwicy")
                 for m in text.matches(of: #/!\[[^\]]*\]\(([^)\s]+)\)/#) {
                     let target = dir.appendingPathComponent(String(m.1)).standardizedFileURL
                     #expect(fm.fileExists(atPath: target.path), "\(lang)/\(f): brak obrazka \(m.1)")

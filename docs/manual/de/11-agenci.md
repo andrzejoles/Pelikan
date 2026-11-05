@@ -1,5 +1,12 @@
 # KI-Agenten
 
+## Wozu es dient
+
+Ein **KI-Agent** ist ein Programm (z. B. Claude Code), mit dem Sie in natürlicher Sprache sprechen, und das die Schritte
+einer Aufgabe selbst ausführt: Es liest Code, prüft Daten, schlägt Korrekturen vor und nimmt sie vor. Sie können z. B.
+bitten: „Erkläre, was das Paket PEL_EMP_API tut“, „Schreibe utPLSQL-Tests für diese Prozedur“ oder „Warum ist diese
+Abfrage langsam?“. Der Agent ist ein Helfer, kein Orakel — **prüfen Sie immer, was er vorschlägt**, bevor Sie zustimmen.
+
 Mit Pelikan können Sie mit einem KI-Agenten arbeiten, der in einem in das Fenster eingebauten Terminal läuft — z. B.
 Claude Code — und Ihre Fenster und die Datenbank ausschließlich über die Werkzeuge von Pelikan und nach Regeln sieht,
 die Sie kontrollieren. Der Agent kann Code und Daten lesen, Pläne analysieren, Code in Fenstern schreiben und
@@ -36,6 +43,22 @@ ab.
 
 Das Arbeitsverzeichnis des Agenten ist der Ordner der Datei des aktiven Fensters (z. B. eines Projekts), hat das Fenster
 keine Datei, ein temporäres Sitzungsverzeichnis. Den Bereich blenden Sie über **Ansicht › Agentenbereich** ein und aus.
+
+> **Übung: Ihr erstes Gespräch mit einem Agenten (nur lesend).**
+>
+> Erfordert ein installiertes Agentenprogramm (z. B. `claude`) und ein Konto bei dessen Anbieter.
+>
+> 1. Verbinden Sie sich mit der Entwicklungsdatenbank und öffnen Sie **Bearbeiten** auf dem Paket **PEL_EMP_API**.
+> 2. Wählen Sie **Werkzeuge › KI-Agent › Claude Code starten**. Klicken Sie in der Rechtematrix auf **Alles
+>    schreibgeschützt** und dann auf **Ausführen**.
+>    *Ergebnis:* Rechts öffnet sich der Agentenbereich mit einem Terminal.
+> 3. Schreiben Sie im Terminal: `Erkläre, was das im Fenster geöffnete Paket PEL_EMP_API tut, und zeige Schwachstellen.`
+>    *Ergebnis:* Unter dem Terminal sehen Sie die Werkzeugaufrufe (z. B. Lesen des Fensterinhalts, Beschreibung einer
+>    Tabelle) — jeder mit seinem Zustand — und der Agent antwortet mit einer Beschreibung des Pakets.
+> 4. Bitten Sie: `Füge im Body des Pakets einen Kommentar über der Prozedur hire hinzu.`
+>    *Ergebnis:* Der Agent kann das nicht — die Sitzung ist schreibgeschützt. So lernen Sie den Agenten gefahrlos kennen,
+>    bevor Sie ihm mehr Rechte geben.
+> 5. Klicken Sie auf **Beenden**.
 
 ![Agentenbereich rechts im Hauptfenster](../img/panel-agenta.png)
 
@@ -88,6 +111,11 @@ Das Fenster ist so gestaltet, dass nichts versehentlich genehmigt wird:
 - **Zulassen** wird erst nach 0,8 Sekunden aktiv;
 - Esc lehnt die Anfrage ab (**Ablehnen**);
 - weitere Anfragen warten in einer Warteschlange, bis Sie die aktuelle bearbeitet haben.
+
+> ⚠️ **Achtung.** Lesen Sie die Vorschau, bevor Sie auf **Zulassen** klicken — besonders die Zeilenzahl und die roten
+> Warnungen. Verstehen Sie nicht, was ein Befehl tun wird, klicken Sie auf **Ablehnen** und fragen Sie den Agenten, wozu er
+> ihn braucht. Stimmen Sie keinem COMMIT von Änderungen zu, die Sie nicht mit einer Abfrage geprüft haben. Auf der
+> Produktion ist die Zustimmung zu Änderungen standardmäßig aus — lassen Sie es so.
 
 ## Transaktionen und Rückgängigmachen
 

@@ -1,5 +1,12 @@
 # Agenci AI
 
+## Do czego to służy
+
+**Agent AI** to program (np. Claude Code), z którym rozmawiasz po polsku albo angielsku, a on sam wykonuje kolejne
+kroki zadania: czyta kod, sprawdza dane, proponuje i wprowadza poprawki. Możesz poprosić np. „wyjaśnij, co robi pakiet
+PEL_EMP_API”, „napisz testy utPLSQL dla tej procedury” albo „dlaczego to zapytanie jest wolne?”. Agent jest
+pomocnikiem, nie wyrocznią — **zawsze sprawdzaj, co proponuje**, zanim się zgodzisz.
+
 Pelikan pozwala pracować z agentem AI uruchomionym w terminalu wbudowanym w okno — np. Claude Code — który widzi Twoje
 okna i bazę wyłącznie przez narzędzia Pelikana i na zasadach, które kontrolujesz. Agent może czytać kod i dane,
 analizować plany, pisać i formatować kod w oknach, a zmiany w bazie wykonuje dopiero po Twojej zgodzie.
@@ -32,6 +39,22 @@ każde połączenie.
 
 Katalogiem roboczym agenta jest folder pliku aktywnego okna (np. projektu), a gdy okno nie ma pliku — tymczasowy
 katalog sesji. Panel pokażesz i ukryjesz przez **Widok › Panel agenta**.
+
+> **Ćwiczenie: pierwsza rozmowa z agentem (tylko odczyt).**
+>
+> Wymaga zainstalowanego programu agenta (np. `claude`) i konta u jego dostawcy.
+>
+> 1. Połącz się z bazą deweloperską i otwórz **Edytuj** na pakiecie **PEL_EMP_API**.
+> 2. Wybierz **Narzędzia › Agent AI › Uruchom Claude Code**. W macierzy uprawnień kliknij **Wszystko tylko do
+>    odczytu**, a potem **Uruchom**.
+>    *Wynik:* po prawej otwiera się panel agenta z terminalem.
+> 3. Napisz w terminalu: `Wyjaśnij, co robi pakiet PEL_EMP_API otwarty w oknie, i wskaż słabe miejsca.`
+>    *Wynik:* pod terminalem widać wywołania narzędzi (np. odczyt treści okna, opis tabeli) — każde ze stanem — a agent
+>    odpowiada opisem pakietu.
+> 4. Poproś: `Dopisz do ciała pakietu komentarz nad procedurą hire.`
+>    *Wynik:* agent nie może tego zrobić — sesja jest tylko do odczytu. Tak bezpiecznie poznasz agenta, zanim dasz mu
+>    więcej uprawnień.
+> 5. Kliknij **Zakończ**.
 
 ![Panel agenta po prawej stronie okna głównego](../img/panel-agenta.png)
 
@@ -81,6 +104,10 @@ Okno jest zaprojektowane tak, żeby nie zatwierdzić niczego przypadkiem:
 - **Zezwól** staje się aktywny dopiero po 0,8 sekundy;
 - Esc odrzuca prośbę (**Odmów**);
 - kolejne prośby czekają w kolejce, aż rozpatrzysz bieżącą.
+
+> ⚠️ **Na co uważać.** Czytaj podgląd przed kliknięciem **Zezwól** — zwłaszcza liczbę wierszy i czerwone ostrzeżenia.
+> Jeśli nie rozumiesz, co polecenie zrobi, kliknij **Odmów** i zapytaj agenta, po co mu ono. Nie zgadzaj się na COMMIT
+> zmian, których nie sprawdziłeś zapytaniem. Na produkcji zgoda na zmiany jest domyślnie wyłączona — zostaw tak.
 
 ## Transakcje i cofanie
 

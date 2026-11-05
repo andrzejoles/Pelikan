@@ -1,7 +1,15 @@
 # Conexiones
 
-Una conexión es una definición guardada: adónde conectarse, como quién y con qué reglas de seguridad. Las definiciones
-se guardan sin contraseñas: las contraseñas van únicamente al Llavero de macOS.
+## Para qué sirve
+
+Una **conexión** es una definición guardada: adónde conectarse (la dirección de la base de datos), como quién (el
+usuario) y con qué reglas de seguridad (entorno, solo lectura, acceso de agentes de IA). Gracias a las definiciones no
+escribes la dirección y el nombre de usuario cada vez, y Pelikan sabe qué bases son de producción y exigen cuidado. Las
+definiciones se guardan **sin contraseñas**: las contraseñas van únicamente al Llavero de macOS.
+
+Un desarrollador típico tiene varias conexiones: su propia base de desarrollo, la base de pruebas del equipo y, a veces,
+acceso de lectura a producción. Este capítulo muestra cómo crearlas, ordenarlas y cómo te protege Pelikan del error de
+«la base equivocada».
 
 ## Lista de conexiones
 
@@ -30,6 +38,15 @@ También puedes usar la ventana de inicio de sesión: **Sesión › Iniciar sesi
 con un buscador y permite crear una conexión nueva o editar una existente. **Sesión › Cerrar sesión de la conexión
 principal** finaliza las sesiones de la conexión principal.
 
+> **Ejercicio: ordena las conexiones en carpetas.**
+> 1. En la lista de conexiones haz clic en el botón de carpeta nueva y llámala `Desarrollo`.
+>    *Resultado:* aparece una carpeta vacía en la lista.
+> 2. Arrastra la conexión `dev_mi_bd` (del capítulo 1) a la carpeta.
+>    *Resultado:* la conexión está en la carpeta; la carpeta **Recientes** sigue mostrándola entre las usadas
+>    recientemente.
+> 3. Haz clic derecho en la conexión y elige **Ventana nueva › SQL Window**.
+>    *Resultado:* se abre una SQL Window en esta conexión, y la ventana aparece bajo la conexión.
+
 ## Conexión nueva
 
 Elige **Sesión › Conexiones › Conexión nueva…** o haz clic en **+** en la lista de conexiones. La ventana de definición
@@ -41,7 +58,8 @@ tiene cuatro pestañas.
   nombres con prefijo, p. ej., `dev_test`.
 - **Carpeta** y **Entorno**: *De desarrollo*, *De pruebas*, *De producción* u *Otros*. El entorno determina el color del
   indicador (pruebas: naranja; producción: rojo), la confirmación de los cambios y lo que puede hacer el agente de IA.
-  **Color propio del indicador** sustituye al color del entorno.
+  **Color propio del indicador** sustituye al color del entorno. ⚠️ Pon siempre el entorno verdadero: de él dependen
+  las advertencias antes de cambios en producción.
 - **Usuario**, **Contraseña** y **Recordar la contraseña en el Llavero**. Si no la recuerda, Pelikan pide la contraseña
   en la primera conexión y la mantiene solo en memoria hasta cerrar la aplicación. Cuando una contraseña guardada deja
   de coincidir (ORA-01017), Pelikan vuelve a pedirla.
@@ -98,6 +116,13 @@ capítulo *Agentes de IA*.
 
 ## Entornos y protección contra errores
 
+### Para qué sirve
+
+El error más peligroso de un desarrollador es ejecutar una sentencia «para probar» en producción. Pelikan ayuda a evitarlo
+de tres maneras: con el **color** (ves en qué base trabajas), con la **confirmación** de cambios en una base de producción
+y con el **bloqueo** de cambios en una conexión de solo lectura.
+
+
 - El color de la conexión se ve en la lista de conexiones, en la pestaña de la ventana (un punto antes del nombre), en la lista de ventanas y en la
   barra de estado. La opción **Fondo del editor con el color de la conexión** (**Ajustes › General**) colorea
   también el fondo del editor. En la misma pestaña puedes añadir reglas de color según el patrón `usuario@base` (p. ej.,
@@ -115,6 +140,32 @@ capítulo *Agentes de IA*.
 - Pelikan nunca confirma una transacción por sí mismo. Al cerrar una ventana o la aplicación con una transacción
   abierta, pregunta si confirmar (COMMIT) o revertir (ROLLBACK); el comportamiento al cerrar sesión se cambia en
   **Ajustes › General › Cierre de sesión con una transacción abierta**.
+
+### Ejercicio: ve la protección en acción (sin riesgo)
+
+El ejercicio usa tu base de desarrollo haciéndose pasar por producción: no cambia nada en la producción real.
+
+1. Haz clic derecho en `dev_mi_bd`, elige **Copiar con otro nombre…** y llama a la copia `dev_falsa_produccion`.
+   *Resultado:* en la lista hay una segunda definición de la misma base.
+2. Haz clic derecho en la copia, elige **Editar…**, en la pestaña **General** pon el **Entorno** en *Producción* y haz
+   clic en **Guardar**.
+   *Resultado:* el punto junto a la conexión es rojo.
+3. Haz clic derecho en la copia, elige **Ventana nueva › SQL Window** y escribe:
+
+   ```sql
+   UPDATE pel_employees SET salary = salary WHERE emp_id = 1;
+   ```
+
+4. Pulsa **F8**.
+   *Resultado:* en lugar de ejecutarse aparece la ventana «Cambios en la conexión de producción». Haz clic en
+   **Cancelar**: la sentencia no llega a la base.
+5. Edita la copia otra vez, marca **Solo lectura** en la pestaña **Avanzado** y guarda. Ejecuta el mismo UPDATE.
+   *Resultado:* Pelikan rechaza la sentencia con el mensaje «La conexión … es de solo lectura; sentencia de
+   modificación bloqueada», y la barra de estado de la ventana muestra «solo lectura».
+6. Por último, elimina la copia: clic derecho › **Eliminar…**.
+
+> ⚠️ **Atención.** La protección funciona solo si el entorno está bien puesto. Al crear una conexión a producción elige
+> *Producción*, y si solo necesitas leer, marca también **Solo lectura**.
 
 ## Contraseñas y Touch ID
 
@@ -135,7 +186,7 @@ comandos— y guarda la nueva en el Llavero si la conexión recuerda su contrase
 
 ## Oracle Wallet
 
-Pelikan admite dos tipos de cartera:
+Una **cartera** (Oracle Wallet) es un archivo cifrado que guarda contraseñas o certificados. Pelikan admite dos tipos:
 
 - **Almacén de contraseñas** (Secure External Password Store): inicio de sesión sin contraseña en Pelikan (`/@alias`).
   El directorio de la cartera y el directorio de configuración de Oracle Net se indican en **Ajustes › Oracle ›
@@ -158,19 +209,52 @@ Las contraseñas de la cartera nunca llegan a Pelikan.
 - **Token OAuth2 desde archivo**: un token preparado antes con una herramienta externa (p. ej., Azure CLI); indicas el
   archivo o el directorio del token.
 
+Estos métodos suele configurarlos el administrador: si no sabes cuál usar, elige *Contraseña*.
+
 ## Ventanas, sesiones y conexión de la ventana
+
+### Para qué sirve
+
 
 Cada ventana tiene su propia conexión, visible en la barra de estado. Haz clic en ella para cambiar la ventana a otra
 conexión; si la ventana tiene una transacción abierta, Pelikan pregunta primero por COMMIT o ROLLBACK. Una ventana con
 la conexión **fijada** (📌) no la cambia cuando cambias la conexión principal; la fijación por omisión de las ventanas
 nuevas se activa en **Ajustes › General**.
 
-Modo de sesión (**Ajustes › General › Modo de sesión**):
+Modo de sesión (**Ajustes › General › Modo de sesión**; las consecuencias de cada modo se describen en el capítulo 13):
 
 - **Multi** (por omisión): cada ventana tiene su propia sesión de base de datos, así que una consulta larga en una
   ventana no bloquea las demás y las transacciones de las ventanas son independientes;
 - **Dual**: las ventanas comparten una sesión, y la compilación tiene otra aparte;
 - **Single**: todo en una sola sesión.
+
+### Ejercicio: transacciones independientes de dos ventanas
+
+Este ejercicio muestra qué es una transacción y por qué importa el COMMIT.
+
+1. Abre dos SQL Window en la base de desarrollo (**⌘N** dos veces). Llamémoslas A y B.
+2. En la ventana A ejecuta (F8):
+
+   ```sql
+   UPDATE pel_employees SET salary = 20000 WHERE emp_id = 1;
+   ```
+
+   *Resultado:* la barra de estado de la ventana A muestra «Filas: 1» y «● transacción abierta».
+3. En la ventana B ejecuta:
+
+   ```sql
+   SELECT salary FROM pel_employees WHERE emp_id = 1;
+   ```
+
+   *Resultado:* 12000: la ventana B **no ve** el cambio no confirmado de la ventana A (una sesión distinta).
+4. Vuelve a la ventana A y pulsa **⇧F10** (ROLLBACK).
+   *Resultado:* la marca de transacción desaparece; el cambio queda deshecho. Si hubieras pulsado **F10** (COMMIT), la
+   ventana B vería 20000 al consultar de nuevo.
+
+> ⚠️ Mientras no confirmes o reviertas un cambio, la fila está **bloqueada**: otras sesiones que intenten cambiarla
+> esperarán. No dejes transacciones abiertas mucho tiempo, sobre todo en bases compartidas.
+
+### Pérdida de conexión y consultas colgadas
 
 Cada 60 segundos Pelikan comprueba si la conexión sigue viva (el intervalo se cambia en Ajustes) y reacciona si se
 pierde. Opcionalmente, cierra las sesiones de las ventanas inactivas durante más tiempo del indicado, si no tienen una
@@ -180,9 +264,11 @@ Cuando no se puede interrumpir una consulta (**Interrumpir**, ⌘.), usa **Sesi�
 (Kill)**: Pelikan finaliza la sesión de la ventana en la base de datos desde una sesión aparte (requiere el privilegio
 ALTER SYSTEM) y vuelve a conectar la ventana.
 
+### Consola de la conexión
+
 **Sesión › Consola de la conexión** abre una SQL Window asignada a la conexión (una por conexión). Su contenido se
 guarda automáticamente y vuelve al abrirla de nuevo, también tras reiniciar Pelikan: un buen lugar para consultas a
-mano.
+mano. Úsala para las consultas que repites a menudo en una base.
 
 ## Exportar e importar definiciones
 
@@ -196,7 +282,7 @@ hace años y configurar otra herramienta. La exportación requiere la confirmaci
 contraseña). Las contraseñas pueden ir **cifradas con una frase** (sin la frase no se pueden recuperar) o en **texto
 plano**; en ese caso Pelikan avisa una vez más y cualquiera que tenga el archivo puede leerlas. **Importar definiciones
 de conexión…** reconoce un archivo con contraseñas, pide la frase si está cifrado, guarda las contraseñas en el Llavero
-y **elimina el archivo**.
+y **elimina el archivo**. ⚠️ No envíes nunca por correo un archivo con contraseñas ni lo pongas en un repositorio.
 
 ## Licencias de los paquetes de Oracle
 
@@ -204,4 +290,5 @@ Los informes AWR, ASH y ADDM requieren el Oracle Diagnostics Pack de pago, y SQL
 Pack. La primera vez que usas una función así, Pelikan pregunta qué licencia tiene la base de datos (*Diagnostics y
 Tuning Pack*, *Solo Diagnostics Pack*, *Sin licencia*) y recuerda la respuesta en la definición de la conexión (puedes
 cambiarla en la pestaña **Avanzado**). La función tampoco funciona si el parámetro de la base de datos
-`CONTROL_MANAGEMENT_PACK_ACCESS` no lo permite.
+`CONTROL_MANAGEMENT_PACK_ACCESS` no lo permite. Si no sabes qué licencia tiene tu empresa, pregunta al administrador:
+usar una función sin licencia incumple el contrato con Oracle.
