@@ -91,7 +91,11 @@ haseł.
 > 3. Wybierz **Narzędzia › Import tekstu…**, wskaż plik i jako tabelę docelową `PEL_DEPARTMENTS`.
 >    *Wynik:* Pelikan rozpoznał separator `;` i nagłówek, a pola przypisał do kolumn o tych samych nazwach.
 > 4. Uruchom import, a potem w oknie SQL wykonaj `SELECT * FROM pel_departments;`.
->    *Wynik:* 6 działów. Zatwierdź (F10) albo wycofaj (⇧F10) import tak jak każdą zmianę danych.
+>    *Wynik:* 6 działów.
+>
+> ⚠️ **Na co uważać.** Import działa w osobnej sesji i **sam zatwierdza** wiersze (COMMIT co zadaną liczbę wierszy
+> i na końcu) — ROLLBACK w oknie SQL go nie cofnie. Wiersze z błędem (np. powtórzony klucz) trafiają do raportu
+> importu. Nowe działy usuniesz poleceniem `DELETE FROM pel_departments WHERE dept_id IN (60, 70);` i COMMIT.
 
 ## Raporty
 
