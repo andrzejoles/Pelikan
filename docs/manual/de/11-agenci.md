@@ -49,7 +49,7 @@ keine Datei, ein temporäres Sitzungsverzeichnis. Den Bereich blenden Sie über 
 > Erfordert ein installiertes Agentenprogramm (z. B. `claude`) und ein Konto bei dessen Anbieter.
 >
 > 1. Verbinden Sie sich mit der Entwicklungsdatenbank und öffnen Sie **Bearbeiten** auf dem Paket **PEL_EMP_API**.
-> 2. Wählen Sie im Menü **Werkzeuge › KI-Agent** den Start von Claude Code. Klicken Sie in der Rechtematrix auf **Alles
+> 2. Wählen Sie **Werkzeuge › KI-Agent › Claude Code starten**. Klicken Sie in der Rechtematrix auf **Alles
 >    schreibgeschützt** und dann auf **Ausführen**.
 >    *Ergebnis:* Rechts öffnet sich der Agentenbereich mit einem Terminal.
 > 3. Schreiben Sie im Terminal: `Erkläre, was das im Fenster geöffnete Paket PEL_EMP_API tut, und zeige Schwachstellen.`

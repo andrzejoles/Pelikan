@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-11-05T10:38:46+01:00",
+  "heartbeat": "2026-11-05T15:12:35+01:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
@@ -58,6 +58,7 @@
     }
   ],
   "done": [
+    "Instrukcja D225: polska wersja gotowa (15 rozdziałów), angielska kompletna; renderer ramek ćwiczeń",
     "Instrukcja D225: rozdział 13 (każda opcja Ustawień) i rozdział 1 (pojęcia, samouczek, schemat ćwiczeniowy sprawdzony na bazie testowej)",
     "PR #143 (code review) scalony, CI zielone",
     "Code review: 19 rund xhigh + 3 rundy medium; poprawki zatwierdzone, testy jednostkowe zielone",
@@ -96,8 +97,7 @@
     "Wydanie 1.5.1 opublikowane (wyraźniejsze karty okien, D198), appcast 1.5.1, GitLab wyrównany",
     "PR #118 scalony: wyraźniejsze karty okien (D198) — aktywna z tłem i paskiem akcentu, kolor połączenia jako kropka, kropka zmian w przycisku zamknięcia",
     "Wydanie 1.5.0 opublikowane (osobne pliki .pks/.pkb, pliki zmienione przez inne programy, plan rozwiń/zwiń, nazewnictwo, zrzuty bez okien; zawiera niewydane 1.4.0), appcast 1.5.0, GitLab wyrównany",
-    "PR #117: osobne pliki .pks/.pkb (D194), pliki zmienione przez inne programy (D197), plan rozwiń/zwiń (D193), nazewnictwo (D195), zrzuty bez okien (D196) — przeglądy bez uwag, kontrole CI lokalnie zielone",
-    "Przeglądy kodu bez uwag: nazewnictwo (3 przejścia), zrzuty bez okien (3), plan; osobne pliki .pks/.pkb — 3 przejścia, ostatnie drobiazgi"
+    "PR #117: osobne pliki .pks/.pkb (D194), pliki zmienione przez inne programy (D197), plan rozwiń/zwiń (D193), nazewnictwo (D195), zrzuty bez okien (D196) — przeglądy bez uwag, kontrole CI lokalnie zielone"
   ],
   "next": [
     "Czekam na kolejne zgłoszenia właściciela"
