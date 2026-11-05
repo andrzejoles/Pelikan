@@ -8,6 +8,16 @@ und führt kein `git push` aus.
 
 Die Befehle stehen im Menü **Werkzeuge › Pro*C-Remote-Build**.
 
+**Wozu es dient:** **Pro*C**-Programme sind C-Programme mit eingebetteten SQL-Befehlen, die mit dem Oracle-Precompiler auf
+dem Server kompiliert werden, auf dem sie laufen (oft ältere Systeme, z. B. AIX). Dieses Kapitel ist nur nützlich, wenn
+Ihr Team solche Programme entwickelt — wenn Sie nicht wissen, ob es Sie betrifft, können Sie es überspringen.
+
+**Wann verwenden:** wenn Sie ein Pro*C-Programm in einem git-Repository ändern und es auf einem Test- (UAT) oder
+Produktionsserver (PROD) bauen und installieren möchten, ohne sich von Hand per SSH anzumelden.
+
+> ⚠️ **Achtung.** Ein Rollout auf ein Ziel **PROD** ersetzt laufende Programme. Bauen und prüfen Sie die Änderung zuerst
+> auf **UAT** und stimmen Sie das Produktions-Rollout mit dem Team ab.
+
 ## SSH-Ziele
 
 **Werkzeuge › Pro*C-Remote-Build › SSH-Ziele …** öffnet die Zielverwaltung — die Server, auf die Sie ausrollen. Ziele
