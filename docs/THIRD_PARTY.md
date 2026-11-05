@@ -11,8 +11,10 @@
 | Sparkle | 2.10.1 | MIT | aktualizacje | PROMPT §4.1 |
 | swift-sdk MCP (modelcontextprotocol/swift-sdk) | 0.12.1 (najnowsze; jak Bifold D17) | MIT | serwer MCP w aplikacji | Bifold D17 |
 | eventsource (mattt/eventsource; zależność swift-sdk MCP) | wg Package.resolved projektu Xcode | MIT | w grafie pakietów swift-sdk | Bifold D17 |
+| tinted-theming/schemes (palety base16/base24) | wybrane 95 palet z rewizji w D227 (`scripts/syntax-schemes.py`) | MIT | wbudowane motywy kolorowania składni (tylko dane — 16 barw palety) | D227 |
 
-Teksty licencji w aplikacji (`Licencje zewnętrzne.txt`) składa `scripts/third-party-licenses.sh` — ODPI-C i każdy pakiet
+Teksty licencji w aplikacji (`Licencje zewnętrzne.txt`) składa `scripts/third-party-licenses.sh` — ODPI-C, palety tinted-theming
+(`docs/licenses/tinted-theming-schemes.txt`) i każdy pakiet
 z Package.resolved projektu Xcode z wersją i rewizją; brak checkoutu albo pliku licencji przerywa budowanie instalatora.
 
 Narzędzia deweloperskie (nie trafiają do aplikacji): XcodeGen, Colima + Docker CLI (MIT/Apache), obraz

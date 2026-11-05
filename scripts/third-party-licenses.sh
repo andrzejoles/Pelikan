@@ -39,6 +39,7 @@ for p in json.load(open(sys.argv[1]))["pins"]:
     for f in "$ROOT/Packages/PelikanKit/Sources/CODPI/LICENSE.txt" "$ROOT/Packages/PelikanKit/Sources/CODPI/NOTICE.txt"; do
         section "ODPI-C (oracle/odpi) v26.0.0" "$f"
     done
+    section "tinted-theming/schemes (palety wbudowanych motywów kolorowania składni, D227)" "$ROOT/docs/licenses/tinted-theming-schemes.txt"
     while IFS=$'\t' read -r dir title; do
         [ -d "$CHECKOUTS/$dir" ] || { echo "Brak checkoutu $dir ($title) w $CHECKOUTS — najpierw zbuduj aplikację" >&2; exit 1; }
         found=0

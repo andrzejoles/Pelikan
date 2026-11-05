@@ -97,6 +97,8 @@ public protocol UIServices: AnyObject {
     /// Zamknięcie narzędzia (nil — bieżącego); zwraca klucz zamkniętego narzędzia.
     func closeTool(_ key: String?) -> String?
     func showPreferenceSets()
+    /// Ustawienia › Kolory składni (D227).
+    func showSyntaxSchemes()
     /// Raport HTML (AWR, ASH, ADDM, SQL Monitor, Tuning Advisor) i lista SQL Monitor.
     func showHTMLReport(title: String, html: String)
     func showSQLMonitor(connection: UUID)
@@ -256,6 +258,7 @@ extension UIServices {
     public func placeTool(_ key: String?, at placement: ToolPlacement) -> String? { nil }
     public func closeTool(_ key: String?) -> String? { nil }
     public func showPreferenceSets() {}
+    public func showSyntaxSchemes() {}
     public func showHTMLReport(title: String, html: String) {}
     public func openURL(_ url: URL) {}
     public func openInApplication(_ file: URL, application: String?) {}

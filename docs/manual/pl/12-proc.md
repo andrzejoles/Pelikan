@@ -91,3 +91,11 @@ nazwy celu).
 Źródła na starszych serwerach bywają w ISO-8859-2. Pelikan wykrywa kodowanie istniejących plików i nie zmienia go po
 cichu: znak, którego nie da się zapisać w kodowaniu pliku, blokuje zapis z dokładnym wskazaniem miejsca. Kodowanie
 zmienisz tylko jawnie (**Plik › Kodowanie pliku…**); projekt może też narzucić kodowanie swoich plików.
+
+## Kolorowanie kodu Pro*C
+
+Pliki `.pc`, `.pcc`, `.c` i `.h` otwarte w Pelikanie są kolorowane jak C: słowa kluczowe, typy (`int`, `char`,
+`VARCHAR`), dyrektywy preprocesora (`#include`), napisy, komentarze i wywołania funkcji. Wstawki
+`EXEC SQL … ;` oraz bloki `EXEC SQL EXECUTE … END-EXEC;` są kolorowane jak SQL i PL/SQL, a zmienne hosta (`:ename`)
+jak zmienne wiązane. Kolory pochodzą z motywu wybranego w **Ustawienia › Kolory**. Przełącznik **Pro*C** w podglądzie
+tej karty pokazuje, jak motyw wygląda w kodzie Pro*C.

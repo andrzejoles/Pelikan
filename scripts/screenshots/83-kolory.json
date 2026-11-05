@@ -1,0 +1,32 @@
+[
+ {
+  "command": "editor.syntaxScheme.use",
+  "args": {
+   "scheme": "builtin.solarized-light",
+   "mode": "light"
+  },
+  "delay": 1
+ },
+ {
+  "command": "editor.syntaxScheme.use",
+  "args": {
+   "scheme": "builtin.tokyo-night-dark",
+   "mode": "dark"
+  },
+  "delay": 1
+ },
+ {
+  "command": "file.new.sql",
+  "args": {
+   "text": "-- Pracownicy z pensją powyżej średniej działu\nselect /*+ index(e emp_dept_ix) */ e.ename, d.dname,\n       to_char(e.hiredate, 'YYYY-MM-DD') as hired, nvl(e.comm, 0) + 100.5 as bonus\n  from emp e join dept d on d.deptno = e.deptno\n where e.sal > (select avg(sal) from emp where deptno = :dept);\n\nbegin\n  dbms_output.put_line('Gotowe: ' || to_char(sysdate, 'HH24:MI'));\nend;\n/\n"
+  },
+  "delay": 2
+ },
+ {
+  "command": "debug.preferences",
+  "args": {
+   "pane": "ColorsPane"
+  },
+  "delay": 3
+ }
+]

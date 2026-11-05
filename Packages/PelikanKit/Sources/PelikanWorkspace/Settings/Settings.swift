@@ -122,6 +122,11 @@ public struct Settings: Sendable, Codable, Hashable {
     public var gridFontWeight: FontWeightChoice = .regular
     /// Własne kolory tekstu i tła edytora, siatki i Object Browsera (PD-PREF-005); nil — kolory motywu systemu.
     public var editorColors = AreaColors()
+    /// Motywy kolorowania składni (D227) dla trybu jasnego i ciemnego systemu — identyfikatory wbudowanych albo własnych.
+    public var syntaxSchemeLight = SyntaxScheme.pelikanLight.id
+    public var syntaxSchemeDark = SyntaxScheme.pelikanDark.id
+    /// Motywy własne (kopie wbudowanych ze zmianami albo zaimportowane).
+    public var customSyntaxSchemes: [SyntaxScheme] = []
     public var gridColors = AreaColors()
     public var browserColors = AreaColors()
     /// Numer wiersza jako pierwsza kolumna przy kopiowaniu i eksporcie (PD-GRID-027).
@@ -294,6 +299,19 @@ public struct Settings: Sendable, Codable, Hashable {
 
     public init() {}
 
+    /// Wszystkie motywy: wbudowane i własne.
+    public var syntaxSchemes: [SyntaxScheme] { SyntaxScheme.builtin + customSyntaxSchemes }
+
+    /// Motyw o identyfikatorze; nieznany (np. usunięty własny) — domyślny Pelikana dla trybu.
+    public func syntaxScheme(id: String, dark: Bool) -> SyntaxScheme {
+        customSyntaxSchemes.first { $0.id == id } ?? SyntaxScheme.builtin(id) ?? (dark ? .pelikanDark : .pelikanLight)
+    }
+
+    /// Motyw obowiązujący w trybie jasnym albo ciemnym.
+    public func activeSyntaxScheme(dark: Bool) -> SyntaxScheme {
+        syntaxScheme(id: dark ? syntaxSchemeDark : syntaxSchemeLight, dark: dark)
+    }
+
     public var valueFormat: ValueFormat {
         ValueFormat(dateFormat: dateFormat, timestampFormat: timestampFormat)
     }
@@ -404,6 +422,9 @@ public struct Settings: Sendable, Codable, Hashable {
         gridFontName = v(.gridFontName, gridFontName)
         gridFontWeight = v(.gridFontWeight, gridFontWeight)
         editorColors = v(.editorColors, editorColors)
+        syntaxSchemeLight = v(.syntaxSchemeLight, syntaxSchemeLight)
+        syntaxSchemeDark = v(.syntaxSchemeDark, syntaxSchemeDark)
+        customSyntaxSchemes = v(.customSyntaxSchemes, customSyntaxSchemes)
         gridColors = v(.gridColors, gridColors)
         browserColors = v(.browserColors, browserColors)
         rowNumbersInCopyExport = v(.rowNumbersInCopyExport, rowNumbersInCopyExport)

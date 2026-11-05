@@ -467,6 +467,127 @@ entfernt ein Kürzel.
   anderen Programmen kann ein Tabulator eine andere Breite haben, sodass der Code „auseinanderfällt“. Die meisten Teams
   verwenden Leerzeichen.
 
+## Tab „Farben“
+
+Das **Farbschema** bestimmt, wie der Editor Code einfärbt. Es legt die Farben von Schlüsselwörtern, Zeichenketten,
+Kommentaren und Funktionsnamen fest, außerdem Hintergrund, Auswahl, Cursor, aktuelle Zeile und Zeilennummern. Pelikan
+hat 98 integrierte Schemata. Standard ist **Pelikan** in einer hellen und einer dunklen Version. Dazu kommt
+**Klassisch** im Stil früherer Oracle-Werkzeuge: weißer Hintergrund, dunkelblaue Schlüsselwörter, rote Zeichenketten
+und grüne Kommentare. Die übrigen 95 sind bekannte Editor-Schemata, u. a. Solarized, Gruvbox, Dracula, Monokai, Nord,
+One Dark, GitHub, Catppuccin und Tokyo Night. Ihre Paletten stammen aus dem Projekt tinted-theming (MIT-Lizenz).
+
+Dieselben Farben gelten im SQL-Fenster, Programmfenster, Testfenster und in der Konsole sowie in den Codevorschauen der
+Werkzeugfenster (Sitzungen, Berichte, Query Builder). Druck und die Quick-Look-Vorschau im Finder behalten die hellen
+Farben von Pelikan, weil Papier und Finder einen weißen Hintergrund haben.
+
+### Liste der Schemata
+
+Links gibt es zwei Gruppen: **Hell** (heller Hintergrund) und **Dunkel** (dunkler Hintergrund). Das farbige Rechteck
+neben dem Namen zeigt den Hintergrund des Schemas und drei seiner Farben: Schlüsselwort, Zeichenkette und Kommentar.
+Ein ✓ markiert ein verwendetes Schema. **eigenes** markiert ein Schema, das Sie selbst gespeichert haben. Das Feld
+**Schemata filtern** schränkt die Liste auf passende Namen oder Autoren ein.
+
+### Im hellen Modus verwenden / Im dunklen Modus verwenden
+
+macOS hat einen hellen und einen dunklen Modus (Systemeinstellungen › Erscheinungsbild oder **Allgemein › Darstellung**
+in Pelikan). Pelikan merkt sich **für jeden Modus ein eigenes Schema**. *Standard:* Pelikan hell und Pelikan dunkel.
+Wechselt das System den Modus (z. B. abends im automatischen Modus), wechselt der Editor von selbst zum anderen
+Schema. Die Farben ändern sich sofort in allen offenen Fenstern, ohne Dateien neu zu öffnen.
+
+Sie können auch für den hellen Modus ein dunkles Schema wählen und umgekehrt. Der Editor hat dann einen eigenen
+Hintergrund, unabhängig vom übrigen Fenster. Die Zeile unter den Schaltflächen zeigt, welches Schema in jedem Modus
+verwendet wird.
+
+### Vorschau
+
+Der Umschalter **SQL / PL/SQL / Pro*C** zeigt Beispielcode in den Farben des ausgewählten Schemas. Das Schema muss
+nicht verwendet werden. So können Sie Schemata vergleichen, bevor Sie eines wählen.
+
+### Farbkategorien
+
+Ein Schema weist jeder Kategorie eine Farbe zu (und bei Bedarf Fett- oder Kursivschrift):
+
+- **Normaler Text** — Namen von Tabellen, Spalten und Variablen.
+- **Schlüsselwörter** — `SELECT`, `BEGIN`, `IF`, `create or replace`; in Pro*C auch `EXEC SQL`, `END-EXEC` und
+  C-Schlüsselwörter (`if`, `return`).
+- **Datentypen** — `VARCHAR2`, `NUMBER`, `DATE`, `BOOLEAN`; in Pro*C `int`, `char`, `VARCHAR`.
+- **Integrierte Funktionen** — `NVL`, `TO_CHAR`, `COUNT` und andere Oracle-Funktionen, wenn auf den Namen eine Klammer
+  folgt; in Pro*C jeder Funktionsaufruf (`printf(`).
+- **Mitgelieferte Datenbankpakete** — `DBMS_OUTPUT`, `UTL_FILE`, `APEX_…`, wenn auf den Namen ein Punkt folgt.
+- **Zeichenketten** — `'Text'`, `q'[…]'`; in Pro*C auch `"Text"`.
+- **Zahlen** — `100`, `2.5`, `1e6`.
+- **Kommentare** — `-- …` und `/* … */`.
+- **Optimizer-Hints** — `/*+ INDEX(e) */`.
+- **Bindevariablen und Ersetzungen** — `:x`, `&name`; in Pro*C Hostvariablen `:ename`.
+- **Bezeichner in Anführungszeichen** — `"Abteilungsname"`.
+- **Operatoren und Satzzeichen** — `:=`, `||`, `(`, `;`.
+- **Kompilierungs- und Präprozessordirektiven** — `$IF … $END` in PL/SQL und `#include`, `#define` in Pro*C.
+
+Die integrierten Schemata haben Farben, die gut lesbar sind: normaler Text hat zum Hintergrund einen Kontrast von
+mindestens 4,5:1, jede Kategorie mindestens 3:1. Zu blasse Farben der ursprünglichen Paletten (meist Kommentare)
+verwendet Pelikan nicht — es verschiebt sie in Richtung der Textfarbe.
+
+### Als eigenes speichern…
+
+Integrierte Schemata lassen sich nicht ändern, damit Sie immer zu ihnen zurückkehren können. Sie möchten andere Farben?
+Wählen Sie das Schema, das Ihren Wünschen am nächsten kommt, und klicken Sie auf **Als eigenes speichern…**. Geben Sie
+einen Namen ein (*Standard:* „Name (Kopie)“). Die Kopie erscheint mit **eigenes** in der Liste und kann sofort
+bearbeitet werden. Das Original bleibt unverändert.
+
+### Eigenes Schema bearbeiten
+
+Unter der Vorschau eines eigenen Schemas steht eine Tabelle:
+
+- **Name** und **Dunkles Schema** — der Name in der Liste und die Gruppe (**Hell** oder **Dunkel**). Die Gruppe schränkt
+  die Auswahl nicht ein: Sie können das Schema in jedem Modus verwenden.
+- **Kategorie** — für jede Kategorie der Liste oben: **Farbe**, **Fett** und **Kursiv**. Ein Klick auf das Farbfeld
+  öffnet die Farbauswahl des Systems. Die Änderung ist sofort in der Vorschau zu sehen und in den Editoren, wenn das
+  Schema verwendet wird. Der Pfeil ↺ neben einer Farbe stellt die Standardfarbe wieder her: die Farbe des normalen Texts
+  für Kategorien, die Systemfarbe für Editorelemente.
+- **Hintergrund**, **Text**, **Auswahl**, **Aktuelle Zeile**, **Zeilennummern**, **Cursor** — Farben des Editors selbst.
+  **Aktuelle Zeile** ist der Balken unter der Zeile mit dem Cursor (wenn im Tab **Editor** das Hervorheben der aktuellen
+  Zeile eingeschaltet ist).
+
+Änderungen werden sofort gespeichert, ohne Schaltfläche **Speichern**. **Löschen** entfernt ein eigenes Schema. War es
+in Verwendung, kehrt der Modus zum Schema Pelikan zurück.
+
+> **Hinweis.** Die unter **Editor › Schriftfarben** eingestellten Farben für **Text** und **Hintergrund** haben Vorrang
+> vor dem Schema. Ändert sich der Hintergrund nach der Wahl eines Schemas nicht, prüfen Sie, ob dort eine eigene Farbe
+> eingestellt ist (die Schaltfläche **System** entfernt sie).
+
+### Importieren … und Exportieren …
+
+**Importieren …** lädt ein Schema aus einer Datei als eigenes Schema. Unterstützte Formate:
+
+- ein Pelikan-Schema (`.json` aus **Exportieren …**),
+- base16 und base24 (`.yaml`) — Hunderte Paletten aus dem Projekt tinted-theming,
+- Xcode (`.xccolortheme`; Benutzerschemata liegen in `~/Library/Developer/Xcode/UserData/FontAndColorThemes`),
+- TextMate und Sublime Text (`.tmTheme`),
+- Visual Studio Code (`.json` aus einer Theme-Erweiterung, die Datei im Ordner `themes`).
+
+Beim Import aus Xcode, TextMate und VS Code ordnet Pelikan die SQL-Kategorien den Farben des Schemas zu. Das Ergebnis
+entspricht nicht immer dem Original-Editor, weil diese Schemata andere Sprachen beschreiben. Passen Sie die Farben dann
+in der Bearbeitungstabelle an.
+
+**Exportieren …** speichert das ausgewählte Schema (auch ein integriertes) in einer `.json`-Datei, z. B. um es auf einen
+anderen Computer zu übertragen oder einem Kollegen zu geben. Eigene Schemata überträgt auch der Export der
+Einstellungen (**Werkzeuge › Einstellungen › Einstellungen exportieren …**, Abschnitt **Editor**).
+
+> **Übung: eigenes Schema mit deutlichen Kommentaren.**
+> 1. Öffnen Sie **Pelikan › Einstellungen …** (⌘,) und den Tab **Farben**.
+> 2. Wählen Sie in der Gruppe **Hell** das Schema **Solarized Light**. *Ergebnis:* Die Vorschau zeigt Code auf cremefarbenem
+>    Hintergrund.
+> 3. Klicken Sie auf **Im hellen Modus verwenden**. *Ergebnis:* Neben dem Namen erscheint ✓, und das offene SQL-Fenster
+>    ändert die Farben.
+> 4. Klicken Sie auf **Als eigenes speichern…**, geben Sie `Mein Solarized` ein und klicken Sie auf **Speichern**.
+>    *Ergebnis:* In der Liste steht **Mein Solarized** mit **eigenes**, unter der Vorschau eine Farbtabelle.
+> 5. Klicken Sie in der Zeile **Kommentare** auf das Farbfeld und wählen Sie ein dunkles Grün. Schalten Sie **Kursiv** aus.
+>    *Ergebnis:* Kommentare in der Vorschau sind grün und aufrecht.
+> 6. Klicken Sie auf **Im hellen Modus verwenden**. *Ergebnis:* Das SQL-Fenster verwendet jetzt Ihr Schema, **Solarized
+>    Light** ist unverändert.
+> 7. Um zum Standardaussehen zurückzukehren, wählen Sie **Pelikan** in der Gruppe **Hell** und klicken Sie auf **Im hellen
+>    Modus verwenden**.
+
 ## Tab „Formatierer“
 
 Der **Formatierer** (⇧⌘F) ordnet PL/SQL- und SQL-Code nach Regeln an: Einrückung, Umbruch von Listen, Groß- und

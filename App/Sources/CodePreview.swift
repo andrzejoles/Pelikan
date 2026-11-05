@@ -68,12 +68,15 @@ struct HighlightedCodeView: NSViewRepresentable {
 
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let tv = scroll.documentView as? NSTextView, let storage = tv.textStorage else { return }
-        let key = "\(highlight)|\(text)"
+        let key = "\(highlight)|\(SyntaxTheme.current.id)|\(text)"
         guard context.coordinator.last != key else { return }
         context.coordinator.last = key
         let font = InterfaceFonts.shared.code
         storage.setAttributedString(NSAttributedString(string: text, attributes: [.font: font, .foregroundColor: NSColor.textColor]))
         if highlight { SyntaxHighlighter().highlightAll(storage, font: font) }
+        // Tło motywu (D227) — kolory jasnego motywu na tle ciemnego okna byłyby nieczytelne.
+        tv.drawsBackground = highlight && SyntaxTheme.hasBackground
+        tv.backgroundColor = SyntaxTheme.background
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
