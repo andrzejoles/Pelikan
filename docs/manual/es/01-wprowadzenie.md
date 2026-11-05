@@ -6,8 +6,46 @@ exportación y administración. La disposición de las ventanas y los atajos de 
 sus usuarios encontrarán ventanas conocidas: **SQL Window**, **Consola SQL*Plus**, **Program Window**, **Test Window**,
 **Explain Plan Window** y **Object Browser** (pestaña **Objetos**).
 
-Este manual describe cómo realizar las tareas habituales. La lista completa de comandos con sus atajos actuales está en
-el último capítulo, **Atajos de teclado**, que genera la propia aplicación.
+La lista completa de comandos con sus atajos actuales está en el último capítulo, **Atajos de teclado**, que genera la
+propia aplicación.
+
+## Cómo usar este manual
+
+El manual está escrito para que pueda seguirlo incluso quien acaba de empezar a trabajar con Oracle. Cada función se
+describe con la misma estructura:
+
+- **Para qué sirve**: qué tarea resuelve y qué conceptos necesitas conocer;
+- **Cuándo usarla**: situaciones típicas del trabajo diario;
+- **Ejercicio paso a paso**: pasos numerados; tras cada paso, *Resultado:* dice lo que deberías ver. Si ves otra cosa,
+  detente y vuelve al paso anterior;
+- **Atención**: errores típicos y sus consecuencias (marcados con ⚠️).
+
+Los ejercicios usan el **esquema de práctica**: unas tablas y un paquete que creas con el script de la sección **Esquema
+de práctica** más abajo. Lo mejor es leer los capítulos en orden: 1 (este), 2 (conexiones), 3 (SQL Window) y después
+según lo necesites. Busca una palabra desconocida en **Conceptos básicos** o en el glosario al final del capítulo 15.
+
+## Conceptos básicos
+
+Algunas palabras que aparecen en todo el manual:
+
+| Concepto | Qué significa |
+|---|---|
+| **Base de datos** (instancia de Oracle) | El servidor que guarda los datos y ejecuta las sentencias. Te conectas a él por la red. |
+| **Usuario** y **esquema** | Una cuenta en la base de datos (p. ej. `SCOTT`). Los objetos creados por un usuario pertenecen al esquema del mismo nombre. |
+| **Objeto** | Algo que vive en un esquema: tabla, vista, índice, secuencia, paquete, procedimiento, función, disparador, tipo… |
+| **Tabla** | Datos en filas y columnas, p. ej. `PEL_EMPLOYEES`. |
+| **Vista** | Una consulta guardada que se puede leer como una tabla. |
+| **SQL** | El lenguaje de sentencias de la base: `SELECT` (lectura), `INSERT`, `UPDATE`, `DELETE`, `MERGE` (cambio de datos), `CREATE`, `ALTER`, `DROP` (cambio de objetos: DDL). |
+| **PL/SQL** | El lenguaje de programación de Oracle: bloques `BEGIN … END`, variables, bucles, excepciones. El código PL/SQL guardado en la base es un **programa** (paquete, procedimiento, función, disparador). |
+| **Paquete** | Un conjunto de procedimientos y funciones relacionados: la **especificación** (lo que ofrece) y el **cuerpo** (cómo lo hace). |
+| **Sesión** | Una conexión con la base de datos. Pelikan puede tener varias sesiones a la vez (capítulo 13, *Modo de sesión*). |
+| **Transacción** | Cambios de datos en una sesión que aún no son permanentes. **COMMIT** los hace permanentes (los demás los ven), **ROLLBACK** los deshace. Las sentencias DDL (`CREATE`, `ALTER`, `DROP`) confirman por sí solas la transacción abierta. |
+| **Compilación** | Guardar un programa PL/SQL en la base y que Oracle lo compruebe. Un programa con un error tiene el estado *INVALID*. |
+| **Conexión** (en Pelikan) | Un conjunto guardado de datos de inicio de sesión: usuario, base de datos, entorno. |
+| **Entorno** | La etiqueta de una base de datos: desarrollo, pruebas, producción. De ella dependen los colores y las advertencias. |
+
+> ⚠️ **La regla más importante:** practica y experimenta solo en una base de datos de **desarrollo** o de **pruebas**. En
+> producción (los datos reales de la empresa) ejecuta solo lo que entiendes y lo que está acordado.
 
 ## Requisitos
 
@@ -63,14 +101,238 @@ caducada ni interrupción de la ejecución (**Interrumpir**).
 
 ## Primeros pasos
 
-1. Haz clic en la pestaña **Conexiones** de la columna izquierda y luego en el botón **+** (o elige **Sesión ›
-   Conexiones › Conexión nueva…**).
-2. Escribe el nombre, el usuario, la contraseña y la base de datos (`host:puerto/servicio` o un alias de
-   `tnsnames.ora`), elige el entorno y haz clic en **Probar** y después en **Guardar**.
-3. Haz doble clic en la conexión de la lista: se convierte en la **conexión principal** (en negrita).
-4. Abre una SQL Window nueva (**Archivo › Nuevo › SQL Window**, ⌘N), escribe una consulta y ejecútala con F8 o ⌘↩.
+### Para qué sirve
+
+Antes de empezar a trabajar, Pelikan necesita saber con qué base de datos conectarse. Este breve tutorial te lleva desde
+el programa vacío hasta el primer resultado de una consulta. Necesitas que el administrador o un compañero te dé: un
+**nombre de usuario**, una **contraseña** y la **dirección de la base de datos**, con la forma `host:puerto/servicio`
+(p. ej. `dbdev.empresa.local:1521/DEVPDB`) o un **alias** del archivo `tnsnames.ora` (p. ej. `DEV`).
+
+### Ejercicio: primera conexión y primera consulta
+
+1. Haz clic en la pestaña **Conexiones** de la columna izquierda de la ventana y luego en el botón **+** (o elige
+   **Sesión › Conexiones › Conexión nueva…**).
+   *Resultado:* se abre la ventana **Conexión nueva**.
+2. En el campo **Nombre** escribe un nombre con el que reconozcas la base de datos, p. ej. `dev_mi_bd`. Escribe el
+   **Usuario**, la **Contraseña** y la **Base de datos** (dirección o alias). Como **Entorno** elige **De desarrollo**.
+3. Haz clic en **Probar**.
+   *Resultado:* un mensaje «Conectado:» con la descripción de la versión de la base de datos. Si ves un error, revisa los
+   datos: las causas y soluciones más comunes están en el capítulo 15 (`ORA-01017`: contraseña o usuario incorrectos,
+   `ORA-12154`: alias desconocido, `ORA-12541`: host o puerto incorrectos).
+4. Marca **Recordar la contraseña en el Llavero** si no quieres escribirla en cada conexión: va al Llavero de macOS, no a
+   un archivo. Haz clic en **Guardar**.
+   *Resultado:* la conexión está en la lista.
+5. Haz doble clic en la conexión de la lista.
+   *Resultado:* el nombre de la conexión aparece en negrita: ahora es la **conexión principal**. Las ventanas nuevas la
+   usarán. Su nombre aparece también en el título de la ventana de Pelikan.
+6. Abre una SQL Window nueva: **Archivo › Nuevo › SQL Window** o **⌘N**.
+   *Resultado:* una pestaña nueva con la letra **S** y un editor vacío. La barra de estado bajo el editor muestra el
+   nombre de la conexión.
+7. Escribe la consulta:
+
+   ```sql
+   SELECT sysdate, user FROM dual;
+   ```
+
+8. Pulsa **F8** (o **⌘↩**).
+   *Resultado:* bajo el editor aparece una pestaña de resultado con una fila: la fecha y hora actuales del servidor y tu
+   nombre de usuario. La barra de estado muestra el número de filas y el tiempo de ejecución.
+
+Listo: ya sabes conectarte y ejecutar una consulta. Siguiente paso: crear el esquema de práctica.
 
 ![Ventana principal: lista de conexiones a la izquierda, SQL Window con el resultado de una consulta](../img/okno-glowne.png)
+
+## Esquema de práctica
+
+### Para qué sirve
+
+Los ejercicios del manual trabajan con unos pocos objetos pequeños: la tabla de departamentos `PEL_DEPARTMENTS`, la
+tabla de empleados `PEL_EMPLOYEES`, la vista `PEL_EMP_DETAILS` y el paquete `PEL_EMP_API` (salario, aumento,
+contratación, lista de empleados de un departamento). El prefijo `PEL_` hace que sea fácil distinguirlos de tus objetos y
+eliminarlos al terminar. Los datos de ejemplo (nombres de departamentos y empleados) están en polaco: los ejercicios se
+refieren a ellos tal cual.
+
+> ⚠️ El script crea objetos en el esquema del usuario con el que has iniciado sesión. Ejecútalo en **tu propio esquema de
+> desarrollo o de pruebas**, nunca en producción ni en un esquema compartido sin el acuerdo del equipo. Para crear los
+> objetos necesitas los privilegios `CREATE TABLE`, `CREATE VIEW` y `CREATE PROCEDURE` y espacio en un tablespace (en un
+> esquema de desarrollo normalmente los tienes).
+
+### Ejercicio: crear el esquema de práctica
+
+1. Conéctate a la base de desarrollo (ejercicio anterior) y abre una SQL Window nueva (**⌘N**).
+2. Copia en la ventana todo el script de abajo.
+3. Selecciona todo el texto (**⌘A**) y pulsa **F8**.
+   *Resultado:* Pelikan ejecuta las sentencias una a una, y la pestaña **Output** bajo el editor muestra un mensaje de
+   cada una. Las sentencias se separan con punto y coma y los paquetes con una barra `/` en su propia línea.
+4. Comprueba el resultado con la consulta:
+
+   ```sql
+   SELECT * FROM pel_emp_details;
+   ```
+
+   *Resultado:* 9 filas: empleados con el nombre del departamento y la ciudad. Ewa Woźniak no tiene departamento, así que
+   esas columnas están vacías.
+5. Abre la pestaña **Objetos** de la columna izquierda y despliega la carpeta **Tablas**.
+   *Resultado:* ves `PEL_DEPARTMENTS` y `PEL_EMPLOYEES`.
+
+El script confirma los datos él mismo (COMMIT tras INSERT), así que también se ven en otras ventanas.
+
+```sql
+-- Esquema de práctica del manual de Pelikan.
+-- Ejecútalo en TU PROPIO esquema de desarrollo o de pruebas, nunca en producción.
+CREATE TABLE pel_departments (
+  dept_id  NUMBER(4)    CONSTRAINT pel_departments_pk PRIMARY KEY,
+  name     VARCHAR2(50) NOT NULL,
+  city     VARCHAR2(50)
+);
+
+CREATE TABLE pel_employees (
+  emp_id      NUMBER(6) GENERATED BY DEFAULT AS IDENTITY (START WITH 100)
+              CONSTRAINT pel_employees_pk PRIMARY KEY,
+  first_name  VARCHAR2(30) NOT NULL,
+  last_name   VARCHAR2(30) NOT NULL,
+  email       VARCHAR2(60) CONSTRAINT pel_employees_email_uk UNIQUE,
+  hire_date   DATE DEFAULT SYSDATE NOT NULL,
+  salary      NUMBER(8,2) CONSTRAINT pel_employees_salary_ck CHECK (salary > 0),
+  dept_id     NUMBER(4) CONSTRAINT pel_employees_dept_fk REFERENCES pel_departments,
+  manager_id  NUMBER(6) CONSTRAINT pel_employees_mgr_fk REFERENCES pel_employees
+);
+
+CREATE INDEX pel_employees_dept_ix ON pel_employees (dept_id);
+
+CREATE OR REPLACE VIEW pel_emp_details AS
+  SELECT e.emp_id, e.first_name || ' ' || e.last_name AS full_name, e.salary,
+         d.name AS department, d.city
+    FROM pel_employees e
+    LEFT JOIN pel_departments d ON d.dept_id = e.dept_id;
+
+INSERT INTO pel_departments VALUES (10, 'Księgowość', 'Warszawa');
+INSERT INTO pel_departments VALUES (20, 'Informatyka', 'Kraków');
+INSERT INTO pel_departments VALUES (30, 'Sprzedaż', 'Gdańsk');
+INSERT INTO pel_departments VALUES (40, 'Kadry', NULL);
+
+INSERT INTO pel_employees VALUES (1, 'Anna', 'Nowak', 'anna.nowak@example.com', DATE '2019-03-01', 12000, 20, NULL);
+INSERT INTO pel_employees VALUES (2, 'Piotr', 'Kowalski', 'piotr.kowalski@example.com', DATE '2020-06-15', 9500, 20, 1);
+INSERT INTO pel_employees VALUES (3, 'Maria', 'Wiśniewska', 'maria.wisniewska@example.com', DATE '2021-01-10', 8700, 20, 1);
+INSERT INTO pel_employees VALUES (4, 'Tomasz', 'Wójcik', 'tomasz.wojcik@example.com', DATE '2018-09-03', 11000, 10, NULL);
+INSERT INTO pel_employees VALUES (5, 'Katarzyna', 'Kamińska', 'katarzyna.kaminska@example.com', DATE '2022-02-14', 7200, 10, 4);
+INSERT INTO pel_employees VALUES (6, 'Michał', 'Lewandowski', 'michal.lewandowski@example.com', DATE '2017-11-20', 13500, 30, NULL);
+INSERT INTO pel_employees VALUES (7, 'Agnieszka', 'Zielińska', 'agnieszka.zielinska@example.com', DATE '2023-04-01', 6800, 30, 6);
+INSERT INTO pel_employees VALUES (8, 'Paweł', 'Szymański', NULL, DATE '2024-07-08', 6500, 30, 6);
+INSERT INTO pel_employees VALUES (9, 'Ewa', 'Woźniak', 'ewa.wozniak@example.com', DATE '2025-01-02', 7000, NULL, NULL);
+COMMIT;
+
+CREATE OR REPLACE PACKAGE pel_emp_api AS
+  -- Salario de un empleado; si no existe, NO_DATA_FOUND.
+  FUNCTION get_salary(p_emp_id IN NUMBER) RETURN NUMBER;
+  -- Aumento de p_percent por ciento; porcentaje negativo: error -20001. Sin COMMIT.
+  PROCEDURE raise_salary(p_emp_id IN NUMBER, p_percent IN NUMBER);
+  -- Empleado nuevo; devuelve su identificador. Sin COMMIT.
+  FUNCTION hire(p_first_name IN VARCHAR2, p_last_name IN VARCHAR2, p_salary IN NUMBER,
+                p_dept_id IN NUMBER) RETURN NUMBER;
+  -- Lista los empleados de un departamento mediante DBMS_OUTPUT.
+  PROCEDURE print_department(p_dept_id IN NUMBER);
+END pel_emp_api;
+/
+
+CREATE OR REPLACE PACKAGE BODY pel_emp_api AS
+  FUNCTION get_salary(p_emp_id IN NUMBER) RETURN NUMBER IS
+    l_salary pel_employees.salary%TYPE;
+  BEGIN
+    SELECT salary INTO l_salary FROM pel_employees WHERE emp_id = p_emp_id;
+    RETURN l_salary;
+  END get_salary;
+
+  PROCEDURE raise_salary(p_emp_id IN NUMBER, p_percent IN NUMBER) IS
+  BEGIN
+    IF p_percent < 0 THEN
+      raise_application_error(-20001, 'Podwyżka nie może być ujemna');
+    END IF;
+    UPDATE pel_employees
+       SET salary = ROUND(salary * (1 + p_percent / 100), 2)
+     WHERE emp_id = p_emp_id;
+    IF SQL%ROWCOUNT = 0 THEN
+      RAISE NO_DATA_FOUND;
+    END IF;
+  END raise_salary;
+
+  FUNCTION hire(p_first_name IN VARCHAR2, p_last_name IN VARCHAR2, p_salary IN NUMBER,
+                p_dept_id IN NUMBER) RETURN NUMBER IS
+    l_emp_id pel_employees.emp_id%TYPE;
+  BEGIN
+    INSERT INTO pel_employees (first_name, last_name, salary, dept_id)
+    VALUES (p_first_name, p_last_name, p_salary, p_dept_id)
+    RETURNING emp_id INTO l_emp_id;
+    RETURN l_emp_id;
+  END hire;
+
+  PROCEDURE print_department(p_dept_id IN NUMBER) IS
+    l_total NUMBER := 0;
+  BEGIN
+    FOR r IN (SELECT first_name, last_name, salary
+                FROM pel_employees
+               WHERE dept_id = p_dept_id
+               ORDER BY last_name) LOOP
+      dbms_output.put_line(r.last_name || ' ' || r.first_name || ': ' || r.salary);
+      l_total := l_total + r.salary;
+    END LOOP;
+    dbms_output.put_line('Razem: ' || l_total);
+  END print_department;
+END pel_emp_api;
+/
+```
+
+Para los ejercicios con pruebas (capítulo 8) también hace falta un paquete de pruebas utPLSQL. Créalo solo cuando el
+framework utPLSQL esté instalado en la base (capítulo 8, *Instalar utPLSQL en la base de datos*):
+
+```sql
+CREATE OR REPLACE PACKAGE pel_emp_api_test AS
+  --%suite(Testy pakietu pel_emp_api)
+
+  --%test(get_salary zwraca pensję pracownika)
+  PROCEDURE get_salary_returns_salary;
+
+  --%test(raise_salary podnosi pensję o 10%)
+  PROCEDURE raise_salary_ten_percent;
+
+  --%test(Ujemna podwyżka zgłasza błąd -20001)
+  --%throws(-20001)
+  PROCEDURE raise_salary_negative;
+END pel_emp_api_test;
+/
+
+CREATE OR REPLACE PACKAGE BODY pel_emp_api_test AS
+  PROCEDURE get_salary_returns_salary IS
+  BEGIN
+    ut.expect(pel_emp_api.get_salary(1)).to_equal(12000);
+  END get_salary_returns_salary;
+
+  PROCEDURE raise_salary_ten_percent IS
+  BEGIN
+    pel_emp_api.raise_salary(2, 10);
+    ut.expect(pel_emp_api.get_salary(2)).to_equal(10450);
+  END raise_salary_ten_percent;
+
+  PROCEDURE raise_salary_negative IS
+  BEGIN
+    pel_emp_api.raise_salary(2, -5);
+  END raise_salary_negative;
+END pel_emp_api_test;
+/
+```
+
+### Eliminar el esquema de práctica
+
+Cuando termines de aprender, elimina los objetos de práctica (la primera sentencia da error si no creaste el paquete de
+pruebas; no pasa nada):
+
+```sql
+DROP PACKAGE pel_emp_api_test;
+DROP PACKAGE pel_emp_api;
+DROP VIEW pel_emp_details;
+DROP TABLE pel_employees PURGE;
+DROP TABLE pel_departments PURGE;
+```
 
 ## Ventana principal
 
