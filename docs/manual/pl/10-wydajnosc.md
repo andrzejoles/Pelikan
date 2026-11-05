@@ -1,5 +1,15 @@
 # Plan wykonania, sesje i administracja
 
+## Do czego to służy
+
+Zanim Oracle wykona zapytanie, **optymalizator** wybiera sposób jego wykonania: którą tabelę czytać najpierw, czy
+użyć indeksu, jak łączyć tabele. Ten sposób to **plan wykonania**. Dwa zapytania zwracające ten sam wynik mogą mieć
+plany różniące się czasem tysiące razy. Narzędzia z tego rozdziału pokazują plan (Explain Plan), mierzą rzeczywiste
+wykonanie (Autotrace) i pozwalają zobaczyć, co dzieje się w bazie (Sesje, Instance Viewer).
+
+**Kiedy użyć:** gdy zapytanie działa wolno, zanim dodasz indeks, i gdy coś „wisi” — żeby sprawdzić, kto blokuje
+wiersze albo co robi baza.
+
 ## Plan wykonania (Explain Plan)
 
 Ustaw kursor na poleceniu (albo je zaznacz) i naciśnij F5 (**Narzędzia › Explain Plan**). Pelikan otworzy okno planu z
@@ -23,6 +33,32 @@ zapytania z procedury dostaniesz bez przepisywania. Puste okno planu otworzysz p
 - **Zapisz** zapisuje plan jako tekst, HTML albo XML (DBMS_XPLAN).
 
 Plan jest liczony w osobnej sesji narzędziowej, więc nie wpływa na transakcję okna.
+
+**Jak czytać plan (dla początkujących):**
+
+- Czyta się go **od najbardziej wciętej operacji** w górę — najpierw wykonuje się to, co jest najgłębiej.
+- `TABLE ACCESS FULL` — Oracle czyta całą tabelę. Dla małej tabeli to dobrze; dla tabeli z milionami wierszy, z której
+  potrzebujesz kilku — zwykle znak, że brakuje indeksu albo warunek go nie używa.
+- `INDEX RANGE SCAN` / `INDEX UNIQUE SCAN` — Oracle szuka przez indeks, jak w skorowidzu książki.
+- **Koszt** (Cost) to szacunek optymalizatora — liczba względna, przydatna do porównania dwóch planów tego samego
+  zapytania, a nie czas w sekundach.
+- **Kardynalność** (Rows) to szacowana liczba wierszy. Gdy jest bardzo różna od rzeczywistej (sprawdzisz w Autotrace),
+  optymalizator ma złe statystyki i może wybrać zły plan.
+
+> **Ćwiczenie: indeks w planie.**
+> 1. W oknie SQL wpisz `SELECT * FROM pel_employees WHERE emp_id = 3;`, postaw na nim kursor i naciśnij **F5**.
+>    *Wynik:* okno planu; w drzewie operacja `INDEX UNIQUE SCAN` na `PEL_EMPLOYEES_PK` — wyszukanie po kluczu głównym.
+> 2. Zmień zapytanie na `SELECT * FROM pel_employees WHERE last_name = 'Nowak';` i naciśnij **Odśwież plan**.
+>    *Wynik:* `TABLE ACCESS FULL` — na kolumnie `LAST_NAME` nie ma indeksu.
+> 3. Przełącz widok na **Diagram**, a potem na **Tekst**.
+>    *Wynik:* ten sam plan jako rysunek i jako tekst DBMS_XPLAN (taki, jaki zobaczy administrator).
+> 4. Zaznacz zapytanie w oknie SQL i wybierz **Narzędzia › Autotrace**.
+>    *Wynik:* plan rzeczywisty z kolumnami **E-Rows** (szacowane) i **A-Rows** (rzeczywiste wiersze) — tu zgodne.
+>
+> ⚠️ **Na co uważać.** Na tak małej tabeli pełny odczyt jest najszybszy i optymalizator słusznie go wybiera — indeks
+> przydaje się przy dużych tabelach. Nie dodawaj indeksów „na zapas”: każdy indeks spowalnia INSERT, UPDATE
+> i DELETE. Autotrace naprawdę **wykonuje** polecenie (DML jest potem wycofywany) — nie uruchamiaj w nim długich
+> zapytań na produkcji w godzinach pracy.
 
 ## Autotrace
 
@@ -67,6 +103,22 @@ się nie uruchomi. Agenci AI nie mają dostępu do tych narzędzi. Raporty zapis
 - **Zapytania…** pozwala zdefiniować własne filtry (warunek WHERE), karty szczegółów (z `:sid`, `:serial#`) i akcje.
 
 Sesje Pelikana mają w kolumnie MODULE wartość „Pelikan”, a sesje agentów AI — „Pelikan agent”.
+
+> **Ćwiczenie: kto blokuje wiersz?**
+>
+> Wymaga uprawnień do odczytu V$SESSION i V$LOCK (zwykle rola SELECT_CATALOG_ROLE).
+>
+> 1. W oknie SQL A wykonaj `UPDATE pel_employees SET salary = salary WHERE emp_id = 1;` i **nie** zatwierdzaj.
+> 2. W oknie SQL B wykonaj to samo polecenie.
+>    *Wynik:* okno B „wisi” — czeka, aż sesja okna A zwolni blokadę wiersza.
+> 3. Otwórz **Narzędzia › Sesje**, znajdź sesje z MODULE „Pelikan” i zaznacz tę, która czeka.
+>    *Wynik:* karta **Oczekiwanie** pokazuje zdarzenie blokady (`enq: TX - row lock contention`), a karta
+>    **Blokady** — sesję blokującą.
+> 4. Wróć do okna A i naciśnij **⇧F10** (ROLLBACK).
+>    *Wynik:* okno B od razu kończy UPDATE. Wycofaj też okno B (**⇧F10**).
+>
+> ⚠️ **Na co uważać.** **Zakończ sesję** przerywa cudzą pracę i cofa jej transakcję. Na bazie współdzielonej kończ
+> tylko własne sesje albo za zgodą administratora.
 
 ## Panel DBA i Instance Viewer
 
