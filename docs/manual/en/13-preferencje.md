@@ -436,6 +436,119 @@ replacement marks the cursor position after the replacement. **Add abbreviation*
 - **Insert a tab character instead of spaces** — *default: off*. On — Tab inserts a tab character. Note: in other programs
   a tab may have a different width, so the code “falls apart”. Most teams use spaces.
 
+## Colors tab
+
+The **color theme** decides how the editor colors code. It sets the colors of keywords, strings, comments and function
+names, as well as the background, selection, cursor, current line and line numbers. Pelikan has 98 built-in themes.
+The default is **Pelikan**, in a light and a dark version. There is also **Classic**, styled after the Oracle tools of
+the past: white background, navy keywords, red strings and green comments. The other 95 are well-known editor themes,
+including Solarized, Gruvbox, Dracula, Monokai, Nord, One Dark, GitHub, Catppuccin and Tokyo Night. Their palettes come
+from the tinted-theming project (MIT license).
+
+The same colors apply in the SQL Window, Program Window, Test Window and console, and in the code previews of tool
+windows (sessions, reports, Query Builder). Printing and the Quick Look preview in Finder keep Pelikan's light colors,
+because paper and Finder have a white background.
+
+### Theme list
+
+On the left there are two groups: **Light** (light background) and **Dark** (dark background). The colored rectangle
+next to a name shows the theme's background and three of its colors: keyword, string and comment. A ✓ marks a theme in
+use. **custom** marks a theme you saved yourself. The **Filter themes** field narrows the list to names or authors that
+match what you type.
+
+### Use in Light Mode / Use in Dark Mode
+
+macOS has a light and a dark mode (System Settings › Appearance, or **General › Appearance** in Pelikan). Pelikan
+remembers **a separate theme for each mode**. *Default:* Pelikan light and Pelikan dark. When the system switches mode
+(for example in the evening with automatic mode), the editor switches to the other theme by itself. Colors change at
+once in all open windows, without reopening files.
+
+You can also choose a dark theme for light mode, and the other way round. The editor then has its own background,
+independent of the rest of the window. The line under the buttons shows which theme is in use in each mode.
+
+### Preview
+
+The **SQL / PL/SQL / Pro*C** switch shows sample code in the colors of the selected theme. The theme does not have to
+be in use. This way you can compare themes before choosing one.
+
+### Color categories
+
+A theme assigns a color (and optionally bold or italic) to each category:
+
+- **Plain text** — names of tables, columns and variables.
+- **Keywords** — `SELECT`, `BEGIN`, `IF`, `create or replace`; in Pro*C also `EXEC SQL`, `END-EXEC` and C keywords
+  (`if`, `return`).
+- **Data types** — `VARCHAR2`, `NUMBER`, `DATE`, `BOOLEAN`; in Pro*C `int`, `char`, `VARCHAR`.
+- **Built-in functions** — `NVL`, `TO_CHAR`, `COUNT` and other Oracle functions when a parenthesis follows the name;
+  in Pro*C every function call (`printf(`).
+- **Supplied database packages** — `DBMS_OUTPUT`, `UTL_FILE`, `APEX_…` when a dot follows the name.
+- **Strings** — `'text'`, `q'[…]'`; in Pro*C also `"text"`.
+- **Numbers** — `100`, `2.5`, `1e6`.
+- **Comments** — `-- …` and `/* … */`.
+- **Optimizer hints** — `/*+ INDEX(e) */`.
+- **Bind variables and substitutions** — `:x`, `&name`; in Pro*C host variables `:ename`.
+- **Quoted identifiers** — `"Department name"`.
+- **Operators and punctuation** — `:=`, `||`, `(`, `;`.
+- **Compilation and preprocessor directives** — `$IF … $END` in PL/SQL and `#include`, `#define` in Pro*C.
+
+Built-in themes have colors chosen so that text is readable: plain text has a contrast of at least 4.5:1 with the
+background, and every category at least 3:1. Pelikan does not use palette colors that are too pale (most often
+comments) — it moves them towards the text color.
+
+### Save as Custom…
+
+Built-in themes cannot be changed, so you can always go back to them. Want different colors? Select the theme closest
+to what you want and click **Save as Custom…**. Enter a name (*default:* “name (copy)”). The copy appears in the list
+marked **custom** and can be edited right away. The original stays unchanged.
+
+### Editing a custom theme
+
+Under the preview of a custom theme there is a table:
+
+- **Name** and **Dark theme** — the name in the list and the group (**Light** or **Dark**). The group does not limit the
+  choice: you can use the theme in either mode.
+- **Category** — for each category in the list above: **Color**, **Bold** and **Italic**. Click a color well to open the
+  system color picker. The change shows at once in the preview, and in the editors if the theme is in use. The ↺ arrow
+  next to a color restores the default color: plain text color for categories, system color for editor elements.
+- **Background**, **Text**, **Selection**, **Current line**, **Line numbers**, **Cursor** — colors of the editor itself.
+  **Current line** is the bar under the line with the cursor (if current line highlighting is on in the **Editor** tab).
+
+Changes are saved at once, without a **Save** button. **Delete** removes a custom theme. If it was in use, that mode
+returns to the Pelikan theme.
+
+> **Note.** **Text** and **background** colors set in **Editor › Font colors** take precedence over the theme. If the
+> background does not change after you choose a theme, check whether a custom color is set there (the **System** button
+> removes it).
+
+### Import… and Export…
+
+**Import…** loads a theme from a file as a custom theme. Supported formats:
+
+- a Pelikan theme (`.json` from **Export…**),
+- base16 and base24 (`.yaml`) — hundreds of palettes from the tinted-theming project,
+- Xcode (`.xccolortheme`; user themes are in `~/Library/Developer/Xcode/UserData/FontAndColorThemes`),
+- TextMate and Sublime Text (`.tmTheme`),
+- Visual Studio Code (`.json` from a theme extension, the file in its `themes` folder).
+
+When importing from Xcode, TextMate and VS Code, Pelikan matches SQL categories to the theme's colors. The result is not
+always the same as in the original editor, because those themes describe other languages. Adjust the colors in the
+editing table if needed.
+
+**Export…** saves the selected theme (also a built-in one) to a `.json` file, for example to move it to another computer
+or give it to a colleague. Custom themes are also carried by exporting settings (**Tools › Settings › Export
+Settings…**, **Editor** section).
+
+> **Exercise: your own theme with clear comments.**
+> 1. Open **Pelikan › Settings…** (⌘,) and the **Colors** tab.
+> 2. In the **Light** group, select **Solarized Light**. *Result:* the preview shows code on a cream background.
+> 3. Click **Use in Light Mode**. *Result:* a ✓ appears next to the name and the open SQL Window changes colors.
+> 4. Click **Save as Custom…**, type `My Solarized` and click **Save**. *Result:* the list contains **My Solarized**
+>    marked **custom**, and a table of colors is under the preview.
+> 5. In the **Comments** row, click the color well and pick a dark green. Turn off **Italic**. *Result:* comments in the
+>    preview are green and upright.
+> 6. Click **Use in Light Mode**. *Result:* the SQL Window now uses your theme, and **Solarized Light** is unchanged.
+> 7. To return to the default look, select **Pelikan** in the **Light** group and click **Use in Light Mode**.
+
 ## Formatter tab
 
 The **formatter** (⇧⌘F) lays out PL/SQL and SQL code according to rules: indentation, list breaking, letter case. Thanks

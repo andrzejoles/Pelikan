@@ -96,3 +96,11 @@ after typing the target's name).
 Sources on older servers are often in ISO-8859-2. Pelikan detects the encoding of existing files and does not change it
 silently: a character that cannot be saved in the file's encoding blocks saving, with the exact location indicated. You
 change the encoding only explicitly (**File › File encoding…**); a project can also enforce the encoding of its files.
+
+## Pro*C code coloring
+
+Files `.pc`, `.pcc`, `.c` and `.h` opened in Pelikan are colored as C: keywords, types (`int`, `char`, `VARCHAR`),
+preprocessor directives (`#include`), strings, comments and function calls. `EXEC SQL … ;` statements and
+`EXEC SQL EXECUTE … END-EXEC;` blocks are colored as SQL and PL/SQL, and host variables (`:ename`) as bind variables.
+The colors come from the theme chosen in **Settings › Colors**. The **Pro*C** switch in that tab's preview shows how a
+theme looks in Pro*C code.

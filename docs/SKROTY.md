@@ -409,6 +409,14 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Ustawienia › Eksportuj ustawienia… | `prefs.export` |  |  | Brak | PD-PREF-003 |
 | Ustawienia › Importuj ustawienia… | `prefs.import` |  |  | Brak | PD-PREF-003 |
 | Ustawienia › Zestawy ustawień… | `prefs.sets` |  |  | Brak | PD-PREF-002 |
+| Ustawienia › Kolory składni… | `prefs.syntaxSchemes` |  |  | Brak | PD-EDIT-001 |
+| Ustawienia › Użyj motywu kolorów składni | `editor.syntaxScheme.use` |  |  | Brak | PD-EDIT-001 |
+| Ustawienia › Zapisz motyw kolorów jako własny | `editor.syntaxScheme.duplicate` |  |  | Brak | PD-EDIT-001 |
+| Ustawienia › Zmień kolor kategorii w motywie | `editor.syntaxScheme.setStyle` |  |  | Brak | PD-EDIT-001 |
+| Ustawienia › Zmień nazwę motywu kolorów | `editor.syntaxScheme.rename` |  |  | Brak | PD-EDIT-001 |
+| Ustawienia › Usuń motyw kolorów | `editor.syntaxScheme.delete` |  |  | Brak | PD-EDIT-001 |
+| Ustawienia › Importuj motyw kolorów… | `editor.syntaxScheme.import` |  |  | Brak | PD-EDIT-001 |
+| Ustawienia › Eksportuj motyw kolorów… | `editor.syntaxScheme.export` |  |  | Brak | PD-EDIT-001 |
 | Dokumenty… | `tools.documents` |  |  | Brak | PD-DOC-002 |
 | Zdalny build Pro*C › Cele SSH… | `ssh.manager` |  |  | Brak | PC-CONN-002 |
 | Zdalny build Pro*C › Testuj cel SSH | `ssh.test` |  |  | Brak | PC-CONN-003 |

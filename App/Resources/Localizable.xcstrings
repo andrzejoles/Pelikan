@@ -11761,6 +11761,34 @@
         }
       }
     },
+    "Ciemne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dunkel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oscuros"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Темні"
+          }
+        }
+      }
+    },
     "Ciemny" : {
       "localizations" : {
         "en" : {
@@ -19853,6 +19881,34 @@
         }
       }
     },
+    "Dyrektywy kompilacji i preprocesora" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilation and preprocessor directives"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kompilierungs- und Präprozessordirektiven"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directivas de compilación y del preprocesador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Директиви компіляції та препроцесора"
+          }
+        }
+      }
+    },
     "Działa: %@" : {
       "localizations" : {
         "en" : {
@@ -21589,6 +21645,34 @@
         }
       }
     },
+    "Eksportuj motyw kolorów…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Color Theme…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbschema exportieren…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar tema de colores…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати колірну тему…"
+          }
+        }
+      }
+    },
     "Eksportuj notatnik jako Markdown…" : {
       "localizations" : {
         "en" : {
@@ -22873,6 +22957,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Фільтр стовпців…"
+          }
+        }
+      }
+    },
+    "Filtruj motywy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter themes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schemata filtern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrar temas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтрувати теми"
           }
         }
       }
@@ -24889,6 +25001,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Стандартні функції SQL"
+          }
+        }
+      }
+    },
+    "Funkcje wbudowane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Built-in functions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integrierte Funktionen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funciones integradas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вбудовані функції"
           }
         }
       }
@@ -28169,6 +28309,34 @@
         }
       }
     },
+    "Identyfikator albo nazwa motywu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme identifier or name"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kennung oder Name des Schemas"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificador o nombre del tema"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор або назва теми"
+          }
+        }
+      }
+    },
     "Identyfikator albo nazwa połączenia" : {
       "localizations" : {
         "en" : {
@@ -29597,6 +29765,34 @@
         }
       }
     },
+    "Importuj motyw kolorów…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Color Theme…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbschema importieren…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importar tema de colores…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імпортувати колірну тему…"
+          }
+        }
+      }
+    },
     "Importuj plik JavaScript…" : {
       "localizations" : {
         "en" : {
@@ -30937,6 +31133,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Як зображення"
+          }
+        }
+      }
+    },
+    "Jasne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hell"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claros"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Світлі"
           }
         }
       }
@@ -32453,6 +32677,34 @@
         }
       }
     },
+    "Kategoria składni albo element edytora" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syntax category or editor element"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syntaxkategorie oder Editorelement"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Categoría de sintaxis o elemento del editor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Категорія синтаксису або елемент редактора"
+          }
+        }
+      }
+    },
     "Każdy w osobnej linii" : {
       "localizations" : {
         "en" : {
@@ -32645,6 +32897,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Job-Klassen"
+          }
+        }
+      }
+    },
+    "Klasyczny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Classic"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klassisch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clásico"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Класичний"
           }
         }
       }
@@ -33797,6 +34077,34 @@
         }
       }
     },
+    "Kolor #rrggbb (puste — bez zmiany; „none” — kolor systemu albo tekstu)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color #rrggbb (empty — unchanged; “none” — system or text color)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbe #rrggbb (leer — unverändert; „none“ — System- oder Textfarbe)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color #rrggbb (vacío — sin cambios; «none» — color del sistema o del texto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Колір #rrggbb (порожньо — без змін; «none» — колір системи або тексту)"
+          }
+        }
+      }
+    },
     "Kolor 1–6 (0 — usuń znacznik z zaznaczenia)" : {
       "localizations" : {
         "en" : {
@@ -33821,6 +34129,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Колір 1–6 (0 — вилучити позначку з виділення)"
+          }
+        }
+      }
+    },
+    "Kolor domyślny (systemu albo zwykłego tekstu)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default color (system or plain text)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardfarbe (System oder normaler Text)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color predeterminado (del sistema o del texto normal)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Типовий колір (системи або звичайного тексту)"
           }
         }
       }
@@ -33881,6 +34217,34 @@
         }
       }
     },
+    "Kolory" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colors"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кольори"
+          }
+        }
+      }
+    },
     "Kolory czcionek" : {
       "localizations" : {
         "en" : {
@@ -33905,6 +34269,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Кольори шрифтів"
+          }
+        }
+      }
+    },
+    "Kolory składni…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syntax Colors…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syntaxfarben…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colores de sintaxis…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кольори синтаксису…"
           }
         }
       }
@@ -34997,6 +35389,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kommentar"
+          }
+        }
+      }
+    },
+    "Komentarze" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comments"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kommentare"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comentarios"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коментарі"
           }
         }
       }
@@ -36593,6 +37013,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перетворити"
+          }
+        }
+      }
+    },
+    "Kopia motywu (wbudowanego albo własnego) jako motyw własny do zmian; wbudowane zostają bez zmian." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies a theme (built-in or custom) as a custom theme to edit; built-in themes stay unchanged."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert ein Schema (integriert oder eigenes) als eigenes Schema zum Bearbeiten; integrierte Schemata bleiben unverändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia un tema (integrado o propio) como tema propio para editarlo; los integrados no cambian."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіює тему (вбудовану або власну) як власну тему для змін; вбудовані залишаються без змін."
           }
         }
       }
@@ -39705,6 +40153,34 @@
         }
       }
     },
+    "Kursywa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Italic"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kursiv"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursiva"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Курсив"
+          }
+        }
+      }
+    },
     "LOAD tabela plik [NEW]" : {
       "localizations" : {
         "en" : {
@@ -40629,6 +41105,34 @@
         }
       }
     },
+    "Linia bieżąca" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current line"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuelle Zeile"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Línea actual"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поточний рядок"
+          }
+        }
+      }
+    },
     "Linia do pokazania" : {
       "localizations" : {
         "en" : {
@@ -41045,6 +41549,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Liste überwachter Abfragen (V$SQL_MONITOR) mit Bericht für die gewählte; erfordert Tuning Pack."
+          }
+        }
+      }
+    },
+    "Lista motywów kolorowania składni (wbudowane i własne) i motywy wybrane dla trybu jasnego i ciemnego; w aplikacji otwiera Ustawienia › Kolory." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lists syntax color themes (built-in and custom) and the themes chosen for light and dark mode; in the app it opens Settings › Colors."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listet Syntaxfarbschemata (integriert und eigene) und die für den hellen und dunklen Modus gewählten Schemata; in der App öffnet es Einstellungen › Farben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista los temas de colores de sintaxis (integrados y propios) y los elegidos para el modo claro y oscuro; en la aplicación abre Ajustes › Colores."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Список тем кольорів синтаксису (вбудованих і власних) і тем, вибраних для світлого й темного режиму; у застосунку відкриває Налаштування › Кольори."
           }
         }
       }
@@ -43401,6 +43933,174 @@
         }
       }
     },
+    "Motyw ciemny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark theme"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dunkles Schema"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema oscuro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Темна тема"
+          }
+        }
+      }
+    },
+    "Motyw dla trybu ciemnego" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme for dark mode"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema für den dunklen Modus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema para el modo oscuro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тема для темного режиму"
+          }
+        }
+      }
+    },
+    "Motyw w użyciu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme in use"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwendetes Schema"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema en uso"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тема використовується"
+          }
+        }
+      }
+    },
+    "Motyw wbudowany jest tylko do odczytu — aby zmienić kolory, zapisz go jako własny." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Built-in themes are read-only — to change colors, save it as a custom theme."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integrierte Schemata sind schreibgeschützt — um Farben zu ändern, als eigenes Schema speichern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los temas integrados son de solo lectura: para cambiar los colores, guárdelo como propio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вбудована тема лише для читання — щоб змінити кольори, збережіть її як власну."
+          }
+        }
+      }
+    },
+    "Motyw wbudowany „%@” jest tylko do odczytu — najpierw zapisz go jako własny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Built-in theme “%@” is read-only — save it as a custom theme first"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integriertes Schema „%@“ ist schreibgeschützt — zuerst als eigenes Schema speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El tema integrado «%@» es de solo lectura: primero guárdelo como propio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вбудована тема «%@» лише для читання — спершу збережіть її як власну"
+          }
+        }
+      }
+    },
+    "Motyw z pliku: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme from a file: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema aus einer Datei: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema desde un archivo: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тема з файлу: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json"
+          }
+        }
+      }
+    },
     "Multi — osobna sesja dla każdego okna" : {
       "localizations" : {
         "en" : {
@@ -43453,6 +44153,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "У кінці рядка"
+          }
+        }
+      }
+    },
+    "Na liście w grupie ciemnych; wybór dla trybu jasnego i ciemnego jest niezależny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listed among dark themes; the choice for light and dark mode is independent"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In der Liste bei den dunklen Schemata; die Auswahl für hellen und dunklen Modus ist unabhängig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En la lista entre los oscuros; la elección para el modo claro y oscuro es independiente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У списку серед темних; вибір для світлого й темного режиму незалежний"
           }
         }
       }
@@ -44153,6 +44881,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Größtes Ergebnis: %@ kB"
+          }
+        }
+      }
+    },
+    "Napisy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strings"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeichenketten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cadenas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рядки"
           }
         }
       }
@@ -45641,6 +46397,34 @@
         }
       }
     },
+    "Nazwa nowego motywu (puste — „nazwa (kopia)”)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name of the new theme (empty — “name (copy)”)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name des neuen Schemas (leer — „Name (Kopie)“)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre del nuevo tema (vacío — «nombre (copia)»)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва нової теми (порожньо — «назва (копія)»)"
+          }
+        }
+      }
+    },
     "Nazwa nowej grupy ręcznej" : {
       "localizations" : {
         "en" : {
@@ -46421,6 +47205,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показувати назви з'єднань, об'єктів і шляхи до файлів"
+          }
+        }
+      }
+    },
+    "Nazwy w cudzysłowie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quoted identifiers"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezeichner in Anführungszeichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificadores entre comillas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імена в лапках"
           }
         }
       }
@@ -47233,6 +48045,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Більше не питати"
+          }
+        }
+      }
+    },
+    "Nie rozpoznano motywu w pliku %@ (obsługiwane: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No theme recognized in file %@ (supported: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Schema in Datei %@ erkannt (unterstützt: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se reconoció ningún tema en el archivo %@ (compatibles: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не розпізнано теми у файлі %@ (підтримуються: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json)"
           }
         }
       }
@@ -52049,6 +52889,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Номер рядка подання від 1 (типово перший виділений)"
+          }
+        }
+      }
+    },
+    "Numery linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Line numbers"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilennummern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Números de línea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Номери рядків"
           }
         }
       }
@@ -56897,6 +57765,34 @@
         }
       }
     },
+    "Operatory i interpunkcja" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operators and punctuation"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operatoren und Satzzeichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operadores y puntuación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оператори та розділові знаки"
+          }
+        }
+      }
+    },
     "Opis" : {
       "localizations" : {
         "en" : {
@@ -61461,6 +62357,34 @@
         }
       }
     },
+    "Pakiety dostarczane z bazą" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supplied database packages"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mitgelieferte Datenbankpakete"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paquetes suministrados con la base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакети, що постачаються з базою"
+          }
+        }
+      }
+    },
     "Pakiety zarządzania są wyłączone w bazie (CONTROL_MANAGEMENT_PACK_ACCESS = NONE)" : {
       "localizations" : {
         "en" : {
@@ -63953,6 +64877,34 @@
         }
       }
     },
+    "Plik motywu: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme file: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schemadatei: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo de tema: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл теми: Pelikan .json, base16/base24 .yaml, Xcode .xccolortheme, TextMate .tmTheme, Visual Studio Code .json"
+          }
+        }
+      }
+    },
     "Plik na obiekt" : {
       "localizations" : {
         "en" : {
@@ -65829,6 +66781,34 @@
         }
       }
     },
+    "Podgląd motywu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme preview"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schemavorschau"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista previa del tema"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередній перегляд теми"
+          }
+        }
+      }
+    },
     "Podgląd przestrzenny" : {
       "localizations" : {
         "en" : {
@@ -66389,6 +67369,34 @@
         }
       }
     },
+    "Podwyżka z kontrolą limitu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raise with a limit check"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gehaltserhöhung mit Grenzprüfung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aumento con control de límite"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підвищення з перевіркою ліміту"
+          }
+        }
+      }
+    },
     "Podzapytania i CTE" : {
       "localizations" : {
         "en" : {
@@ -66553,6 +67561,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Підсвічувати входження назви під курсором і виділеного слова"
+          }
+        }
+      }
+    },
+    "Pogrubienie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bold"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fett"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Negrita"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жирний"
           }
         }
       }
@@ -73665,6 +74701,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zugangsdaten"
+          }
+        }
+      }
+    },
+    "Pracownicy z pensją powyżej średniej działu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Employees earning above their department average"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mitarbeiter mit Gehalt über dem Abteilungsdurchschnitt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empleados con salario superior a la media del departamento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Працівники із зарплатою вище середньої у відділі"
           }
         }
       }
@@ -93997,6 +95061,34 @@
         }
       }
     },
+    "Tryb systemu: light albo dark (puste — według motywu)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System mode: light or dark (empty — by the theme)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemmodus: light oder dark (leer — nach dem Schema)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo del sistema: light o dark (vacío — según el tema)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Режим системи: light або dark (порожньо — за темою)"
+          }
+        }
+      }
+    },
     "Tryb ścisły — CLI bez własnej powłoki i edycji plików, tylko narzędzia Pelikana (gdzie CLI na to pozwala)" : {
       "localizations" : {
         "en" : {
@@ -95337,6 +96429,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Typen"
+          }
+        }
+      }
+    },
+    "Typy danych" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data types"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datentypen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipos de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Типи даних"
           }
         }
       }
@@ -97973,6 +99093,34 @@
         }
       }
     },
+    "Ustawia motyw kolorowania składni dla trybu jasnego albo ciemnego systemu (domyślnie dla trybu motywu); zmienia kolory wszystkich edytorów i podglądów kodu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sets the syntax color theme for the system light or dark mode (by default for the theme's mode); changes the colors of all editors and code previews."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Legt das Syntaxfarbschema für den hellen oder dunklen Systemmodus fest (standardmäßig für den Modus des Schemas); ändert die Farben aller Editoren und Codevorschauen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establece el tema de colores de sintaxis para el modo claro u oscuro del sistema (por defecto, el modo del tema); cambia los colores de todos los editores y vistas previas de código."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встановлює тему кольорів синтаксису для світлого або темного режиму системи (типово — для режиму теми); змінює кольори всіх редакторів і переглядів коду."
+          }
+        }
+      }
+    },
     "Ustawia powiększenie diagramu (10–200 %%)." : {
       "localizations" : {
         "en" : {
@@ -98981,6 +100129,34 @@
         }
       }
     },
+    "Usuwa motyw własny; tryb, który go używał, wraca do domyślnego motywu Pelikana. Wbudowanych nie można usunąć." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deletes a custom theme; a mode that used it returns to Pelikan's default theme. Built-in themes cannot be deleted."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löscht ein eigenes Schema; ein Modus, der es verwendete, kehrt zum Standardschema von Pelikan zurück. Integrierte Schemata können nicht gelöscht werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina un tema propio; el modo que lo usaba vuelve al tema predeterminado de Pelikan. Los integrados no se pueden eliminar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видаляє власну тему; режим, що її використовував, повертається до типової теми Pelikan. Вбудовані видалити не можна."
+          }
+        }
+      }
+    },
     "Usuwa obiekt z bazy (DROP) po potwierdzeniu." : {
       "localizations" : {
         "en" : {
@@ -99985,6 +101161,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Видалити макрос"
+          }
+        }
+      }
+    },
+    "Usuń motyw kolorów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Color Theme"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbschema löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar tema de colores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити колірну тему"
           }
         }
       }
@@ -101529,6 +102733,90 @@
         }
       }
     },
+    "Użyj motywu kolorów składni" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Syntax Color Theme"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syntaxfarbschema verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar tema de colores de sintaxis"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використати тему кольорів синтаксису"
+          }
+        }
+      }
+    },
+    "Użyj w trybie ciemnym" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use in Dark Mode"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im dunklen Modus verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar en modo oscuro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використати в темному режимі"
+          }
+        }
+      }
+    },
+    "Użyj w trybie jasnym" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use in Light Mode"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im hellen Modus verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar en modo claro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використати у світлому режимі"
+          }
+        }
+      }
+    },
     "Użytkownicy" : {
       "localizations" : {
         "en" : {
@@ -102337,6 +103625,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In dieser Datenbank gibt es keine Oracle REST Data Services (ORDS)"
+          }
+        }
+      }
+    },
+    "W trybie jasnym: %@ · w trybie ciemnym: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light mode: %@ · dark mode: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heller Modus: %@ · dunkler Modus: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo claro: %@ · modo oscuro: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Світлий режим: %@ · темний режим: %@"
           }
         }
       }
@@ -103961,6 +105277,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Завантажувати без запиту файли, змінені ззовні, коли вікно не має змін"
+          }
+        }
+      }
+    },
+    "Wczytuje motyw z pliku jako motyw własny: Pelikan, base16/base24, Xcode, TextMate albo Visual Studio Code." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loads a theme from a file as a custom theme: Pelikan, base16/base24, Xcode, TextMate or Visual Studio Code."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt ein Schema aus einer Datei als eigenes Schema: Pelikan, base16/base24, Xcode, TextMate oder Visual Studio Code."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carga un tema desde un archivo como tema propio: Pelikan, base16/base24, Xcode, TextMate o Visual Studio Code."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажує тему з файлу як власну: Pelikan, base16/base24, Xcode, TextMate або Visual Studio Code."
           }
         }
       }
@@ -119981,6 +121325,34 @@
         }
       }
     },
+    "Zapisuje motyw (wbudowany albo własny) do pliku JSON Pelikana — do przeniesienia na inny komputer albo udostępnienia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saves a theme (built-in or custom) to a Pelikan JSON file — to move it to another computer or share it."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichert ein Schema (integriert oder eigenes) in einer Pelikan-JSON-Datei — zum Übertragen auf einen anderen Computer oder zum Teilen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda un tema (integrado o propio) en un archivo JSON de Pelikan, para llevarlo a otro equipo o compartirlo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає тему (вбудовану або власну) у файл JSON Pelikan — щоб перенести на інший комп'ютер або поділитися."
+          }
+        }
+      }
+    },
     "Zapisuje notatnik z wynikami jako dokument Markdown." : {
       "localizations" : {
         "en" : {
@@ -120877,6 +122249,62 @@
         }
       }
     },
+    "Zapisz jako własny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save as Custom"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als eigenes speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar como propio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти як власну"
+          }
+        }
+      }
+    },
+    "Zapisz jako własny…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save as Custom…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als eigenes speichern…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar como propio…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти як власну…"
+          }
+        }
+      }
+    },
     "Zapisz jako zapytanie standardowe…" : {
       "localizations" : {
         "en" : {
@@ -121069,6 +122497,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Усе одно зберегти"
+          }
+        }
+      }
+    },
+    "Zapisz motyw kolorów jako własny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Color Theme as Custom"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbschema als eigenes speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar tema de colores como propio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти колірну тему як власну"
           }
         }
       }
@@ -126281,6 +127737,34 @@
         }
       }
     },
+    "Zmienia kolor, pogrubienie albo kursywę kategorii składni lub kolor elementu edytora w motywie własnym." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes the color, bold or italic of a syntax category, or the color of an editor element, in a custom theme."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ändert Farbe, Fett- oder Kursivschrift einer Syntaxkategorie oder die Farbe eines Editorelements in einem eigenen Schema."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia el color, la negrita o la cursiva de una categoría de sintaxis, o el color de un elemento del editor, en un tema propio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінює колір, жирний шрифт або курсив категорії синтаксису чи колір елемента редактора у власній темі."
+          }
+        }
+      }
+    },
     "Zmienia nazwę folderu szablonów użytkownika (z szablonami)." : {
       "localizations" : {
         "en" : {
@@ -126389,6 +127873,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перейменовує макрос у бібліотеці."
+          }
+        }
+      }
+    },
+    "Zmienia nazwę motywu własnego i jego przypisanie do trybu jasnego albo ciemnego na liście." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renames a custom theme and changes whether it is listed as light or dark."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benennt ein eigenes Schema um und ändert seine Zuordnung zu hell oder dunkel in der Liste."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia el nombre de un tema propio y si aparece entre los claros u oscuros."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменовує власну тему й змінює її належність до світлих чи темних у списку."
           }
         }
       }
@@ -127261,6 +128773,34 @@
         }
       }
     },
+    "Zmienne wiązane i podstawienia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bind variables and substitutions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bindevariablen und Ersetzungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Variables de enlace y sustituciones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінні прив'язки та підстановки"
+          }
+        }
+      }
+    },
     "Zmienne: " : {
       "localizations" : {
         "en" : {
@@ -127425,6 +128965,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passwort ändern …"
+          }
+        }
+      }
+    },
+    "Zmień kolor kategorii w motywie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change Category Color in Theme"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategoriefarbe im Schema ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar color de categoría en el tema"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити колір категорії в темі"
           }
         }
       }
@@ -127705,6 +129273,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перейменувати макрос"
+          }
+        }
+      }
+    },
+    "Zmień nazwę motywu kolorów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename Color Theme"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbschema umbenennen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar nombre del tema de colores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменувати колірну тему"
           }
         }
       }
@@ -128913,6 +130509,34 @@
         }
       }
     },
+    "Zwykły tekst" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plain text"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normaler Text"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto normal"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звичайний текст"
+          }
+        }
+      }
+    },
     "Złączenia" : {
       "localizations" : {
         "en" : {
@@ -129977,6 +131601,34 @@
         }
       }
     },
+    "ciemny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dark"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dunkel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "oscuro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "темна"
+          }
+        }
+      }
+    },
     "co %@ min" : {
       "localizations" : {
         "en" : {
@@ -130981,6 +132633,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "як у тілі"
+          }
+        }
+      }
+    },
+    "jasny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "light"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hell"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "claro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "світла"
           }
         }
       }
@@ -133753,6 +135433,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "offen"
+          }
+        }
+      }
+    },
+    "paleta z tinted-theming (MIT)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "palette from tinted-theming (MIT)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Palette von tinted-theming (MIT)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "paleta de tinted-theming (MIT)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "палітра з tinted-theming (MIT)"
           }
         }
       }
@@ -137845,6 +139553,34 @@
         }
       }
     },
+    "własny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "custom"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eigenes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "propio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "власна"
+          }
+        }
+      }
+    },
     "włączone" : {
       "localizations" : {
         "en" : {
@@ -138457,6 +140193,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Variable %@\n Typ: %@"
+          }
+        }
+      }
+    },
+    "zmienna hosta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "host variable"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostvariable"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "variable host"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "змінна хоста"
           }
         }
       }

@@ -471,6 +471,126 @@ dónde queda el cursor tras sustituir. **Añadir abreviatura** añade una fila v
   tabulación. Ojo: en otros programas una tabulación puede tener otro ancho y el código «se descuadra». La mayoría de los
   equipos usa espacios.
 
+## Pestaña Colores
+
+El **tema de colores** decide cómo colorea el código el editor. Fija los colores de las palabras clave, cadenas,
+comentarios y nombres de funciones, además del fondo, la selección, el cursor, la línea actual y los números de línea.
+Pelikan tiene 98 temas integrados. El predeterminado es **Pelikan**, en versión clara y oscura. También está
+**Clásico**, al estilo de las antiguas herramientas de Oracle: fondo blanco, palabras clave azul marino, cadenas rojas y
+comentarios verdes. Los otros 95 son temas de editor conocidos, entre ellos Solarized, Gruvbox, Dracula, Monokai, Nord,
+One Dark, GitHub, Catppuccin y Tokyo Night. Sus paletas proceden del proyecto tinted-theming (licencia MIT).
+
+Los mismos colores se aplican en la ventana SQL, la ventana de programa, la ventana de prueba y la consola, y en las
+vistas previas de código de las ventanas de herramientas (sesiones, informes, Query Builder). La impresión y la vista
+previa Quick Look del Finder mantienen los colores claros de Pelikan, porque el papel y el Finder tienen fondo blanco.
+
+### Lista de temas
+
+A la izquierda hay dos grupos: **Claros** (fondo claro) y **Oscuros** (fondo oscuro). El rectángulo de color junto al
+nombre muestra el fondo del tema y tres de sus colores: palabra clave, cadena y comentario. Una ✓ marca el tema en uso.
+**propio** marca un tema que guardó usted. El campo **Filtrar temas** limita la lista a los nombres o autores que
+coinciden con lo escrito.
+
+### Usar en modo claro / Usar en modo oscuro
+
+macOS tiene un modo claro y uno oscuro (Ajustes del Sistema › Apariencia, o **General › Aspecto** en Pelikan). Pelikan
+recuerda **un tema distinto para cada modo**. *Por defecto:* Pelikan claro y Pelikan oscuro. Cuando el sistema cambia de
+modo (por ejemplo, por la tarde con el modo automático), el editor pasa solo al otro tema. Los colores cambian al
+instante en todas las ventanas abiertas, sin volver a abrir los archivos.
+
+También puede elegir un tema oscuro para el modo claro, y al revés. El editor tiene entonces su propio fondo,
+independiente del resto de la ventana. La línea bajo los botones muestra qué tema está en uso en cada modo.
+
+### Vista previa
+
+El selector **SQL / PL/SQL / Pro*C** muestra código de ejemplo con los colores del tema seleccionado. El tema no tiene
+que estar en uso. Así puede comparar temas antes de elegir uno.
+
+### Categorías de colores
+
+Un tema asigna un color (y, si se quiere, negrita o cursiva) a cada categoría:
+
+- **Texto normal** — nombres de tablas, columnas y variables.
+- **Palabras clave** — `SELECT`, `BEGIN`, `IF`, `create or replace`; en Pro*C también `EXEC SQL`, `END-EXEC` y palabras
+  clave de C (`if`, `return`).
+- **Tipos de datos** — `VARCHAR2`, `NUMBER`, `DATE`, `BOOLEAN`; en Pro*C `int`, `char`, `VARCHAR`.
+- **Funciones integradas** — `NVL`, `TO_CHAR`, `COUNT` y otras funciones de Oracle cuando al nombre le sigue un
+  paréntesis; en Pro*C toda llamada a función (`printf(`).
+- **Paquetes suministrados con la base de datos** — `DBMS_OUTPUT`, `UTL_FILE`, `APEX_…` cuando al nombre le sigue un
+  punto.
+- **Cadenas** — `'texto'`, `q'[…]'`; en Pro*C también `"texto"`.
+- **Números** — `100`, `2.5`, `1e6`.
+- **Comentarios** — `-- …` y `/* … */`.
+- **Sugerencias del optimizador** — `/*+ INDEX(e) */`.
+- **Variables de enlace y sustituciones** — `:x`, `&nombre`; en Pro*C variables host `:ename`.
+- **Identificadores entre comillas** — `"Nombre del departamento"`.
+- **Operadores y puntuación** — `:=`, `||`, `(`, `;`.
+- **Directivas de compilación y del preprocesador** — `$IF … $END` en PL/SQL y `#include`, `#define` en Pro*C.
+
+Los temas integrados tienen colores elegidos para que el texto sea legible: el texto normal tiene un contraste con el
+fondo de al menos 4,5:1 y cada categoría de al menos 3:1. Pelikan no usa los colores demasiado pálidos de las paletas
+originales (casi siempre los comentarios): los acerca al color del texto.
+
+### Guardar como propio…
+
+Los temas integrados no se pueden cambiar, para que siempre pueda volver a ellos. ¿Quiere otros colores? Seleccione el
+tema más parecido a lo que busca y haga clic en **Guardar como propio…**. Escriba un nombre (*por defecto:* «nombre
+(copia)»). La copia aparece en la lista marcada como **propio** y se puede editar enseguida. El original no cambia.
+
+### Edición de un tema propio
+
+Bajo la vista previa de un tema propio hay una tabla:
+
+- **Nombre** y **Tema oscuro** — el nombre en la lista y el grupo (**Claros** u **Oscuros**). El grupo no limita la
+  elección: puede usar el tema en cualquier modo.
+- **Categoría** — para cada categoría de la lista anterior: **Color**, **Negrita** y **Cursiva**. Haga clic en el campo
+  de color para abrir el selector de colores del sistema. El cambio se ve al instante en la vista previa, y en los
+  editores si el tema está en uso. La flecha ↺ junto a un color restablece el color predeterminado: el del texto normal
+  para las categorías y el del sistema para los elementos del editor.
+- **Fondo**, **Texto**, **Selección**, **Línea actual**, **Números de línea**, **Cursor** — colores del propio editor.
+  **Línea actual** es la franja bajo la línea con el cursor (si en la pestaña **Editor** está activado el resaltado de la
+  línea actual).
+
+Los cambios se guardan al instante, sin botón **Guardar**. **Eliminar** borra un tema propio. Si estaba en uso, ese modo
+vuelve al tema Pelikan.
+
+> **Nota.** Los colores de **texto** y **fondo** fijados en **Editor › Colores de fuente** tienen prioridad sobre el
+> tema. Si el fondo no cambia al elegir un tema, compruebe si allí hay un color propio (el botón **Del sistema** lo
+> quita).
+
+### Importar… y Exportar…
+
+**Importar…** carga un tema desde un archivo como tema propio. Formatos compatibles:
+
+- un tema de Pelikan (`.json` de **Exportar…**),
+- base16 y base24 (`.yaml`) — cientos de paletas del proyecto tinted-theming,
+- Xcode (`.xccolortheme`; los temas del usuario están en `~/Library/Developer/Xcode/UserData/FontAndColorThemes`),
+- TextMate y Sublime Text (`.tmTheme`),
+- Visual Studio Code (`.json` de una extensión de tema, el archivo de su carpeta `themes`).
+
+Al importar desde Xcode, TextMate y VS Code, Pelikan asigna las categorías de SQL a los colores del tema. El resultado no
+siempre coincide con el editor original, porque esos temas describen otros lenguajes. Ajuste entonces los colores en la
+tabla de edición.
+
+**Exportar…** guarda el tema seleccionado (también uno integrado) en un archivo `.json`, por ejemplo para llevarlo a otro
+equipo o dárselo a un compañero. Los temas propios también viajan con la exportación de ajustes
+(**Herramientas › Ajustes › Exportar ajustes…**, sección **Editor**).
+
+> **Ejercicio: un tema propio con comentarios bien visibles.**
+> 1. Abra **Pelikan › Ajustes…** (⌘,) y la pestaña **Colores**.
+> 2. En el grupo **Claros**, seleccione **Solarized Light**. *Resultado:* la vista previa muestra código sobre fondo
+>    crema.
+> 3. Haga clic en **Usar en modo claro**. *Resultado:* aparece una ✓ junto al nombre y la ventana SQL abierta cambia de
+>    colores.
+> 4. Haga clic en **Guardar como propio…**, escriba `Mi Solarized` y haga clic en **Guardar**. *Resultado:* la lista
+>    contiene **Mi Solarized** marcado como **propio** y bajo la vista previa aparece una tabla de colores.
+> 5. En la fila **Comentarios**, haga clic en el campo de color y elija un verde oscuro. Desactive **Cursiva**.
+>    *Resultado:* los comentarios de la vista previa son verdes y rectos.
+> 6. Haga clic en **Usar en modo claro**. *Resultado:* la ventana SQL usa ahora su tema y **Solarized Light** no ha
+>    cambiado.
+> 7. Para volver al aspecto predeterminado, seleccione **Pelikan** en el grupo **Claros** y haga clic en **Usar en modo
+>    claro**.
+
 ## Pestaña Formateador
 
 El **formateador** (⇧⌘F) ordena el código PL/SQL y SQL según reglas: sangrías, partición de listas, mayúsculas y

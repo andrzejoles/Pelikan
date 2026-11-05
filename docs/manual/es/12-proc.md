@@ -101,3 +101,11 @@ El código fuente en los servidores antiguos suele estar en ISO-8859-2. Pelikan 
 existentes y no la cambia sin avisar: un carácter que no se puede guardar en la codificación del archivo bloquea el
 guardado e indica exactamente el lugar. La codificación solo se cambia de forma explícita (**Archivo › Codificación del
 archivo…**); un proyecto también puede imponer la codificación de sus archivos.
+
+## Coloreado del código Pro*C
+
+Los archivos `.pc`, `.pcc`, `.c` y `.h` abiertos en Pelikan se colorean como C: palabras clave, tipos (`int`, `char`,
+`VARCHAR`), directivas del preprocesador (`#include`), cadenas, comentarios y llamadas a funciones. Las sentencias
+`EXEC SQL … ;` y los bloques `EXEC SQL EXECUTE … END-EXEC;` se colorean como SQL y PL/SQL, y las variables host
+(`:ename`) como variables de enlace. Los colores proceden del tema elegido en **Ajustes › Colores**. El selector
+**Pro*C** de la vista previa de esa pestaña muestra cómo se ve un tema en código Pro*C.

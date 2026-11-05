@@ -3786,3 +3786,42 @@ poprawny wynik bez danych:
   `report_level` dokumentacja nie podaje: wypróbowane ('ALL', nazwy wymiarów) kończą się ORA-13721. Pelikan rozpakowuje
   dane raportu aktywnego (base64 + zlib) i przy pustym `<body/>` wskazuje Performance Hub, który ma kartę ASH
   Analytics z danymi. Poza macOS (bez frameworku Compression) raport jest pokazywany jak dotąd.
+
+### D227 · 2026-11-05 — Motywy kolorowania składni: wbudowane z tinted-theming, własne, import; Pro*C
+
+**Zlecenie właściciela:** szablony kolorowania składni (przede wszystkim SQL, PL/SQL i Pro*C), prosty edytor
+z zapisem własnego szablonu (wbudowanych nie zmieniamy, zmiany zapisuje się jako własny), jak najwięcej (do setki)
+gotowych, dobrze ocenianych wzorców jasnych i ciemnych; „może znajdziesz gotowe biblioteki”.
+
+- **Źródło wbudowanych:** repozytorium tinted-theming/schemes (MIT, rewizja 05e6e6f; licencja w
+  `docs/licenses/tinted-theming-schemes.txt` i w „Licencje zewnętrzne.txt”). 605 palet base16/base24 w jednolitym
+  formacie z oznaczeniem jasny/ciemny i zaleceniami, która barwa do czego służy — przydział barw do kategorii SQL jest
+  jeden dla wszystkich (także importowanych). Wybrane 95 znanych motywów: Solarized, Selenized, Gruvbox (i Material),
+  Dracula i Alucard, Monokai, Nord, One Dark/Light, Tomorrow, GitHub (z wariantami wysokiego kontrastu i dla
+  daltonistów), Catppuccin, Tokyo Night, Ayu, Material, Rosé Pine, Everforest, Kanagawa, Darcula, Dark+ (VS Code),
+  PaperColor, Cupertino (Xcode), Windows High Contrast, Flexoki, Oxocarbon, Penumbra, Borland, Embarcadero i inne.
+  Razem z domyślnym Pelikanem (jasny i ciemny — kolory sprzed D227, tło i tekst systemu) i Klasycznym — 98.
+  Lista i generator: `scripts/syntax-schemes.py` (do kodu trafia tylko 16 barw palety).
+- **Kontrast:** tekst ≥ 4,5:1, kategorie i numery linii ≥ 3:1 względem tła. Barwy palet, które tego nie osiągają (zwykle
+  przygaszone komentarze, np. Nord, Catppuccin), są przesuwane w stronę koloru tekstu do progu — test pilnuje
+  wszystkich wbudowanych. Palety z bardzo słabym kontrastem (np. Material Lighter) pominięte.
+- **ThemePark (ChimeHQ, BSD-3) sprawdzony i odrzucony:** brak wydań (tylko gałąź), wymuszone rozpakowanie przy motywie
+  TextMate bez tła (awaria), zgrubne mapowanie zakresów (tylko dokładne „comment”, „keyword”…), tło motywu Xcode
+  zastąpione kolorem systemu. Własny import (~250 linii, Foundation — działa też na Linuksie): base16/base24 YAML,
+  Xcode `.xccolortheme` (kolory i kroje), TextMate `.tmTheme` i Visual Studio Code JSON (z komentarzami, przecinkami
+  na końcu i przezroczystością) — kategorie z najdłuższego pasującego zakresu TextMate, najpierw zakresów gramatyki SQL.
+- **Kategorie:** do słów kluczowych, napisów, liczb, komentarzy, wskazówek, zmiennych, nazw w cudzysłowie i operatorów
+  doszły typy danych, funkcje wbudowane (nazwa przed „(”), pakiety dostarczane z bazą (`DBMS_…` przed „.”) i dyrektywy
+  (`$IF`, preprocesor C) — z list `SQLWords` formatera. Domyślny motyw Pelikana koloruje je jak dotąd (typy i dyrektywy
+  jak słowa kluczowe, funkcje i pakiety jak tekst) — wygląd po aktualizacji się nie zmienia.
+- **Wybór:** osobny motyw dla trybu jasnego i ciemnego systemu (kolory dynamiczne — przełączenie trybu nie przelicza
+  kolorów, tylko pogrubienie i kursywę). Własne kolory tekstu i tła edytora z karty Edytor (PD-PREF-005) mają
+  pierwszeństwo przed motywem. Motywy obejmują edytor (tło, zaznaczenie, kursor, linię bieżącą, numery linii)
+  i podglądy kodu w oknach narzędzi; druk i Quick Look zostają przy kolorach jasnych Pelikana (papier, Finder).
+- **Własne motywy** w ustawieniach (`customSyntaxSchemes`, sekcja Edytor zestawów ustawień — przenoszą się eksportem
+  ustawień), edycja w Ustawienia › Kolory; komendy `editor.syntaxScheme.*` dla palety i skryptów; agent ich nie
+  widzi (ustawienia aplikacji, D33).
+- **Pro*C:** `ProCLexer` — C (słowa kluczowe, typy, preprocesor, napisy, komentarze, wywołania funkcji), wstawki
+  `EXEC SQL|ORACLE|TOOLS … ;` i bloki `EXEC SQL EXECUTE … END-EXEC;` leksowane jak SQL/PL/SQL (zmienne hosta `:x` jak
+  zmienne wiązane). Pliki .pc, .pcc, .c i .h; kolorowanie całego tekstu przy każdej zmianie (pliki Pro*C są małe wobec
+  progu, przy którym przyrostowe ma znaczenie). Gotowych motywów dla Pro*C nie ma — kolory z motywu.

@@ -17,6 +17,7 @@
 		0968C67BB157B77053000FE7 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 17B2E96D730996376F52B97F /* Sparkle */; };
 		0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31283604CBB6B024351A4FFF /* PreferencesView.swift */; };
 		0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52082891AAB3D01CF123726D /* LogonView.swift */; };
+		0EA8043538E750E08E37FE2D /* ColorsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61F010F5CED5E073180D2D61 /* ColorsPane.swift */; };
 		0F3CC52E4AAE28FA9CF5306C /* ObjectBrowserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341BB93097046C46EB2F523B /* ObjectBrowserViewController.swift */; };
 		0FE528D62537CDE69983BA9D /* Manual in Resources */ = {isa = PBXBuildFile; fileRef = AB21607B1D88320079CA9E62 /* Manual */; };
 		1184C786CD59098DDC76580C /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 910C5AB0C7B52DF921BC7E98 /* SwiftTerm */; };
@@ -212,6 +213,7 @@
 		570D3064D5201AF56E748711 /* PlanVisualViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanVisualViews.swift; sourceTree = "<group>"; };
 		578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeDataEditor.swift; sourceTree = "<group>"; };
 		5F92ED91422BB2BB0A701B9B /* AppFonts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFonts.swift; sourceTree = "<group>"; };
+		61F010F5CED5E073180D2D61 /* ColorsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorsPane.swift; sourceTree = "<group>"; };
 		62611D2986EABAD106F9D86C /* DebuggerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebuggerPanel.swift; sourceTree = "<group>"; };
 		683515088F140833D5EF9EE2 /* Pelikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pelikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6A7AB38578901FB5D0CA9D28 /* PerfReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerfReportsView.swift; sourceTree = "<group>"; };
@@ -335,6 +337,7 @@
 				229E7A0294B2BA8203F506AF /* BeautifierPane.swift */,
 				F1892296F597E772265A2D4D /* BrowserPane.swift */,
 				01FC2412E9C8ACDDB6E8C981 /* ChoiceField.swift */,
+				61F010F5CED5E073180D2D61 /* ColorsPane.swift */,
 				F8877900ED39A5D37A825941 /* PreferenceIndex.swift */,
 				81B425CCDE53DC54B6B0C37F /* PreferenceSetsPane.swift */,
 				31283604CBB6B024351A4FFF /* PreferencesView.swift */,
@@ -897,6 +900,7 @@
 				5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */,
 				EBC025717821067F9DB1A4CE /* CodePreview.swift in Sources */,
 				53A071441267FB1A65FE9E57 /* CodeTextEditor.swift in Sources */,
+				0EA8043538E750E08E37FE2D /* ColorsPane.swift in Sources */,
 				A3E61CC8AF2B22C31ECA4161 /* CommandPalette.swift in Sources */,
 				E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */,
 				E1307212DEA5DCBACA490C55 /* CompletionPopup.swift in Sources */,
