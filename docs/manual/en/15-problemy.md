@@ -23,6 +23,10 @@ Anyway** (see the *Introduction* chapter).
 - **ORA-12154 / TNS:** the alias was not found — check the configuration directory (the **Advanced** tab or
   **Settings › Oracle › Oracle Net and Oracle Wallet**) or use a `host:port/service` address.
 - **ORA-01017:** wrong password — Pelikan asks for it again; check remembering to replace the password in the Keychain.
+- **ORA-12541 / ORA-12170:** nobody answers at the given address or the connection does not get through — check the
+  host and port (usually 1521), the VPN and whether the database is running.
+- **ORA-12514:** the server is running but does not know the given service — check the service name after the slash in
+  `host:port/service`.
 - **ORA-28001:** the password has expired — Pelikan shows the password change window.
 - **Oracle Wallet:** the **Database** field must be exactly the alias stored in the wallet, and the wallet must have the
   `cwallet.sso` file (auto-login). The wallet status is shown in **Settings › Oracle**. Changes in this section take
@@ -94,6 +98,26 @@ The log never contains passwords, SQL statement text or database data. Connectio
 paths are hidden or replaced by a hash by default (the same name always has the same hash). In **Settings ›
 General › Application Log** you choose how much is logged (*Warnings and errors*, *Events*, *Details — diagnostics*)
 and can show names — useful when tracking down a problem on your own computer.
+
+## The most common Oracle errors while learning
+
+An Oracle error message starts with an `ORA-nnnnn` code. **F1** on the code in the editor or double-clicking a
+compilation error opens its description in the Oracle documentation. The most common errors at the start:
+
+| Error | What it means | What to do |
+|---|---|---|
+| ORA-00942 | table or view does not exist | check the name and schema (`schema.table`), whether you are on the right connection and whether you have the SELECT privilege |
+| ORA-00904 | invalid identifier | a typo in a column name or a column from a table other than in FROM |
+| ORA-00933 / ORA-00936 | SQL command not properly ended / missing expression | a missing comma, parenthesis or keyword; a semicolon in the middle of a statement |
+| ORA-01403 | no data found (NO_DATA_FOUND) | `SELECT … INTO` found no row — handle the exception or check the condition |
+| ORA-01422 | `SELECT … INTO` returned more than one row (TOO_MANY_ROWS) | narrow the WHERE condition |
+| ORA-00001 | unique constraint violated | you insert a value already present in a primary key or unique column |
+| ORA-02291 / ORA-02292 | parent key not found / child records found | foreign key: first add the parent row (e.g. the department), and delete the child rows first |
+| ORA-01722 | invalid number | you compare text with a number or the text cannot be converted to a number |
+| ORA-06502 | numeric or value error in PL/SQL | a value too long for a variable (e.g. `VARCHAR2(10)`) or a bad conversion |
+| ORA-00054 / waiting without end | resource busy — a row or table locked by another session | someone (also you in another window) has an uncommitted change; see the lock exercise in chapter 10 |
+| ORA-04068 | the package state has been discarded | the package was recompiled during your session — execute the statement again |
+| PLS-00201 | identifier must be declared | the name of a variable, procedure or package is unknown, or the EXECUTE privilege is missing |
 
 ## Known limitations
 

@@ -1,5 +1,12 @@
 # AI agents
 
+## What it is for
+
+An **AI agent** is a program (e.g. Claude Code) you talk to in plain language, and it carries out the steps of a task by
+itself: it reads code, checks data, proposes and makes fixes. You can ask, e.g., “explain what the PEL_EMP_API package
+does”, “write utPLSQL tests for this procedure” or “why is this query slow?”. The agent is a helper, not an oracle —
+**always check what it proposes** before you agree.
+
 Pelikan lets you work with an AI agent running in a terminal built into the window — e.g. Claude Code — which sees your
 windows and the database only through Pelikan's tools and on rules that you control. The agent can read code and data,
 analyze plans, write and format code in windows, and it makes changes in the database only after your consent.
@@ -33,6 +40,22 @@ rejects every connection.
 
 The agent's working directory is the folder of the active window's file (e.g. a project), and when the window has no
 file — a temporary session directory. You show and hide the panel with **View › Agent panel**.
+
+> **Exercise: your first conversation with an agent (read-only).**
+>
+> Requires an installed agent program (e.g. `claude`) and an account with its provider.
+>
+> 1. Connect to the development database and open **Edit** on the **PEL_EMP_API** package.
+> 2. Choose **Tools › AI agent › Run Claude Code**. In the permission matrix click **Everything read-only**, then
+>    **Run**.
+>    *Result:* the agent panel with a terminal opens on the right.
+> 3. Type in the terminal: `Explain what the PEL_EMP_API package open in the window does and point out weak spots.`
+>    *Result:* under the terminal you see the tool calls (e.g. reading the window content, describing a table) — each
+>    with its state — and the agent answers with a description of the package.
+> 4. Ask: `Add a comment above the hire procedure in the package body.`
+>    *Result:* the agent cannot do it — the session is read-only. This way you safely get to know the agent before you
+>    give it more permissions.
+> 5. Click **Quit**.
 
 ![Agent panel on the right side of the main window](../img/panel-agenta.png)
 
@@ -83,6 +106,11 @@ The window is designed so that nothing gets approved by accident:
 - **Allow** becomes active only after 0.8 seconds;
 - Esc rejects the request (**Deny**);
 - further requests wait in a queue until you have dealt with the current one.
+
+> ⚠️ **Watch out.** Read the preview before clicking **Allow** — especially the number of rows and the red warnings. If
+> you do not understand what a statement will do, click **Deny** and ask the agent why it needs it. Do not agree to a
+> COMMIT of changes you have not checked with a query. On production, consent to changes is off by default — keep it
+> that way.
 
 ## Transactions and undo
 
