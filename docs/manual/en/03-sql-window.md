@@ -1,8 +1,18 @@
 # SQL Window and result grid
 
-The SQL Window is used to execute queries and scripts. The result of each query appears on a separate tab below the
-editor, and database messages and DBMS_OUTPUT output on the **Output** tab. You open a new window with **File › New ›
-SQL Window** (⌘N); the window works on the main connection or on the connection selected in the status bar.
+## What it is for
+
+The **SQL Window** is where you talk to the database: you type a SQL statement (e.g. a `SELECT` query), execute it and
+look at the result. It is Pelikan's most used window — in it you check data, fix a row, prepare a report or run a
+deployment script. The result of each query appears on a separate tab below the editor, and database messages and
+DBMS_OUTPUT output on the **Output** tab. You open a new window with **File › New › SQL Window** (⌘N); the window works
+on the main connection or on the connection selected in the status bar.
+
+**When to use it:** whenever you want to execute SQL or a short PL/SQL block. For writing packages and procedures use
+the Program Window (chapter 6), for testing programs with parameters — the Test Window (chapter 7), and for SQL*Plus
+scripts with `SET`, `SPOOL`, `PROMPT` commands — the SQL*Plus Console (chapter 4).
+
+The exercises in this chapter use the practice schema from chapter 1.
 
 ## Executing statements
 
@@ -30,6 +40,25 @@ interruption), use **Session › Terminate window session (Kill)**.
 
 Pelikan never commits changes automatically (the **AutoCommit SQL statements** option in **Settings › SQL Window** is
 off by default). An open transaction is indicated in the status bar (“● transaction open”).
+
+> **Exercise: one statement or the whole script.**
+> 1. Open a new SQL Window (⌘N) and type three queries, each on its own line:
+>
+>    ```sql
+>    SELECT * FROM pel_departments;
+>    SELECT * FROM pel_employees WHERE dept_id = 20;
+>    SELECT COUNT(*) FROM pel_employees;
+>    ```
+>
+> 2. Click in the second line and press **F8**.
+>    *Result:* only the second query runs — one result tab with the three employees of department 20 (AutoSelect).
+> 3. Press **⇧⌘↩** (execute opposite of AutoSelect).
+>    *Result:* all three queries run; there are three result tabs under the editor.
+> 4. Select the first two lines with the mouse and press **F8**.
+>    *Result:* the two selected queries run — a selection always takes precedence over AutoSelect.
+>
+> ⚠️ **Watch out.** With AutoSelect off, F8 without a selection runs the whole script — including `DELETE` or `DROP`
+> statements left in the window “for later”. Keep in the window only what you want to execute.
 
 ## Code Contents
 
@@ -59,6 +88,23 @@ exception handlers — see the program window chapter); the branch button next t
 Variable values are remembered in the window. The **&** button on the bar below the editor (**Session › Variable
 substitution**) turns substitution off when the text contains `&` and `:` characters with another meaning.
 
+**What it is for:** a variable lets you write a query once and run it with different values — without rewriting the
+condition. **Bind variables** (`:name`) are also safer and faster for the database than pasting values into the text.
+
+> **Exercise: a query with a parameter.**
+> 1. In a SQL Window type and execute (F8):
+>
+>    ```sql
+>    SELECT first_name, last_name, salary FROM pel_employees WHERE dept_id = :dzial;
+>    ```
+>
+>    *Result:* the **Variables** window appears with a `dzial` field.
+> 2. Type `30` and confirm.
+>    *Result:* three rows — the employees of the Sprzedaż (sales) department.
+> 3. Execute the query again.
+>    *Result:* the Variables window remembers the value `30`; change it to `10` — you will see the Księgowość
+>    (accounting) department.
+
 ## Directives in comments
 
 A comment directly before a statement can control its result:
@@ -74,6 +120,14 @@ A comment directly before a statement can control its result:
 
 In file names you can use `%dbuser%`, `%dbname%`, `%date%`, `%time%` and `%&variable%`. A relative path is resolved from
 the directory of the window's file.
+
+Example — a result tab with a name and the salary total under the grid:
+
+```sql
+-- Tab=Employees (&Count)
+-- Totals=sum:SALARY
+SELECT first_name, last_name, salary FROM pel_employees;
+```
 
 ## Result grid
 
@@ -113,6 +167,22 @@ results Pelikan asks before the size limit from Settings is exceeded.
 
 Most of these actions are in the grid's context menu and in **Edit › Result** or **Session › Result**.
 
+> **Exercise: working with a result.**
+> 1. Execute `SELECT * FROM pel_emp_details;`.
+>    *Result:* 9 rows.
+> 2. Click the **SALARY** column header twice.
+>    *Result:* the first click sorts ascending, the second descending; Michał Lewandowski (13500) is at the top.
+> 3. Right-click the `Informatyka` cell in the **DEPARTMENT** column and choose **Filter by cell value**.
+>    *Result:* three rows of the Informatyka (IT) department remain. The filter works on the fetched rows, without
+>    querying the database again; you remove it from the bar above the grid.
+> 4. Right-click the **SALARY** column, choose **Column Totals…** and check sum and average.
+>    *Result:* the sum and the average salary of the visible rows are shown under the grid.
+> 5. Select a few rows, press **⇧⌘C** (copy with header) and paste into Numbers or Excel.
+>    *Result:* the data in columns, with headers.
+>
+> ⚠️ **Watch out.** Sorting, filters and totals work on the **fetched** rows. If the result shows “(more…)”, some rows
+> are not fetched yet — fetch all (⇧⌘⇟) or add a condition to the query.
+
 ## Editing data in the grid
 
 To edit a result, the query must return the `ROWID` column, e.g.:
@@ -135,6 +205,22 @@ The simplest way is **Edit data** from the table's menu in the Object Browser �
 
 On a production connection saving requires confirmation, and on a read-only connection it is blocked.
 
+> **Exercise: add a department through the grid.**
+> 1. Execute `SELECT t.*, t.rowid FROM pel_departments t;`.
+>    *Result:* 4 departments.
+> 2. Click the padlock above the grid (or ⌥⌘E).
+>    *Result:* the padlock is open and the cells can be edited.
+> 3. Choose **Insert record** (⌥⌘I) and type `50`, `Logistyka`, `Poznań`.
+>    *Result:* the new row has a **+** mark in its header, and the counter above the grid shows 1 pending change.
+> 4. Choose **Copy change SQL**.
+>    *Result:* the clipboard holds an `INSERT INTO … PEL_DEPARTMENTS …` statement — this is how Pelikan will save the
+>    change.
+> 5. Press **⌥⌘S** (Apply changes).
+>    *Result:* the **+** mark disappears and the status bar shows “● transaction open” — the change is in the database
+>    but not committed yet.
+> 6. Press **⇧F10** (ROLLBACK), then **⇧⌘R** (refresh result).
+>    *Result:* department 50 is gone — the change was rolled back. To keep it, press F10 (COMMIT) instead of ROLLBACK.
+
 ## Copying and exporting
 
 - **Edit › Result › Copy with header** (⇧⌘C), **Copy header**, **Copy as expression list** (for `IN (…)`), **Copy to
@@ -148,6 +234,12 @@ On a production connection saving requires confirmation, and on a read-only conn
   Window, without executing them.
 - **File › Print…** (⌘P) prints the window's code with syntax colors and the grid (the selected or all fetched rows).
 
+> **Exercise: export to Excel.**
+> 1. Execute `SELECT * FROM pel_emp_details;`.
+> 2. Choose **File › Export result…**, pick the Excel (xlsx) format and save the file on the desktop.
+>    *Result:* the file opens in Excel or Numbers; salaries are numbers (they can be summed), and the headers are the
+>    column names.
+
 ## Charts
 
 **Session › Result › Chart…** opens a chart window from the current result tab. Choose the type (bar, line, area,
@@ -157,12 +249,32 @@ and values next to the points. You can save a chart template, and export the cha
 
 ![Chart window from a query result](../img/wykres.png)
 
+> **Exercise: salaries by department as a chart.**
+> 1. Execute:
+>
+>    ```sql
+>    SELECT department, SUM(salary) AS total FROM pel_emp_details GROUP BY department;
+>    ```
+>
+> 2. Choose **Session › Result › Chart…**, bar type, category **DEPARTMENT**, series **TOTAL**.
+>    *Result:* a bar for each department; Informatyka has the highest.
+
 ## Query By Example
 
 **Session › Result › Query By Example…** (⇧⌘E) lets you narrow down a result without writing WHERE: enter criteria under
 the column names — a value, a pattern with `%`, an operator (`>`, `<>`…), `in (…)`, `between … and …` or `null` — and
 Pelikan executes the query again with the conditions. Text comparison is case-insensitive, and dates are compared
 without time. **Clear Query By Example** restores the original query.
+
+> **Exercise: QBE.**
+> 1. Execute `SELECT * FROM pel_employees;` and press **⇧⌘E**.
+> 2. Under the **SALARY** column type `> 10000`, under **LAST_NAME** — `%ski`.
+>    *Result:* after confirming one row remains — Michał Lewandowski (13500). Piotr Kowalski also ends in “ski”, but
+>    earns 9500. QBE added both conditions to the query at once (joined with AND).
+> 3. Choose **Clear Query By Example**.
+>    *Result:* all rows again.
+
+How QBE compares text and dates is set in **Settings › SQL Window › Query By Example** (chapter 13).
 
 ## Statistics and plan
 
