@@ -76,13 +76,61 @@ public enum PerfReportRunner {
     static let allPackages = ["DBMS_XPLAN", "DBMS_WORKLOAD_REPOSITORY", "DBMS_SQLTUNE", "DBMS_PERF", "DBMS_SQLDIAG", "DBMS_ADDM",
                               "DBMS_STATS", "DBMS_SPM", "DBMS_AUTO_SQLTUNE", "DBMS_AUTO_REPORT"]
 
-    /// Powód blokady raportu z braku EXECUTE (z poleceniem GRANT); nil — uprawnienie jest albo nie sprawdzono.
+    /// Uprawnienia systemowe potrzebne raportowi (SESSION_PRIVS) — bez nich Oracle zwraca zamiast raportu
+    /// `<report>ORA-20000: Insufficient privileges</report>`.
+    static func systemPrivileges(_ id: String) -> [String] {
+        id == "perf.statsOps" ? ["ANALYZE ANY", "ANALYZE ANY DICTIONARY"] : []
+    }
+
+    static let allSystemPrivileges = ["ANALYZE ANY", "ANALYZE ANY DICTIONARY"]
+    /// Znacznik w zbiorze dostępnych uprawnień: SESSION_PRIVS sprawdzone (bez niego uprawnień systemowych nie blokujemy).
+    static let privilegesChecked = "PRIV:"
+
+    /// Powód blokady raportu z braku EXECUTE albo uprawnienia systemowego (z poleceniem GRANT); nil — uprawnienia
+    /// są albo nie sprawdzono.
     public static func missingPrivilege(_ id: String, accessible: Set<String>?, user: String) -> String? {
         guard let accessible else { return nil }
+        let grantee = ManagementPacks.grantee(user)
+        var reasons: [String] = []
         let missing = packages(id).filter { !accessible.contains($0) }
-        guard !missing.isEmpty else { return nil }
-        let grants = missing.map { "GRANT EXECUTE ON SYS.\($0) TO \(ManagementPacks.grantee(user));" }.joined(separator: " ")
-        return L10n.tr("Brak uprawnienia EXECUTE do \(missing.joined(separator: ", ")) — administrator bazy może je nadać: \(grants)")
+        if !missing.isEmpty {
+            let grants = missing.map { "GRANT EXECUTE ON SYS.\($0) TO \(grantee);" }.joined(separator: " ")
+            reasons.append(L10n.tr("Brak uprawnienia EXECUTE do \(missing.joined(separator: ", ")) — administrator bazy może je nadać: \(grants)"))
+        }
+        if accessible.contains(privilegesChecked) {
+            let privs = systemPrivileges(id).filter { !accessible.contains(privilegesChecked + $0) }
+            if !privs.isEmpty {
+                let grants = privs.map { "GRANT \($0) TO \(grantee);" }.joined(separator: " ")
+                reasons.append(L10n.tr("Brak uprawnienia \(privs.joined(separator: ", ")) — administrator bazy może je nadać: \(grants)"))
+            }
+        }
+        return reasons.isEmpty ? nil : reasons.joined(separator: " ")
+    }
+
+    /// Błąd Oracle zwrócony jako treść raportu (`<report>ORA-20000: Insufficient privileges</report>` z DBMS_STATS) —
+    /// komunikat zamiast pozornie poprawnego raportu.
+    static func embeddedError(_ content: String) -> String? {
+        let t = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard t.count < 2000, t.hasPrefix("<report>"), t.hasSuffix("</report>") else { return nil }
+        let inner = t.dropFirst("<report>".count).dropLast("</report>".count).trimmingCharacters(in: .whitespacesAndNewlines)
+        return inner.hasPrefix("ORA-") ? inner : nil
+    }
+
+    /// Dane raportu aktywnego (`<report … encode="base64" compress="zlib">`) po rozpakowaniu; nil — brak albo nie da się
+    /// rozpakować (poza macOS — bez frameworku Compression).
+    static func activePayload(_ content: String) -> String? {
+        #if canImport(Darwin)
+        guard let open = content.range(of: "compress=\"zlib\""), let tagEnd = content.range(of: ">", range: open.upperBound..<content.endIndex),
+              let close = content.range(of: "</report>", range: tagEnd.upperBound..<content.endIndex) else { return nil }
+        var body = content[tagEnd.upperBound..<close.lowerBound]
+        if let id = body.range(of: "</report_id>") { body = body[id.upperBound...] }
+        guard let data = Data(base64Encoded: body.filter { !$0.isWhitespace }), data.count > 6 else { return nil }
+        // Strumień zlib (RFC 1950): 2 bajty nagłówka i 4 bajty sumy Adler-32 wokół surowego DEFLATE (algorytm .zlib).
+        guard let raw = try? (data.subdata(in: 2..<(data.count - 4)) as NSData).decompressed(using: .zlib) as Data else { return nil }
+        return String(decoding: raw, as: UTF8.self)
+        #else
+        return nil
+        #endif
     }
 
     /// Wykrycie formatu treści: HTML (także ACTIVE), XML albo tekst.
@@ -110,6 +158,17 @@ public enum PerfReportRunner {
         }
         let dbid = SQLProbe.dbid(major)
         for p in packages(q.reportID) { try await ManagementPacks.requireExecute(p, in: s, report: report.title) }
+        // Uprawnienia systemowe (SESSION_PRIVS, także z ról) — bez nich Oracle zwraca zamiast raportu ORA-20000.
+        let privs = systemPrivileges(q.reportID)
+        if !privs.isEmpty {
+            let list = privs.map { "'\($0)'" }.joined(separator: ", ")
+            if let (_, rows) = try? await s.queryAll("select privilege from session_privs where privilege in (\(list))", limit: 100) {
+                let have = Set([privilegesChecked] + rows.compactMap { $0.first?.displayText }.map { privilegesChecked + $0 })
+                if let reason = missingPrivilege(q.reportID, accessible: have.union(packages(q.reportID)), user: s.info.sessionUser) {
+                    throw CommandError.notAvailable(reason)
+                }
+            }
+        }
         let id = q.sqlID ?? ""
         let inst = q.instance ?? availability?.instance
         var content: String
@@ -270,6 +329,18 @@ public enum PerfReportRunner {
             }
         default:
             throw CommandError.invalidArgument("report", q.reportID)
+        }
+        if let error = embeddedError(content) {
+            if error.contains("ORA-20000"), !privs.isEmpty {
+                throw CommandError.notAvailable(L10n.tr("Oracle odmówił raportu (\(error)) — raport wymaga uprawnień \(privs.joined(separator: ", "))"))
+            }
+            throw CommandError.notAvailable(L10n.tr("Oracle zwrócił zamiast raportu błąd: \(error)"))
+        }
+        // ASH Analytics (19c) bywa samym szkieletem: parametry i opis procesora, puste `<body/>` (dane wczytuje dopiero
+        // Enterprise Manager) — zamiast pustej strony wskazanie Performance Hub, który ma kartę ASH Analytics z danymi.
+        if q.reportID == "perf.ashAnalytics", let payload = activePayload(content),
+           payload.contains("<body/>") || payload.contains("<body></body>") {
+            throw CommandError.notAvailable(L10n.tr("Oracle zwrócił raport ASH Analytics bez danych (sam szkielet raportu) — te same wykresy aktywności z danymi pokazuje Performance Hub (karta ASH Analytics)"))
         }
         content = secureViewerScripts(content)
         let format = detect(content, requested: q.format)

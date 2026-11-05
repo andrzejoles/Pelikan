@@ -9577,6 +9577,34 @@
         }
       }
     },
+    "Brak uprawnienia %@ — administrator bazy może je nadać: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing privilege %@ — a database administrator can grant it: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlende Berechtigung %@ — ein Datenbankadministrator kann sie erteilen: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falta el privilegio %@ — un administrador de la base de datos puede concederlo: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бракує привілею %@ — адміністратор бази даних може його надати: %@"
+          }
+        }
+      }
+    },
     "Brak uprawnienia EXECUTE do %@ — administrator bazy może je nadać: %@" : {
       "localizations" : {
         "en" : {
@@ -58185,6 +58213,34 @@
         }
       }
     },
+    "Oracle odmówił raportu (%@) — raport wymaga uprawnień %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle refused the report (%@) — the report requires the privileges %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle hat den Bericht verweigert (%@) — der Bericht erfordert die Berechtigungen %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle rechazó el informe (%@) — el informe requiere los privilegios %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle відмовив у звіті (%@) — звіт потребує привілеїв %@"
+          }
+        }
+      }
+    },
     "Oracle przechwytuje tylko bindy w WHERE/HAVING, bez LOB, LONG i typów obiektowych." : {
       "localizations" : {
         "en" : {
@@ -58265,6 +58321,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Oracle повернув порожній звіт (немає даних у вибраному джерелі або періоді)"
+          }
+        }
+      }
+    },
+    "Oracle zwrócił raport ASH Analytics bez danych (sam szkielet raportu) — te same wykresy aktywności z danymi pokazuje Performance Hub (karta ASH Analytics)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle returned the ASH Analytics report without data (only the report skeleton) — Performance Hub (ASH Analytics tab) shows the same activity charts with data"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle hat den ASH-Analytics-Bericht ohne Daten zurückgegeben (nur das Berichtsgerüst) — dieselben Aktivitätsdiagramme mit Daten zeigt Performance Hub (Registerkarte ASH Analytics)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle devolvió el informe ASH Analytics sin datos (solo el esqueleto del informe) — Performance Hub (pestaña ASH Analytics) muestra los mismos gráficos de actividad con datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle повернув звіт ASH Analytics без даних (лише каркас звіту) — ті самі графіки активності з даними показує Performance Hub (вкладка ASH Analytics)"
+          }
+        }
+      }
+    },
+    "Oracle zwrócił zamiast raportu błąd: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle returned an error instead of the report: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle hat statt des Berichts einen Fehler zurückgegeben: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle devolvió un error en lugar del informe: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle повернув помилку замість звіту: %@"
           }
         }
       }

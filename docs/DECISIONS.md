@@ -3767,6 +3767,26 @@ użytkownika na poziomie junior, który może nie wiedzieć, do czego funkcja s�
   nieobsłużonego Markdown ani odnośników do kotwic.
 
 
+### D226 · 2026-11-05 — Raporty wydajności po nadaniu EXECUTE na DBMS_WORKLOAD_REPOSITORY
+
+**Zlecenie właściciela:** powtórzyć przebieg raportów D223 na bazie 19c po nadaniu uprawnienia i naprawić błędy.
+Przebieg: 54 wywołania. Wszystkie 11 raportów wcześniej zablokowanych brakiem EXECUTE działa (AWR i ASH dla SQL, AWR
+globalny i dla RAC, porównanie AWR, ADDM, ASH, ASH Analytics). Wynik tylko lokalnie. Dwa raporty zgłaszały
+poprawny wynik bez danych:
+
+- **Raport operacji statystyk bez uprawnień:** DBMS_STATS.REPORT_STATS_OPERATIONS przy braku ANALYZE ANY albo
+  ANALYZE ANY DICTIONARY zwraca zamiast raportu `<report>ORA-20000: Insufficient privileges</report>` (19c i 26ai —
+  test na bazie testowej przechodził, bo ten błąd uchodził za raport). Pelikan sprawdza przy otwarciu okna i przed
+  wywołaniem raportu uprawnienia systemowe (SESSION_PRIVS, także z ról) i blokuje raport z poleceniem GRANT tylko dla
+  brakujących; użytkownik lokalnej bazy testowej dostał oba uprawnienia (`scripts/testdb.sh`). Każdy błąd Oracle
+  zwrócony jako treść raportu jest komunikatem, a nie raportem. Sprawdzone na bazie właściciela: blokada
+  z `GRANT ANALYZE ANY DICTIONARY`.
+- **ASH Analytics bez danych:** DBMS_WORKLOAD_REPOSITORY.ASH_REPORT_ANALYTICS w 19c zwraca sam szkielet. Zawiera
+  parametry i opis procesora, a `<body/>` jest puste, choć ASH ma próbki z tego okresu. Dopuszczalnych wartości
+  `report_level` dokumentacja nie podaje: wypróbowane ('ALL', nazwy wymiarów) kończą się ORA-13721. Pelikan rozpakowuje
+  dane raportu aktywnego (base64 + zlib) i przy pustym `<body/>` wskazuje Performance Hub, który ma kartę ASH
+  Analytics z danymi. Poza macOS (bez frameworku Compression) raport jest pokazywany jak dotąd.
+
 ### D227 · 2026-11-05 — Motywy kolorowania składni: wbudowane z tinted-theming, własne, import; Pro*C
 
 **Zlecenie właściciela:** szablony kolorowania składni (przede wszystkim SQL, PL/SQL i Pro*C), prosty edytor

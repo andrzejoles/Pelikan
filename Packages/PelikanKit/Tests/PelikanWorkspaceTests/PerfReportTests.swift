@@ -95,6 +95,39 @@ struct PerfReportTests {
         #expect(PerfReportCatalog.report("perf.realtimeADDM")?.formats == [.xml])
     }
 
+    @Test("Baza 19c właściciela (D226): uprawnienia systemowe raportu statystyk, błąd Oracle w treści, pusty ASH Analytics")
+    func emptyAndRefusedReports() async throws {
+        // Bez znacznika SESSION_PRIVS — uprawnień systemowych nie sprawdzono, bez blokady.
+        #expect(PerfReportRunner.missingPrivilege("perf.statsOps", accessible: ["DBMS_STATS"], user: "PERF_USER") == nil)
+        let checked: Set<String> = ["DBMS_STATS", PerfReportRunner.privilegesChecked, PerfReportRunner.privilegesChecked + "ANALYZE ANY"]
+        let reason = try #require(PerfReportRunner.missingPrivilege("perf.statsOps", accessible: checked, user: "PERF_USER"))
+        #expect(reason.contains("GRANT ANALYZE ANY DICTIONARY TO PERF_USER;") && !reason.contains("GRANT ANALYZE ANY TO"))
+        #expect(PerfReportRunner.missingPrivilege("perf.statsOps", accessible: checked.union([PerfReportRunner.privilegesChecked + "ANALYZE ANY DICTIONARY"]), user: "PERF_USER") == nil)
+        #expect(PerfReportRunner.missingPrivilege("perf.awr", accessible: checked.union(["DBMS_WORKLOAD_REPOSITORY"]), user: "PERF_USER") == nil)
+
+        // Wykonanie bez ANALYZE ANY DICTIONARY — zablokowane przed wywołaniem raportu (SESSION_PRIVS atrapy jest puste).
+        let s = PerfCaptureSession()
+        await #expect(throws: CommandError.self) { _ = try await PerfReportRunner.run(PerfReportRequest(reportID: "perf.statsOps", format: .html), availability: nil, license: .all, in: s) }
+        #expect(s.last(containing: "report_stats_operations") == nil && s.last(containing: "session_privs") != nil)
+        #expect(PerfReportRunner.embeddedError("<report>ORA-20000: Insufficient privileges</report>\n") == "ORA-20000: Insufficient privileges")
+        #expect(PerfReportRunner.embeddedError("<report><body>x</body></report>") == nil)
+        #expect(PerfReportRunner.embeddedError("plain text") == nil)
+
+        #if canImport(Darwin)
+        func active(_ xml: String) throws -> String {
+            let raw = try (Data(xml.utf8) as NSData).compressed(using: .zlib) as Data
+            let zlib = Data([0x78, 0x01]) + raw + Data([0, 0, 0, 0])   // nagłówek i suma Adler-32 (niesprawdzana)
+            return "<html><script id=\"fxtmodel\" type=\"text/xml\"><report db_version=\"19.0.0.0.0\" encode=\"base64\" compress=\"zlib\">"
+                + "<report_id><![CDATA[/orarep/ash/viewer]]></report_id>\n" + zlib.base64EncodedString(options: .lineLength64Characters) + "\n</report></script></html>"
+        }
+        let empty = try active("<report_parameters><begin_time>t</begin_time></report_parameters><cpu_info/><body/>")
+        #expect(PerfReportRunner.activePayload(empty)?.contains("<body/>") == true)
+        let full = try active("<report_parameters/><body><activity>1</activity></body>")
+        #expect(PerfReportRunner.activePayload(full)?.contains("<activity>1</activity>") == true)
+        #expect(PerfReportRunner.activePayload("<html></html>") == nil)
+        #endif
+    }
+
     @Test("Wykonanie (D224): raport i źródło spoza licencji oraz raport z nowszej wersji nie wywołują Oracle")
     func runnerGating() async throws {
         let s = PerfCaptureSession(major: 11)
