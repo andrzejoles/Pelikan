@@ -90,6 +90,30 @@ połączenia (karta **Zaawansowane** › **Licencja Diagnostics/Tuning Pack**). 
 parametr bazy `CONTROL_MANAGEMENT_PACK_ACCESS` ma wartość `NONE` (albo `DIAGNOSTIC` dla funkcji Tuning Pack), funkcja
 się nie uruchomi. Agenci AI nie mają dostępu do tych narzędzi. Raporty zapiszesz jako HTML.
 
+## Raporty wydajności
+
+**Do czego to służy:** gdy baza albo jedno zapytanie działa wolno, administrator zwykle prosi o raport AWR, ASH albo
+SQL Monitor. Okno **Raporty wydajności bazy** zbiera wszystkie te raporty w jednym miejscu, z wyborem okresu
+i formatu.
+
+- **Wydajność › Wszystkie raporty wydajności…** otwiera okno z listą raportów (**Wybierz raport**): AWR, ASH, ADDM,
+  Performance Hub, SQL Monitor, plany i statystyki. Dla wybranego raportu ustawiasz **Okres** (np. **Ostatnia
+  godzina**, zakres **Od** – **Do** w czasie bazy albo **Migawki AWR**), **Instancję** (w RAC także **Wszystkie
+  instancje RAC**) i **Format wyniku**, a potem klikasz **Uruchom raport**.
+- **Wydajność › Raporty dla SQL_ID…** robi to samo dla jednego zapytania — z zaznaczonego wiersza tabeli (np. listy
+  sesji albo najdroższych zapytań), komórki z SQL_ID albo polecenia pod kursorem. Przycisk **Sprawdź** pokazuje, gdzie
+  zapytanie jest dostępne: w **pamięci kursorów**, w ASH, w AWR i w SQL Monitor — raporty bez danych o zapytaniu są
+  zablokowane z wyjaśnieniem.
+- Raport, do którego brakuje uprawnienia (np. EXECUTE na pakiecie `DBMS_WORKLOAD_REPOSITORY`) albo licencji, jest na
+  liście zablokowany z powodem i gotowym poleceniem GRANT do przekazania administratorowi.
+
+> **Ćwiczenie: znajdź SQL_ID swojego zapytania.**
+> 1. W oknie SQL wykonaj `SELECT /* moje_cwiczenie */ COUNT(*) FROM pel_emp_details;`.
+> 2. Postaw kursor na tym poleceniu i wybierz **Wydajność › Raporty dla SQL_ID…**.
+>    *Wynik:* okno raportów z SQL_ID zapytania znalezionym w pamięci kursorów po tekście („polecenie pod kursorem”).
+> 3. Kliknij **Sprawdź**, wybierz raport planu z pamięci kursorów i **Uruchom raport**.
+>    *Wynik:* plan, według którego baza naprawdę wykonała zapytanie, z liczbą wykonań.
+
 ## Sesje bazy
 
 **Narzędzia › Sesje** pokazuje sesje bazy (V$SESSION):
