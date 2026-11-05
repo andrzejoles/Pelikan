@@ -130,8 +130,8 @@ kilkadziesiąt tysięcy linii.
 ### Podpowiedzi i nawigacja
 
 > **Ćwiczenie: podpowiedzi i przejście do deklaracji.**
-> 1. W nowym oknie SQL wpisz `SELECT e.` po słowie `FROM pel_employees e` — najpierw napisz całość
->    `SELECT  FROM pel_employees e;`, postaw kursor po `SELECT ` i wpisz `e.`.
+> 1. W nowym oknie SQL wpisz `SELECT  FROM pel_employees e;` (dwie spacje po `SELECT`), postaw kursor między
+>    spacjami i wpisz `e.`.
 >    *Wynik:* po chwili pojawia się lista kolumn tabeli `PEL_EMPLOYEES` (alias `e`). Wybierz `LAST_NAME` strzałkami
 >    i Enterem.
 > 2. W nowej linii wpisz `pel_emp_api.`.
