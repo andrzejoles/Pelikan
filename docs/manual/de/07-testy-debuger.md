@@ -1,5 +1,15 @@
 # Test Window, Debugger und Profiler
 
+## Wozu es dient
+
+Ein Programm zu schreiben ist die halbe Arbeit — Sie müssen noch prüfen, ob es funktioniert. Das **Test Window** ruft
+eine Prozedur oder Funktion mit gewählten Parametern auf und zeigt, was sie zurückgegeben hat. Der **Debugger** führt ein
+Programm Zeile für Zeile aus und zeigt die Werte der Variablen — der beste Weg, fremden Code zu verstehen oder die Ursache
+eines Fehlers zu finden. Der **Profiler** misst, wie viel Zeit jede Zeile braucht — er zeigt, wo ein Programm langsam ist.
+
+**Wann verwenden:** das Test Window — nach jeder Änderung eines Programms; den Debugger — wenn ein Programm ein falsches
+Ergebnis liefert und Sie nicht wissen, warum; den Profiler — wenn ein Programm richtig, aber zu langsam arbeitet.
+
 ## Test Window
 
 Das Test Window führt einen PL/SQL-Block mit Bindevariablen aus und ermöglicht es, ihn zu debuggen und zu profilieren.
@@ -14,6 +24,22 @@ Variablen für die Parameter und das Funktionsergebnis. Ein leeres Fenster öffn
    hervorgehoben. Die Statusleiste zeigt die Ausführungszeit.
 3. Schreiben Sie die Änderungen fest oder rollen Sie sie zurück: F10 / ⇧F10 (die Option **AutoCommit nach Ausführung des
    Testfensters** unter **Einstellungen › SQL Window** schreibt automatisch fest).
+
+> **Übung: eine Funktion und eine Prozedur testen.**
+> 1. Klappen Sie im Object Browser das Paket **PEL_EMP_API** auf, klicken Sie mit der rechten Maustaste auf die Funktion
+>    **GET_SALARY** und wählen Sie **Testen**.
+>    *Ergebnis:* ein Test Window (Buchstabe **T**) mit dem Block `begin :result := ….pel_emp_api.get_salary(p_emp_id =>
+>    :p_emp_id); end;` und einer Tabelle der Variablen `result` und `p_emp_id`.
+> 2. Geben Sie in der Variablentabelle `1` als Wert von `p_emp_id` ein und drücken Sie **F8**.
+>    *Ergebnis:* `result` = 12000, gelb hervorgehoben (der Wert hat sich geändert).
+> 3. Geben Sie `999` ein und drücken Sie erneut **F8**.
+>    *Ergebnis:* der Fehler `ORA-01403` — keine Daten gefunden (Ausnahme NO_DATA_FOUND), und der Tab **Fehlerstack** zeigt
+>    die Zeile im Paket, in der er auftrat.
+> 4. Öffnen Sie auf dieselbe Weise **Testen** für die Prozedur **RAISE_SALARY**, geben Sie `p_emp_id` = 2,
+>    `p_percent` = 10 ein und drücken Sie **F8**.
+>    *Ergebnis:* kein Fehler; die Statusleiste zeigt eine offene Transaktion. Das SQL Window (eine eigene Sitzung) sieht
+>    noch das alte Gehalt von Mitarbeiter 2 — das neue sieht es erst nach COMMIT im Test Window.
+> 5. Drücken Sie **⇧F10** (ROLLBACK), um die Änderung nicht in der Datenbank zu lassen.
 
 Die übrigen Tabs:
 
@@ -73,6 +99,33 @@ Der Debugger verwendet das Oracle-Paket DBMS_DEBUG und arbeitet auf Datenbanken 
 Der Fokus bleibt im Hauptfenster, sodass Sie mit Kurzbefehlen schrittweise vorgehen und dabei auf den Code schauen
 können.
 
+> **Übung: eine Schleife im Debugger verfolgen.**
+>
+> Erfordert das Privileg `DEBUG CONNECT SESSION` (prüfen Sie **Debuggen › Debugger-Privilegien …**).
+>
+> 1. Markieren Sie im Object Browser das Paket **PEL_EMP_API** und wählen Sie **Werkzeuge › Objekt ›
+>    Debug-Informationen hinzufügen**.
+>    *Ergebnis:* Das Paket wird mit Debug-Informationen neu kompiliert.
+> 2. Klicken Sie mit der rechten Maustaste auf **PRINT_DEPARTMENT**, wählen Sie **Testen** und geben Sie
+>    `p_dept_id` = 20 ein.
+> 3. Wählen Sie **Debuggen › Debuggen starten** (F9).
+>    *Ergebnis:* Das Fenster **Debugger** öffnet sich, und die Ausführung hält in der ersten Zeile des Blocks an.
+> 4. Drücken Sie **⌃N** (hineinspringen).
+>    *Ergebnis:* Der Debugger springt in den Body des Pakets, in die Prozedur `print_department`.
+> 5. Drücken Sie mehrmals **⌃O** (überspringen) und beobachten Sie den Tab **Variablen**.
+>    *Ergebnis:* Mit jedem Schleifendurchlauf wächst `l_total`, und der Record `r` zeigt den nächsten Mitarbeiter. Fahren
+>    Sie mit der Maus über `l_total` im Code — ein Tooltip zeigt den Wert.
+> 6. Klicken Sie auf den Rand neben der Zeile `dbms_output.put_line('Razem: ' || l_total);` (ein Haltepunkt) und
+>    drücken Sie **⌃R** (fortsetzen).
+>    *Ergebnis:* Der Debugger hält in dieser Zeile an; `l_total` = 30200.
+> 7. Drücken Sie noch einmal **⌃R**.
+>    *Ergebnis:* Das Programm endet, und der Tab **Ausgabe** des Test Window zeigt die Liste der Mitarbeiter und die
+>    Summe.
+>
+> ⚠️ **Achtung.** Die debuggte Sitzung ist angehalten — sie hält Sperren und eine offene Transaktion. Lassen Sie den
+> Debugger auf einer gemeinsamen Datenbank nicht lange angehalten; beenden Sie ihn mit **⇧F9**. Debuggen Sie nicht auf
+> der Produktion.
+
 ### Variablen, beobachtete Ausdrücke, Stack
 
 - **Variablen** — lokale, Parameter, globale Paketvariablen (private und öffentliche), Records, Collections und Objekte
@@ -109,6 +162,12 @@ Markierung. In einer Zeile kann es einen Haltepunkt geben.
 
 Auch utPLSQL-Tests lassen sich debuggen: **Debuggen › utPLSQL: Test unter dem Cursor debuggen**.
 
+> **Übung: ein bedingter Haltepunkt.**
+> 1. Wählen Sie im Fenster **Debuggen › Haltepunkte …** den Haltepunkt aus der vorigen Übung (oder setzen Sie einen neuen
+>    in der Zeile `l_total := l_total + r.salary;`) und geben Sie in der Spalte **Bedingung** `r.salary > 10000` ein.
+> 2. Starten Sie das Debuggen (F9) und drücken Sie **⌃R**.
+>    *Ergebnis:* Der Debugger hält nur bei Anna Nowak (12000) an — die anderen Mitarbeiter überspringt er.
+
 ## Profiler
 
 1. Wählen Sie im Tab **Profiler** des Test Window im Feld **Profiler bei Ausführung** die Art: **Linear
@@ -118,6 +177,9 @@ Auch utPLSQL-Tests lassen sich debuggen: **Debuggen › utPLSQL: Test unter dem 
 3. Der Tab **Profiler** zeigt den Bericht: beim linearen Profiler Zeit, Anzahl der Ausführungen und Anteil jeder Zeile
    mit einem Balkendiagramm; beim hierarchischen Funktionen mit Eigenzeit und Zeit inklusive Aufrufen sowie den
    Aufrufbaum. Zeiteinheit und Anteilsschwelle legen Sie in diesem Tab fest.
+
+**So lesen Sie den Bericht:** Die Zeilen mit dem größten Zeitanteil lohnen eine Beschleunigung. Oft sind es SQL-Abfragen,
+die in einer Schleife ausgeführt werden — statt tausend einzelner Abfragen ist eine Abfrage für alle Zeilen besser.
 
 Das Menü **Läufe** im Tab (sowie **Debuggen › Profiler-Läufe**) öffnet die Berichte früherer Läufe. Fehlende
 Profiler-Tabellen legt Pelikan in Ihrem Schema an (auf einer Produktionsverbindung nach Bestätigung, auf einer

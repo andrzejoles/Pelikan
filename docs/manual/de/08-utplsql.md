@@ -1,5 +1,17 @@
 # utPLSQL-Tests
 
+## Wozu es dient
+
+Ein **Unit-Test** ist ein kleines Programm, das Ihren Code aufruft und prüft, ob das Ergebnis wie erwartet ist — z. B.
+„nach einer Erhöhung um 10 % beträgt ein Gehalt von 9500 genau 10450“. Sie führen Tests nach jeder Änderung aus: Haben
+Sie etwas kaputt gemacht, zeigt ein Test das sofort, bevor der Fehler die Benutzer erreicht. **utPLSQL** ist die
+beliebteste Testbibliothek für PL/SQL: Tests werden als Pakete mit Annotationskommentaren (`--%suite`, `--%test`)
+geschrieben, Prüfungen als Aufrufe von `ut.expect(…).to_equal(…)`. utPLSQL rollt von einem Test vorgenommene
+Datenänderungen automatisch zurück, sodass Tests keine Daten verderben.
+
+**Wann verwenden:** für jedes Paket mit Geschäftslogik. Eine gute Gewohnheit: zuerst ein Test, der den Fehler zeigt, dann
+die Korrektur, nach der der Test besteht.
+
 Pelikan unterstützt utPLSQL — die Bibliothek für Unit-Tests in PL/SQL — direkt: Ausführen von Tests mit
 Live-Ergebnissen, Codeabdeckung, Erzeugen von Testgerüsten und Navigation zwischen einem Paket und seinen Tests. Die
 Befehle stehen im Menü **Werkzeuge › utPLSQL**.
@@ -27,6 +39,31 @@ zufälliges Passwort, das niemand kennt, und sein Konto wird sofort gesperrt. Au
   vor nicht gepaarten `--%context`/`--%endcontext`.
 - **utPLSQL: zu Test / getestetem Paket wechseln** (⌃⌘T) wechselt zwischen einem Paket und seinem Testpaket (nach dem
   Namen `test_name` oder nach Abhängigkeiten).
+
+> **Übung: die Tests des Übungspakets ausführen.**
+>
+> Erfordert utPLSQL in der Datenbank (prüfen Sie **utPLSQL: Version in der Datenbank**) und das Paket `PEL_EMP_API_TEST`
+> aus dem Skript in Kapitel 1.
+>
+> 1. Öffnen Sie im Object Browser **Bearbeiten** auf dem Paket **PEL_EMP_API_TEST** und sehen Sie sich die
+>    Spezifikation an.
+>    *Ergebnis:* Die Annotation `--%suite` benennt die Testsuite, jede `--%test` ist ein Test, und `--%throws(-20001)`
+>    sagt, dass der Test mit diesem Fehler enden muss.
+> 2. Setzen Sie den Cursor in die Spezifikation und drücken Sie **⌃⌘U** (Test unter dem Cursor ausführen).
+>    *Ergebnis:* Das Ergebnisfenster öffnet sich mit einem Fortschrittsbalken; drei Tests grün — **Erfolg**.
+> 3. Ändern Sie im Body des Tests den erwarteten Wert in `raise_salary_ten_percent` von `10450` auf `10000` und
+>    kompilieren Sie (F8).
+> 4. Führen Sie die Tests erneut aus (**⌃⌘U**).
+>    *Ergebnis:* ein Test rot (**Fehlschläge**). In den Testdetails: **Erwartet** 10000, **Ist** 10450 — Sie sehen sofort,
+>    was nicht stimmt.
+> 5. Stellen Sie `10450` wieder her, kompilieren Sie und wählen Sie **Erneut fehlgeschlagen**.
+>    *Ergebnis:* alles grün.
+> 6. Prüfen Sie in einem SQL Window: `SELECT salary FROM pel_employees WHERE emp_id = 2;`.
+>    *Ergebnis:* 9500 — utPLSQL hat die vom Test vorgenommene Erhöhung zurückgerollt.
+>
+> **Übung: ein Test für die neue Funktion.** Wenn Sie in Kapitel 6 die Funktion `department_name` hinzugefügt haben,
+> ergänzen Sie das Testpaket um einen Test (Deklaration in der Spezifikation mit `--%test(…)` und Prozedur im Body) mit
+> `ut.expect(pel_emp_api.department_name(2)).to_equal('Informatyka');` und führen Sie ihn aus.
 
 ## Tests ausführen
 
@@ -71,6 +108,11 @@ im Fenster **mit Optionen ausführen…** geben Sie andere Schemata sowie ein- u
 - Im Program Window sind die Zeilen am Rand markiert: grün — abgedeckt, gelb — teilweise, rot — nicht abgedeckt.
 - Die Statusleiste zeigt den Abdeckungsgrad des Objekts und des Schemas in Prozent.
 - **Abdeckungsbericht** öffnet den HTML-Bericht von utPLSQL im Browser.
+
+**So lesen Sie die Abdeckung:** Rote Zeilen sind Code, den kein Test ausgeführt hat — ein Fehler darin wird nicht
+entdeckt. 100 % Abdeckung heißt nicht, dass der Code fehlerfrei ist, aber eine niedrige Abdeckung heißt, dass die Tests
+wenig prüfen. Führen Sie die Tests `PEL_EMP_API_TEST` mit Abdeckung aus und öffnen Sie den Body von `PEL_EMP_API`: Die
+Prozeduren `hire` und `print_department` sind rot — sie haben keine Tests.
 
 Die Abdeckung nutzt Profiler-Daten — vor dem ersten solchen Lauf in einer Sitzung erinnert Pelikan an die erforderlichen
 Berechtigungen.
