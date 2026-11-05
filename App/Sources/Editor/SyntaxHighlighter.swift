@@ -138,7 +138,7 @@ final class SyntaxHighlighter {
     func highlightAll(_ storage: NSTextStorage, font: NSFont) {
         let text = Self.utf16(of: storage)
         storage.beginEditing()
-        storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
+        storage.addAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
         if proC {
             lexer.lexAll(text, onLine: { _ in }, onToken: { _ in })
             applyProC(text, storage: storage, font: font)
@@ -158,7 +158,8 @@ final class SyntaxHighlighter {
     }
 
     private func applyProC(_ text: [UInt16], storage: NSTextStorage, font: NSFont) {
-        storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
+        // addAttributes — bez kasowania podkreśleń diagnostyk i innych atrybutów magazynu (kolorowanie przy każdej zmianie).
+        storage.addAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
         for s in ProCLexer.spans(text) { apply(s.style, NSRange(location: s.start, length: s.length), in: storage, font: font) }
     }
 

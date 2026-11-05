@@ -110,8 +110,10 @@ public enum PerfReportRunner {
     /// Błąd Oracle zwrócony jako treść raportu (`<report>ORA-20000: Insufficient privileges</report>` z DBMS_STATS) —
     /// komunikat zamiast pozornie poprawnego raportu.
     static func embeddedError(_ content: String) -> String? {
+        // Najpierw tanie sprawdzenia — raporty AWR mają megabajty.
+        guard content.utf8.count < 2000, content.prefix(40).contains("<report>") else { return nil }
         let t = content.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard t.count < 2000, t.hasPrefix("<report>"), t.hasSuffix("</report>") else { return nil }
+        guard t.hasPrefix("<report>"), t.hasSuffix("</report>") else { return nil }
         let inner = t.dropFirst("<report>".count).dropLast("</report>".count).trimmingCharacters(in: .whitespacesAndNewlines)
         return inner.hasPrefix("ORA-") ? inner : nil
     }

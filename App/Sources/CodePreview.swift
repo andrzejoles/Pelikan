@@ -34,8 +34,14 @@ struct CodePreview: View {
             }
             .controlSize(.small)
             .font(.uiSecondary)
-            HighlightedCodeView(text: shown, highlight: highlight)
+            HighlightedCodeView(text: shown, highlight: highlight, schemeKey: Self.schemeKey)
         }
+    }
+
+    /// Motywy z ustawień (obserwowane przez SwiftUI) — zmiana motywu odświeża podgląd (D227).
+    static var schemeKey: String {
+        guard let st = (NSApp.delegate as? AppDelegate)?.workspace.settings else { return "" }
+        return "\(st.syntaxSchemeLight)|\(st.syntaxSchemeDark)|\(st.customSyntaxSchemes.hashValue)"
     }
 
     private func openInSQLWindow() {
@@ -49,6 +55,9 @@ struct CodePreview: View {
 struct HighlightedCodeView: NSViewRepresentable {
     let text: String
     var highlight = true
+    /// Motywy z ustawień; w kluczu odświeżenia razem z trybem systemu.
+    var schemeKey = ""
+    @Environment(\.colorScheme) private var colorScheme
 
     func makeNSView(context: Context) -> NSScrollView {
         let scroll = NSTextView.scrollableTextView()
@@ -68,7 +77,8 @@ struct HighlightedCodeView: NSViewRepresentable {
 
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let tv = scroll.documentView as? NSTextView, let storage = tv.textStorage else { return }
-        let key = "\(highlight)|\(SyntaxTheme.current.id)|\(text)"
+        if let st = (NSApp.delegate as? AppDelegate)?.workspace.settings { SyntaxTheme.apply(st) }
+        let key = "\(highlight)|\(schemeKey)|\(colorScheme)|\(SyntaxTheme.current.id)|\(text)"
         guard context.coordinator.last != key else { return }
         context.coordinator.last = key
         let font = InterfaceFonts.shared.code

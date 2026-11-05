@@ -3833,3 +3833,18 @@ włączały go dopiero przyciski „Użyj w trybie jasnym/ciemnym”, a przycisk
 widocznego. Teraz kliknięcie motywu włącza go od razu w trybie, w którym jest system (jak wybór motywu w Xcode),
 a przyciski przypisują motyw drugiemu trybowi. Karta mówi, w którym trybie jest system, i ostrzega, gdy własny
 kolor tekstu albo tła z Edytor › Kolory czcionek przesłania motyw.
+
+### D229 · 2026-11-05 — Code review (medium) zmian 1.20.6–1.21.2: poprawki
+
+- **Pro*C:** `EXEC SQL EXECUTE s USING …;` (dynamiczny SQL) kończy się średnikiem — blokiem do `END-EXEC` jest tylko
+  `EXECUTE BEGIN|DECLARE …` (wcześniej cały dalszy kod C był kolorowany jak SQL).
+- **Podkreślenia diagnostyk** zostają przy zmianie motywu, trybu systemu i przy każdej zmianie pliku Pro*C (pełne
+  kolorowanie dodaje atrybuty zamiast je zastępować, po ponownym kolorowaniu podkreślenia są nakładane od nowa).
+- **Tło w kolorze połączenia** liczone dynamicznie z tła motywu (wcześniej zostawało tło motywu z chwili otwarcia).
+- **Zmiana samego koloru** w motywie (przeciąganie w polu koloru) nie leksuje tekstu — tylko odświeża rysowanie;
+  ponowne kolorowanie przy zmianie motywu, pogrubienia/kursywy albo trybu Pro*C. Otwarcie okna koloruje tekst raz.
+- **Import VS Code:** przecinek na końcu z komentarzem przed zamknięciem nie psuje JSONC.
+- **Podglądy kodu** odświeżają się po zmianie motywu i trybu systemu.
+- **Raporty:** wykrywanie błędu Oracle w treści raportu bez przeglądania megabajtowych raportów AWR.
+- Pominięte (nie błędy działania): znacznik uprawnień systemowych w zbiorze pakietów, osobne rozwiązywanie stylów
+  w podglądzie motywu.

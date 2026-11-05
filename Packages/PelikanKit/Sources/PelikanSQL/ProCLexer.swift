@@ -104,7 +104,7 @@ public enum ProCLexer {
     }
 
     /// Koniec wstawki EXEC: `body` — koniec treści SQL (średnik albo `END-EXEC`), `end` — za średnikiem kończącym,
-    /// `block` — blok PL/SQL zakończony `END-EXEC`. Blok `EXEC SQL EXECUTE` (bez IMMEDIATE) kończy się na `END-EXEC;`, pozostałe na
+    /// `block` — blok PL/SQL zakończony `END-EXEC`. Blok `EXEC SQL EXECUTE BEGIN|DECLARE …` kończy się na `END-EXEC;`, pozostałe na
     /// pierwszym średniku poza napisami i komentarzami.
     static func execEnd(_ text: [UInt16], from start: Int) -> (body: Int, end: Int, block: Bool) {
         let end = text.count
@@ -121,7 +121,9 @@ public enum ProCLexer {
         if matches(k, "EXECUTE") {
             var j = k + 7
             while j < end, text[j] == 32 || text[j] == 9 || text[j] == 10 || text[j] == 13 { j += 1 }
-            block = !matches(j, "IMMEDIATE")
+            // Blok PL/SQL tylko po BEGIN albo DECLARE; `EXECUTE IMMEDIATE …;` i dynamiczny SQL `EXECUTE s USING …;`
+            // kończą się średnikiem.
+            block = matches(j, "BEGIN") || matches(j, "DECLARE")
         }
         var i = start
         while i < end {

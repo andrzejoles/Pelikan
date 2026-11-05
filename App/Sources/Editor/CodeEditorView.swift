@@ -72,6 +72,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private var appliedExtraSelections = false
     /// Motyw i tryb kolorowania, z którymi pokolorowano tekst (zmiana — ponowne kolorowanie).
     private var appliedSchemeKey: String?
+    private var appliedColorsKey: String?
     private var appearanceSchemeID: String?
 
     init(document: Document, fontSize: CGFloat = 13, secondary: Bool = false) {
@@ -123,7 +124,13 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             self.textView.insertionPointColor = SyntaxTheme.cursor
             self.textView.selectedTextAttributes = [.backgroundColor: SyntaxTheme.selection]
             if ws.settings.colorWindowBackground, let c = ws.indicatorColor(for: self.document) {
-                self.textView.backgroundColor = base.blended(withFraction: 0.08, of: NSColor(red: c.red, green: c.green, blue: c.blue, alpha: 1)) ?? base
+                // Odcień dynamiczny: tło motywu rozwiązywane przy rysowaniu (zmiana motywu i trybu systemu, D227).
+                let tint = NSColor(red: c.red, green: c.green, blue: c.blue, alpha: 1)
+                self.textView.backgroundColor = NSColor(name: nil) { ap in
+                    var out = base
+                    ap.performAsCurrentDrawingAppearance { out = (base.usingColorSpace(.sRGB) ?? base).blended(withFraction: 0.08, of: tint) ?? base }
+                    return out
+                }
             } else {
                 self.textView.backgroundColor = base
             }
@@ -135,13 +142,21 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             _ = (ws.settings.syntaxSchemeLight, ws.settings.syntaxSchemeDark, ws.settings.customSyntaxSchemes)
             SyntaxTheme.apply(ws.settings)
             let proC = self.document.fileURL.map { ProCLexer.fileExtensions.contains($0.pathExtension.lowercased()) } ?? false
-            let key = "\(SyntaxTheme.current.id)|\(proC)|\(SyntaxTheme.schemes.light.hashValue)|\(SyntaxTheme.schemes.dark.hashValue)"
-            guard key != self.appliedSchemeKey else { return }
+            // Ponowne kolorowanie tylko przy zmianie motywu, kroju (pogrubienie/kursywa) albo trybu Pro*C; sama zmiana
+            // koloru (kolory są dynamiczne) — tylko odświeżenie rysowania (przeciąganie w polu koloru nie leksuje tekstu).
+            let key = "\(SyntaxTheme.current.id)|\(proC)|\(Self.fontSignature(SyntaxTheme.schemes.light))|\(Self.fontSignature(SyntaxTheme.schemes.dark))"
+            let colors = "\(SyntaxTheme.schemes.light.hashValue)|\(SyntaxTheme.schemes.dark.hashValue)"
             let first = self.appliedSchemeKey == nil
-            self.appliedSchemeKey = key
-            self.highlighter.proC = proC
-            // Pierwsze przejście: tekst wczytany przed ustaleniem trybu Pro*C trzeba pokolorować od nowa.
-            if !first || proC, let storage = self.textView.textStorage { self.highlighter.highlightAll(storage, font: self.font) }
+            if first { self.appearanceSchemeID = SyntaxTheme.scheme(for: self.effectiveAppearance).id }
+            if key != self.appliedSchemeKey {
+                self.appliedSchemeKey = key
+                self.highlighter.proC = proC
+                // Pierwsze przejście: tekst wczytany przed ustaleniem trybu Pro*C trzeba pokolorować od nowa.
+                if !first || proC { self.rehighlightAll() }
+            } else if colors != self.appliedColorsKey, let tlm = self.textView.textLayoutManager {
+                tlm.invalidateLayout(for: tlm.documentRange)
+            }
+            self.appliedColorsKey = colors
             self.textView.needsDisplay = true
             self.ruler.needsDisplay = true
         })
@@ -457,8 +472,20 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let key = SyntaxTheme.scheme(for: effectiveAppearance).id
         guard key != appearanceSchemeID else { return }
         appearanceSchemeID = key
-        if let storage = textView.textStorage, storage.length > 0 { highlighter.highlightAll(storage, font: font) }
+        rehighlightAll()
         ruler.needsDisplay = true
+    }
+
+    /// Kroje motywu (pogrubienie, kursywa kategorii) — ich zmiana wymaga ponownego kolorowania, zmiana koloru nie.
+    static func fontSignature(_ s: SyntaxScheme) -> String {
+        SyntaxStyle.allCases.map { st in let t = s.style(st); return "\(t.bold ? 1 : 0)\(t.italic ? 1 : 0)" }.joined()
+    }
+
+    /// Pełne ponowne kolorowanie bez zmiany tekstu (motyw, tryb systemu) — z podkreśleniami diagnostyk.
+    private func rehighlightAll() {
+        guard let storage = textView.textStorage, storage.length > 0 else { return }
+        highlighter.highlightAll(storage, font: font)
+        if !diagnostics.isEmpty { showDiagnostics(diagnostics) }
     }
 
     private func load(_ text: String) {

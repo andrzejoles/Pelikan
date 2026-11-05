@@ -236,7 +236,16 @@ public enum SyntaxSchemeImport {
                 i += 2
             } else if c == "," {
                 var j = i + 1
-                while j < u.count, u[j].properties.isWhitespace { j += 1 }
+                // Białe znaki i komentarze między przecinkiem a zamknięciem (`"a": 1, // ostatni` przed `}`).
+                while j < u.count {
+                    if u[j].properties.isWhitespace { j += 1 }
+                    else if u[j] == "/", j + 1 < u.count, u[j + 1] == "/" { while j < u.count, u[j] != "\n" { j += 1 } }
+                    else if u[j] == "/", j + 1 < u.count, u[j + 1] == "*" {
+                        j += 2
+                        while j + 1 < u.count, !(u[j] == "*" && u[j + 1] == "/") { j += 1 }
+                        j += 2
+                    } else { break }
+                }
                 if j < u.count, u[j] == "}" || u[j] == "]" { i += 1; continue }   // przecinek przed zamknięciem
                 out.unicodeScalars.append(c); i += 1
             } else {

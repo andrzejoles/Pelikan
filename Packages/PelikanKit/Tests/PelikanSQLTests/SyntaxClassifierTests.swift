@@ -48,5 +48,10 @@ struct SyntaxClassifierTests {
         // Po wstawce znów C.
         #expect(got["return"] == .keyword)
         #expect(ProCLexer.fileExtensions.contains("pc"))
+        // Dynamiczny SQL (metoda 2/3): EXECUTE s USING …; kończy się średnikiem — dalej znów C.
+        let dyn = Array("EXEC SQL PREPARE s FROM :q;\nEXEC SQL EXECUTE s USING :a;\nreturn 1;\n".utf16)
+        var d: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(dyn) { d[String(decoding: dyn[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(d["return"] == .keyword && d[":a"] == .variable && d["1"] == .number)
     }
 }
