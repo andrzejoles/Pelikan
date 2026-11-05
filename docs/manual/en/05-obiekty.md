@@ -1,5 +1,15 @@
 # Object Browser and object editors
 
+## What it is for
+
+A database contains hundreds or thousands of objects: tables, views, packages, indexes. The **Object Browser** shows
+them in a tree, as Finder shows files — you can browse them, search, open them for editing, look at their data and
+structure. **Object editors** let you create and change objects in a form, without writing `CREATE` and `ALTER`
+statements by hand — Pelikan shows the generated SQL before executing it, so you learn the syntax along the way.
+
+**When to use it:** when you want to check which columns a table has, who uses a package, which objects are invalid
+after a deployment, or to add a column or an index.
+
 ## Object Browser
 
 The **Objects** tab in the left column shows the database objects of the open connections in folders by type:
@@ -50,6 +60,20 @@ invalidate objects across the whole database.
 
 The tree works smoothly even in schemas with tens of thousands of objects — the dictionary is read in the background.
 
+> **Exercise: get to know the practice table.**
+> 1. Click the **Objects** tab in the left column.
+>    *Result:* a tree with the main connection at the top and object type folders under it.
+> 2. Type `pel` in the **Filter** field.
+>    *Result:* only objects with “PEL” in the name remain in the folders.
+> 3. Expand **Tables › PEL_EMPLOYEES**.
+>    *Result:* you see the columns with their types, constraints (primary key `PEL_EMPLOYEES_PK`, unique e-mail, salary
+>    CHECK, foreign keys), indexes and dependencies.
+> 4. Expand **Used by**.
+>    *Result:* the view `PEL_EMP_DETAILS` and the package `PEL_EMP_API` — the objects that stop working if you drop or
+>    change this table.
+> 5. Type `status=invalid` in the **Filter** field.
+>    *Result:* the list of invalid objects — right after creating the practice schema it should be empty.
+
 ### Object menu
 
 Right-click an object (or click with ⌃). Depending on the object type, the menu contains:
@@ -73,6 +97,18 @@ Right-click an object (or click with ⌃). Depending on the object type, the men
 On a table column or constraint the menu has **Rename item…**. When you select several objects (⌘+click or ⇧+click), the
 menu offers common actions: **Copy comma-separated names** (also ⌘C), **DDL of selected**, **Recompile selected** and
 **Drop selected…**.
+
+> **Exercise: data, DDL and ready code from the menu.**
+> 1. Right-click **PEL_DEPARTMENTS** and choose **Show data**.
+>    *Result:* a new SQL Window with a query and its result — 4 departments.
+> 2. Right-click **PEL_EMPLOYEES** and choose **DDL**.
+>    *Result:* a new window with the `CREATE TABLE` statement that recreates the table — this is how you check the
+>    exact definition of an object.
+> 3. Right-click **PEL_EMPLOYEES** and choose **Generate code › INSERT**.
+>    *Result:* an INSERT statement with all columns appears — just fill in the values.
+>
+> ⚠️ **Watch out.** **Drop object…** and **Recompile** act on the database at once (after confirmation). Dropping a table
+> cannot be undone with ROLLBACK — only the Recycle Bin (below) can help, if it is enabled in the database.
 
 Other operations on the selected object are in the **Tools › Object** menu: among others **Add debug information**,
 **Edit table definition**, **View editor**, **Compare with active window**, **Compare with object in another
@@ -106,6 +142,15 @@ In **Settings › Object Browser** you set:
 - **Tools › Compile invalid objects…** shows the invalid objects of the schema and compiles them in dependency order
   until nothing changes any more; compilation errors are in the list.
 
+> **Exercise: who uses the SALARY column?**
+> 1. Press **⇧⌘O** (Find database objects), type `salary` and start the search.
+>    *Result:* a list of places in sources and definitions where the word `salary` appears — among others the body of
+>    the `PEL_EMP_API` package.
+> 2. Double-click the hit in `PEL_EMP_API`.
+>    *Result:* a Program Window with the package body, the cursor on the line with the hit.
+>
+> This is how, before changing a column, you check which code will need fixing.
+
 ## Table editor
 
 You create a new table with **File › New › Table…**, and open an existing one with **Edit** from the table's menu (or
@@ -134,6 +179,19 @@ Editor tabs:
 **Apply** executes the changes as `ALTER` and stops at the first error; **Refresh** reloads the definition from the
 database. On a production connection confirmation is required.
 
+> **Exercise: add a column in the table editor.**
+> 1. Right-click **PEL_EMPLOYEES** and choose **Edit**.
+>    *Result:* the table editor on the **General** tab.
+> 2. Go to the **Columns** tab and add the column `PHONE` of type `VARCHAR2(20)`, allowing NULL.
+> 3. Go to the **SQL** tab.
+>    *Result:* the statement `ALTER TABLE … ADD (PHONE VARCHAR2(20))` — exactly what Pelikan will execute.
+> 4. Click **Apply**.
+>    *Result:* the column is in the table; in the Object Browser (after **Refresh**) it is in the list of columns.
+>
+> ⚠️ **Watch out.** DDL (ALTER) commits the open transaction and cannot be undone with ROLLBACK. Changes that require
+> **Recreate table** rebuild the table with its data — on a large table this takes long and locks it. On a shared
+> database agree structure changes with the team.
+
 ## Other object editors
 
 In **File › New** you will find editors: **Sequence…**, **Synonym…**, **Index…**, **View (editor)…** (query, FORCE, READ
@@ -155,6 +213,10 @@ Passwords entered in the user and link editors are kept only in the window's mem
 object under its old or a new name, and **Recycle Bin › Empty Recycle Bin…** removes objects permanently (after
 confirmation).
 
+**What it is for:** in Oracle `DROP TABLE` without `PURGE` does not remove the table at once but moves it to the recycle
+bin (if the recycle bin is enabled in the database — the `RECYCLEBIN` parameter). Thanks to this, a table dropped by
+mistake can be restored together with its data.
+
 ## Diagrams
 
 - **Tools › Diagram › ER diagram from schema…** draws the tables of the schema (or those matching a mask) with foreign
@@ -163,6 +225,15 @@ confirmation).
   with the **Tools › Diagram › Add to diagram** command.
 
 ![ER diagram of a schema](../img/diagram-er.png)
+
+**What it is for:** an ER (entity-relationship) diagram shows tables as rectangles and foreign keys as lines between
+them. It is the fastest way to understand an unknown schema.
+
+> **Exercise: diagram of the practice schema.**
+> 1. Choose **Tools › Diagram › ER diagram from schema…**. In the first question leave the suggested schema (yours), in
+>    the second — **Table name mask (LIKE)** — type `PEL%`.
+>    *Result:* a diagram with the tables `PEL_DEPARTMENTS` and `PEL_EMPLOYEES` joined by a foreign key line, and a line
+>    from `PEL_EMPLOYEES` to itself (the employee's manager).
 
 In the diagram window: **Related** adds tables connected by foreign keys, **Dependencies** — dependency lines, **Note**
 and **Group** organize the drawing, **Columns** shows or hides columns, **Grid** turns on snapping to an 8 px grid, and

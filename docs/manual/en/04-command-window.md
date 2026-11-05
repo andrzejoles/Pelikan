@@ -1,7 +1,16 @@
 # SQL*Plus Console
 
-The SQL*Plus Console works like SQL*Plus: it executes statements line by line and scripts, and shows query results as text
-in columns. You open it with **File › New › SQL*Plus Console** or from the connection's menu in the connection list.
+## What it is for
+
+**SQL*Plus** is Oracle's classic text tool for running scripts. Many teams deploy database changes with SQL*Plus
+scripts — with `SET`, `PROMPT`, `SPOOL` (writing output to a file) or `WHENEVER SQLERROR` (stopping on an error). The SQL
+Window does not understand them, but the Pelikan **SQL*Plus Console** does: it executes statements line by line and
+scripts, and shows query results as text in columns, as SQL*Plus does. You open it with **File › New › SQL*Plus
+Console** or from the connection's menu in the connection list.
+
+**When to use it:** to run ready deployment scripts (`@install.sql`), for scripts that write output to a file, and when
+you want to see how a script will behave in SQL*Plus at the administrator's. For ordinary queries and browsing data the
+SQL Window with its result grid is more convenient (chapter 3).
 
 The window has two tabs:
 
@@ -13,6 +22,33 @@ The window has two tabs:
 
 The status bar shows the current settings of `ECHO`, `TERMOUT`, `FEEDBACK`, `VERIFY`, `AUTOPRINT`, `HEADING` and
 `TIMING`; double-clicking an indicator toggles the setting.
+
+> **Exercise: your first SQL*Plus script.**
+> 1. Open **File › New › SQL*Plus Console**.
+>    *Result:* a window with the letter **C**, the **Dialog** tab with a command line at the bottom.
+> 2. On the command line type `DESCRIBE pel_employees` and press ↩.
+>    *Result:* a list of the table's columns with their types and whether they may be empty (NULL).
+> 3. Go to the **Editor** tab and type the script:
+>
+>    ```sql
+>    SET SERVEROUTPUT ON
+>    SET TIMING ON
+>    PROMPT Employees of the Informatyka department:
+>    EXECUTE pel_emp_api.print_department(20)
+>    COLUMN last_name HEADING 'Last name' FORMAT A15
+>    SELECT last_name, salary FROM pel_employees WHERE dept_id = 20;
+>    ```
+>
+> 4. Press **F8**.
+>    *Result:* the Dialog tab shows the PROMPT text, the list from `print_department` (DBMS_OUTPUT), a text table with
+>    the “Last name” heading and the execution time of each statement (TIMING). The status bar shows TIMING on.
+> 5. On the command line type `DIR` to see the console's current directory (you change it with `CD directory`). Then
+>    type `SPOOL employees.txt`, `SELECT * FROM pel_departments;` and `SPOOL OFF`.
+>    *Result:* the current directory contains the file `employees.txt` with the query result.
+>
+> ⚠️ **Watch out.** Start a deployment script with `WHENEVER SQLERROR EXIT SQL.SQLCODE` — otherwise after one
+> statement fails the next ones keep running and the database is left “half-way” through the change. Before running
+> someone else's script, read it and check which connection the console is on.
 
 ## Supported SQL*Plus commands
 
@@ -60,4 +96,5 @@ do not go to the command history.
 ## Step-by-step script execution
 
 `SET EXECPAUSE ON` or **Session › Pause Execution** makes Pelikan ask before each statement of a script whether to
-execute it, execute the rest of the script, or abort.
+execute it, execute the rest of the script, or abort. It is a safe way to run a script you do not know for the first
+time: you see every statement before it reaches the database.
