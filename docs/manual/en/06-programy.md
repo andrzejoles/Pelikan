@@ -1,5 +1,15 @@
 # Program Window and code editor
 
+## What it is for
+
+A **program** in Oracle is PL/SQL code stored in the database: a package, procedure, function, type or trigger. Unlike a
+script in the SQL Window, a program must be **compiled** — Oracle then checks the syntax, the existence of tables and
+columns and the types, and stores the code in the database, from where other programs and applications can call it.
+The **Program Window** is for writing and compiling programs, and the **code editor** (shared by all windows) helps you
+write quickly and without mistakes: it suggests names, shows errors as you type and formats code.
+
+**When to use it:** for every change of a package, procedure or trigger — from a one-line fix to a new module.
+
 ## Program Window
 
 The Program Window is used to write and compile PL/SQL units: packages, procedures, functions, types and triggers, as
@@ -49,6 +59,45 @@ well as Java sources and MLE modules (JavaScript). You open it with **File › N
   overwriting it.
   Set the extensions and pair opening in **Settings › General › Specification and body in separate files**.
 
+> **Exercise: add a function to the package and compile it.**
+> 1. In the Object Browser right-click the **PEL_EMP_API** package and choose **Edit**.
+>    *Result:* a Program Window with two tabs: the package specification and body.
+> 2. On the specification tab, before `END pel_emp_api;`, add the declaration:
+>
+>    ```sql
+>    FUNCTION department_name(p_emp_id IN NUMBER) RETURN VARCHAR2;
+>    ```
+>
+> 3. Switch to the body tab and before `END pel_emp_api;` add the function — deliberately with an error (no semicolon
+>    after `WHERE`):
+>
+>    ```sql
+>    FUNCTION department_name(p_emp_id IN NUMBER) RETURN VARCHAR2 IS
+>      l_name pel_departments.name%TYPE;
+>    BEGIN
+>      SELECT d.name INTO l_name
+>        FROM pel_employees e JOIN pel_departments d ON d.dept_id = e.dept_id
+>       WHERE e.emp_id = p_emp_id
+>      RETURN l_name;
+>    END department_name;
+>    ```
+>
+> 4. Press **F8** (compile).
+>    *Result:* the specification compiles without errors, and a compilation error of the body (e.g. `PLS-00103`) with a
+>    line number appears under the editor.
+> 5. Click the error in the list.
+>    *Result:* the cursor moves to the line with the error. Add `;` at the end of the `WHERE` line and press **F8**
+>    again.
+>    *Result:* the error list is empty, the package is valid (VALID).
+> 6. Check the function in a SQL Window: `SELECT pel_emp_api.department_name(2) FROM dual;`.
+>    *Result:* `Informatyka`.
+> 7. Save the package to files: **⌘S**.
+>    *Result:* Pelikan asks for a name and a folder and then saves two files: `pel_emp_api.pks` and `pel_emp_api.pkb`.
+>
+> ⚠️ **Watch out.** Compilation **replaces** the code in the database at once — other users calling the package get the
+> new version (and their sessions may see error `ORA-04068` about a changed package state). A compilation with an error
+> leaves the package invalid (INVALID) until you fix it. On shared databases use **Trial compilation** (below).
+
 ### Working safely with code in the database
 
 - **Session › Trial compilation** compiles the units under a temporary name and shows errors without replacing the
@@ -61,6 +110,16 @@ well as Java sources and MLE modules (JavaScript). You open it with **File › N
 - **File › Compare › Compare with file…** and **Compare with objects in another database…** (e.g. with a test database)
   open the diff viewer.
 - **Session › Run block in Test Window** executes the selected anonymous block in a new Test Window with DBMS_OUTPUT.
+
+> **Exercise: trial compilation and comparison with the database.**
+> 1. In the Program Window with the **PEL_EMP_API** package change the text `'Razem: '` to `'Suma: '` in the body.
+> 2. Choose **Session › Trial compilation**.
+>    *Result:* Pelikan compiles the code under a temporary name and shows any errors — the package in the database does
+>    not change.
+> 3. Choose **File › Compare › Compare with source in database**.
+>    *Result:* a diff viewer with both versions; the changed line is highlighted.
+> 4. Choose **File › Restore**.
+>    *Result:* the text returns to its state when it was opened.
 
 ### Compiler settings
 
@@ -77,6 +136,17 @@ The same editor works in SQL, program and test windows and in the SQL*Plus Conso
 thousands of lines.
 
 ### Completion and navigation
+
+> **Exercise: completion and going to a declaration.**
+> 1. In a new SQL Window type `SELECT  FROM pel_employees e;` (two spaces after `SELECT`), put the cursor between the
+>    spaces and type `e.`.
+>    *Result:* after a moment a list of the columns of `PEL_EMPLOYEES` (alias `e`) appears. Choose `LAST_NAME` with the
+>    arrows and Enter.
+> 2. On a new line type `pel_emp_api.`.
+>    *Result:* a list of the package's functions and procedures with their parameters.
+> 3. Write `BEGIN pel_emp_api.print_department(20); END;`, put the cursor on `print_department` and press **⌃⌘J** (or
+>    ⌘+click).
+>    *Result:* the package body opens at the place where the procedure is defined.
 
 - **Code completion** appears by itself after a dot (e.g. `package.`, `alias.`, `sequence.`) or on demand: ⌥⎋ (in the
   PL/SQL Developer profile ⌃Space). It suggests schema objects, columns (also through table aliases), package elements,
@@ -187,6 +257,12 @@ syntax colours, line numbers and a vertical right-margin line; the switch above 
 red bar marks where lines were removed; changing an option switches to the example that shows it and scrolls to the
 change, and clicking an option shows its example. A region without formatting can also be marked with the
 `-- @formatter:off` and `-- @formatter:on` comments; the formatter leaves `$IF … $END` conditional compilation unchanged. The formatter treats a word after a dot as an identifier (`E.ENAME` with upper-case identifiers); JSON keys in dot notation are case-sensitive, so format such code with identifiers “unchanged” or in a NoFormat region.
+
+> **Exercise: formatting with one shortcut.**
+> 1. In a SQL Window type on one line: `select first_name,last_name from pel_employees where dept_id=20 and salary>9000 order by last_name;`
+> 2. Press **⇧⌘F**.
+>    *Result:* keywords are uppercase, each column and each condition is on its own line, the clause keywords are
+>    aligned. **⌘Z** undoes the formatting. You change the rules in **Settings › Formatter** (chapter 13).
 
 ### Templates, snippets and macros
 
