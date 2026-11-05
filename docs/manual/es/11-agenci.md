@@ -1,5 +1,12 @@
 # Agentes de IA
 
+## Para qué sirve
+
+Un **agente de IA** es un programa (p. ej. Claude Code) con el que hablas en lenguaje natural y que realiza por sí mismo
+los pasos de una tarea: lee código, comprueba datos, propone y aplica correcciones. Puedes pedirle, p. ej., «explica qué
+hace el paquete PEL_EMP_API», «escribe pruebas utPLSQL para este procedimiento» o «¿por qué es lenta esta consulta?». El
+agente es un ayudante, no un oráculo: **comprueba siempre lo que propone** antes de aceptarlo.
+
 Pelikan te permite trabajar con un agente de IA que se ejecuta en un terminal integrado en la ventana (p. ej., Claude
 Code) y que ve tus ventanas y la base de datos únicamente a través de las herramientas de Pelikan y con las reglas que
 tú controlas. El agente puede leer código y datos, analizar planes, escribir y formatear código en las ventanas, y solo
@@ -36,6 +43,22 @@ Pelikan, el servidor registrado rechaza cualquier conexión.
 El directorio de trabajo del agente es la carpeta del archivo de la ventana activa (p. ej., de un proyecto) y, si la
 ventana no tiene archivo, un directorio temporal de la sesión. El panel se muestra y se oculta con **Vista › Panel del
 agente**.
+
+> **Ejercicio: tu primera conversación con un agente (solo lectura).**
+>
+> Requiere tener instalado un programa de agente (p. ej. `claude`) y una cuenta con su proveedor.
+>
+> 1. Conéctate a la base de desarrollo y abre **Editar** sobre el paquete **PEL_EMP_API**.
+> 2. Elige **Herramientas › Agente de IA › Ejecutar Claude Code**. En la matriz de permisos haz clic en **Todo de solo
+>    lectura** y después en **Ejecutar**.
+>    *Resultado:* a la derecha se abre el panel del agente con un terminal.
+> 3. Escribe en el terminal: `Explica qué hace el paquete PEL_EMP_API abierto en la ventana y señala sus puntos débiles.`
+>    *Resultado:* bajo el terminal ves las llamadas a herramientas (p. ej. leer el contenido de la ventana, describir una
+>    tabla), cada una con su estado, y el agente responde con una descripción del paquete.
+> 4. Pídele: `Añade un comentario sobre el procedimiento hire en el cuerpo del paquete.`
+>    *Resultado:* el agente no puede hacerlo: la sesión es de solo lectura. Así conoces al agente sin riesgo antes de darle
+>    más permisos.
+> 5. Haz clic en **Finalizar**.
 
 ![Panel del agente en el lado derecho de la ventana principal](../img/panel-agenta.png)
 
@@ -87,6 +110,11 @@ La ventana está diseñada para que no se apruebe nada por accidente:
 - **Permitir** se activa solo tras 0,8 segundos;
 - Esc rechaza la solicitud (**Denegar**);
 - las solicitudes siguientes esperan en cola hasta que resuelves la actual.
+
+> ⚠️ **Atención.** Lee la vista previa antes de hacer clic en **Permitir**, sobre todo el número de filas y las
+> advertencias en rojo. Si no entiendes qué hará una sentencia, haz clic en **Denegar** y pregúntale al agente para qué la
+> necesita. No apruebes un COMMIT de cambios que no hayas comprobado con una consulta. En producción la aprobación de
+> cambios está desactivada por defecto: déjala así.
 
 ## Transacciones y deshacer
 

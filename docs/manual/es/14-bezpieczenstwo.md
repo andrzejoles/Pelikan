@@ -3,6 +3,16 @@
 Este capítulo reúne en un solo lugar cómo protege Pelikan las contraseñas, los datos y las bases de datos, también
 frente a errores y frente a los agentes de IA.
 
+**Para principiantes: cinco reglas que conviene conocer desde el primer día:**
+
+1. Guarda las contraseñas solo con **Recordar la contraseña en el Llavero**, nunca en scripts, archivos de texto ni
+   comentarios del código.
+2. Pon a cada conexión su **entorno** real; en una producción de la que solo lees, marca **Solo lectura**.
+3. Antes de COMMIT comprueba con una consulta qué has cambiado. Los cambios de estructura (DDL) se confirman solos y no se
+   deshacen con ROLLBACK.
+4. No envíes a nadie un registro con los nombres visibles ni un archivo de exportación de conexiones con contraseñas.
+5. Dale primero a un agente de IA acceso de solo lectura y lee la vista previa en la ventana de aprobación.
+
 ## Contraseñas
 
 - Las contraseñas de bases de datos, las contraseñas SSH (túneles y destinos Pro*C) y las frases de paso de claves SSH
