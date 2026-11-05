@@ -4,9 +4,17 @@ This chapter describes the tools from the **Tools**, **Reports**, **Project** an
 deploying changes, export and import, reports, notebooks, projects and files. The performance and administration tools
 are described in the *Execution plan, sessions and administration* chapter.
 
+You do not need to know all the tools at once. At the start the most useful are: **Local history** (getting back an
+earlier version of code), **Export user objects** (a copy of code in files), **Text Importer** (loading a CSV) and
+**Comparing user objects** (what differs between the development and the test database). Each section starts with an
+explanation of what the tool is for.
+
 ## Comparing schemas and deploying changes
 
 ### Comparing user objects
+
+**What it is for:** you make changes first on the development database, and then they have to be moved to the test and
+production ones. The comparison shows which objects differ and creates a script that aligns the target database.
 
 **Tools › Compare user objects…** compares the DDL of a schema's objects with a target schema — on the same or another
 connection (e.g. `dev_test` with the acceptance test database).
@@ -26,7 +34,8 @@ connection (e.g. `dev_test` with the acceptance test database).
 **Tools › Database Diff…** compares schemas by object type (also between connections); for tables it generates `ALTER
 TABLE` statements that add, modify and drop columns. You add selected differences with the **To cart** button.
 
-**Tools › Deployment cart…** collects objects (DDL) and table data (with a WHERE filter) into a change package. You add
+**Tools › Deployment cart…** collects objects (DDL) and table data (with a WHERE filter) into a change package. It is
+your “list of changes to deploy” — you add objects to it while working, and at the end you get one script. You add
 the object selected in the Object Browser with **Tools › Cart › Add object to cart**, and **Cart › Cart deployment
 script** generates a script in dependency order in a new SQL Window — with `WHENEVER SQLERROR EXIT` and `COMMIT` at the
 end.
@@ -64,11 +73,36 @@ A Data Pump export writes files on the server side (the `DATA_PUMP_DIR` director
 the database go through the same safeguards as the SQL Window: on a production connection they ask for confirmation, on
 a read-only connection they are blocked. No saved definition (of a transfer, job or import) contains passwords.
 
+> **Exercise: a copy of code in files and a CSV import.**
+> 1. Choose **Tools › Export user objects…**, select the objects with the `PEL_` prefix and choose saving “file per
+>    object” to a new folder.
+>    *Result:* the folder contains `.sql` files with the tables and the view and the pair `pel_emp_api.pks` /
+>    `pel_emp_api.pkb` — code ready to put into git.
+> 2. Prepare a file `departments.csv` in a text editor:
+>
+>    ```
+>    dept_id;name;city
+>    60;Marketing;Wrocław
+>    70;Prawny;Łódź
+>    ```
+>
+> 3. Choose **Tools › Text Importer…**, point to the file and choose `PEL_DEPARTMENTS` as the target table.
+>    *Result:* Pelikan recognized the `;` separator and the header and mapped the fields to the columns with the same
+>    names.
+> 4. Run the import, then execute `SELECT * FROM pel_departments;` in a SQL Window.
+>    *Result:* 6 departments.
+>
+> ⚠️ **Watch out.** The import runs in a separate session and **commits** the rows itself (COMMIT every given number of
+> rows and at the end) — ROLLBACK in a SQL Window does not undo it. Rows with an error (e.g. a duplicate key) go to the
+> import report. You remove the new departments with `DELETE FROM pel_departments WHERE dept_id IN (60, 70);` and
+> COMMIT.
+
 ## Reports
 
 ### Predefined reports
 
-**Reports › Predefined reports…** opens a set of ready-made reports about the database in the categories *About
+**Reports › Predefined reports…** opens a set of ready-made reports about the database — you do not need to know the
+dictionary views to check e.g. the largest tables or invalid objects. The reports are in the categories *About
 database*, *Objects*, *Tables*, *PL/SQL*, *Security* and others. A report can show a grid, a chart or DBMS_OUTPUT
 output, ask for variables and have row details. **Open report in SQL Window** lets you modify the query, and you can
 export the result to CSV, HTML or XLSX.
@@ -92,6 +126,20 @@ The **Reports** menu also has quick reports: **Compilation errors**, **Invalid o
 5. Save the report as a `.rep` file. **Report › Add report to the Reports menu** puts it in **Reports › My reports**.
 
 ![Report with groups and totals in the Green style](../img/raport-styl.png)
+
+> **Exercise: a report of salaries by department.**
+> 1. Open **File › New › Report Window** and type:
+>
+>    ```sql
+>    SELECT department, full_name, salary FROM pel_emp_details ORDER BY department, full_name
+>    ```
+>
+> 2. Press **F8**.
+>    *Result:* an HTML table with the employees.
+> 3. On the **Layout** tab check **Group** for the **DEPARTMENT** column, and for **SALARY** — **Sum** and the format
+>    `#,##0.00`.
+> 4. Run the report again.
+>    *Result:* employees grouped by department, with the salary total under each department and a grand total.
 
 **Report › Save report as HTML…**, **Export report data…** (CSV, TSV, XML, Excel) and **Print report…** (also to PDF)
 share the result. **Lock report definition** hides the query and layout — the report can then only be executed (until it
@@ -136,6 +184,9 @@ BY and DISTINCT. The query goes to the editor. You can open a selected simple SE
 
 ## Local history
 
+**What it is for:** it is your code's “time machine”. Even if you do not use git and you broke a procedure and compiled
+it, you will find the previous version in the local history.
+
 Pelikan saves a version of a file or object at every save, compilation, refactoring and restore — independently of Git
 and without a database connection. **File › Local history › Local history** shows the versions of the active window;
 **Compare with current** opens the differences, and **Restore** inserts the old version (the current text stays in the
@@ -144,13 +195,22 @@ from the last 30 days.
 
 ![Local history of a file](../img/historia-lokalna.png)
 
+> **Exercise: get back the previous version.**
+> 1. Open **Edit** on the **PEL_EMP_API** package and change any comment on the body tab. Compile (F8).
+> 2. Choose **File › Local history › Local history**.
+>    *Result:* a list of versions with dates — the newest is your compilation.
+> 3. Select an earlier version and click **Compare with current**.
+>    *Result:* the diff viewer shows the changed comment.
+> 4. Click **Restore**, then compile (F8).
+>    *Result:* the database has the previous version again; the version with the comment also stays in the history.
+
 ## Projects, worksets and files
 
 - A **project** groups files and database objects (with notes and groups) in a `.prj` file. **Project › Build project**
   compiles everything in the order of the items, and **Project make** — only files changed since the last build and
   invalid objects. Project options include the connection, stopping after the first error, and formatting. **Save
   project desktop** remembers the open windows.
-- A **workset** remembers the open windows — also with unsaved changes and variable values — and restores them at the
+- A **workset** — like a “work session” on one task — remembers the open windows — also with unsaved changes and variable values — and restores them at the
   next launch (**File › Workset**: new, open, save, restore, close, compare, autosave). You save the main window layout
   with **View › Save window layout**.
 - When you quit with **workset autosave** on (the default; **Settings › General › Files › Restore windows after
