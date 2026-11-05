@@ -101,3 +101,11 @@ Quelltexte auf älteren Servern liegen oft in ISO-8859-2 vor. Pelikan erkennt di
 ändert sie nicht stillschweigend: Ein Zeichen, das sich in der Kodierung der Datei nicht speichern lässt, blockiert das
 Speichern mit genauer Angabe der Stelle. Die Kodierung ändern Sie nur ausdrücklich (**Datei › Dateikodierung …**); ein
 Projekt kann außerdem die Kodierung seiner Dateien vorgeben.
+
+## Einfärben von Pro*C-Code
+
+In Pelikan geöffnete Dateien `.pc`, `.pcc`, `.c` und `.h` werden wie C eingefärbt: Schlüsselwörter, Typen (`int`, `char`,
+`VARCHAR`), Präprozessordirektiven (`#include`), Zeichenketten, Kommentare und Funktionsaufrufe. Anweisungen
+`EXEC SQL … ;` und Blöcke `EXEC SQL EXECUTE … END-EXEC;` werden wie SQL und PL/SQL eingefärbt, Hostvariablen (`:ename`)
+wie Bindevariablen. Die Farben stammen aus dem Schema in **Einstellungen › Farben**. Der Umschalter **Pro*C** in der
+Vorschau dieses Tabs zeigt, wie ein Schema in Pro*C-Code aussieht.

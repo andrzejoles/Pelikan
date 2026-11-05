@@ -70,6 +70,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private var applyingModelSelection = false
     /// Widok ma dodatkowe kursory z modelu (do zdjęcia, gdy model je wyczyści).
     private var appliedExtraSelections = false
+    /// Motyw i tryb kolorowania, z którymi pokolorowano tekst (zmiana — ponowne kolorowanie).
+    private var appliedSchemeKey: String?
+    private var appearanceSchemeID: String?
 
     init(document: Document, fontSize: CGFloat = 13, secondary: Bool = false) {
         self.document = document
@@ -113,17 +116,34 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         tokens.append(trackChanges { [weak self] in
             guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
             _ = self.document.connectionID
-            // Własne kolory edytora (PD-PREF-005) — tło jako baza odcienia połączenia.
+            // Własne kolory edytora (PD-PREF-005) — tło jako baza odcienia połączenia; bez nich kolory motywu (D227).
             let colors = ws.settings.editorColors
-            let base = colors.background.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? .textBackgroundColor
+            let base = colors.background.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? SyntaxTheme.background
             SyntaxTheme.customPlain = colors.text.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
-            self.textView.insertionPointColor = SyntaxTheme.customPlain ?? .textColor
+            self.textView.insertionPointColor = SyntaxTheme.cursor
+            self.textView.selectedTextAttributes = [.backgroundColor: SyntaxTheme.selection]
             if ws.settings.colorWindowBackground, let c = ws.indicatorColor(for: self.document) {
                 self.textView.backgroundColor = base.blended(withFraction: 0.08, of: NSColor(red: c.red, green: c.green, blue: c.blue, alpha: 1)) ?? base
             } else {
                 self.textView.backgroundColor = base
             }
             self.textView.needsDisplay = true
+        })
+        // Motywy kolorowania składni (D227) i kolorowanie Pro*C według rozszerzenia pliku.
+        tokens.append(trackChanges { [weak self] in
+            guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
+            _ = (ws.settings.syntaxSchemeLight, ws.settings.syntaxSchemeDark, ws.settings.customSyntaxSchemes)
+            SyntaxTheme.apply(ws.settings)
+            let proC = self.document.fileURL.map { ProCLexer.fileExtensions.contains($0.pathExtension.lowercased()) } ?? false
+            let key = "\(SyntaxTheme.current.id)|\(proC)|\(SyntaxTheme.schemes.light.hashValue)|\(SyntaxTheme.schemes.dark.hashValue)"
+            guard key != self.appliedSchemeKey else { return }
+            let first = self.appliedSchemeKey == nil
+            self.appliedSchemeKey = key
+            self.highlighter.proC = proC
+            // Pierwsze przejście: tekst wczytany przed ustaleniem trybu Pro*C trzeba pokolorować od nowa.
+            if !first || proC, let storage = self.textView.textStorage { self.highlighter.highlightAll(storage, font: self.font) }
+            self.textView.needsDisplay = true
+            self.ruler.needsDisplay = true
         })
         tokens.append(trackChanges { [weak self] in self?.syncFromModel() })
         // Nowa sesja edycji (otwarcie, zapis, wczytanie — także jednego pliku okna pary): zmiany zapomniane po
@@ -429,6 +449,16 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         if textView.frame.width < size.width || textView.frame.height < size.height {
             textView.setFrameSize(NSSize(width: max(textView.frame.width, size.width), height: max(textView.frame.height, size.height)))
         }
+    }
+
+    /// Zmiana trybu systemu: kolory są dynamiczne, ale pogrubienie i kursywa zależą od motywu trybu (D227).
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        let key = SyntaxTheme.scheme(for: effectiveAppearance).id
+        guard key != appearanceSchemeID else { return }
+        appearanceSchemeID = key
+        if let storage = textView.textStorage, storage.length > 0 { highlighter.highlightAll(storage, font: font) }
+        ruler.needsDisplay = true
     }
 
     private func load(_ text: String) {
@@ -1151,7 +1181,7 @@ final class CodeTextView: NSTextView {
     static let executionLineColor = NSColor.systemGreen.withAlphaComponent(0.22)
     /// Początki zwiniętych struktur — za ich linią rysowany jest znacznik „⋯”.
     var foldedLines: [Int] = [] { didSet { needsDisplay = true } }
-    static let currentLineColor = NSColor(name: nil) { $0.isDark ? NSColor(white: 1, alpha: 0.05) : NSColor(srgbRed: 0.95, green: 0.97, blue: 1, alpha: 1) }
+    static var currentLineColor: NSColor { SyntaxTheme.currentLine }
 
     /// Podświetlenie linii z kursorem (UG 23.12 „Highlight current line”).
     override func drawBackground(in rect: NSRect) {
@@ -1782,7 +1812,7 @@ final class LineNumberRulerView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         let area = dirtyRect.intersection(bounds)
-        NSColor.textBackgroundColor.setFill()
+        (textView?.backgroundColor ?? SyntaxTheme.background).setFill()
         area.fill()
         NSColor.separatorColor.setFill()
         NSRect(x: bounds.width - 1, y: area.minY, width: 1, height: area.height).fill()
@@ -1793,7 +1823,7 @@ final class LineNumberRulerView: NSView {
         let inset = tv.textContainerInset.height
         let lineHeight = tv.font.map { $0.ascender - $0.descender + $0.leading } ?? 16
         func label(_ line: Int, y: CGFloat, height: CGFloat) {
-            let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: line == caretLine ? NSColor.labelColor : NSColor.tertiaryLabelColor]
+            let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: line == caretLine ? SyntaxTheme.lineNumberCurrent : SyntaxTheme.lineNumber]
             if let s = lineStatus[line] {
                 (s == .added ? NSColor.systemGreen : NSColor.systemOrange).withAlphaComponent(0.85).setFill()
                 NSRect(x: 0, y: y, width: 2.5, height: height).fill()

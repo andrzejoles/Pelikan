@@ -362,8 +362,9 @@ Przeglądarki obiektów (*domyślnie: jak interfejs*; wartość 0 pt — jak int
 
 Dla **Edytora**, **Siatki wyników** i **Przeglądarki obiektów** możesz wybrać kolor **tekstu** i **tła**. *Domyślnie:*
 kolory systemu, które zmieniają się z trybem jasnym i ciemnym. Własny kolor obowiązuje w obu trybach — wybierz taki,
-który jest czytelny i w jasnym, i w ciemnym. **Systemowe** przywraca kolory systemu. Kolorowanie składni (słowa
-kluczowe, teksty, komentarze) zostaje.
+który jest czytelny i w jasnym, i w ciemnym. **Systemowe** przywraca kolory systemu albo motywu. Kolorowanie składni (słowa
+kluczowe, teksty, komentarze) zostaje. Kolory tekstu i tła edytora ustawione tutaj mają pierwszeństwo przed motywem
+z karty **Kolory**.
 
 ### Code Assistant (podpowiedzi kodu)
 
@@ -445,6 +446,120 @@ Wpisujesz krótki skrót i spację (albo inny znak kończący), a Pelikan zamien
 - **Szerokość tabulacji** — *domyślnie: 2*, od 1 do 8. Ile spacji daje Tab i jeden poziom wcięcia.
 - **Wstawiaj znak tabulacji zamiast spacji** — *domyślnie: wyłączone*. Włączone — Tab wstawia znak tabulacji. Uwaga:
   w innych programach tabulacja może mieć inną szerokość, przez co kod „rozjedzie się”. Większość zespołów używa spacji.
+
+## Karta Kolory
+
+**Motyw kolorów** decyduje, jak edytor koloruje kod. Ustala kolory słów kluczowych, napisów, komentarzy i nazw
+funkcji, a także tło, zaznaczenie, kursor, linię bieżącą i numery linii. Pelikan ma 98 motywów wbudowanych.
+Domyślny jest **Pelikan**, w wersji jasnej i ciemnej. Jest też **Klasyczny** w stylu dawnych narzędzi Oracle: białe
+tło, granatowe słowa kluczowe, czerwone napisy i zielone komentarze. Pozostałe 95 to znane motywy edytorów, m.in.
+Solarized, Gruvbox, Dracula, Monokai, Nord, One Dark, GitHub, Catppuccin i Tokyo Night. Ich palety pochodzą
+z projektu tinted-theming (licencja MIT).
+
+Te same kolory obowiązują w oknie SQL, oknie programu, oknie testu i konsoli, a także w podglądach kodu w oknach
+narzędzi (sesje, raporty, Query Builder). Wydruk i podgląd Quick Look w Finderze zostają przy jasnych kolorach
+Pelikana, bo papier i Finder mają białe tło.
+
+### Lista motywów
+
+Po lewej są dwie grupy: **Jasne** (jasne tło) i **Ciemne** (ciemne tło). Kolorowy prostokąt przy nazwie pokazuje tło
+motywu i trzy jego kolory: słowa kluczowego, napisu i komentarza. Znacznik ✓ oznacza motyw w użyciu. Napis **własny**
+oznacza motyw, który zapisałeś sam. Pole **Filtruj motywy** zawęża listę do nazw albo autorów pasujących do wpisanego
+tekstu.
+
+### Użyj w trybie jasnym / Użyj w trybie ciemnym
+
+macOS ma tryb jasny i ciemny (Ustawienia systemowe › Wygląd albo karta **Ogólne › Wygląd** w Pelikanie). Pelikan
+pamięta **osobny motyw dla każdego trybu**. *Domyślnie:* Pelikan jasny i Pelikan ciemny. Gdy system zmienia tryb
+(np. wieczorem przy trybie automatycznym), edytor sam przełącza się na drugi motyw. Kolory zmieniają się od razu we
+wszystkich otwartych oknach, bez ponownego otwierania plików.
+
+Motyw ciemny możesz wybrać także dla trybu jasnego, i odwrotnie. Edytor ma wtedy własne tło niezależne od reszty
+okna. Wiersz pod przyciskami pokazuje, który motyw jest teraz w użyciu w każdym trybie.
+
+### Podgląd
+
+Przełącznik **SQL / PL/SQL / Pro*C** pokazuje przykład kodu w kolorach zaznaczonego motywu. Motyw nie musi być
+w użyciu. Tak możesz porównać motywy, zanim któryś wybierzesz.
+
+### Kategorie kolorów
+
+Motyw przypisuje kolor (i ewentualnie pogrubienie albo kursywę) każdej kategorii:
+
+- **Zwykły tekst** — nazwy tabel, kolumn i zmiennych.
+- **Słowa kluczowe** — `SELECT`, `BEGIN`, `IF`, `create or replace`; w Pro*C także `EXEC SQL`, `END-EXEC` i słowa C
+  (`if`, `return`).
+- **Typy danych** — `VARCHAR2`, `NUMBER`, `DATE`, `BOOLEAN`; w Pro*C `int`, `char`, `VARCHAR`.
+- **Funkcje wbudowane** — `NVL`, `TO_CHAR`, `COUNT` i inne funkcje Oracle, gdy za nazwą jest nawias; w Pro*C każde
+  wywołanie funkcji (`printf(`).
+- **Pakiety dostarczane z bazą** — `DBMS_OUTPUT`, `UTL_FILE`, `APEX_…`, gdy za nazwą jest kropka.
+- **Napisy** — `'tekst'`, `q'[…]'`; w Pro*C także `"tekst"`.
+- **Liczby** — `100`, `2.5`, `1e6`.
+- **Komentarze** — `-- …` i `/* … */`.
+- **Wskazówki optymalizatora** — `/*+ INDEX(e) */`.
+- **Zmienne wiązane i podstawienia** — `:x`, `&nazwa`; w Pro*C zmienne hosta `:ename`.
+- **Nazwy w cudzysłowie** — `"Nazwa działu"`.
+- **Operatory i interpunkcja** — `:=`, `||`, `(`, `;`.
+- **Dyrektywy kompilacji i preprocesora** — `$IF … $END` w PL/SQL i `#include`, `#define` w Pro*C.
+
+Motywy wbudowane mają kolory dobrane tak, aby tekst był czytelny: kontrast zwykłego tekstu z tłem co najmniej 4,5:1,
+a każdej kategorii co najmniej 3:1. Zbyt bladych kolorów oryginalnych palet (najczęściej komentarzy) Pelikan nie
+używa — przesuwa je w stronę koloru tekstu.
+
+### Zapisz jako własny…
+
+Motywów wbudowanych nie można zmieniać, aby zawsze dało się do nich wrócić. Chcesz inne kolory? Zaznacz motyw
+najbliższy temu, czego szukasz, i kliknij **Zapisz jako własny…**. Podaj nazwę (*domyślnie:* „nazwa (kopia)”).
+Kopia pojawia się na liście z napisem **własny** i od razu można ją edytować. Oryginał zostaje bez zmian.
+
+### Edycja motywu własnego
+
+Pod podglądem motywu własnego jest tabela:
+
+- **Nazwa** i **Motyw ciemny** — nazwa na liście i grupa (**Jasne** albo **Ciemne**). Grupa nie ogranicza wyboru: motywu
+  możesz użyć w dowolnym trybie.
+- **Kategoria** — dla każdej kategorii z listy wyżej: **Kolor**, **Pogrubienie** i **Kursywa**. Kliknij pole koloru,
+  aby otworzyć systemowy wybór koloru. Zmianę od razu widać w podglądzie i w edytorach, jeśli motyw jest w użyciu.
+  Strzałka ↺ obok koloru przywraca kolor domyślny: kolor zwykłego tekstu dla kategorii, kolor systemu dla elementów
+  edytora.
+- **Tło**, **Tekst**, **Zaznaczenie**, **Linia bieżąca**, **Numery linii**, **Kursor** — kolory samego edytora.
+  **Linia bieżąca** to pasek pod linią z kursorem (o ile w karcie **Edytor** jest włączone podświetlanie bieżącej linii).
+
+Zmiany zapisują się od razu, bez przycisku **Zapisz**. Przycisk **Usuń** usuwa motyw własny. Jeśli był w użyciu,
+tryb wraca do motywu Pelikan.
+
+> **Uwaga.** Kolory **tekstu** i **tła** ustawione w karcie **Edytor › Kolory czcionek** mają pierwszeństwo przed
+> motywem. Jeśli po wybraniu motywu tło się nie zmienia, sprawdź, czy tam nie ma własnego koloru (przycisk
+> **Systemowe** go usuwa).
+
+### Importuj… i Eksportuj…
+
+**Importuj…** wczytuje motyw z pliku jako motyw własny. Obsługiwane formaty:
+
+- motyw Pelikana (`.json` z **Eksportuj…**),
+- base16 i base24 (`.yaml`) — setki palet z projektu tinted-theming,
+- Xcode (`.xccolortheme`, motywy użytkownika są w `~/Library/Developer/Xcode/UserData/FontAndColorThemes`),
+- TextMate i Sublime Text (`.tmTheme`),
+- Visual Studio Code (`.json` z rozszerzenia motywu, plik z katalogu `themes`).
+
+Przy imporcie z Xcode, TextMate i VS Code Pelikan dobiera kategorie SQL do kolorów motywu. Nie zawsze trafia tak, jak
+w oryginalnym edytorze, bo te motywy opisują inne języki. Popraw wtedy kolory w tabeli edycji.
+
+**Eksportuj…** zapisuje zaznaczony motyw (także wbudowany) do pliku `.json`, np. aby przenieść go na inny komputer albo
+dać koledze. Motywy własne przenosi też eksport ustawień (**Narzędzia › Ustawienia › Eksportuj ustawienia…**, sekcja
+**Edytor**).
+
+> **Ćwiczenie: własny motyw z wyraźnymi komentarzami.**
+> 1. Otwórz **Pelikan › Ustawienia…** (⌘,) i kartę **Kolory**.
+> 2. W grupie **Jasne** zaznacz **Solarized Light**. *Wynik:* podgląd pokazuje kod na kremowym tle.
+> 3. Kliknij **Użyj w trybie jasnym**. *Wynik:* przy nazwie pojawia się ✓, a otwarte okno SQL zmienia kolory.
+> 4. Kliknij **Zapisz jako własny…**, wpisz `Mój Solarized` i kliknij **Zapisz**. *Wynik:* na liście jest
+>    **Mój Solarized** z napisem **własny**, a pod podglądem tabela kolorów.
+> 5. W wierszu **Komentarze** kliknij pole koloru i wybierz ciemnozielony. Wyłącz **Kursywa**. *Wynik:* komentarze
+>    w podglądzie są zielone i proste.
+> 6. Kliknij **Użyj w trybie jasnym**. *Wynik:* okno SQL używa teraz Twojego motywu, a **Solarized Light** jest bez
+>    zmian.
+> 7. Aby wrócić do wyglądu domyślnego, zaznacz **Pelikan** w grupie **Jasne** i kliknij **Użyj w trybie jasnym**.
 
 ## Karta Formater
 

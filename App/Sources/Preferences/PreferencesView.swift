@@ -21,7 +21,7 @@ struct PreferencesView: View {
 
     static let panes: [(id: String, title: String, icon: String)] = [
         ("GeneralPane", L10n.tr("Ogólne"), "gearshape"), ("SQLWindowPane", L10n.tr("Okno SQL"), "tablecells"),
-        ("EditorPane", L10n.tr("Edytor"), "text.cursor"), ("BeautifierPane", L10n.tr("Formater"), "text.alignleft"),
+        ("EditorPane", L10n.tr("Edytor"), "text.cursor"), ("ColorsPane", L10n.tr("Kolory"), "paintpalette"), ("BeautifierPane", L10n.tr("Formater"), "text.alignleft"),
         ("KeyboardPane", L10n.tr("Klawiatura"), "keyboard"), ("OraclePane", L10n.tr("Oracle"), "cylinder"),
         ("BrowserPane", L10n.tr("Przeglądarka obiektów"), "list.bullet.indent"), ("ToolsPane", L10n.tr("Narzędzia"), "wrench.and.screwdriver"),
         ("AgentsPane", L10n.tr("Agenci"), "cpu"), ("PreferenceSetsPane", L10n.tr("Zestawy"), "square.stack.3d.up"),
@@ -50,6 +50,7 @@ struct PreferencesView: View {
                     GeneralPane(workspace: workspace).tag("GeneralPane").tabItem { tab("GeneralPane") }
                     SQLWindowPane(workspace: workspace).tag("SQLWindowPane").tabItem { tab("SQLWindowPane") }
                     EditorPane(workspace: workspace).tag("EditorPane").tabItem { tab("EditorPane") }
+                    ColorsPane(workspace: workspace).tag("ColorsPane").tabItem { tab("ColorsPane") }
                     BeautifierPane(workspace: workspace).tag("BeautifierPane").tabItem { tab("BeautifierPane") }
                     KeyboardPane(workspace: workspace).tag("KeyboardPane").tabItem { tab("KeyboardPane") }
                     OraclePane(workspace: workspace).tag("OraclePane").tabItem { tab("OraclePane") }

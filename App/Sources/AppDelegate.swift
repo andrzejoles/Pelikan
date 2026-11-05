@@ -139,6 +139,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             guard let self else { return }
             InterfaceFonts.shared.apply(self.workspace.settings)
         }
+        // Motywy kolorowania składni (D227) — także dla podglądów kodu bez otwartego edytora.
+        trackChanges { [weak self] in
+            guard let self else { return }
+            SyntaxTheme.apply(self.workspace.settings)
+        }
         languageToken = trackChanges { [weak self] in
             guard let self else { return }
             Self.applyLanguage(self.workspace.settings.language)
@@ -257,6 +262,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     func showPreferenceSets() {
         PreferencesWindowController.show(workspace: workspace, pane: "PreferenceSetsPane")
+    }
+
+    func showSyntaxSchemes() {
+        PreferencesWindowController.show(workspace: workspace, pane: "ColorsPane")
     }
 
     /// Pliki otwierane z Findera, Docka albo `open -a` (typy z Info.plist) i URL schematu Pelikana (PD-CLI-001).

@@ -368,7 +368,7 @@ public enum RibbonModel {
                 .menu(L10n.tr("Szablony"), symbol: "doc.text", commands: [
                     "templates.save", "templates.edit", "templates.delete", separator, "templates.newFolder", "templates.renameFolder", "templates.deleteFolder",
                 ]),
-                .menu(L10n.tr("Ustawienia"), symbol: "gearshape", commands: ["prefs.sets", "prefs.export", "prefs.import", separator, "localTasks.runNow"]),
+                .menu(L10n.tr("Ustawienia"), symbol: "gearshape", commands: ["prefs.sets", "prefs.export", "prefs.import", separator, "prefs.syntaxSchemes", "editor.syntaxScheme.import", separator, "localTasks.runNow"]),
             ]),
             // Komendy panelu agenta rejestruje aplikacja (AgentUICommands); uruchamianie — po profilu z Ustawień › Agenci.
             RibbonGroup(L10n.tr("Agent AI"), [
