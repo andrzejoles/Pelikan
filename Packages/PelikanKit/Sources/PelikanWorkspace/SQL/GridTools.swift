@@ -189,10 +189,10 @@ public enum GridTools {
         return cleaned.hasPrefix(".") ? "_" + cleaned.dropFirst() : cleaned
     }
 
-    /// Zapis wartości kolumny każdego wiersza do osobnego pliku; zwraca liczbę plików. Wartości LOB pobrane w całości
-    /// (siatka może trzymać skrócone — wtedy plik ma tylko pobraną część, raportowane w `truncated`).
+    /// Zapis wartości kolumny każdego wiersza do osobnego pliku; zwraca liczbę plików. LOB obcięty w siatce — w całości
+    /// porcjami z lokatora; bez lokatora plik ma tylko pobraną część (raportowane w `truncated`).
     @MainActor
-    public static func columnToFiles(_ grid: ResultGridModel, column: Int, viewRows: [Int], directory: URL, template: String) throws -> (files: Int, truncated: Int) {
+    public static func columnToFiles(_ grid: ResultGridModel, column: Int, viewRows: [Int], directory: URL, template: String) async throws -> (files: Int, truncated: Int) {
         var files = 0, truncated = 0
         // `value`/`text` przyjmują wiersz widoku (same mapują przez sortowanie i filtr).
         for (i, row) in viewRows.enumerated() {
@@ -203,6 +203,10 @@ public enum GridTools {
             let data: Data
             switch grid.value(row: row, column: column) {
             case .null: continue
+            case .lob(let l) where l.truncated && l.locator != nil:
+                try await grid.writeLOB(l, to: directory.appendingPathComponent(name))
+                files += 1
+                continue
             case .lob(let l):
                 if l.truncated { truncated += 1 }
                 data = l.bytes ?? Data((l.text ?? "").utf8)

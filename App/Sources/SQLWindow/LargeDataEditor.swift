@@ -251,7 +251,11 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
 
     @objc private func save() {
         let name = model.columnName + "." + model.format.fileExtension
-        Task { _ = await workspace.ui?.saveFile(suggestedName: (name as NSString).deletingPathExtension, fileExtension: model.format.fileExtension, data: model.fileData) }
+        // Obcięty LOB (siatka i edytor do limitu) zapisywany w całości porcjami z bazy (lokator), nie tylko pobrana część.
+        Task {
+            guard let url = await workspace.ui?.chooseSaveURL(suggestedName: (name as NSString).deletingPathExtension, fileExtension: model.format.fileExtension) else { return }
+            do { try await model.write(to: url) } catch { workspace.ui?.showError(error.localizedDescription) }
+        }
     }
 
     @objc private func apply() {

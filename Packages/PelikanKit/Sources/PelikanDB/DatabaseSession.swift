@@ -260,11 +260,55 @@ public protocol DatabaseSession: AnyObject, Sendable {
     func breakExecution()
     func ping() async throws
     func setTags(_ tags: SessionTags) async throws
+    /// Porcja LOB z lokatora (`LOBValue.locator`): od `offset` (od 1; znaki dla CLOB/NCLOB, bajty dla BLOB/BFILE)
+    /// najwyżej `amount` jednostek. Pusta porcja — koniec. Lokator nieznany (zwolniony) — `DatabaseError.unsupported`.
+    func readLOB(_ locator: LOBLocator, offset: UInt64, amount: UInt64) async throws -> LOBValue
+    /// Połączenie utracone (ORA-03113, ORA-00028 po zakończeniu sesji, DPI-1080…) albo sesja zamknięta — kolejne
+    /// wywołania zawiodą; `SessionManager` zastępuje taką sesję nową przy następnym użyciu.
+    var connectionLost: Bool { get }
     func close() async
 }
 
 public extension DatabaseSession {
     func columns(of resultSet: ResultSetID) async -> [ColumnInfo] { [] }
+
+    var connectionLost: Bool { false }
+
+    func readLOB(_ locator: LOBLocator, offset: UInt64, amount: UInt64) async throws -> LOBValue {
+        throw DatabaseError.unsupported("Sterownik nie odczytuje LOB po lokatorze")
+    }
+
+    /// Cała treść LOB porcjami (`chunk` znaków albo bajtów): wartość nieobcięta — jedna porcja; obcięta — odczyt
+    /// z lokatora od początku. Bez lokatora — `DatabaseError.unsupported`.
+    func streamLOB(_ value: LOBValue, chunk: UInt64 = 1 << 20, isolation: isolated (any Actor)? = #isolation,
+                   consume: (LOBValue) async throws -> Void) async throws {
+        guard value.truncated else { try await consume(value); return }
+        guard let locator = value.locator else { throw DatabaseError.unsupported("Brak lokatora LOB") }
+        var offset: UInt64 = 1
+        while offset <= value.length {
+            try Task.checkCancellation()
+            let part = try await readLOB(locator, offset: offset, amount: min(chunk, value.length - offset + 1))
+            let units = UInt64(part.text.map { $0.utf16.count } ?? part.bytes?.count ?? 0)
+            if units == 0 { break }
+            try await consume(part)
+            offset += units
+        }
+    }
+
+    /// Pełna wartość LOB w pamięci (do `limit` jednostek; dłuższa zostaje obcięta ze znacznikiem i lokatorem).
+    func fullLOB(_ value: LOBValue, limit: UInt64 = 256 << 20) async throws -> LOBValue {
+        guard value.truncated, value.locator != nil else { return value }
+        var text = "", bytes = Data(), count: UInt64 = 0
+        let isText = value.kind == .clob || value.kind == .nclob
+        var capped = value
+        capped.length = min(value.length, limit)
+        try await streamLOB(capped) { part in
+            if let t = part.text { text += t; count += UInt64(t.utf16.count) }
+            if let b = part.bytes { bytes.append(b); count += UInt64(b.count) }
+        }
+        return LOBValue(kind: value.kind, text: isText ? text : nil, bytes: isText ? nil : bytes, length: value.length,
+                        truncated: count < value.length, locator: value.locator)
+    }
 
     /// Zmiana hasła użytkownika (OCIPasswordChange) — hasło nie trafia do tekstu SQL ani do historii poleceń.
     func changePassword(user: String, oldPassword: String, newPassword: String) async throws {

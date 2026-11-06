@@ -52,8 +52,8 @@ struct DBAPanelView: View {
         .frame(minWidth: 900, minHeight: 540)
         .environment(\.reportConnection, connection)
 
-        .toolTask(id: connection) { await reload() }
-        .onChange(of: section) { Task { await reload() } }
+        // Jedno zadanie na połączenie i sekcję: zmiana sekcji anuluje poprzednie wczytanie (wynik nie nadpisuje nowej).
+        .toolTask(id: "\(connection?.uuidString ?? "")|\(section.map { "\($0)" } ?? "")") { await reload() }
     }
 
     init(workspace: Workspace) {
@@ -75,9 +75,14 @@ struct DBAPanelView: View {
         selection = nil
         do {
             let s = try await workspace.toolSession("dba", connection: connection)
-            result = await DBAPanel.load(section, in: s)
+            let r = await DBAPanel.load(section, in: s)
+            guard !Task.isCancelled else { return }
+            result = r
             message = L10n.tr("Wierszy: \(result?.rows.count ?? 0)")
-        } catch { result = .failed(error.localizedDescription) }
+        } catch {
+            guard !Task.isCancelled else { return }
+            result = .failed(error.localizedDescription)
+        }
     }
 
     private func alterParameter() {
@@ -184,8 +189,8 @@ struct InstanceViewerView: View {
         .padding(10)
         .frame(minWidth: 360, minHeight: 560)
         .environment(\.reportConnection, connection)
-        .onChange(of: connection) { snap = nil; Task { await refresh() } }
-        .task(id: auto ? interval : 0) {
+        .onChange(of: connection) { snap = nil }
+        .task(id: "\(auto ? interval : 0)|\(connection?.uuidString ?? "")") {
             await refresh()
             while auto, !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(interval))
@@ -224,9 +229,14 @@ struct InstanceViewerView: View {
     private func refresh() async {
         do {
             let s = try await workspace.toolSession("instance", connection: connection)
-            snap = await InstanceViewer.snapshot(in: s, previous: snap)
+            let next = await InstanceViewer.snapshot(in: s, previous: snap)
+            guard !Task.isCancelled else { return }
+            snap = next
             error = nil
-        } catch { self.error = error.localizedDescription }
+        } catch {
+            guard !Task.isCancelled else { return }
+            self.error = error.localizedDescription
+        }
     }
 
     init(workspace: Workspace) {

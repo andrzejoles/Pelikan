@@ -46,6 +46,11 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     /// otwiera kursor w sesji serwera; trzymanie wszystkich kończyło się ORA-01000 (R8-02) — najstarsze ponad limit są
     /// zamykane (ich komórka zgłasza wtedy nieznany wynik).
     private var pendingNested: [UInt64] = []
+    /// Lokatory obciętych LOB-ów (pełna treść na żądanie, `readLOB`), od najstarszego; ponad limit najstarsze zwalniane.
+    private var lobRefs: [UInt64: OpaquePointer] = [:]
+    private var lobOrder: [UInt64] = []
+    private var nextLOBRef: UInt64 = 1
+    static let maxLOBLocators = 20_000
     static let maxPendingNestedCursors = 100
     /// Paczka pobierania zapytania z kolumną kursora: serwer otwiera kursor zagnieżdżony dla każdego wiersza paczki.
     static let nestedCursorFetchArraySize: UInt32 = 25
@@ -217,8 +222,15 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     }
 
     private func check(_ status: Int32) throws {
-        if status != DPI_SUCCESS { throw env.lastError() }
+        guard status != DPI_SUCCESS else { return }
+        let e = env.lastError()
+        if e.isConnectionLost { lost.withLock { $0 = true } }
+        throw e
     }
+
+    /// Połączenie utracone (błąd utraty połączenia w dowolnym wywołaniu) albo sesja zamykana/zamknięta.
+    private let lost = Mutex(false)
+    public var connectionLost: Bool { lost.withLock { $0 } || closed }
 
     // MARK: - DatabaseSession
 
@@ -277,6 +289,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                 if proceed {
                     for (_, rs) in resultSets { dpiStmt_release(rs.stmt) }
                     resultSets.removeAll()
+                    for (_, lob) in lobRefs { dpiLob_release(lob) }
+                    lobRefs.removeAll(); lobOrder.removeAll()
                     // Sterownik nigdy nie zatwierdza po cichu: decyzję COMMIT/ROLLBACK podejmuje wcześniej interfejs
                     // (D10); tu zostaje bezpieczne ROLLBACK przed zamknięciem.
                     dpiConn_rollback(conn)
@@ -688,10 +702,57 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             try check(dpiLob_readBytes(lob, 1, amount, p.baseAddress, &read))
         }
         let bytes = buffer.withUnsafeBytes { Data($0.prefix(Int(read))) }
+        let locator = size > amount ? keep(lob) : nil
         if kind == .clob || kind == .nclob {
-            return LOBValue(kind: kind, text: String(decoding: bytes, as: UTF8.self), length: size, truncated: size > amount)
+            return LOBValue(kind: kind, text: String(decoding: bytes, as: UTF8.self), length: size, truncated: size > amount, locator: locator)
         }
-        return LOBValue(kind: kind, bytes: bytes, length: size, truncated: size > amount)
+        return LOBValue(kind: kind, bytes: bytes, length: size, truncated: size > amount, locator: locator)
+    }
+
+    /// Zachowuje lokator (referencja ODPI przeżywa ponowne użycie bufora pobierania i zamknięcie kursora).
+    private func keep(_ lob: OpaquePointer) -> LOBLocator? {
+        guard dpiLob_addRef(lob) == DPI_SUCCESS else { return nil }
+        let id = nextLOBRef
+        nextLOBRef += 1
+        lobRefs[id] = lob
+        lobOrder.append(id)
+        if lobOrder.count > Self.maxLOBLocators {
+            let drop = lobOrder.count - Self.maxLOBLocators
+            for old in lobOrder.prefix(drop) { if let l = lobRefs.removeValue(forKey: old) { dpiLob_release(l) } }
+            lobOrder.removeFirst(drop)
+        }
+        return LOBLocator(id)
+    }
+
+    public func readLOB(_ locator: LOBLocator, offset: UInt64, amount: UInt64) async throws -> LOBValue {
+        try await onQueue { [self] in
+            guard let lob = lobRefs[locator.id] else {
+                throw DatabaseError.unsupported("Lokator LOB nie jest już dostępny — wykonaj zapytanie ponownie")
+            }
+            var type: dpiOracleTypeNum = 0
+            try check(dpiLob_getType(lob, &type))
+            let kind: LOBValue.Kind = switch Int32(type) {
+            case DPI_ORACLE_TYPE_NCLOB: .nclob
+            case DPI_ORACLE_TYPE_BLOB: .blob
+            case DPI_ORACLE_TYPE_BFILE: .bfile
+            default: .clob
+            }
+            var size: UInt64 = 0
+            try check(dpiLob_getSize(lob, &size))
+            let isText = kind == .clob || kind == .nclob
+            guard offset >= 1, offset <= size, amount > 0 else {
+                return LOBValue(kind: kind, text: isText ? "" : nil, bytes: isText ? nil : Data(), length: size, truncated: false)
+            }
+            let n = min(amount, size - offset + 1)
+            var bufSize: UInt64 = 0
+            try check(dpiLob_getBufferSize(lob, n, &bufSize))
+            var buffer = [CChar](repeating: 0, count: Int(bufSize))
+            var read = bufSize
+            try buffer.withUnsafeMutableBufferPointer { p in try check(dpiLob_readBytes(lob, offset, n, p.baseAddress, &read)) }
+            let bytes = buffer.withUnsafeBytes { Data($0.prefix(Int(read))) }
+            return isText ? LOBValue(kind: kind, text: String(decoding: bytes, as: UTF8.self), length: size, truncated: false)
+                          : LOBValue(kind: kind, bytes: bytes, length: size, truncated: false)
+        }
     }
 
     private static func vectorValues(_ vi: dpiVectorInfo) -> [Double] {

@@ -149,7 +149,10 @@ results Pelikan asks before the size limit from Settings is exceeded.
 - **CLOB, BLOB, XML, long texts** — the button in the cell or **Edit › Result › Large Data Editor…** (⌥⌘L) opens the
   large data editor with text, XML, JSON, HTML, image, PDF and hex views, JSON/XML formatting and saving to a file.
 - The **Value panel** (**View › Value panel**, ⌥⌘V) shows the current cell next to the grid as text, JSON, XML, HTML, an
-  image or hex.
+  image or hex. A CLOB is fetched in full (also from queries without ROWID: views, joins, functions); a binary value
+  (BLOB) only on request: **Fetch All** or save to file. Panel buttons and the grid context menu: **Save Cell Value to
+  File…** (full value, read from the database in chunks) and **Open Cell Value in External Application** (text in the
+  external editor from Preferences, e.g. BBEdit; changes are not written back).
 - **Single record view** shows the current row vertically with the column types and comments. The button in the bar
   above the grid or **Record** on the **Result** ribbon tab turns it on and off; each result tab keeps its own state.
 - A **nested cursor** (`CURSOR(…)` in a query) opens in a new result tab.

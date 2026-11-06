@@ -14,6 +14,29 @@ public enum GridCommands {
         return doc.results.first { $0.id == doc.activeResultID } ?? doc.results.first
     }
 
+    /// Rozszerzenie pliku dla wartości komórki (z wykrytego formatu pobranej treści).
+    static func valueFileExtension(_ v: OracleValue) -> String {
+        switch v {
+        case .lob(let l): LargeDataFormat.detect(text: l.text, bytes: l.bytes).fileExtension
+        case .raw(let d): LargeDataFormat.detect(text: nil, bytes: d).fileExtension
+        default: "txt"
+        }
+    }
+
+    /// Pełna wartość komórki do pliku: LOB z bazy porcjami (lokator), inne — tekst wartości w UTF-8 albo bajty RAW.
+    @MainActor static func writeValue(_ v: OracleValue, grid: ResultGridModel, row: Int, column: Int, to url: URL) async throws {
+        switch v {
+        case .lob(let l):
+            if l.truncated, l.locator == nil {
+                throw CommandError.notAvailable(L10n.tr("Pełna treść LOB jest niedostępna — wykonaj zapytanie ponownie"))
+            }
+            try await grid.writeLOB(l, to: url)
+        case .raw(let d): try d.write(to: url)
+        case .null: try Data().write(to: url)
+        default: try Data(grid.text(row: row, column: column).utf8).write(to: url)
+        }
+    }
+
     @MainActor
     static func activeGrid(_ ws: Workspace) -> (ResultTab, ResultGridModel)? {
         guard let tab = activeTab(ws), let grid = tab.grid else { return nil }
@@ -179,6 +202,36 @@ public enum GridCommands {
                 ctx.workspace.ui?.showLargeDataEditor(model)
                 try await model.loadFull()
                 return .ok
+            },
+            Command(CommandDescriptor(id: "grid.saveValue", title: L10n.tr("Zapisz wartość komórki do pliku…"), category: .edit, submenu: L10n.tr("Wynik"),
+                                      parameters: [CommandParameter("file", .string, L10n.tr("Plik"))],
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Zapisuje pełną wartość bieżącej komórki (CLOB w UTF-8, BLOB bez zmian) do pliku — LOB pobierany z bazy porcjami, bez limitu siatki."),
+                                      feature: "PD-GRID-023"),
+                    validate: { ws in activeGrid(ws).map { $0.0.selectedRows?.first != nil && $0.0.currentColumn != nil } ?? false }) { ctx in
+                guard let (tab, grid) = activeGrid(ctx.workspace), let row = tab.selectedRows?.first, let col = tab.currentColumn else { return .ok }
+                let v = grid.value(row: row, column: col)
+                var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
+                if url == nil { url = await ctx.ui?.chooseSaveURL(suggestedName: grid.columns[col].name, fileExtension: Self.valueFileExtension(v)) }
+                guard let url else { throw CommandError.cancelledByUser }
+                try await Self.writeValue(v, grid: grid, row: row, column: col, to: url)
+                return CommandResult(message: L10n.tr("Zapisano wartość do pliku \(url.lastPathComponent)"), value: .string(url.path))
+            },
+            Command(CommandDescriptor(id: "grid.openValueExternally", title: L10n.tr("Otwórz wartość komórki w programie zewnętrznym"), category: .edit, submenu: L10n.tr("Wynik"),
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Zapisuje pełną wartość bieżącej komórki do pliku tymczasowego i otwiera go w edytorze zewnętrznym z ustawień (tekst) albo w programie skojarzonym z formatem. Zmiany w pliku nie wracają do bazy."),
+                                      feature: "PD-GRID-023"),
+                    validate: { ws in activeGrid(ws).map { $0.0.selectedRows?.first != nil && $0.0.currentColumn != nil } ?? false }) { ctx in
+                guard let (tab, grid) = activeGrid(ctx.workspace), let row = tab.selectedRows?.first, let col = tab.currentColumn else { return .ok }
+                let v = grid.value(row: row, column: col)
+                let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-value-\(UUID().uuidString.prefix(8))", isDirectory: true)
+                try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+                let safe = grid.columns[col].name.replacingOccurrences(of: "/", with: "_")
+                let url = dir.appendingPathComponent(safe).appendingPathExtension(Self.valueFileExtension(v))
+                try await Self.writeValue(v, grid: grid, row: row, column: col, to: url)
+                let isText = !(grid.columns[col].type == .blob || grid.columns[col].type == .raw || grid.columns[col].type == .longRaw || grid.columns[col].type == .bfile)
+                ctx.ui?.openInApplication(url, application: isText ? ctx.workspace.settings.externalEditor : nil)
+                return CommandResult(value: .string(url.path))
             },
             // Edycja danych (UG 7.6).
             Command(CommandDescriptor(id: "grid.edit", title: L10n.tr("Edytuj dane"), category: .session, submenu: L10n.tr("Wynik"),

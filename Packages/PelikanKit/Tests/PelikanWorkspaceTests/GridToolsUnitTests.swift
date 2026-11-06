@@ -35,7 +35,7 @@ struct GridToolsUnitTests {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-c2f-\(UUID().uuidString.prefix(6))")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
-        _ = try GridTools.columnToFiles(g, column: 1, viewRows: [0], directory: dir, template: "[ID].txt")
+        _ = try await GridTools.columnToFiles(g, column: 1, viewRows: [0], directory: dir, template: "[ID].txt")
         #expect(try String(contentsOf: dir.appendingPathComponent("3.txt"), encoding: .utf8) == "c")
     }
 
@@ -52,7 +52,7 @@ struct GridToolsUnitTests {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-c2f-\(UUID().uuidString.prefix(6))")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
-        let r = try GridTools.columnToFiles(g, column: 1, viewRows: [0, 1], directory: dir, template: "[ID]_[NAME].txt")
+        let r = try await GridTools.columnToFiles(g, column: 1, viewRows: [0, 1], directory: dir, template: "[ID]_[NAME].txt")
         #expect(r.files == 2)
         #expect(try FileManager.default.contentsOfDirectory(atPath: dir.path).sorted() == ["2_b.txt", "3_c.txt"])
     }

@@ -10,6 +10,9 @@ final class FakeSession: DatabaseSession, @unchecked Sendable {
                            capabilities: [], currentSchema: "U", sessionUser: "U")
     let executed = Mutex<[String]>([])
     let closedFlag = Mutex(false)
+    /// Utracone połączenie (np. sesja zakończona przez KILL).
+    let lostFlag = Mutex(false)
+    var connectionLost: Bool { lostFlag.withLock { $0 } }
     func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult {
         executed.withLock { $0.append(sql) }
         return ExecutionResult(kind: .other)
@@ -89,6 +92,28 @@ struct SessionManagerTests {
         #expect(ws.sessions.compileKey(connection: c).purpose == .compile)
         ws.settings.sessionMode = .single
         #expect(ws.sessions.compileKey(connection: c).purpose == .main)
+    }
+
+    @Test("Sesja z utraconym połączeniem (narzędzie, okno) zastąpiona nową przy następnym użyciu; okno traci znacznik transakcji")
+    func lostSessionReplaced() async throws {
+        let (ws, driver) = make()
+        let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        let key = SessionKey(connectionID: def.id, purpose: .tool("sessions"))
+        let first = try await ws.sessions.session(key) as! FakeSession
+        #expect(try await ws.sessions.session(key) === first)
+        first.lostFlag.withLock { $0 = true }
+        let second = try await ws.sessions.session(key) as! FakeSession
+        #expect(second !== first)
+        #expect(driver.sessions.withLock { $0.count } == 2)
+        let doc = ws.newDocument(.sql)
+        doc.connectionID = def.id
+        let docKey = try #require(ws.sessionKey(for: doc))
+        let s3 = try await ws.sessions.session(docKey) as! FakeSession
+        doc.transactionOpen = true
+        s3.lostFlag.withLock { $0 = true }
+        _ = try await ws.sessions.session(docKey)
+        #expect(!doc.transactionOpen)
     }
 
     @Test("Zapisane hasło: łączy bez pytania; skrypt inicjalizacji i bieżący schemat wykonane")

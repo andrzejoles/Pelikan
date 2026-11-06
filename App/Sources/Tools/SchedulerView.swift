@@ -49,15 +49,12 @@ struct SchedulerView: View {
         }
         .frame(minWidth: 900, minHeight: 560)
         .onFirstAppear { reportName = reports.first?.name ?? "" }
-        .toolTask(id: connection) {
-            selection = nil
-            await reload()
-            await reloadTab()
-        }
-        .onChange(of: kind) { Task { await reload() } }
-        .onChange(of: selection) { Task { await loadSQL() } }
-        .onChange(of: tab) { Task { await reloadTab() } }
-        .onChange(of: reportName) { Task { await reloadTab() } }
+        .onChange(of: connection) { selection = nil }
+        // Zadania z kluczem: zmiana połączenia, rodzaju, zaznaczenia albo karty anuluje poprzednie wczytanie, a jego
+        // wynik nie nadpisuje bieżącego.
+        .toolTask(id: "\(connection?.uuidString ?? "")|\(kind.map { "\($0)" } ?? "")") { await reload() }
+        .toolTask(id: "\(connection?.uuidString ?? "")|\(tab)|\(reportName)") { await reloadTab() }
+        .toolTask(id: "\(connection?.uuidString ?? "")|\(selection.map { "\($0)" } ?? "")") { await loadSQL() }
         .sheet(isPresented: $editingReports) {
             SchedulerReportsEditor(workspace: workspace) {
                 editingReports = false
@@ -151,26 +148,35 @@ struct SchedulerView: View {
     private func reload() async {
         guard let kind else { return }
         do {
-            objects = try await Scheduler.objects(kind, in: try await SchedulerCommands.session(workspace, connection: connection).1)
+            let list = try await Scheduler.objects(kind, in: try await SchedulerCommands.session(workspace, connection: connection).1)
+            guard !Task.isCancelled else { return }
+            objects = list
             message = L10n.tr("\(kind.displayName): \(objects.count)")
-        } catch { message = error.localizedDescription }
+        } catch { if !Task.isCancelled { message = error.localizedDescription } }
     }
 
     private func reloadTab() async {
         do {
             let s = try await SchedulerCommands.session(workspace, connection: connection).1
-            if tab == 1, let r = reports.first(where: { $0.name == reportName }) { runs = try await Scheduler.runs(r, in: s) }
-            if tab == 2 { running = try await Scheduler.running(in: s) }
-        } catch { message = error.localizedDescription }
+            if tab == 1, let r = reports.first(where: { $0.name == reportName }) {
+                let v = try await Scheduler.runs(r, in: s)
+                if !Task.isCancelled { runs = v }
+            }
+            if tab == 2 {
+                let v = try await Scheduler.running(in: s)
+                if !Task.isCancelled { running = v }
+            }
+        } catch { if !Task.isCancelled { message = error.localizedDescription } }
     }
 
     private func loadSQL() async {
         guard let o = selected else { sql = ""; return }
         do {
             let s = try await SchedulerCommands.session(workspace, connection: connection).1
-            sql = o.kind == .jobs ? Scheduler.createSQL(try await Scheduler.job(owner: o.owner, name: o.name, in: s))
+            let text = o.kind == .jobs ? Scheduler.createSQL(try await Scheduler.job(owner: o.owner, name: o.name, in: s))
                 : try await Scheduler.ddl(owner: o.owner, name: o.name, in: s)
-        } catch { sql = error.localizedDescription }
+            if !Task.isCancelled { sql = text }
+        } catch { if !Task.isCancelled { sql = error.localizedDescription } }
     }
 
     private func edit() {

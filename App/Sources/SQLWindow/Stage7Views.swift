@@ -5,14 +5,43 @@ import SwiftUI
 import WebKit
 
 /// Panel wartości obok siatki (DB-PANEL-001): bieżąca komórka jako tekst, JSON, XML, HTML, obraz albo hex.
+/// Obcięty CLOB/NCLOB jest dociągany w całości od razu (lokator ze sterownika), BLOB — tylko na żądanie
+/// („Pobierz całość”, „Zapisz do pliku…”).
 struct CellValuePanelView: View {
+    let workspace: Workspace
     @Bindable var tab: ResultTab
     let grid: ResultGridModel
     @State private var mode: CellValuePresentation.Mode?
+    /// Pełna treść obciętego LOB-a bieżącej komórki (klucz komórki, wartość).
+    @State private var full: (key: String, value: LOBValue)?
+    @State private var loading: String?
+    @State private var loadError: String?
+    @State private var requested: String?
+
+    private var cell: (row: Int, column: Int)? {
+        guard let row = tab.selectedRows?.first, let col = tab.currentColumn, row < grid.rowCount, col < grid.columns.count else { return nil }
+        return (row, col)
+    }
+
+    private var lob: LOBValue? {
+        guard let c = cell, case .lob(let l) = grid.value(row: c.row, column: c.column) else { return nil }
+        return l
+    }
+
+    /// Klucz komórki: wiersz, kolumna i lokator (po ponownym wykonaniu ta sama komórka ma inny lokator).
+    private var key: String {
+        guard let c = cell else { return "" }
+        return "\(c.row):\(c.column):\(lob?.locator?.id ?? 0)"
+    }
+
+    private var isText: Bool { lob.map { $0.kind == .clob || $0.kind == .nclob } ?? false }
 
     private var presentation: CellValuePresentation? {
-        guard let row = tab.selectedRows?.first, let col = tab.currentColumn, row < grid.rowCount, col < grid.columns.count else { return nil }
-        return CellValuePresentation.make(grid.value(row: row, column: col), column: grid.columns[col], format: grid.format)
+        guard let c = cell else { return nil }
+        var v = grid.value(row: c.row, column: c.column)
+        if let f = full, f.key == key { v = .lob(f.value) }
+        else if let l = lob, let cached = grid.cachedFullLOB(l) { v = .lob(cached) }
+        return CellValuePresentation.make(v, column: grid.columns[c.column], format: grid.format)
     }
 
     var body: some View {
@@ -27,7 +56,33 @@ struct CellValuePanelView: View {
                     }
                     .labelsHidden().fixedSize()
                 }
-                if p.truncated { Text(L10n.tr("Wartość obcięta do pobranej długości — pełna w Large Data Editor")).font(.uiSecondary).foregroundStyle(.orange) }
+                if let l = lob {
+                    HStack(spacing: 6) {
+                        Text(sizeText(l)).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(1)
+                        Spacer()
+                        if p.truncated, !isText, l.locator != nil, loading != key {
+                            Button(L10n.tr("Pobierz całość")) { requested = key }
+                                .help(L10n.tr("Pobiera całą wartość binarną z bazy do podglądu"))
+                        }
+                        Button { _ = workspace.perform("grid.saveValue") } label: { Image(systemName: "square.and.arrow.down") }
+                            .iconLabel(L10n.tr("Zapisz wartość komórki do pliku…"))
+                        Button { _ = workspace.perform("grid.openValueExternally") } label: { Image(systemName: "arrow.up.forward.app") }
+                            .iconLabel(L10n.tr("Otwórz wartość komórki w programie zewnętrznym"))
+                    }
+                    .controlSize(.small)
+                }
+                if loading == key {
+                    HStack(spacing: 6) {
+                        ProgressView().controlSize(.small)
+                        Text(L10n.tr("Pobieranie pełnej wartości…")).font(.uiSecondary).foregroundStyle(.secondary)
+                    }
+                } else if let e = loadError {
+                    Text(e).font(.uiSecondary).foregroundStyle(.red)
+                } else if p.truncated {
+                    Text(lob?.locator == nil ? L10n.tr("Wartość obcięta do pobranej długości — pełna w Large Data Editor")
+                                             : L10n.tr("Podgląd początku wartości — całość: „Pobierz całość” albo zapis do pliku"))
+                        .font(.uiSecondary).foregroundStyle(.orange)
+                }
                 content(p, mode.flatMap { p.modes.contains($0) ? $0 : nil } ?? p.detected)
             } else {
                 Text(L10n.tr("Zaznacz komórkę")).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -35,6 +90,31 @@ struct CellValuePanelView: View {
         }
         .padding(6)
         .background(Color(nsColor: .controlBackgroundColor))
+        .task(id: key + "|" + (requested == key ? "load" : "")) { await loadIfNeeded() }
+    }
+
+    /// Tekst LOB-a — od razu w całości; binarny — po „Pobierz całość”.
+    private func loadIfNeeded() async {
+        let k = key
+        loadError = nil
+        guard let l = lob, l.truncated, l.locator != nil, full?.key != k else { return }
+        if let cached = grid.cachedFullLOB(l) { full = (k, cached); return }
+        guard isText || requested == k else { return }
+        loading = k
+        defer { if loading == k { loading = nil } }
+        do {
+            let v = try await grid.fullLOB(l)
+            guard key == k else { return }
+            full = (k, v)
+        } catch is CancellationError {
+        } catch {
+            if key == k { loadError = error.localizedDescription }
+        }
+    }
+
+    private func sizeText(_ l: LOBValue) -> String {
+        let n = ByteCountFormatter.string(fromByteCount: Int64(l.length), countStyle: .file)
+        return l.kind == .clob || l.kind == .nclob ? L10n.tr("\(l.length) znaków") : n
     }
 
     private func label(_ m: CellValuePresentation.Mode) -> String {
@@ -59,12 +139,47 @@ struct CellValuePanelView: View {
         case .html:
             HTMLPreview(html: p.text)
         default:
-            ScrollView([.vertical, .horizontal]) {
-                Text(p.rendered(m)).font(.code).textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-            }
+            ReadOnlyTextView(text: p.rendered(m), id: "\(key)|\(m.rawValue)|\(p.text.utf16.count)|\(p.data?.count ?? 0)")
         }
     }
+}
+
+/// Tekst tylko do odczytu w NSTextView (zaznaczanie, szukanie ⌘F, przewijanie) — wydajny także dla wielu MB, w
+/// przeciwieństwie do `Text` w SwiftUI. Treść podmieniana tylko przy zmianie `id` (bez porównywania całego tekstu).
+struct ReadOnlyTextView: NSViewRepresentable {
+    let text: String
+    let id: String
+
+    func makeNSView(context: Context) -> NSScrollView {
+        let scroll = NSTextView.scrollableTextView()
+        let tv = scroll.documentView as! NSTextView
+        tv.isEditable = false
+        tv.isSelectable = true
+        tv.isRichText = false
+        tv.usesFindBar = true
+        tv.isIncrementalSearchingEnabled = true
+        tv.layoutManager?.allowsNonContiguousLayout = true
+        tv.font = InterfaceFonts.shared.code
+        tv.textContainerInset = NSSize(width: 2, height: 4)
+        scroll.hasHorizontalScroller = true
+        tv.isHorizontallyResizable = true
+        tv.textContainer?.widthTracksTextView = false
+        tv.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        tv.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        tv.string = text
+        context.coordinator.id = id
+        return scroll
+    }
+
+    func updateNSView(_ scroll: NSScrollView, context: Context) {
+        guard context.coordinator.id != id, let tv = scroll.documentView as? NSTextView else { return }
+        context.coordinator.id = id
+        tv.string = text
+        tv.scroll(.zero)
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+    final class Coordinator { var id = "" }
 }
 
 /// Podgląd HTML bez JavaScriptu i bez sieci (treść z bazy jest niezaufana).

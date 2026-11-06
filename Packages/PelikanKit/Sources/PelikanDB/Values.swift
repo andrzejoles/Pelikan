@@ -73,10 +73,23 @@ public struct LOBValue: Sendable, Hashable {
     /// Błąd odczytu treści (BFILE do nieistniejącego pliku albo katalogu bez uprawnienia) — komórka zamiast przerwania
     /// pobierania wszystkich wierszy.
     public var readError: String?
+    /// Lokator LOB zachowany w sesji, gdy wartość jest obcięta — pełna treść porcjami przez `DatabaseSession.readLOB`
+    /// (bez ROWID, także dla widoków, złączeń i funkcji). Nie wchodzi w równość wartości.
+    public var locator: LOBLocator?
 
-    public init(kind: Kind, text: String? = nil, bytes: Data? = nil, length: UInt64, truncated: Bool, readError: String? = nil) {
+    public init(kind: Kind, text: String? = nil, bytes: Data? = nil, length: UInt64, truncated: Bool, readError: String? = nil,
+                locator: LOBLocator? = nil) {
         self.kind = kind; self.text = text; self.bytes = bytes; self.length = length; self.truncated = truncated
-        self.readError = readError
+        self.readError = readError; self.locator = locator
+    }
+
+    public static func == (a: LOBValue, b: LOBValue) -> Bool {
+        a.kind == b.kind && a.text == b.text && a.bytes == b.bytes && a.length == b.length && a.truncated == b.truncated
+            && a.readError == b.readError
+    }
+
+    public func hash(into h: inout Hasher) {
+        h.combine(kind); h.combine(text); h.combine(bytes); h.combine(length); h.combine(truncated); h.combine(readError)
     }
 
     /// Pierwsza linia komunikatu błędu odczytu (np. „ORA-22288: file or LOB operation FILEOPEN failed”).
@@ -84,6 +97,12 @@ public struct LOBValue: Sendable, Hashable {
         let message = (error as? OracleError)?.message ?? String(describing: error)
         return message.split(whereSeparator: \.isNewline).first.map(String.init) ?? message
     }
+}
+
+/// Lokator LOB trzymany przez sesję (identyfikator w obrębie sesji, która go zwróciła).
+public struct LOBLocator: Sendable, Hashable {
+    public let id: UInt64
+    public init(_ id: UInt64) { self.id = id }
 }
 
 public struct ResultSetID: Sendable, Hashable, Codable {

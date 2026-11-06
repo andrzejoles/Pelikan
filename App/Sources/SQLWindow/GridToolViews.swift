@@ -143,9 +143,11 @@ struct ColumnToFilesView: View {
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let dir = panel.url else { return }
         let rows = tab.selectedRows.flatMap { $0.isEmpty ? nil : $0 } ?? Array(0..<grid.rowCount)
-        do {
-            let r = try GridTools.columnToFiles(grid, column: column, viewRows: rows, directory: dir, template: template)
-            message = L10n.tr("Zapisano plików: \(r.files)") + (r.truncated > 0 ? " " + L10n.tr("(skrócone LOB-y: \(r.truncated))") : "")
-        } catch { message = error.localizedDescription }
+        Task {
+            do {
+                let r = try await GridTools.columnToFiles(grid, column: column, viewRows: rows, directory: dir, template: template)
+                message = L10n.tr("Zapisano plików: \(r.files)") + (r.truncated > 0 ? " " + L10n.tr("(skrócone LOB-y: \(r.truncated))") : "")
+            } catch { message = error.localizedDescription }
+        }
     }
 }

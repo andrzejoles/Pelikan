@@ -3858,3 +3858,49 @@ kolor tekstu albo tła z Edytor › Kolory czcionek przesłania motyw.
 - Świadomie bez zmian: po pełnym kolorowaniu po edycji podkreślenia wracają dopiero z analizy; plik Pro*C kolorowany w całości przy każdej zmianie (D227), więc podkreślenia wracają po analizie.
 - Pominięte (nie błędy działania): znacznik uprawnień systemowych w zbiorze pakietów, osobne rozwiązywanie stylów
   w podglądzie motywu.
+
+### D230 · 2026-11-06 — Pełna wartość LOB z lokatora: panel wartości, zapis do pliku, program zewnętrzny
+
+Panel wartości pokazywał tylko to, co pobrała siatka (przy „LOB na żądanie” 4000 bajtów, D110), a pełną treść dawał
+jedynie Large Data Editor — i to tylko po ROWID z tabeli (widoki, złączenia, funkcje: „pełna treść niedostępna”).
+Teraz sterownik zachowuje lokator obciętego LOB-a (`LOBValue.locator`, najwyżej 20 000 na sesję, najstarsze
+zwalniane; zwolnienie przy zamknięciu sesji) i czyta go porcjami (`DatabaseSession.readLOB`, `streamLOB`, `fullLOB`) —
+także po zamknięciu kursora. Instant Client: `dpiLob_addRef` i `dpiLob_readBytes` od pozycji. Thin: OracleNIO nie
+czyta od pozycji (a dla CLOB przesuwa ją w bajtach), więc porcję kopiuje serwer (`DBMS_LOB.COPY` do tymczasowego
+LOB-a, CLOB do 65 535 znaków na porcję — granica z D182).
+- **Panel wartości:** CLOB/NCLOB dociągany w całości od razu (tekst w NSTextView — wydajny dla wielu MB, szukanie
+  ⌘F); BLOB tylko na żądanie („Pobierz całość”) — wymaganie właściciela: dane binarne nie z automatu. Pamięć siatki
+  trzyma 8 ostatnich pełnych treści.
+- **Zapis do pliku** (`grid.saveValue`, panel, menu kontekstowe, Large Data Editor, „Kolumna do plików…”): pełna
+  wartość strumieniem porcji 1 MB do pliku, bez wczytywania całości do pamięci (CLOB w UTF-8).
+- **Program zewnętrzny** (`grid.openValueExternally`): pełna wartość w pliku tymczasowym, tekst w edytorze
+  zewnętrznym z Ustawień (np. BBEdit, Notepad++ pod Wine), binaria w programie skojarzonym; tylko do odczytu (edycja
+  z powrotem do bazy — Large Data Editor).
+- Lokator nie wchodzi w równość wartości (porównania danych i zmiany siatki bez zmian). Wartość obcięta bez lokatora
+  (np. spoza sterownika) — jak dotąd: ROWID albo komunikat.
+
+### D231 · 2026-11-06 — Współbieżność: martwe sesje odnawiane, narzędzia bez kolejki nieaktualnych zapytań
+
+Zgłoszenie właściciela: po „Zakończ sesję” w przeglądarce sesji wszystko przestaje działać, a szczegóły nie nadążają
+za zaznaczeniem. Przegląd aplikacji pod kątem pracy w tle — przyczyny i poprawki:
+- **Martwa sesja zostawała w mapie.** `SessionManager` usuwał sesję z utraconym połączeniem tylko po błędzie
+  polecenia okna (`dropLostSession`) i przy pingu sesji głównych; sesje narzędzi, kompilacji, debugera, agenta
+  i utPLSQL po zerwaniu albo zakończeniu (KILL, ORA-00028, DPI-1080) odpowiadały błędem już zawsze. Teraz sterownik
+  zapamiętuje utratę połączenia (`DatabaseSession.connectionLost`: ODPI — błąd utraty połączenia albo sesja
+  zamknięta; thin — zamknięte połączenie OracleNIO albo taki błąd), a `SessionManager.session` zastępuje taką sesję
+  nową przy następnym użyciu (okna tej sesji tracą znacznik otwartej transakcji).
+- **Jedna sesja na listę, szczegóły, plan i Kill.** Wywołania jednej sesji idą kolejno (kolejka ODPI); `KILL` bez
+  IMMEDIATE czeka do 60 s na zakończenie sesji, a lista GV$SESSION na RAC bywa wolna — wszystko inne czekało.
+  Przeglądarka sesji ma osobne sesje: lista (`sessions`), szczegóły i plan (`sessions.detail`), zmiany — Kill i akcje
+  (`sessions.admin`). ORA-00031 („sesja oznaczona do zakończenia”) to sukces, nie błąd.
+- **Nieaktualne wyniki nadpisywały bieżące.** Szczegóły ładowane z `onChange { Task { … } }`: każde kliknięcie
+  dokładało zapytanie, wyniki przychodziły po kolei i ostatni ustawiał widok, nawet gdy dotyczył wcześniejszego
+  zaznaczenia. Teraz zadania z kluczem (`.task(id:)`/`toolTask(id:)` — zmiana zaznaczenia anuluje poprzednie, a wynik
+  anulowanego nie trafia do widoku) w przeglądarce sesji, Schedulerze (rodzaj, zaznaczenie, karta), panelu DBA
+  (sekcja) i Instance Viewer (połączenie); przeładowania listy w trakcie innego łączone w jedno następne.
+- Bez zmian (sprawdzone): sesja ODPI ma własną kolejkę i wątek (Break spoza kolejki); narzędzia długotrwałe (raporty
+  wydajności, kopiowanie schematu, przenoszenie danych, profiler, plan, utPLSQL) mają własne sesje; okna modalne
+  wyboru plików i pytań blokują tylko interakcję; `Thread.sleep` tylko przy zamykaniu terminali agenta (≤ 1 s).
+  Metadane (przeglądarka obiektów, podpowiedzi) dzielą sesję główną — w trybie Multi okna mają własne sesje, więc
+  zapytanie w oknie ich nie blokuje.
+

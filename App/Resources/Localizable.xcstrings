@@ -813,6 +813,34 @@
         }
       }
     },
+    "%@ znaków" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ characters"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Zeichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ caracteres"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ символів"
+          }
+        }
+      }
+    },
     "%@ został nieoczekiwanie zamknięty" : {
       "localizations" : {
         "en" : {
@@ -61685,6 +61713,34 @@
         }
       }
     },
+    "Otwórz wartość komórki w programie zewnętrznym" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Cell Value in External Application"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zellwert in externer Anwendung öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir valor de la celda en una aplicación externa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити значення комірки в зовнішній програмі"
+          }
+        }
+      }
+    },
     "Otwórz workset" : {
       "localizations" : {
         "en" : {
@@ -63813,6 +63869,34 @@
         }
       }
     },
+    "Pełna treść LOB jest niedostępna — wykonaj zapytanie ponownie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Full LOB content is not available — run the query again"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vollständiger LOB-Inhalt nicht verfügbar — Abfrage erneut ausführen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El contenido completo del LOB no está disponible — ejecute la consulta de nuevo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повний вміст LOB недоступний — виконайте запит ще раз"
+          }
+        }
+      }
+    },
     "Pełny" : {
       "localizations" : {
         "en" : {
@@ -65857,6 +65941,34 @@
         }
       }
     },
+    "Pobiera całą wartość binarną z bazy do podglądu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetches the whole binary value from the database for preview"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt den ganzen Binärwert zur Vorschau aus der Datenbank"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtiene el valor binario completo de la base de datos para la vista previa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримує все двійкове значення з бази для перегляду"
+          }
+        }
+      }
+    },
     "Pobiera kolejną stronę wierszy wyniku." : {
       "localizations" : {
         "en" : {
@@ -66053,6 +66165,34 @@
         }
       }
     },
+    "Pobieranie pełnej wartości…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetching full value…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vollständiger Wert wird geladen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obteniendo el valor completo…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримання повного значення…"
+          }
+        }
+      }
+    },
     "Pobieranie włączone" : {
       "localizations" : {
         "en" : {
@@ -66105,6 +66245,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abrufen"
+          }
+        }
+      }
+    },
+    "Pobierz całość" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetch All"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtener todo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримати все"
           }
         }
       }
@@ -66805,6 +66973,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Попередній перегляд теми"
+          }
+        }
+      }
+    },
+    "Podgląd początku wartości — całość: „Pobierz całość” albo zapis do pliku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview of the beginning of the value — whole value: “Fetch All” or save to file"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorschau des Wertanfangs — ganzer Wert: „Alles laden“ oder in Datei speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista previa del inicio del valor — valor completo: «Obtener todo» o guardar en archivo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перегляд початку значення — усе значення: «Отримати все» або збереження у файл"
           }
         }
       }
@@ -120849,6 +121045,34 @@
         }
       }
     },
+    "Zapisano wartość do pliku %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved value to file %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wert in Datei %@ gespeichert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valor guardado en el archivo %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Значення збережено у файл %@"
+          }
+        }
+      }
+    },
     "Zapisano wierszy: %@" : {
       "localizations" : {
         "en" : {
@@ -121629,6 +121853,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Speichert das zuletzt aufgezeichnete Makro unter einem Namen in der Bibliothek, optional mit Tastaturkurzbefehl."
+          }
+        }
+      }
+    },
+    "Zapisuje pełną wartość bieżącej komórki (CLOB w UTF-8, BLOB bez zmian) do pliku — LOB pobierany z bazy porcjami, bez limitu siatki." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saves the full value of the current cell (CLOB as UTF-8, BLOB unchanged) to a file — the LOB is read from the database in chunks, without the grid limit."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichert den vollständigen Wert der aktuellen Zelle (CLOB als UTF-8, BLOB unverändert) in eine Datei — der LOB wird stückweise aus der Datenbank gelesen, ohne Rasterlimit."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda el valor completo de la celda actual (CLOB en UTF-8, BLOB sin cambios) en un archivo — el LOB se lee de la base de datos por partes, sin el límite de la cuadrícula."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає повне значення поточної комірки (CLOB в UTF-8, BLOB без змін) у файл — LOB читається з бази частинами, без обмеження сітки."
+          }
+        }
+      }
+    },
+    "Zapisuje pełną wartość bieżącej komórki do pliku tymczasowego i otwiera go w edytorze zewnętrznym z ustawień (tekst) albo w programie skojarzonym z formatem. Zmiany w pliku nie wracają do bazy." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saves the full value of the current cell to a temporary file and opens it in the external editor from Preferences (text) or in the application associated with the format. Changes in the file are not written back to the database."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichert den vollständigen Wert der aktuellen Zelle in eine temporäre Datei und öffnet sie im externen Editor aus den Einstellungen (Text) oder im mit dem Format verknüpften Programm. Änderungen in der Datei gelangen nicht in die Datenbank."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda el valor completo de la celda actual en un archivo temporal y lo abre en el editor externo de Preferencias (texto) o en la aplicación asociada al formato. Los cambios en el archivo no vuelven a la base de datos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає повне значення поточної комірки в тимчасовий файл і відкриває його в зовнішньому редакторі з налаштувань (текст) або в програмі, пов’язаній із форматом. Зміни у файлі не повертаються в базу."
           }
         }
       }
@@ -122889,6 +123169,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fensterlayout speichern"
+          }
+        }
+      }
+    },
+    "Zapisz wartość komórki do pliku…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Cell Value to File…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zellwert in Datei speichern…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar valor de la celda en archivo…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти значення комірки у файл…"
           }
         }
       }

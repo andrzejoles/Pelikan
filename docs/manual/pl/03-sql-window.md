@@ -148,7 +148,10 @@ wynikach Pelikan pyta przed przekroczeniem limitu rozmiaru z Ustawień.
 - **CLOB, BLOB, XML, długie teksty** — przycisk w komórce albo **Edycja › Wynik › Large Data Editor…** (⌥⌘L) otwiera
   edytor dużych danych z widokami tekst, XML, JSON, HTML, obraz, PDF i hex, formatowaniem JSON/XML i zapisem do pliku.
 - **Panel wartości** (**Widok › Panel wartości**, ⌥⌘V) pokazuje obok siatki bieżącą komórkę jako tekst, JSON, XML,
-  HTML, obraz albo hex.
+  HTML, obraz albo hex. CLOB jest pobierany w całości (także z zapytań bez ROWID: widoki, złączenia, funkcje);
+  wartość binarna (BLOB) — tylko na żądanie: **Pobierz całość** albo zapis do pliku. Przyciski panelu i menu
+  kontekstowe siatki: **Zapisz wartość komórki do pliku…** (pełna wartość, porcjami z bazy) i **Otwórz wartość komórki
+  w programie zewnętrznym** (tekst w edytorze zewnętrznym z Ustawień, np. BBEdit; zmiany nie wracają do bazy).
 - **Widok pojedynczego rekordu** pokazuje bieżący wiersz w pionie z typami i komentarzami kolumn. Włącza go i wyłącza
   przycisk w pasku nad siatką albo **Rekord** na karcie wstążki **Wynik**; stan zapamiętuje każda karta wyniku osobno.
 - **Kursor zagnieżdżony** (`CURSOR(…)` w zapytaniu) otwiera się w nowej karcie wyniku.

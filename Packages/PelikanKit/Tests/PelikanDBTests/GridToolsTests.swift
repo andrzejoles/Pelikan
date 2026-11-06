@@ -48,7 +48,7 @@ struct GridToolsTests {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-c2f-\(UUID().uuidString.prefix(6))")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
-        let r = try GridTools.columnToFiles(grid, column: 1, viewRows: [0, 1], directory: dir, template: "[EMPNO]_[#].txt")
+        let r = try await GridTools.columnToFiles(grid, column: 1, viewRows: [0, 1], directory: dir, template: "[EMPNO]_[#].txt")
         #expect(r.files == 2)
         let names = try FileManager.default.contentsOfDirectory(atPath: dir.path).sorted()
         #expect(names.count == 2 && names[0].hasSuffix("_1.txt"))

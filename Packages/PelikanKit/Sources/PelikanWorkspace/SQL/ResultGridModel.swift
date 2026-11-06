@@ -61,6 +61,8 @@ public final class ResultGridModel {
     public private(set) var sortKeys: [SortKey] = []
     /// Permutacja: wiersz widoku → wiersz danych (nil bez sortowania).
     @ObservationIgnored var order: [Int]?
+    /// Pełne treści obciętych LOB-ów pobrane na żądanie (klucz — lokator), najnowsze na końcu.
+    @ObservationIgnored var fullLOBs: [(LOBLocator, LOBValue)] = []
 
     public struct SortKey: Sendable, Hashable {
         public var column: Int

@@ -668,6 +668,10 @@ public final class Workspace {
             registerUserReports()
         }
         sessions.onMainConnectionChange = { [weak self] in self?.applyPreferenceSets() }
+        sessions.onSessionLost = { [weak self] key in
+            guard let self else { return }
+            for d in documents where d.transactionOpen && sessionKey(for: d) == key { d.transactionOpen = false }
+        }
     }
 
     /// Dopisuje polecenie do historii (bez poleceń z hasłami, bez duplikatu ostatniego), limit 200 (UG 23.26).

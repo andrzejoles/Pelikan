@@ -140,7 +140,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             record.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
         // Panel wartości bieżącej komórki po prawej (DB-PANEL-001), widoczny przełącznikiem z menu Widok.
-        let panel = NSHostingView(rootView: CellValuePanelView(tab: tab, grid: grid).interfaceFont())
+        let panel = NSHostingView(rootView: CellValuePanelView(workspace: workspace, tab: tab, grid: grid).interfaceFont())
         panel.translatesAutoresizingMaskIntoConstraints = false
         addSubview(panel)
         let trailing = scroll.trailingAnchor.constraint(equalTo: panel.leadingAnchor)
@@ -581,7 +581,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         let copyAsItem = menu.addItem(withTitle: L10n.tr("Kopiuj jako"), action: nil, keyEquivalent: "")
         copyAsItem.submenu = copyAs
         menu.addItem(.separator())
-        for (title, id) in [(L10n.tr("Large Data Editor…"), "grid.largeData"), (L10n.tr("Eksportuj wynik…"), "grid.export"),
+        for (title, id) in [(L10n.tr("Large Data Editor…"), "grid.largeData"), (L10n.tr("Zapisz wartość komórki do pliku…"), "grid.saveValue"),
+                            (L10n.tr("Otwórz wartość komórki w programie zewnętrznym"), "grid.openValueExternally"), (L10n.tr("Eksportuj wynik…"), "grid.export"),
                             (L10n.tr("Kopiuj do Excela"), "grid.copyToExcel"), (L10n.tr("Kolumna do plików…"), "grid.columnToFiles"),
                             (L10n.tr("Zapytania powiązane…"), "grid.linkedQueries"), (L10n.tr("Porównaj rekordy"), "grid.compareRecords"),
                             (L10n.tr("Porównaj wyniki"), "grid.compareResults"), (L10n.tr("Zapisz jako zapytanie standardowe…"), "grid.saveAsStandardQuery")] {
