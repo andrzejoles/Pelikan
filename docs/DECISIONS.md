@@ -3961,6 +3961,11 @@ Właściciel: „Wszędzie tam, gdzie to możliwe daj osobną sesję”. Dodatko
   — bez logowania przy każdej przerwie w pisaniu.
 - **Raporty wydajności:** licencja, dostępność i migawki (`perf.list`) osobno od generowania raportu (`perf`).
 - **Scheduler:** DDL zaznaczonego obiektu (`scheduler.detail`) osobno od listy i kart przebiegów.
+- Limit sesji profilu (ORA-02391, ORA-00018, ORA-00020) przy otwieraniu sesji metadanych — metadane wracają do
+  sesji głównej do rozłączenia (przeglądarka obiektów działa jak przed zmianą). Sesje otwierane w tle nie pokazują
+  okien pytania o hasło; rozłączenie w trakcie ich otwierania zwalnia sesję i tunel.
+- Bezczynne sesje narzędzi nie są zamykane automatycznie (jak dotąd): zamknięcie w trakcie długiej operacji narzędzia
+  przerwałoby ją; sesje otwierają się dopiero przy pierwszym użyciu narzędzia i zamykają przy rozłączeniu.
 - Komendy narzędzi danych (agent, paleta) — ta sama sesja co okno narzędzia (`DataTransferCommands.session(tool:)`).
 - Migawka odzyskiwania przed wykonaniem — zapis na dysk przed startem polecenia (okresowa — w tle, D233).
 - Pozostają wspólne (świadomie): sesja jednego narzędzia dla jego kolejnych kroków (operacje i tak idą po kolei

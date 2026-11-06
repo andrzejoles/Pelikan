@@ -203,8 +203,26 @@ public final class SessionManager {
     /// W trybie Dual okna wykonują polecenia w sesji głównej — metadane zostają w niej, żeby `ALTER SESSION SET
     /// CURRENT_SCHEMA` wpisane w oknie działało też dla analizy nazw i przeglądarki obiektów (jak dotąd).
     public func metadataKey(connection: UUID) -> SessionKey {
-        settings().sessionMode == .multi ? SessionKey(connectionID: connection, purpose: .tool("metadata"))
+        settings().sessionMode == .multi && !metadataFallback.contains(connection)
+            ? SessionKey(connectionID: connection, purpose: .tool("metadata"))
             : SessionKey(connectionID: connection, purpose: .main)
+    }
+
+    /// Połączenia, na których osobnej sesji metadanych nie da się otworzyć (limit sesji profilu: ORA-02391, ORA-00018,
+    /// ORA-00020) — metadane wracają do sesji głównej do rozłączenia, zamiast przestać działać.
+    @ObservationIgnored private var metadataFallback: Set<UUID> = []
+
+    /// Sesja metadanych (otwierana na żądanie użytkownika); przy limicie sesji — sesja główna.
+    public func metadataSession(_ connection: UUID) async throws -> any DatabaseSession {
+        await closeUnusedMetadataSession(connection)
+        let key = metadataKey(connection: connection)
+        do {
+            return try await session(key)
+        } catch let e as OracleError where key.purpose != .main && [2391, 18, 20].contains(e.code) {
+            Log.connection.notice("Limit sesji — metadane w sesji głównej (\(e.code, privacy: .public))")
+            metadataFallback.insert(connection)
+            return try await session(SessionKey(connectionID: connection, purpose: .main))
+        }
     }
 
     /// Schemat ustawiony komendą „Ustaw bieżący schemat…” — stosowany także w sesji metadanych otwieranej później.
@@ -242,7 +260,7 @@ public final class SessionManager {
         quietKeys.insert(key)
         defer { quietKeys.remove(key) }
         do {
-            let s = try await session(key)
+            let s = try await metadataSession(connection)
             metadataOpenFailed[connection] = nil
             return s
         } catch {
@@ -259,6 +277,13 @@ public final class SessionManager {
     // MARK: Sesje
 
     public func existingSession(_ key: SessionKey) -> (any DatabaseSession)? { sessions[key] }
+
+    /// Sesja otwarta albo właśnie otwierana (czeka na koniec otwierania; błąd otwarcia — nil).
+    public func existingOrPendingSession(_ key: SessionKey) async -> (any DatabaseSession)? {
+        if let s = sessions[key] { return s }
+        guard let pending = connecting[key] else { return nil }
+        return try? await pending.value
+    }
 
     /// Klucz, pod którym jest ta sesja (nil — już zamknięta, usunięta albo zastąpiona nową).
     public func key(of session: any DatabaseSession) -> SessionKey? { sessions.first { $0.value === session }?.key }
@@ -305,17 +330,29 @@ public final class SessionManager {
             onSessionLost?(key)
             Task.detached { await s.close() }
         }
-        if let pending = connecting[key] { return try await pending.value }
-        let task = Task { @MainActor in try await self.open(key) }
+        if let pending = connecting[key] {
+            // Dołączenie do otwierania w tle (bez okien pytania): gdy odmówiło z braku hasła, otwarcie od nowa —
+            // już z pytaniem, bo prosi użytkownik.
+            let joinedQuiet = quietKeys.contains(key)
+            do { return try await pending.value } catch CommandError.cancelledByUser where joinedQuiet {
+                return try await session(key)
+            }
+        }
+        let generation = disconnects[key.connectionID, default: 0]
+        let task = Task { @MainActor in
+            let s = try await self.open(key)
+            // Rozłączono w trakcie łączenia (np. sesja metadanych otwierana w tle): sesja i tunel zwolnione, a każdy
+            // czekający na to otwarcie dostaje błąd zamiast zamkniętej sesji.
+            guard self.disconnects[key.connectionID, default: 0] == generation else {
+                if let t = self.sessionTunnels.removeValue(forKey: key) { self.tunnels.release(t, of: key.connectionID) }
+                await s.close()
+                throw CommandError.notConnected
+            }
+            return s
+        }
         connecting[key] = task
         defer { connecting[key] = nil }
-        let generation = disconnects[key.connectionID, default: 0]
         let s = try await task.value
-        // Rozłączono w trakcie łączenia (np. sesja metadanych otwierana w tle) — bez osieroconej sesji po rozłączeniu.
-        guard disconnects[key.connectionID, default: 0] == generation else {
-            await s.close()
-            throw CommandError.notConnected
-        }
         sessions[key] = s
         lastActivity[key] = Date()
         store.markUsed(key.connectionID)
@@ -508,6 +545,7 @@ public final class SessionManager {
         // Po ponownym połączeniu schemat z definicji połączenia (jak sesja główna).
         currentSchemaOverride[connectionID] = nil
         metadataOpenFailed[connectionID] = nil
+        metadataFallback.remove(connectionID)
     }
 
     private func noteOpen(_ connectionID: UUID) {
@@ -515,10 +553,15 @@ public final class SessionManager {
     }
 
     public func disconnectAll() async {
+        // Jak `disconnect` dla każdego połączenia: otwierane w tle sesje nie wracają, schemat z definicji, próby od nowa.
+        for id in Set(sessions.keys.map(\.connectionID)).union(connecting.keys.map(\.connectionID)) { disconnects[id, default: 0] += 1 }
         openConnections.removeAll()
         for key in Array(sessions.keys) { await close(key) }
         sessionPasswords.removeAll()
         ownerConfirmed.removeAll()
+        currentSchemaOverride.removeAll()
+        metadataOpenFailed.removeAll()
+        metadataFallback.removeAll()
     }
 
     /// Stan połączenia na liście.

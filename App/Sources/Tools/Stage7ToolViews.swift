@@ -152,10 +152,10 @@ struct PredefinedReportsView: View {
 
     private func showDetail(_ r: PredefinedReport, _ res: PredefinedReportResult) async {
         do {
-            let run = runID
+            let run = runID, conn = connection
             let s = try await session()
             let d = try await PredefinedReports.detail(r, master: res, row: detailRow - 1, values: values, in: s)
-            guard selection == r.id, runID == run else { return }
+            guard selection == r.id, runID == run, connection == conn else { return }
             detail = d
         } catch { message = error.localizedDescription }
     }

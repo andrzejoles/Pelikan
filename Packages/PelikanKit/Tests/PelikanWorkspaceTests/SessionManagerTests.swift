@@ -151,6 +151,28 @@ struct SessionManagerTests {
         _ = driver
     }
 
+    @Test("Limit sesji profilu (ORA-02391) przy sesji metadanych: metadane w sesji głównej zamiast błędu")
+    func metadataFallbackOnSessionLimit() async throws {
+        final class LimitedDriver: DatabaseDriver, @unchecked Sendable {
+            let kind = DriverKind.instantClient
+            let capabilities: DriverCapabilities = []
+            func availability() -> Result<Void, DatabaseError> { .success(()) }
+            func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession {
+                if options.tags.action?.contains("metadata") == true { throw OracleError(code: 2391, message: "ORA-02391: exceeded simultaneous SESSIONS_PER_USER limit") }
+                return FakeSession()
+            }
+        }
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: LimitedDriver()])
+        let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        let main = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        #expect(try await ws.sessions.metadataSession(def.id) === main)
+        #expect(ws.sessions.metadataKey(connection: def.id).purpose == .main)
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) === main)
+        await ws.sessions.disconnect(def.id)
+        #expect(ws.sessions.metadataKey(connection: def.id).purpose == .tool("metadata"))
+    }
+
     @Test("Zapisane hasło: łączy bez pytania; skrypt inicjalizacji i bieżący schemat wykonane")
     func savedPassword() async throws {
         let (ws, driver) = make()
