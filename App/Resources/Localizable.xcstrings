@@ -2409,30 +2409,30 @@
         }
       }
     },
-    "ALTER SESSION SET CURRENT_SCHEMA w sesji głównej połączenia (Przeglądarka obiektów i nazwy bez schematu)." : {
+    "ALTER SESSION SET CURRENT_SCHEMA w sesji głównej i sesji metadanych połączenia (Przeglądarka obiektów i nazwy bez schematu)." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ALTER SESSION SET CURRENT_SCHEMA in the connection's main session (Object Browser and unqualified names)."
+            "value" : "ALTER SESSION SET CURRENT_SCHEMA in the main and metadata sessions of the connection (Object Browser and names without a schema)."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ALTER SESSION SET CURRENT_SCHEMA in der Hauptsitzung der Verbindung (Object Browser und Namen ohne Schema)."
+            "value" : "ALTER SESSION SET CURRENT_SCHEMA in der Haupt- und Metadatensitzung der Verbindung (Objektbrowser und Namen ohne Schema)."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ALTER SESSION SET CURRENT_SCHEMA en la sesión principal de la conexión (Object Browser y nombres sin esquema)."
+            "value" : "ALTER SESSION SET CURRENT_SCHEMA en las sesiones principal y de metadatos de la conexión (Explorador de objetos y nombres sin esquema)."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ALTER SESSION SET CURRENT_SCHEMA в основному сеансі з'єднання (Object Browser та імена без схеми)."
+            "value" : "ALTER SESSION SET CURRENT_SCHEMA в основному сеансі й сеансі метаданих з’єднання (Оглядач об’єктів і назви без схеми)."
           }
         }
       }
@@ -113593,6 +113593,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Результат останнього запуску автоматичного радника SQL Tuning (SYS_AUTO_SQL_TUNING_TASK)."
+          }
+        }
+      }
+    },
+    "Wynik raportu „%@” pominięty — w trakcie wybrano inny raport albo połączenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Result of report “%@” discarded — another report or connection was selected meanwhile"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergebnis des Berichts „%@“ verworfen — inzwischen wurde ein anderer Bericht oder eine andere Verbindung gewählt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultado del informe «%@» descartado — mientras tanto se eligió otro informe u otra conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Результат звіту «%@» відкинуто — тим часом вибрано інший звіт або з’єднання"
           }
         }
       }

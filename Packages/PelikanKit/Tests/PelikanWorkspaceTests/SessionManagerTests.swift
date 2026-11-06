@@ -116,6 +116,65 @@ struct SessionManagerTests {
         #expect(!doc.transactionOpen)
     }
 
+    @Test("Metadane: osobna sesja w trybie Multi (czynności w tle jej nie otwierają); Dual i jedna sesja — główna")
+    func metadataSession() async throws {
+        let (ws, _) = make()
+        let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        #expect(ws.sessions.metadataKey(connection: def.id).purpose == .tool("metadata"))
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) == nil)
+        let main = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        // Czynności w tle nie otwierają sesji — do pierwszej czynności użytkownika sesja główna.
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) === main)
+        let meta = try await ws.metadata(for: def.id)!.session()
+        #expect(meta !== main)
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) === meta)
+        ws.settings.sessionMode = .dual
+        #expect(ws.sessions.metadataKey(connection: def.id).purpose == .main)
+        // Po zmianie trybu osobna sesja metadanych zamknięta przy pierwszym użyciu metadanych.
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) === main)
+        #expect(ws.sessions.existingSession(SessionKey(connectionID: def.id, purpose: .tool("metadata"))) == nil)
+        #expect((meta as! FakeSession).closedFlag.withLock { $0 })
+        ws.settings.sessionMode = .single
+        #expect(ws.sessions.metadataKey(connection: def.id).purpose == .main)
+    }
+
+    @Test("Ustaw bieżący schemat: sesja główna i metadanych (także otwierana później); po rozłączeniu — z definicji")
+    func currentSchemaFollowsMetadata() async throws {
+        let (ws, driver) = make()
+        let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        _ = try await ws.invoke("connection.setCurrentSchema", CommandArguments(["connection": .string(def.id.uuidString), "schema": "HR"]))
+        let meta = try await ws.sessions.metadataSession(def.id) as! FakeSession
+        #expect(meta.executed.withLock { $0 }.contains("ALTER SESSION SET CURRENT_SCHEMA = HR"))
+        await ws.sessions.disconnect(def.id)
+        #expect(ws.sessions.currentSchemaOverride[def.id] == nil)
+        _ = driver
+    }
+
+    @Test("Limit sesji profilu (ORA-02391) przy sesji metadanych: metadane w sesji głównej zamiast błędu")
+    func metadataFallbackOnSessionLimit() async throws {
+        final class LimitedDriver: DatabaseDriver, @unchecked Sendable {
+            let kind = DriverKind.instantClient
+            let capabilities: DriverCapabilities = []
+            func availability() -> Result<Void, DatabaseError> { .success(()) }
+            func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession {
+                if options.tags.action?.contains("metadata") == true { throw OracleError(code: 2391, message: "ORA-02391: exceeded simultaneous SESSIONS_PER_USER limit") }
+                return FakeSession()
+            }
+        }
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: LimitedDriver()])
+        let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        let main = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        #expect(try await ws.sessions.metadataSession(def.id) === main)
+        #expect(ws.sessions.metadataKey(connection: def.id).purpose == .main)
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) === main)
+        await ws.sessions.disconnect(def.id)
+        #expect(ws.sessions.metadataKey(connection: def.id).purpose == .tool("metadata"))
+    }
+
     @Test("Zapisane hasło: łączy bez pytania; skrypt inicjalizacji i bieżący schemat wykonane")
     func savedPassword() async throws {
         let (ws, driver) = make()
@@ -407,12 +466,14 @@ struct ConnectionCheckTests {
         let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: "u", connectString: "h/s"), savePassword: false)
         try ws.connections.upsert(def, password: "good")
         let key = SessionKey(connectionID: def.id, purpose: .main)
+        // Analiza w tle nie otwiera sesji metadanych (D234) — sesja główna, dopóki metadanych nie otworzy użytkownik.
         let s1 = try await ws.sessions.session(key)
         let doc = ws.newDocument(.sql)
         doc.connectionID = def.id
         doc.text = "select * from t;"
         await ws.analyzeCode(doc)
         #expect(ws.nameSources.keys.map(\.session) == [ObjectIdentifier(s1)])
+        #expect(ws.sessions.existingSession(ws.sessions.metadataKey(connection: def.id)) == nil)
         await ws.sessions.disconnect(def.id)
         let s2 = try await ws.sessions.session(key)
         await ws.analyzeCode(doc)

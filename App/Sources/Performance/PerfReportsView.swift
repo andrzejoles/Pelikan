@@ -56,6 +56,9 @@ final class PerfReportsModel {
     var reports: [PerfReport] { mode == .global ? PerfReportCatalog.globalReports : PerfReportCatalog.sqlReports }
 
     func session() async throws -> any DatabaseSession { try await workspace.toolSession("perf", connection: connection) }
+    /// Licencja, dostępność i migawki — osobna sesja: generowanie raportu (AWR, ASH — minuty) nie wstrzymuje wczytania
+    /// po zmianie połączenia albo zapytania (D234).
+    func listSession() async throws -> any DatabaseSession { try await workspace.toolSession("perf.list", connection: connection) }
 
     /// Licencja, dostępność zapytania (z ustaleniem SQL_ID z hasha albo tekstu), migawki i czas bazy.
     func load() async {
@@ -69,7 +72,7 @@ final class PerfReportsModel {
         serverMajor = nil
         availability = nil
         do {
-            let s = try await session()
+            let s = try await listSession()
             // Anulowana deklaracja licencji: dalej tylko raporty bez pakietów (wersja, uprawnienia, zaznaczenie — jak zwykle).
             let lic: PerfLicense
             do {

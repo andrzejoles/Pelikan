@@ -136,7 +136,13 @@ public final class SessionManager {
         if closed > 0 { Log.connection.info("Zamknięto \(closed) bezczynnych sesji okien (po \(minutes) min)") }
         return closed
     }
-    @ObservationIgnored private var connecting: [SessionKey: Task<any DatabaseSession, any Error>] = [:]
+    /// Otwierania w toku: zadanie i pokolenie rozłączeń połączenia.
+    private struct Pending {
+        let id = UUID()
+        let task: Task<any DatabaseSession, any Error>
+        let generation: Int
+    }
+    @ObservationIgnored private var connecting: [SessionKey: Pending] = [:]
     @ObservationIgnored private let store: ConnectionStore
     @ObservationIgnored private var drivers: [DriverKind: any DatabaseDriver]
     @ObservationIgnored public weak var prompter: (any ConnectionPrompter)?
@@ -148,6 +154,12 @@ public final class SessionManager {
     @ObservationIgnored public let tunnels = SSHTunnelManager()
     /// Tunel, przez który połączyła się sesja — zwalniany dokładnie ten (nie wg bieżącej definicji ani nowszego tunelu).
     @ObservationIgnored private var sessionTunnels: [SessionKey: SSHTunnelManager.Tunnel] = [:]
+    /// Tunele sesji otwartych, jeszcze niezapisanych w mapie (klucz — tożsamość sesji).
+    @ObservationIgnored private var openedTunnels: [ObjectIdentifier: SSHTunnelManager.Tunnel] = [:]
+
+    private func releaseOpenedTunnel(of s: any DatabaseSession, connection: UUID) {
+        if let t = openedTunnels.removeValue(forKey: ObjectIdentifier(s)) { tunnels.release(t, of: connection) }
+    }
     /// Połączenia, dla których właściciel Maca potwierdził w tym uruchomieniu użycie zapisanych haseł (bazy i SSH, D56).
     @ObservationIgnored private var ownerConfirmed: Set<UUID> = []
     /// Sprawdzanie połączeń w toku (kolejny przebieg czeka na koniec poprzedniego) i czas ostatniego przebiegu.
@@ -197,6 +209,69 @@ public final class SessionManager {
         SessionKey(connectionID: connection, purpose: .debugger(document))
     }
 
+    /// Sesja metadanych (przeglądarka obiektów, podpowiedzi, analiza nazw, odczyty słownika): osobna, żeby długie
+    /// wczytanie dużej gałęzi albo zapytanie słownika nie opóźniały innych czynności na sesji głównej (D234). W trybie
+    /// jednej sesji — sesja główna (wszystko w jednej sesji z założenia).
+    /// W trybie Dual okna wykonują polecenia w sesji głównej — metadane zostają w niej, żeby `ALTER SESSION SET
+    /// CURRENT_SCHEMA` wpisane w oknie działało też dla analizy nazw i przeglądarki obiektów (jak dotąd).
+    public func metadataKey(connection: UUID) -> SessionKey {
+        settings().sessionMode == .multi && (metadataFallback[connection].map { Date().timeIntervalSince($0) > 300 } ?? true)
+            ? SessionKey(connectionID: connection, purpose: .tool("metadata"))
+            : SessionKey(connectionID: connection, purpose: .main)
+    }
+
+    /// Połączenia, na których osobnej sesji metadanych nie da się otworzyć (limit sesji profilu: ORA-02391, ORA-00018,
+    /// ORA-00020) — metadane wracają do sesji głównej do rozłączenia, zamiast przestać działać.
+    /// Chwila przejścia na sesję główną — po 5 minutach ponowna próba osobnej sesji (błędy listenera bywają chwilowe).
+    @ObservationIgnored private var metadataFallback: [UUID: Date] = [:]
+
+    /// Sesja metadanych (otwierana na żądanie użytkownika); przy limicie sesji — sesja główna.
+    public func metadataSession(_ connection: UUID) async throws -> any DatabaseSession {
+        await closeUnusedMetadataSession(connection)
+        let key = metadataKey(connection: connection)
+        // Połączenie przez metadane (rozwinięcie gałęzi niepołączonego połączenia) otwiera też sesję główną — jak dotąd;
+        // „połączone” dla reszty aplikacji to istniejąca sesja główna.
+        let main = SessionKey(connectionID: connection, purpose: .main)
+        if key != main, sessions[main] == nil { _ = try await session(main) }
+        do {
+            return try await session(key)
+        } catch let e as OracleError where key.purpose != .main && [2391, 18, 20, 12516, 12519, 12520].contains(e.code) {
+            Log.connection.notice("Limit sesji — metadane w sesji głównej (\(e.code, privacy: .public))")
+            metadataFallback[connection] = Date()
+            return try await session(SessionKey(connectionID: connection, purpose: .main))
+        }
+    }
+
+    /// Schemat ustawiony komendą „Ustaw bieżący schemat…” — stosowany także w sesji metadanych otwieranej później.
+    @ObservationIgnored public private(set) var currentSchemaOverride: [UUID: String] = [:]
+
+    /// Schemat do sesji otwieranych później (główna, metadanych) — tylko bezpieczny identyfikator (trafia do SQL).
+    public func setCurrentSchemaOverride(_ schema: String, for connection: UUID) throws {
+        guard Self.isSafeIdentifier(schema) else { throw CommandError.invalidArgument("schema", schema) }
+        currentSchemaOverride[connection] = schema
+    }
+    /// Licznik rozłączeń połączenia — sesja otwierana w chwili rozłączenia nie wraca po nim do mapy.
+    @ObservationIgnored private var disconnects: [UUID: Int] = [:]
+
+    /// Po zmianie trybu z Multi na Dual albo jedną sesję: osobna sesja metadanych nie jest już używana — zamknięta
+    /// przy pierwszym użyciu metadanych (bez sesji serwera do rozłączenia).
+    public func closeUnusedMetadataSession(_ connection: UUID) async {
+        let separate = SessionKey(connectionID: connection, purpose: .tool("metadata"))
+        guard metadataKey(connection: connection) != separate, sessions[separate] != nil else { return }
+        await close(separate)
+    }
+
+    /// Sesja do odczytów słownika w tle, gdy połączenie jest otwarte (sesja główna istnieje).
+    public func metadataSessionIfConnected(_ connection: UUID) async -> (any DatabaseSession)? {
+        // Bez otwierania sesji (czynności w tle: analiza kodu, sprawdzanie zmian) — istniejąca sesja metadanych, a gdy
+        // jej jeszcze nie ma (otwiera ją dopiero czynność użytkownika: przeglądarka, podpowiedź), sesja główna.
+        await closeUnusedMetadataSession(connection)
+        let main = SessionKey(connectionID: connection, purpose: .main)
+        guard let m = sessions[main] else { return nil }
+        if let s = sessions[metadataKey(connection: connection)], !s.connectionLost { return s }
+        return m
+    }
+
     public func compileKey(connection: UUID) -> SessionKey {
         settings().sessionMode == .single ? SessionKey(connectionID: connection, purpose: .main)
             : SessionKey(connectionID: connection, purpose: .compile)
@@ -205,6 +280,13 @@ public final class SessionManager {
     // MARK: Sesje
 
     public func existingSession(_ key: SessionKey) -> (any DatabaseSession)? { sessions[key] }
+
+    /// Sesja otwarta albo właśnie otwierana (czeka na koniec otwierania; błąd otwarcia — nil).
+    public func existingOrPendingSession(_ key: SessionKey) async -> (any DatabaseSession)? {
+        if let s = sessions[key] { return s }
+        guard let pending = connecting[key], pending.generation == disconnects[key.connectionID, default: 0] else { return nil }
+        return try? await pending.task.value
+    }
 
     /// Klucz, pod którym jest ta sesja (nil — już zamknięta, usunięta albo zastąpiona nową).
     public func key(of session: any DatabaseSession) -> SessionKey? { sessions.first { $0.value === session }?.key }
@@ -251,11 +333,31 @@ public final class SessionManager {
             onSessionLost?(key)
             Task.detached { await s.close() }
         }
-        if let pending = connecting[key] { return try await pending.value }
-        let task = Task { @MainActor in try await self.open(key) }
-        connecting[key] = task
-        defer { connecting[key] = nil }
+        let generation = disconnects[key.connectionID, default: 0]
+        // Dołączenie do otwierania w toku — tylko z bieżącego pokolenia (sprzed rozłączenia — nieaktualne).
+        if let pending = connecting[key], pending.generation == generation { return try await pending.task.value }
+        let task = Task { @MainActor in
+            let s = try await self.open(key)
+            // Rozłączono w trakcie łączenia: sesja i tunel zwolnione, a każdy
+            // czekający na to otwarcie dostaje błąd zamiast zamkniętej sesji.
+            guard self.disconnects[key.connectionID, default: 0] == generation else {
+                self.releaseOpenedTunnel(of: s, connection: key.connectionID)
+                await s.close()
+                throw CommandError.notConnected
+            }
+            return s
+        }
+        let entry = Pending(task: task, generation: generation)
+        connecting[key] = entry
+        defer { if connecting[key]?.id == entry.id { connecting[key] = nil } }
         let s = try await task.value
+        // Rozłączenie między końcem otwierania a tym miejscem — sesja nie wraca do mapy.
+        guard disconnects[key.connectionID, default: 0] == generation else {
+            releaseOpenedTunnel(of: s, connection: key.connectionID)
+            await s.close()
+            throw CommandError.notConnected
+        }
+        if let t = openedTunnels.removeValue(forKey: ObjectIdentifier(s)) { sessionTunnels[key] = t }
         sessions[key] = s
         lastActivity[key] = Date()
         store.markUsed(key.connectionID)
@@ -290,6 +392,9 @@ public final class SessionManager {
 
     private func openSession(_ key: SessionKey) async throws -> any DatabaseSession {
         guard let def = store.connection(key.connectionID) else { throw CommandError.notConnected }
+        // Hasło i potwierdzenie właściciela zapamiętywane tylko, gdy w trakcie otwierania nie było rozłączenia.
+        let generation = disconnects[def.id, default: 0]
+        let current = { [unowned self] in self.disconnects[def.id, default: 0] == generation }
         guard let driver = drivers[def.driver] else {
             throw DatabaseError.driverUnavailable(L10n.tr("Sterownik \(def.driver.rawValue) jest niedostępny"))
         }
@@ -338,15 +443,26 @@ public final class SessionManager {
                 if let np = credentials.newPassword {
                     // Nowe zastępuje stare, jeśli stare było zapisane albo użytkownik chciał.
                     if def.savePassword || rememberOnSuccess { try? store.rememberPassword(np, for: def.id) }
-                    sessionPasswords[def.id] = np
+                    if current() { sessionPasswords[def.id] = np }
                 }
                 // Nieudana inicjalizacja (skrypt startowy, NLS, Workspace Manager) — sesja zamknięta, tunel zwolniony.
-                do { try await initialize(s, def) } catch { await s.close(); throw error }
+                do {
+                    try await initialize(s, def)
+                    // Schemat z „Ustaw bieżący schemat…” — sesja główna i metadanych także po ponownym połączeniu.
+                    if key.purpose == .main || key.purpose == .tool("metadata"), let schema = currentSchemaOverride[def.id] {
+                        // Schemat usunięty albo bez uprawnień — schemat z definicji zamiast odmowy każdego połączenia.
+                        do { _ = try await s.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)") } catch {
+                            Log.connection.notice("Bieżący schemat z „Ustaw bieżący schemat…” niedostępny — pominięty w tej sesji")
+                        }
+                    }
+                } catch { await s.close(); throw error }
                 connected = true
-                if let tunnel { sessionTunnels[key] = tunnel }
+                // Tunel przypisany do klucza dopiero przy zapisaniu sesji w mapie (`session`) — otwarcie nieaktualne po
+                // rozłączeniu zwalnia własny tunel, nie tunel nowszej sesji pod tym samym kluczem.
+                if let tunnel { openedTunnels[ObjectIdentifier(s)] = tunnel }
                 if credentials.newPassword == nil, let p = password {
-                    if rememberOnSuccess { try? store.rememberPassword(p, for: def.id) }
-                    sessionPasswords[def.id] = p
+                    if rememberOnSuccess, current() { try? store.rememberPassword(p, for: def.id) }
+                    if current() { sessionPasswords[def.id] = p }
                 }
                 return s
             } catch let e as OracleError where e.isPasswordExpired && attempt < 2 {
@@ -378,10 +494,12 @@ public final class SessionManager {
     /// włączona, raz na połączenie w tym uruchomieniu (do rozłączenia).
     private func confirmOwner(_ def: ConnectionDefinition) async throws {
         guard settings().requireOwnerForSavedPasswords, !ownerConfirmed.contains(def.id) else { return }
+        let generation = disconnects[def.id, default: 0]
         guard await prompter?.authenticateOwner(reason: L10n.tr("użyć zapisanego hasła połączenia „\(def.displayName)”")) == true else {
             throw CommandError.cancelledByUser
         }
-        ownerConfirmed.insert(def.id)
+        // Rozłączono w czasie pytania — potwierdzenie nie przechodzi na następne połączenie.
+        if disconnects[def.id, default: 0] == generation { ownerConfirmed.insert(def.id) }
     }
 
     /// Hasło tunelu SSH z Pęku kluczy (po potwierdzeniu właściciela, D56); nil — tunel na klucz albo agenta SSH.
@@ -432,12 +550,18 @@ public final class SessionManager {
     /// Rozłącza wszystkie sesje połączenia (UG 19.1 Disconnect).
     public func disconnect(_ connectionID: UUID) async {
         Log.connection.info("Rozłączono \(store.connection(connectionID)?.displayName, privacy: .hash)")
-        for key in sessions.keys where key.connectionID == connectionID {
-            await close(key)
-        }
+        disconnects[connectionID, default: 0] += 1
+        // Stan połączenia czyszczony przed zamykaniem sesji (`await`): otwarcie rozpoczęte w trakcie nie loguje się
+        // zapamiętanym hasłem ani ze schematem sprzed rozłączenia.
         sessionPasswords[connectionID] = nil
         ownerConfirmed.remove(connectionID)
         openConnections.removeAll { $0 == connectionID }
+        // Po ponownym połączeniu schemat z definicji połączenia (jak sesja główna).
+        currentSchemaOverride[connectionID] = nil
+        metadataFallback[connectionID] = nil
+        for key in sessions.keys where key.connectionID == connectionID {
+            await close(key)
+        }
     }
 
     private func noteOpen(_ connectionID: UUID) {
@@ -445,10 +569,14 @@ public final class SessionManager {
     }
 
     public func disconnectAll() async {
+        // Jak `disconnect` dla każdego połączenia: otwierane w trakcie sesje nie wracają, schemat z definicji.
+        for id in Set(sessions.keys.map(\.connectionID)).union(connecting.keys.map(\.connectionID)) { disconnects[id, default: 0] += 1 }
         openConnections.removeAll()
         for key in Array(sessions.keys) { await close(key) }
         sessionPasswords.removeAll()
         ownerConfirmed.removeAll()
+        currentSchemaOverride.removeAll()
+        metadataFallback.removeAll()
     }
 
     /// Stan połączenia na liście.

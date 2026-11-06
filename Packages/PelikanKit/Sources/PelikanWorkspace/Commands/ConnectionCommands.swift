@@ -248,7 +248,7 @@ public enum ConnectionCommands {
             Command(CommandDescriptor(id: "connection.setCurrentSchema", title: L10n.tr("Ustaw bieżący schemat…"), category: .session, submenu: L10n.tr("Połączenia"),
                                       parameters: [connectionParam, CommandParameter("schema", .string, required: true, L10n.tr("Schemat"))],
                                       agent: .none, effect: .settings,
-                                      summary: L10n.tr("ALTER SESSION SET CURRENT_SCHEMA w sesji głównej połączenia (Przeglądarka obiektów i nazwy bez schematu)."),
+                                      summary: L10n.tr("ALTER SESSION SET CURRENT_SCHEMA w sesji głównej i sesji metadanych połączenia (Przeglądarka obiektów i nazwy bez schematu)."),
                                       inMenu: false, feature: "PD-CONN-022")) { ctx in
                 let id = try connectionID(ctx)
                 var schema = ctx.arguments.string("schema")
@@ -256,6 +256,17 @@ public enum ConnectionCommands {
                 guard let schema, SessionManager.isSafeIdentifier(schema) else { throw CommandError.invalidArgument("schema", schema ?? "") }
                 let s = try await ctx.workspace.sessions.session(SessionKey(connectionID: id, purpose: .main))
                 _ = try await s.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)")
+                // Przeglądarka obiektów i nazwy bez schematu korzystają z sesji metadanych (D234) — ten sam schemat tam
+                // i w sesjach metadanych otwieranych później.
+                let sm = ctx.workspace.sessions
+                try sm.setCurrentSchemaOverride(schema, for: id)
+                let metaKey = sm.metadataKey(connection: id)
+                // Także sesja metadanych otwierana właśnie teraz (mogła odczytać schemat przed zmianą).
+                if metaKey.purpose != .main, let meta = await sm.existingOrPendingSession(metaKey) {
+                    // Nieudana zmiana — sesja metadanych zamknięta: następna otworzy się już z nowym schematem.
+                    do { _ = try await meta.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)") } catch { await sm.close(metaKey) }
+                }
+                ctx.workspace.metadata(for: id)?.refresh()
                 return CommandResult(value: .string(try await s.scalar("select sys_context('userenv', 'current_schema') from dual") ?? schema))
             },
             Command(CommandDescriptor(id: "connection.disconnect", title: L10n.tr("Rozłącz"), category: .session, submenu: L10n.tr("Połączenia"),

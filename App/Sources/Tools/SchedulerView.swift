@@ -172,7 +172,8 @@ struct SchedulerView: View {
     private func loadSQL() async {
         guard let o = selected else { sql = ""; return }
         do {
-            let s = try await SchedulerCommands.session(workspace, connection: connection).1
+            // DDL zaznaczonego obiektu (DBMS_METADATA) na osobnej sesji — nie czeka za listą ani kartą przebiegów (D234).
+            let s = try await SchedulerCommands.session(workspace, connection: connection, purpose: "scheduler.detail").1
             let text = o.kind == .jobs ? Scheduler.createSQL(try await Scheduler.job(owner: o.owner, name: o.name, in: s))
                 : try await Scheduler.ddl(owner: o.owner, name: o.name, in: s)
             if !Task.isCancelled { sql = text }

@@ -663,8 +663,8 @@ public actor CachedNameSource: NameResolutionSource {
 }
 
 extension Workspace {
-    /// Analiza tekstu okna: inspekcje zawsze, nieznane nazwy — gdy połączenie okna ma otwartą sesję główną
-    /// (analiza nie łączy z bazą). Wynik trafia do `diagnostics` (podkreślenia w edytorze, lista problemów).
+    /// Analiza tekstu okna: inspekcje zawsze, nieznane nazwy — gdy połączenie okna ma otwartą sesję główną (analiza
+    /// nie łączy z bazą: sesja metadanych, jeśli już otwarta, inaczej główna — D234). Wynik trafia do `diagnostics` (podkreślenia w edytorze, lista problemów).
     @discardableResult
     public func analyzeCode(_ doc: Document, names: Bool = true) async -> [EditorDiagnostic] {
         guard [.sql, .program, .test].contains(doc.kind) else { return [] }
@@ -672,7 +672,7 @@ extension Workspace {
         // Inspekcje poza wątkiem głównym: pakiet 40 000 linii to ~0,26 s (release) przy każdej przerwie w pisaniu (D233).
         let limit = settings.identifierLengthWarning
         var found = await Task.detached(priority: .userInitiated) { CodeInspections.inspect(text, identifierLimit: limit) }.value
-        if names, let c = effectiveConnection(of: doc), let s = sessions.existingSession(SessionKey(connectionID: c, purpose: .main)) {
+        if names, let c = effectiveConnection(of: doc), let s = await sessions.metadataSessionIfConnected(c) {
             // Program z innego schematu (nagłówek z właścicielem): nazwy bez schematu — w schemacie właściciela.
             let schema = doc.kind == .program ? ProgramCompiler.units(in: text).first?.owner : nil
             // Klucz z tożsamością sesji: po ponownym połączeniu źródło ze starą (zamkniętą) sesją jest odrzucane.

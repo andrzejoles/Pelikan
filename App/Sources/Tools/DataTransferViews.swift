@@ -38,7 +38,7 @@ enum DataTransferUI {
     /// Sesja narzędzia danych — osobna na narzędzie (`tool`): długi eksport nie wstrzymuje innych narzędzi, a DML
     /// importu, generatora i porównania nie trafia do jednej wspólnej transakcji (D233).
     static func session(_ ws: Workspace, _ connection: UUID?, tool: String) async throws -> any DatabaseSession {
-        try await ws.toolSession(DataTransferCommands.sessionPurpose + "." + tool, connection: connection)
+        try await DataTransferCommands.session(ws, connection: connection, tool: tool)
     }
 
     static func schema(_ ws: Workspace, _ connection: UUID?) -> String { ws.sessions.connectedSchema(connection) ?? "" }
@@ -91,6 +91,7 @@ struct ExportTablesView: View {
     @State private var options = TableExportOptions()
     @State private var dumpFile = "pelikan.dmp"
     @State private var message = ""
+    @State private var loadToken = 0
     @State private var busy = false
 
     var body: some View {
@@ -150,11 +151,16 @@ struct ExportTablesView: View {
     }
 
     private func load() async {
+        // Nowsze wczytanie (Enter po zmianie schematu) zastępuje wolniejsze wcześniejsze; samo pisanie w polu — nie.
+        loadToken += 1
+        let token = loadToken, o = owner, c = connection
         do {
-            tables = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(owner), in: try await DataTransferUI.session(workspace, connection, tool: "eksport"))
+            let list = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(o), in: try await DataTransferUI.session(workspace, c, tool: "eksport"))
+            guard loadToken == token else { return }
+            tables = list
             selected = []
             message = L10n.tr("Tabele: \(tables.count)")
-        } catch { message = error.localizedDescription }
+        } catch { if loadToken == token { message = error.localizedDescription } }
     }
 
     private func export() async {
@@ -212,7 +218,7 @@ struct ImportTablesView: View {
                 Button(L10n.tr("Wybierz skrypt i importuj…")) { Task { await importSQL() } }.disabled(busy)
             case .native:
                 HStack {
-                    Button(L10n.tr("Otwórz plik…")) { openNative() }
+                    Button(L10n.tr("Otwórz plik…")) { openNative() }.disabled(busy)
                     TextField(L10n.tr("Schemat docelowy"), text: $owner).frame(maxWidth: 220).textFieldStyle(.roundedBorder)
                 }
                 HSplitView {
@@ -499,7 +505,7 @@ struct ImporterView: View {
     private func loadMapping() async {
         do {
             let o = ResultExporter.dictionaryName(owner), t = ResultExporter.dictionaryName(table)
-            let maps = try await TextImport.defaultMappings(owner: o, table: t, fieldNames: header, in: try await DataTransferUI.session(workspace, connection, tool: "importer"))
+            let maps = try await TextImport.defaultMappings(owner: o, table: t, fieldNames: header, in: try await DataTransferUI.session(workspace, connection, tool: excel ? "importer.excel" : "importer.text"))
             guard !maps.isEmpty else { message = L10n.tr("Brak tabeli \(owner).\(table)"); return }
             target = ImportTarget(owner: o, table: t, mappings: maps)
         } catch { message = error.localizedDescription }
@@ -526,7 +532,7 @@ struct ImporterView: View {
         defer { busy = false }
         do {
             try await DataTransferUI.guardChanges(workspace, connection: connection)
-            let r = try await TextImport.run(rows, fieldNames: header, target: t, in: try await DataTransferUI.session(workspace, connection, tool: "importer")) { n in message = L10n.tr("Zaimportowano \(n)…") }
+            let r = try await TextImport.run(rows, fieldNames: header, target: t, in: try await DataTransferUI.session(workspace, connection, tool: excel ? "importer.excel" : "importer.text")) { n in message = L10n.tr("Zaimportowano \(n)…") }
             message = DataTransferUI.summary(r)
         } catch { message = error.localizedDescription }
     }
@@ -676,6 +682,7 @@ struct CompareTableDataView: View {
     @State private var options = DataCompareOptions()
     @State private var diffs: [TableDataDiff] = []
     @State private var message = ""
+    @State private var loadToken = 0
     @State private var busy = false
 
     var body: some View {
@@ -740,10 +747,14 @@ struct CompareTableDataView: View {
     }
 
     private func load() async {
+        loadToken += 1
+        let token = loadToken, o = owner, c = connection
         do {
-            tables = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(owner), in: try await DataTransferUI.session(workspace, connection, tool: "porownanie"))
+            let list = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(o), in: try await DataTransferUI.session(workspace, c, tool: "porownanie"))
+            guard loadToken == token else { return }
+            tables = list
             selected = []
-        } catch { message = error.localizedDescription }
+        } catch { if loadToken == token { message = error.localizedDescription } }
     }
 
     private func target() async throws -> any DatabaseSession {

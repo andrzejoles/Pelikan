@@ -176,7 +176,7 @@ public final class RecoveryStore: Sendable {
         io.sync { write(w) }
     }
 
-    /// Jak `save`, bez czekania na zapis (timer i migawka przed wykonaniem).
+    /// Jak `save`, bez czekania na zapis (migawka okresowa; przed wykonaniem — `save`, żeby była na dysku przed startem).
     public func saveInBackground(_ w: Workset) {
         io.async { self.write(w) }
     }
@@ -315,7 +315,8 @@ extension Workspace {
         guard settings.recoveryEnabled, settings.recoveryOnExecute else { return false }
         if let last = lastExecuteSnapshot, now.timeIntervalSince(last) < minimumInterval { return false }
         lastExecuteSnapshot = now
-        recovery.saveInBackground(recoverySnapshot())
+        // Na dysku przed startem polecenia — migawka ma przetrwać awarię w trakcie (najwyżej raz na `minimumInterval`).
+        recovery.save(recoverySnapshot())
         return true
     }
 

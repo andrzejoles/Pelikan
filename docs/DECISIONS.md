@@ -3948,3 +3948,35 @@ głównym, praca po zamknięciu narzędzia, przyciski aktywne w trakcie. Poprawi
   wczytywanie dużej gałęzi opóźnia podpowiedzi; w trybie Multi okna SQL mają własne sesje, więc zapytania okien ich
   nie blokują. Osobna sesja metadanych — do decyzji właściciela (dodatkowa sesja na każde połączenie).
 
+### D234 · 2026-11-06 — Osobne sesje wszędzie, gdzie to możliwe (decyzja właściciela)
+
+Właściciel: „Wszędzie tam, gdzie to możliwe daj osobną sesję”. Dodatkowo do D231/D233:
+- **Metadane** (przeglądarka obiektów, podpowiedzi, analiza nazw w edytorze, opis obiektów, sprawdzanie zmian obiektów
+  okien programu, kosz) — w trybie Multi sesja `metadata` zamiast głównej (`SessionManager.metadataKey`): długie
+  wczytanie dużej gałęzi nie opóźnia podpowiedzi ani poleceń na sesji głównej. W trybach Dual i jednej sesji —
+  sesja główna: okna wykonują w niej polecenia, więc `ALTER SESSION SET CURRENT_SCHEMA` wpisane w oknie musi
+  obowiązywać też analizę nazw (code review). „Ustaw bieżący schemat…” zmienia schemat w sesji głównej i w sesji
+  metadanych (także otwieranej później; do rozłączenia). Czynności w tle (analiza kodu, sprawdzanie zmian obiektów)
+  nie otwierają sesji: korzystają z sesji metadanych, gdy już jest (otwiera ją czynność użytkownika — przeglądarka,
+  podpowiedź, opis), a do tego czasu z głównej. Uproszczenie po 8 rundach code review: otwieranie w tle wymagało
+  trybu bez pytań o hasło, blokady po odmowie (ponawianie złym hasłem blokowałoby konto) i przerw po błędzie — każda
+  poprawka dokładała kolejne przypadki brzegowe.
+- **Raporty wydajności:** licencja, dostępność i migawki (`perf.list`) osobno od generowania raportu (`perf`).
+- **Scheduler:** DDL zaznaczonego obiektu (`scheduler.detail`) osobno od listy i kart przebiegów.
+- Limit sesji profilu (ORA-02391, ORA-00018, ORA-00020; listener: ORA-12516/12519/12520) przy otwieraniu sesji
+  metadanych — metadane wracają na 5 minut do sesji głównej (przeglądarka obiektów działa jak przed zmianą).
+  Rozłączenie w trakcie otwierania sesji zwalnia ją i jej tunel, bez zapamiętania hasła i potwierdzenia właściciela.
+- Bezczynne sesje narzędzi nie są zamykane automatycznie (jak dotąd): zamknięcie w trakcie długiej operacji narzędzia
+  przerwałoby ją; sesje otwierają się dopiero przy pierwszym użyciu narzędzia i zamykają przy rozłączeniu.
+- Komendy narzędzi danych (agent, paleta) — ta sama sesja co okno narzędzia (`DataTransferCommands.session(tool:)`).
+- Migawka odzyskiwania przed wykonaniem — zapis na dysk przed startem polecenia (okresowa — w tle, D233).
+- Pozostają wspólne (świadomie): sesja jednego narzędzia dla jego kolejnych kroków (operacje i tak idą po kolei
+  w jednym oknie), sesja okna dla jego poleceń (transakcja okna), sesja kompilacji (kolejność kompilacji).
+- **Code review (medium, 9 rund) zmian 1.21.5 → 1.21.6:** poprawione błędy i istotna ergonomia (bieżący schemat
+  w sesji metadanych, tryb Dual na sesji głównej, limit sesji, tunel i hasło przy rozłączeniu w trakcie otwierania,
+  nieaktualne wyniki raportów i list, migawka przed wykonaniem na dysku); po 8. rundzie uproszczenie — czynności
+  w tle nie otwierają sesji (usunięte okna „w tle”, blokada po odmowie i przerwy). Runda 9 bez istotnych błędów.
+  Pominięte świadomie: liczba sesji narzędzi (decyzja właściciela), zamknięcie sesji metadanych przy zmianie trybu
+  w trakcie zapytania (ODPI kończy zapytanie przed zamknięciem), rzadkie wyścigi z rozłączeniem w chwili rejestracji
+  sesji, porządki nazw.
+
