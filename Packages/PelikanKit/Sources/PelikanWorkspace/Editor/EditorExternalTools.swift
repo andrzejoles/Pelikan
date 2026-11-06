@@ -176,7 +176,7 @@ public final class RecoveryStore: Sendable {
         io.sync { write(w) }
     }
 
-    /// Jak `save`, bez czekania na zapis (timer i migawka przed wykonaniem).
+    /// Jak `save`, bez czekania na zapis (migawka okresowa; przed wykonaniem — `save`, żeby była na dysku przed startem).
     public func saveInBackground(_ w: Workset) {
         io.async { self.write(w) }
     }

@@ -216,14 +216,15 @@ public final class SessionManager {
     /// W trybie Dual okna wykonują polecenia w sesji głównej — metadane zostają w niej, żeby `ALTER SESSION SET
     /// CURRENT_SCHEMA` wpisane w oknie działało też dla analizy nazw i przeglądarki obiektów (jak dotąd).
     public func metadataKey(connection: UUID) -> SessionKey {
-        settings().sessionMode == .multi && !metadataFallback.contains(connection)
+        settings().sessionMode == .multi && (metadataFallback[connection].map { Date().timeIntervalSince($0) > 300 } ?? true)
             ? SessionKey(connectionID: connection, purpose: .tool("metadata"))
             : SessionKey(connectionID: connection, purpose: .main)
     }
 
     /// Połączenia, na których osobnej sesji metadanych nie da się otworzyć (limit sesji profilu: ORA-02391, ORA-00018,
     /// ORA-00020) — metadane wracają do sesji głównej do rozłączenia, zamiast przestać działać.
-    @ObservationIgnored private var metadataFallback: Set<UUID> = []
+    /// Chwila przejścia na sesję główną — po 5 minutach ponowna próba osobnej sesji (błędy listenera bywają chwilowe).
+    @ObservationIgnored private var metadataFallback: [UUID: Date] = [:]
 
     /// Sesja metadanych (otwierana na żądanie użytkownika); przy limicie sesji — sesja główna.
     public func metadataSession(_ connection: UUID) async throws -> any DatabaseSession {
@@ -234,18 +235,29 @@ public final class SessionManager {
         let main = SessionKey(connectionID: connection, purpose: .main)
         if key != main, sessions[main] == nil { _ = try await session(main) }
         do {
-            return try await session(key)
+            let s = try await session(key)
+            if !Self.quietOpen { metadataAuthBlocked.remove(connection) }
+            return s
         } catch let e as OracleError where key.purpose != .main && [2391, 18, 20, 12516, 12519, 12520].contains(e.code) {
             Log.connection.notice("Limit sesji — metadane w sesji głównej (\(e.code, privacy: .public))")
-            metadataFallback.insert(connection)
+            metadataFallback[connection] = Date()
             return try await session(SessionKey(connectionID: connection, purpose: .main))
         }
     }
 
     /// Schemat ustawiony komendą „Ustaw bieżący schemat…” — stosowany także w sesji metadanych otwieranej później.
-    @ObservationIgnored public var currentSchemaOverride: [UUID: String] = [:]
+    @ObservationIgnored public private(set) var currentSchemaOverride: [UUID: String] = [:]
+
+    /// Schemat do sesji otwieranych później (główna, metadanych) — tylko bezpieczny identyfikator (trafia do SQL).
+    public func setCurrentSchemaOverride(_ schema: String, for connection: UUID) throws {
+        guard Self.isSafeIdentifier(schema) else { throw CommandError.invalidArgument("schema", schema) }
+        currentSchemaOverride[connection] = schema
+    }
     /// Nieudane otwarcie sesji metadanych w tle — kolejna próba najwcześniej po minucie (limit sesji profilu, tunel).
     @ObservationIgnored private var metadataOpenFailed: [UUID: Date] = [:]
+    /// Odmowa logowania sesji metadanych w tle (ORA-01017, brak hasła) — bez dalszych prób w tle do otwarcia przez
+    /// użytkownika albo rozłączenia: ponawianie złym hasłem zablokowałoby konto (FAILED_LOGIN_ATTEMPTS).
+    @ObservationIgnored private var metadataAuthBlocked: Set<UUID> = []
     /// Otwieranie w tle (bez czynności użytkownika): bez okien pytania o hasło i potwierdzenia właściciela — zamiast
     /// pytania błąd. Wartość zadania (dziedziczona przez zadanie otwierania), więc dotyczy tylko tego otwierania.
     @TaskLocal static var quietOpen = false
@@ -274,6 +286,7 @@ public final class SessionManager {
         let key = metadataKey(connection: connection)
         if key == main { return m }
         if let s = sessions[key], !s.connectionLost { return s }
+        if metadataAuthBlocked.contains(connection) { return nil }
         if let failed = metadataOpenFailed[connection], Date().timeIntervalSince(failed) < 60 { return nil }
         do {
             let s = try await Self.$quietOpen.withValue(true) { try await metadataSession(connection) }
@@ -281,6 +294,9 @@ public final class SessionManager {
             return s
         } catch CommandError.notConnected {
             return nil     // rozłączono w trakcie — bez przerwy minutowej po ponownym połączeniu
+        } catch CommandError.cancelledByUser {
+            metadataAuthBlocked.insert(connection)     // potrzebne hasło albo potwierdzenie — tylko na żądanie użytkownika
+            return nil
         } catch {
             metadataOpenFailed[connection] = Date()
             return nil
@@ -410,6 +426,9 @@ public final class SessionManager {
 
     private func openSession(_ key: SessionKey) async throws -> any DatabaseSession {
         guard let def = store.connection(key.connectionID) else { throw CommandError.notConnected }
+        // Hasło i potwierdzenie właściciela zapamiętywane tylko, gdy w trakcie otwierania nie było rozłączenia.
+        let generation = disconnects[def.id, default: 0]
+        let current = { [unowned self] in self.disconnects[def.id, default: 0] == generation }
         guard let driver = drivers[def.driver] else {
             throw DatabaseError.driverUnavailable(L10n.tr("Sterownik \(def.driver.rawValue) jest niedostępny"))
         }
@@ -458,7 +477,7 @@ public final class SessionManager {
                 if let np = credentials.newPassword {
                     // Nowe zastępuje stare, jeśli stare było zapisane albo użytkownik chciał.
                     if def.savePassword || rememberOnSuccess { try? store.rememberPassword(np, for: def.id) }
-                    sessionPasswords[def.id] = np
+                    if current() { sessionPasswords[def.id] = np }
                 }
                 // Nieudana inicjalizacja (skrypt startowy, NLS, Workspace Manager) — sesja zamknięta, tunel zwolniony.
                 do {
@@ -477,8 +496,8 @@ public final class SessionManager {
                 // rozłączeniu zwalnia własny tunel, nie tunel nowszej sesji pod tym samym kluczem.
                 if let tunnel { openedTunnels[ObjectIdentifier(s)] = tunnel }
                 if credentials.newPassword == nil, let p = password {
-                    if rememberOnSuccess { try? store.rememberPassword(p, for: def.id) }
-                    sessionPasswords[def.id] = p
+                    if rememberOnSuccess, current() { try? store.rememberPassword(p, for: def.id) }
+                    if current() { sessionPasswords[def.id] = p }
                 }
                 return s
             } catch let e as OracleError where e.isPasswordExpired && attempt < 2 {
@@ -512,11 +531,13 @@ public final class SessionManager {
     /// włączona, raz na połączenie w tym uruchomieniu (do rozłączenia).
     private func confirmOwner(_ def: ConnectionDefinition) async throws {
         guard settings().requireOwnerForSavedPasswords, !ownerConfirmed.contains(def.id) else { return }
+        let generation = disconnects[def.id, default: 0]
         guard !Self.quietOpen else { throw CommandError.cancelledByUser }
         guard await prompter?.authenticateOwner(reason: L10n.tr("użyć zapisanego hasła połączenia „\(def.displayName)”")) == true else {
             throw CommandError.cancelledByUser
         }
-        ownerConfirmed.insert(def.id)
+        // Rozłączono w czasie pytania — potwierdzenie nie przechodzi na następne połączenie.
+        if disconnects[def.id, default: 0] == generation { ownerConfirmed.insert(def.id) }
     }
 
     /// Hasło tunelu SSH z Pęku kluczy (po potwierdzeniu właściciela, D56); nil — tunel na klucz albo agenta SSH.
@@ -576,7 +597,8 @@ public final class SessionManager {
         // Po ponownym połączeniu schemat z definicji połączenia (jak sesja główna).
         currentSchemaOverride[connectionID] = nil
         metadataOpenFailed[connectionID] = nil
-        metadataFallback.remove(connectionID)
+        metadataFallback[connectionID] = nil
+        metadataAuthBlocked.remove(connectionID)
         for key in sessions.keys where key.connectionID == connectionID {
             await close(key)
         }
@@ -596,6 +618,7 @@ public final class SessionManager {
         currentSchemaOverride.removeAll()
         metadataOpenFailed.removeAll()
         metadataFallback.removeAll()
+        metadataAuthBlocked.removeAll()
     }
 
     /// Stan połączenia na liście.

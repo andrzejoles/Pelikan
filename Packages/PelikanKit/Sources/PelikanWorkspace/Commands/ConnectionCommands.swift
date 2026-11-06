@@ -259,7 +259,7 @@ public enum ConnectionCommands {
                 // Przeglądarka obiektów i nazwy bez schematu korzystają z sesji metadanych (D234) — ten sam schemat tam
                 // i w sesjach metadanych otwieranych później.
                 let sm = ctx.workspace.sessions
-                sm.currentSchemaOverride[id] = schema
+                try sm.setCurrentSchemaOverride(schema, for: id)
                 let metaKey = sm.metadataKey(connection: id)
                 // Także sesja metadanych otwierana właśnie teraz (mogła odczytać schemat przed zmianą).
                 if metaKey.purpose != .main, let meta = await sm.existingOrPendingSession(metaKey) {

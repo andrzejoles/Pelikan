@@ -179,14 +179,17 @@ struct SessionManagerTests {
             let kind = DriverKind.instantClient
             let capabilities: DriverCapabilities = []
             func availability() -> Result<Void, DatabaseError> { .success(()) }
+            let metaAttempts = Mutex(0)
             func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession {
+                if options.tags.action?.contains("metadata") == true { metaAttempts.withLock { $0 += 1 } }
                 if options.tags.action?.contains("metadata") == true, credentials.password != "new" {
                     throw OracleError(code: 1017, message: "ORA-01017: invalid username/password; logon denied")
                 }
                 return FakeSession()
             }
         }
-        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: MetaPasswordDriver()])
+        let driver = MetaPasswordDriver()
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: driver])
         let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"), savePassword: false)
         try ws.connections.upsert(def)
         let prompter = FakePrompter(answers: [("good", false), ("new", false)])
@@ -195,8 +198,13 @@ struct SessionManagerTests {
         #expect(prompter.asked == 1)
         #expect(await ws.sessions.metadataSessionIfConnected(def.id) == nil)
         #expect(prompter.asked == 1)
+        // Odmowa w tle — bez kolejnych prób złym hasłem (blokada konta), do otwarcia przez użytkownika.
+        let attempts = driver.metaAttempts.withLock { $0 }
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) == nil)
+        #expect(driver.metaAttempts.withLock { $0 } == attempts)
         _ = try await ws.sessions.metadataSession(def.id)
         #expect(prompter.asked == 2)
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) != nil)
     }
 
     @Test("Zapisane hasło: łączy bez pytania; skrypt inicjalizacji i bieżący schemat wykonane")
