@@ -68,7 +68,7 @@ extension ResultGridModel {
 
     /// Zapis pełnej wartości LOB do pliku porcjami (bez wczytywania całości do pamięci): CLOB w UTF-8, BLOB bez zmian.
     public func writeLOB(_ l: LOBValue, to url: URL) async throws {
-        FileManager.default.createFile(atPath: url.path, contents: nil)
+        _ = FileManager.default.createFile(atPath: url.path, contents: nil)
         let h = try FileHandle(forWritingTo: url)
         defer { try? h.close() }
         try h.truncate(atOffset: 0)
