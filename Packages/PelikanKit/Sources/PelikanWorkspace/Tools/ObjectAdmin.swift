@@ -158,7 +158,7 @@ extension Workspace {
     public func checkProgramWindowChanges() async -> [DocumentID] {
         var changed: [DocumentID] = []
         for doc in documents where doc.kind == .program && !doc.objectTimestamps.isEmpty && !doc.isExecuting {
-            guard let conn = effectiveConnection(of: doc), let s = sessions.existingSession(SessionKey(connectionID: conn, purpose: .main)),
+            guard let conn = effectiveConnection(of: doc), let s = await sessions.metadataSessionIfConnected(conn),
                   let names = try? await ObjectAdmin.changedObjects(of: doc, in: s), !names.isEmpty else { continue }
             doc.statusText = L10n.tr("⚠️ Obiekt zmieniony w bazie po wczytaniu: \(names.joined(separator: ", ")) — porównaj ze źródłem w bazie przed kompilacją")
             changed.append(doc.id)

@@ -12,9 +12,10 @@ enum ObjectAdminCommands {
                                   summary: summary, feature: feature), validate: validate, run: run)
     }
 
-    /// Sesja główna połączenia obiektu (gałąź Object Browsera, argument `connection`, a bez nich — połączenie główne).
+    /// Sesja metadanych połączenia obiektu (gałąź Object Browsera, argument `connection`, a bez nich — połączenie główne).
     static func mainSession(_ ctx: CommandContext) async throws -> any DatabaseSession {
-        try await ctx.workspace.sessions.session(SessionKey(connectionID: try ctx.objectConnection(), purpose: .main))
+        let conn = try ctx.objectConnection()
+        return try await ctx.workspace.sessions.session(ctx.workspace.sessions.metadataKey(connection: conn))
     }
 
     /// Sesja poleceń z niejawnym COMMIT (DDL, DBMS_MVIEW/DBMS_JOB/DBMS_AQADM): sesja kompilacji, jak `ob.recompile` —
@@ -237,7 +238,7 @@ enum ObjectAdminCommands {
                     summary: L10n.tr("Porównuje czas ostatniej zmiany obiektów okna programu w bazie z chwilą wczytania albo kompilacji."), feature: "PD-PROG-011",
                     validate: { programDocument($0) != nil }) { ctx in
                 guard let doc = programDocument(ctx.workspace), let conn = ctx.workspace.effectiveConnection(of: doc) else { throw CommandError.notConnected }
-                let s = try await ctx.workspace.sessions.session(SessionKey(connectionID: conn, purpose: .main))
+                let s = try await ctx.workspace.sessions.session(ctx.workspace.sessions.metadataKey(connection: conn))
                 let changed = try await ObjectAdmin.changedObjects(of: doc, in: s)
                 if !changed.isEmpty {
                     doc.statusText = L10n.tr("⚠️ Obiekt zmieniony w bazie po wczytaniu: \(changed.joined(separator: ", ")) — porównaj ze źródłem w bazie przed kompilacją")

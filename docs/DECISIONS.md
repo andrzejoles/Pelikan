@@ -3948,3 +3948,18 @@ głównym, praca po zamknięciu narzędzia, przyciski aktywne w trakcie. Poprawi
   wczytywanie dużej gałęzi opóźnia podpowiedzi; w trybie Multi okna SQL mają własne sesje, więc zapytania okien ich
   nie blokują. Osobna sesja metadanych — do decyzji właściciela (dodatkowa sesja na każde połączenie).
 
+### D234 · 2026-11-06 — Osobne sesje wszędzie, gdzie to możliwe (decyzja właściciela)
+
+Właściciel: „Wszędzie tam, gdzie to możliwe daj osobną sesję”. Dodatkowo do D231/D233:
+- **Metadane** (przeglądarka obiektów, podpowiedzi, analiza nazw w edytorze, opis obiektów, sprawdzanie zmian obiektów
+  okien programu, kosz) — sesja `metadata` zamiast głównej (`SessionManager.metadataKey`). Długie wczytanie dużej
+  gałęzi nie opóźnia podpowiedzi ani poleceń na sesji głównej, a w trybie Dual zapytania okien (sesja główna) nie
+  wstrzymują przeglądarki obiektów. Czynności w tle (analiza kodu, sprawdzanie zmian co minutę) otwierają ją tylko przy
+  otwartym połączeniu — bez łączenia od zera i pytania o hasło. Tryb jednej sesji — sesja główna (z założenia).
+  Skutek uboczny w trybie Dual: `ALTER SESSION SET CURRENT_SCHEMA` wpisane w oknie nie zmienia już schematu
+  przeglądarki obiektów (jak w trybie Multi); schemat z definicji połączenia ustawia każda sesja przy otwarciu.
+- **Raporty wydajności:** licencja, dostępność i migawki (`perf.list`) osobno od generowania raportu (`perf`).
+- **Scheduler:** DDL zaznaczonego obiektu (`scheduler.detail`) osobno od listy i kart przebiegów.
+- Pozostają wspólne (świadomie): sesja jednego narzędzia dla jego kolejnych kroków (operacje i tak idą po kolei
+  w jednym oknie), sesja okna dla jego poleceń (transakcja okna), sesja kompilacji (kolejność kompilacji).
+

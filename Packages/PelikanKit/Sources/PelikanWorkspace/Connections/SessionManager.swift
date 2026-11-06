@@ -197,6 +197,21 @@ public final class SessionManager {
         SessionKey(connectionID: connection, purpose: .debugger(document))
     }
 
+    /// Sesja metadanych (przeglądarka obiektów, podpowiedzi, analiza nazw, odczyty słownika): osobna, żeby długie
+    /// wczytanie dużej gałęzi albo zapytanie słownika nie opóźniały innych czynności na sesji głównej (D234). W trybie
+    /// jednej sesji — sesja główna (wszystko w jednej sesji z założenia).
+    public func metadataKey(connection: UUID) -> SessionKey {
+        settings().sessionMode == .single ? SessionKey(connectionID: connection, purpose: .main)
+            : SessionKey(connectionID: connection, purpose: .tool("metadata"))
+    }
+
+    /// Sesja metadanych, gdy połączenie jest otwarte (sesja główna istnieje) — bez łączenia od zera i bez pytania
+    /// o hasło (czynności w tle: analiza kodu, sprawdzanie zmian obiektów).
+    public func metadataSessionIfConnected(_ connection: UUID) async -> (any DatabaseSession)? {
+        guard sessions[SessionKey(connectionID: connection, purpose: .main)] != nil else { return nil }
+        return try? await session(metadataKey(connection: connection))
+    }
+
     public func compileKey(connection: UUID) -> SessionKey {
         settings().sessionMode == .single ? SessionKey(connectionID: connection, purpose: .main)
             : SessionKey(connectionID: connection, purpose: .compile)

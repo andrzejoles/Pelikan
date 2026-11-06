@@ -116,6 +116,23 @@ struct SessionManagerTests {
         #expect(!doc.transactionOpen)
     }
 
+    @Test("Metadane: osobna sesja w trybach Multi i Dual (bez pytania o hasło w tle, gdy niepołączone); w trybie jednej sesji — główna")
+    func metadataSession() async throws {
+        let (ws, _) = make()
+        let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        #expect(ws.sessions.metadataKey(connection: def.id).purpose == .tool("metadata"))
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) == nil)
+        let main = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        let meta = try #require(await ws.sessions.metadataSessionIfConnected(def.id))
+        #expect(meta !== main)
+        #expect(try await ws.metadata(for: def.id)!.session() === meta)
+        ws.settings.sessionMode = .dual
+        #expect(ws.sessions.metadataKey(connection: def.id).purpose == .tool("metadata"))
+        ws.settings.sessionMode = .single
+        #expect(ws.sessions.metadataKey(connection: def.id).purpose == .main)
+    }
+
     @Test("Zapisane hasło: łączy bez pytania; skrypt inicjalizacji i bieżący schemat wykonane")
     func savedPassword() async throws {
         let (ws, driver) = make()
@@ -407,15 +424,19 @@ struct ConnectionCheckTests {
         let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: "u", connectString: "h/s"), savePassword: false)
         try ws.connections.upsert(def, password: "good")
         let key = SessionKey(connectionID: def.id, purpose: .main)
-        let s1 = try await ws.sessions.session(key)
+        _ = try await ws.sessions.session(key)
         let doc = ws.newDocument(.sql)
         doc.connectionID = def.id
         doc.text = "select * from t;"
         await ws.analyzeCode(doc)
+        // Analiza nazw na sesji metadanych (D234).
+        let s1 = try #require(ws.sessions.existingSession(ws.sessions.metadataKey(connection: def.id)))
         #expect(ws.nameSources.keys.map(\.session) == [ObjectIdentifier(s1)])
         await ws.sessions.disconnect(def.id)
-        let s2 = try await ws.sessions.session(key)
+        _ = try await ws.sessions.session(key)
         await ws.analyzeCode(doc)
+        let s2 = try #require(ws.sessions.existingSession(ws.sessions.metadataKey(connection: def.id)))
+        #expect(s2 !== s1)
         #expect(ws.nameSources.keys.map(\.session) == [ObjectIdentifier(s2)])
         ws.metadata(for: def.id)?.refresh()
         #expect(ws.nameSources.isEmpty)

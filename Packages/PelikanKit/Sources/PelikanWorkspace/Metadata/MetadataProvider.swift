@@ -209,7 +209,7 @@ public final class MetadataProvider {
     }
 
     func session() async throws -> any DatabaseSession {
-        try await workspace.sessions.session(SessionKey(connectionID: connectionID, purpose: .main))
+        try await workspace.sessions.session(workspace.sessions.metadataKey(connection: connectionID))
     }
 
     public func refresh() {
