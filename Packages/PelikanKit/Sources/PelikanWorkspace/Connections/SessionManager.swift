@@ -279,6 +279,8 @@ public final class SessionManager {
             let s = try await Self.$quietOpen.withValue(true) { try await metadataSession(connection) }
             metadataOpenFailed[connection] = nil
             return s
+        } catch CommandError.notConnected {
+            return nil     // rozłączono w trakcie — bez przerwy minutowej po ponownym połączeniu
         } catch {
             metadataOpenFailed[connection] = Date()
             return nil
@@ -564,9 +566,8 @@ public final class SessionManager {
     public func disconnect(_ connectionID: UUID) async {
         Log.connection.info("Rozłączono \(store.connection(connectionID)?.displayName, privacy: .hash)")
         disconnects[connectionID, default: 0] += 1
-        for key in sessions.keys where key.connectionID == connectionID {
-            await close(key)
-        }
+        // Stan połączenia czyszczony przed zamykaniem sesji (`await`): otwarcie rozpoczęte w trakcie nie loguje się
+        // zapamiętanym hasłem ani ze schematem sprzed rozłączenia.
         sessionPasswords[connectionID] = nil
         ownerConfirmed.remove(connectionID)
         openConnections.removeAll { $0 == connectionID }
@@ -574,6 +575,9 @@ public final class SessionManager {
         currentSchemaOverride[connectionID] = nil
         metadataOpenFailed[connectionID] = nil
         metadataFallback.remove(connectionID)
+        for key in sessions.keys where key.connectionID == connectionID {
+            await close(key)
+        }
     }
 
     private func noteOpen(_ connectionID: UUID) {

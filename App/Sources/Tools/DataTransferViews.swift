@@ -150,8 +150,12 @@ struct ExportTablesView: View {
     }
 
     private func load() async {
+        // Nowsze wczytanie (Enter po zmianie schematu) zastępuje wolniejsze wcześniejsze.
+        let o = owner, c = connection
         do {
-            tables = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(owner), in: try await DataTransferUI.session(workspace, connection, tool: "eksport"))
+            let list = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(o), in: try await DataTransferUI.session(workspace, c, tool: "eksport"))
+            guard owner == o, connection == c else { return }
+            tables = list
             selected = []
             message = L10n.tr("Tabele: \(tables.count)")
         } catch { message = error.localizedDescription }
@@ -740,8 +744,11 @@ struct CompareTableDataView: View {
     }
 
     private func load() async {
+        let o = owner, c = connection
         do {
-            tables = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(owner), in: try await DataTransferUI.session(workspace, connection, tool: "porownanie"))
+            let list = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(o), in: try await DataTransferUI.session(workspace, c, tool: "porownanie"))
+            guard owner == o, connection == c else { return }
+            tables = list
             selected = []
         } catch { message = error.localizedDescription }
     }
