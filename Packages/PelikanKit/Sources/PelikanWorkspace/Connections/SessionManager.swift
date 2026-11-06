@@ -211,17 +211,36 @@ public final class SessionManager {
     @ObservationIgnored public var currentSchemaOverride: [UUID: String] = [:]
     /// Nieudane otwarcie sesji metadanych w tle — kolejna próba najwcześniej po minucie (limit sesji profilu, tunel).
     @ObservationIgnored private var metadataOpenFailed: [UUID: Date] = [:]
+    /// Sesje otwierane w tle (bez czynności użytkownika) — bez okien pytania o hasło: zamiast pytania błąd.
+    @ObservationIgnored private var quietKeys: Set<SessionKey> = []
+    /// Licznik rozłączeń połączenia — sesja otwierana w chwili rozłączenia nie wraca po nim do mapy.
+    @ObservationIgnored private var disconnects: [UUID: Int] = [:]
+
+    private func prompter(for key: SessionKey) -> (any ConnectionPrompter)? {
+        quietKeys.contains(key) ? nil : prompter
+    }
 
     /// Sesja metadanych, gdy połączenie jest otwarte (sesja główna istnieje) — dla czynności w tle (analiza kodu,
     /// sprawdzanie zmian obiektów). Pierwsze użycie otwiera ją z hasłem sesji głównej; po błędzie — przerwa minutowa,
     /// bez ponawiania logowania przy każdej przerwie w pisaniu.
+    /// Po zmianie trybu z Multi na Dual albo jedną sesję: osobna sesja metadanych nie jest już używana — zamknięta
+    /// przy pierwszym użyciu metadanych (bez sesji serwera do rozłączenia).
+    public func closeUnusedMetadataSession(_ connection: UUID) async {
+        let separate = SessionKey(connectionID: connection, purpose: .tool("metadata"))
+        guard metadataKey(connection: connection) != separate, sessions[separate] != nil else { return }
+        await close(separate)
+    }
+
     public func metadataSessionIfConnected(_ connection: UUID) async -> (any DatabaseSession)? {
+        await closeUnusedMetadataSession(connection)
         let main = SessionKey(connectionID: connection, purpose: .main)
         guard let m = sessions[main] else { return nil }
         let key = metadataKey(connection: connection)
         if key == main { return m }
         if let s = sessions[key], !s.connectionLost { return s }
         if let failed = metadataOpenFailed[connection], Date().timeIntervalSince(failed) < 60 { return nil }
+        quietKeys.insert(key)
+        defer { quietKeys.remove(key) }
         do {
             let s = try await session(key)
             metadataOpenFailed[connection] = nil
@@ -290,7 +309,13 @@ public final class SessionManager {
         let task = Task { @MainActor in try await self.open(key) }
         connecting[key] = task
         defer { connecting[key] = nil }
+        let generation = disconnects[key.connectionID, default: 0]
         let s = try await task.value
+        // Rozłączono w trakcie łączenia (np. sesja metadanych otwierana w tle) — bez osieroconej sesji po rozłączeniu.
+        guard disconnects[key.connectionID, default: 0] == generation else {
+            await s.close()
+            throw CommandError.notConnected
+        }
         sessions[key] = s
         lastActivity[key] = Date()
         store.markUsed(key.connectionID)
@@ -338,7 +363,7 @@ public final class SessionManager {
         // Hasło zapisujemy dopiero po udanym połączeniu i tylko gdy użytkownik zaznaczył „Zapamiętaj”.
         var rememberOnSuccess = false
         if password == nil, !def.target.usesExternalCredentials {
-            guard let answer = await prompter?.askPassword(for: def, reason: nil) else { throw CommandError.cancelledByUser }
+            guard let answer = await prompter(for: key)?.askPassword(for: def, reason: nil) else { throw CommandError.cancelledByUser }
             password = answer.password
             rememberOnSuccess = answer.remember
         }
@@ -378,7 +403,8 @@ public final class SessionManager {
                 // Nieudana inicjalizacja (skrypt startowy, NLS, Workspace Manager) — sesja zamknięta, tunel zwolniony.
                 do {
                     try await initialize(s, def)
-                    if key.purpose == .tool("metadata"), let schema = currentSchemaOverride[def.id] {
+                    // Schemat z „Ustaw bieżący schemat…” — sesja główna i metadanych także po ponownym połączeniu.
+                    if key.purpose == .main || key.purpose == .tool("metadata"), let schema = currentSchemaOverride[def.id] {
                         _ = try await s.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)")
                     }
                 } catch { await s.close(); throw error }
@@ -391,13 +417,13 @@ public final class SessionManager {
                 return s
             } catch let e as OracleError where e.isPasswordExpired && attempt < 2 {
                 Log.connection.notice("Hasło wygasło (\(e as any Error)) — prośba o nowe hasło")
-                guard let np = await prompter?.askNewPassword(for: def, message: e.message) else { throw CommandError.cancelledByUser }
+                guard let np = await prompter(for: key)?.askNewPassword(for: def, message: e.message) else { throw CommandError.cancelledByUser }
                 credentials = Credentials(password: password, newPassword: np)
             } catch let e as OracleError where e.code == 1017 && attempt < 2 && !def.target.usesExternalCredentials {
                 // ORA-01017: błędne hasło — pytamy ponownie (zapisane hasło jest nieaktualne).
                 Log.connection.notice("Odmowa logowania (ORA-01017) — ponowne pytanie o hasło")
                 sessionPasswords[def.id] = nil
-                guard let answer = await prompter?.askPassword(for: def, reason: e.message) else { throw CommandError.cancelledByUser }
+                guard let answer = await prompter(for: key)?.askPassword(for: def, reason: e.message) else { throw CommandError.cancelledByUser }
                 password = answer.password
                 rememberOnSuccess = answer.remember
                 credentials = Credentials(password: password)
@@ -472,6 +498,7 @@ public final class SessionManager {
     /// Rozłącza wszystkie sesje połączenia (UG 19.1 Disconnect).
     public func disconnect(_ connectionID: UUID) async {
         Log.connection.info("Rozłączono \(store.connection(connectionID)?.displayName, privacy: .hash)")
+        disconnects[connectionID, default: 0] += 1
         for key in sessions.keys where key.connectionID == connectionID {
             await close(key)
         }

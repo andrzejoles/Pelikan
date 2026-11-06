@@ -262,7 +262,8 @@ public enum ConnectionCommands {
                 sm.currentSchemaOverride[id] = schema
                 let metaKey = sm.metadataKey(connection: id)
                 if metaKey.purpose != .main, let meta = sm.existingSession(metaKey) {
-                    _ = try await meta.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)")
+                    // Utracona sesja metadanych — nowa dostanie schemat przy otwarciu; główna już jest zmieniona.
+                    _ = try? await meta.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)")
                 }
                 ctx.workspace.metadata(for: id)?.refresh()
                 return CommandResult(value: .string(try await s.scalar("select sys_context('userenv', 'current_schema') from dual") ?? schema))

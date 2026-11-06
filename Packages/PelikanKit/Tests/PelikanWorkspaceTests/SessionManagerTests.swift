@@ -129,6 +129,10 @@ struct SessionManagerTests {
         #expect(try await ws.metadata(for: def.id)!.session() === meta)
         ws.settings.sessionMode = .dual
         #expect(ws.sessions.metadataKey(connection: def.id).purpose == .main)
+        // Po zmianie trybu osobna sesja metadanych zamknięta przy pierwszym użyciu metadanych.
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) === main)
+        #expect(ws.sessions.existingSession(SessionKey(connectionID: def.id, purpose: .tool("metadata"))) == nil)
+        #expect((meta as! FakeSession).closedFlag.withLock { $0 })
         ws.settings.sessionMode = .single
         #expect(ws.sessions.metadataKey(connection: def.id).purpose == .main)
     }

@@ -113597,6 +113597,34 @@
         }
       }
     },
+    "Wynik raportu „%@” pominięty — w trakcie wybrano inny raport albo połączenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Result of report “%@” discarded — another report or connection was selected meanwhile"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergebnis des Berichts „%@“ verworfen — inzwischen wurde ein anderer Bericht oder eine andere Verbindung gewählt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultado del informe «%@» descartado — mientras tanto se eligió otro informe u otra conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Результат звіту «%@» відкинуто — тим часом вибрано інший звіт або з’єднання"
+          }
+        }
+      }
+    },
     "Wynik testu" : {
       "localizations" : {
         "en" : {

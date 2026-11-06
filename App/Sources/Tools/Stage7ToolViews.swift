@@ -139,7 +139,10 @@ struct PredefinedReportsView: View {
             v.merge(values) { $1 }
             let res = try await PredefinedReports.run(r, values: v, in: s)
             // Inny raport albo połączenie wybrane w trakcie — wynik nie trafia do widoku innego raportu.
-            guard selection == r.id, connection == conn else { return }
+            guard selection == r.id, connection == conn else {
+                message = L10n.tr("Wynik raportu „\(r.title)” pominięty — w trakcie wybrano inny raport albo połączenie")
+                return
+            }
             runID = UUID()
             result = res
             detail = nil
