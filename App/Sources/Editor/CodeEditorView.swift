@@ -74,8 +74,6 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private var appliedSchemeKey: String?
     private var appliedColorsKey: String?
     private var appliedPlain: NSColor?
-    /// Licznik zmian tekstu, dla którego policzono `diagnostics`.
-    private var diagnosticsEdits = -1
 
     init(document: Document, fontSize: CGFloat = 13, secondary: Bool = false) {
         self.document = document
@@ -141,7 +139,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
                 self.textView.backgroundColor = base
             }
             // Kolor tekstu z Preferencji jest w dynamicznym kolorze — ułożone fragmenty trzeba unieważnić.
-            if plainChanged, let tlm = self.textView.textLayoutManager { tlm.invalidateLayout(for: tlm.documentRange) }
+            if plainChanged {
+                if let tlm = self.textView.textLayoutManager { tlm.invalidateLayout(for: tlm.documentRange) } else { self.rehighlightAll() }
+            }
             self.textView.needsDisplay = true
         })
         // Motywy kolorowania składni (D227) i kolorowanie Pro*C według rozszerzenia pliku.
@@ -493,8 +493,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private func rehighlightAll() {
         guard let storage = textView.textStorage, storage.length > 0 else { return }
         highlighter.highlightAll(storage, font: font)
-        // Zakresy diagnostyk tylko dla niezmienionego tekstu — po edycji nakłada je analiza.
-        if !diagnostics.isEmpty, diagnosticsEdits == textEdits { showDiagnostics(diagnostics) }
+        // Zakresy diagnostyk tylko, gdy analiza dotyczyła obecnego tekstu (porównanie raz, przy zmianie motywu, trybu
+        // albo czcionki); po edycji podkreślenia nakłada analiza zaplanowana po zmianie.
+        if !diagnostics.isEmpty, document.text == analyzedText { showDiagnostics(diagnostics) }
     }
 
     private func load(_ text: String) {
@@ -621,7 +622,6 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     /// Podkreślenie falowane (kropkowane): błąd — czerwone, ostrzeżenie — pomarańczowe; atrybuty renderowania, bez zmiany tekstu.
     private func showDiagnostics(_ list: [EditorDiagnostic]) {
         diagnostics = list
-        diagnosticsEdits = textEdits
         // Atrybuty magazynu tekstu, nie renderowania: TextKit 2 nie rysuje podkreślenia z atrybutów renderowania
         // (podkreślenia były niewidoczne — wykryte zrzutem w tle). Zmiana atrybutów nie zmienia tekstu ani historii cofania;
         // kolorowanie składni nadpisuje edytowaną linię, a analiza po zmianie nakłada podkreślenia ponownie.

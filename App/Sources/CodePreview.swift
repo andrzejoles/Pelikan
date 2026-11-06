@@ -41,7 +41,7 @@ struct CodePreview: View {
     /// Motywy z ustawień (obserwowane przez SwiftUI) — zmiana motywu odświeża podgląd (D227).
     static var schemeKey: String {
         guard let st = (NSApp.delegate as? AppDelegate)?.workspace.settings else { return "" }
-        return "\(st.syntaxSchemeLight)|\(st.syntaxSchemeDark)|\(st.customSyntaxSchemes.hashValue)"
+        return "\(st.syntaxSchemeLight)|\(st.syntaxSchemeDark)|\(st.customSyntaxSchemes.hashValue)|\(st.editorColors.hashValue)"
     }
 
     private func openInSQLWindow() {
