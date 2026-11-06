@@ -111,6 +111,7 @@ struct PerfReportTests {
         #expect(s.last(containing: "report_stats_operations") == nil && s.last(containing: "session_privs") != nil)
         #expect(PerfReportRunner.embeddedError("<report>ORA-20000: Insufficient privileges</report>\n") == "ORA-20000: Insufficient privileges")
         #expect(PerfReportRunner.embeddedError("<report><body>x</body></report>") == nil)
+        #expect(PerfReportRunner.embeddedError(String(repeating: "\n", count: 50) + "<report>ORA-20000: Brak uprawnień — zażółć</report>") != nil)
         #expect(PerfReportRunner.embeddedError("plain text") == nil)
 
         #if canImport(Darwin)

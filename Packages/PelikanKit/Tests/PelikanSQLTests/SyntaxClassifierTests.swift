@@ -48,5 +48,45 @@ struct SyntaxClassifierTests {
         // Po wstawce znów C.
         #expect(got["return"] == .keyword)
         #expect(ProCLexer.fileExtensions.contains("pc"))
+        // Dynamiczny SQL (metoda 2/3): EXECUTE s USING …; kończy się średnikiem — dalej znów C.
+        let dyn = Array("EXEC SQL PREPARE s FROM :q;\nEXEC SQL EXECUTE s USING :a;\nreturn 1;\n".utf16)
+        var d: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(dyn) { d[String(decoding: dyn[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(d["return"] == .keyword && d[":a"] == .variable && d["1"] == .number)
+        // Nazwa polecenia zaczynająca się od „begin” nie jest blokiem PL/SQL.
+        let named = Array("EXEC SQL EXECUTE begin_stmt USING :a;\nreturn 2;\n".utf16)
+        var n: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(named) { n[String(decoding: named[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(n["return"] == .keyword && n["2"] == .number)
+        // Komentarz i etykieta przed BEGIN — nadal blok do END-EXEC.
+        let labeled = Array("EXEC SQL EXECUTE\n  -- aktualizacja\n  <<blk>> BEGIN x := 1; y := 2; END;\nEND-EXEC;\nreturn 3;\n".utf16)
+        var b: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(labeled) { b[String(decoding: labeled[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(b["END-EXEC"] == .keyword && b["y"] == nil && b["return"] == .keyword && b["END"] == .keyword)
+        // Klauzula AT przed EXECUTE.
+        let at = Array("EXEC SQL AT :db EXECUTE BEGIN x := 1; y := 2; END; END-EXEC;\nreturn 4;\n".utf16)
+        var a: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(at) { a[String(decoding: at[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(a["END-EXEC"] == .keyword && a["return"] == .keyword && a["4"] == .number)
+        // Składowany PL/SQL do END-EXEC.
+        let ddl = Array("EXEC SQL CREATE OR REPLACE /* v2 */ PROCEDURE p AS BEGIN x := 1; y := 2; END; END-EXEC;\nreturn 5;\n".utf16)
+        var c: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(ddl) { c[String(decoding: ddl[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(c["END-EXEC"] == .keyword && c["return"] == .keyword && c["5"] == .number && c["y"] == nil)
+        // Specyfikacja typu kończy się średnikiem; AT ze zmienną strukturalną.
+        let ty = Array("EXEC SQL CREATE TYPE num_tab AS TABLE OF NUMBER;\nreturn 6;\nEXEC SQL AT :ctx.db EXECUTE BEGIN x := 1; y := 2; END; END-EXEC;\nreturn 7;\n".utf16)
+        var t: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(ty) { t[String(decoding: ty[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(t["6"] == .number && t["7"] == .number && t["END-EXEC"] == .keyword)
+        // Specyfikacja wywołania kończy się średnikiem.
+        let cs = Array("EXEC SQL CREATE OR REPLACE FUNCTION f RETURN NUMBER AS LANGUAGE C NAME \"f\" LIBRARY lib;\nreturn 8;\n".utf16)
+        var q: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(cs) { q[String(decoding: cs[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(q["8"] == .number && q["return"] == .keyword)
+        // Parametr o nazwie „language” w ciele z END-EXEC; AT z komentarzem przyklejonym do nazwy.
+        let pl = Array("EXEC SQL CREATE OR REPLACE FUNCTION f(language IN VARCHAR2) RETURN NUMBER AS BEGIN x := 1; RETURN 1; END; END-EXEC;\nreturn 9;\nEXEC SQL AT :db/* main */EXECUTE BEGIN a := 1; b := 2; END; END-EXEC;\nreturn 10;\n".utf16)
+        var r: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(pl) { r[String(decoding: pl[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(r["9"] == .number && r["10"] == .number && r["b"] == nil)
     }
 }

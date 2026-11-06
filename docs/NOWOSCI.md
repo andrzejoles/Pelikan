@@ -2,6 +2,16 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.21.3 — poprawki kolorowania po przeglądzie kodu
+
+- **Pro*C:** poprawne końce wstawek `EXEC SQL` — dynamiczny SQL `EXECUTE s USING …;`, specyfikacja typu, specyfikacja
+  wywołania `LANGUAGE C`, klauzula `AT :db`, komentarze i etykiety przed `BEGIN`, `CREATE … PROCEDURE` do `END-EXEC`.
+- **Edytor:** zmiana motywu, trybu systemu i wielkości czcionki nie gubi podkreśleń problemów; pogrubienie i kursywa
+  motywu własnego działają od razu; tło w kolorze połączenia nadąża za motywem; przeciąganie w polu koloru nie spowalnia
+  edytora.
+- **Podglądy kodu** odświeżają się po zmianie motywu, trybu i koloru tekstu; import motywów VS Code z komentarzem po
+  ostatnim przecinku.
+
 ## 1.21.2 — motyw kolorów włącza się kliknięciem
 
 - **Ustawienia › Kolory:** kliknięcie motywu na liście od razu włącza go w bieżącym trybie systemu (jasnym albo

@@ -142,7 +142,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         // Motywy kolorowania składni (D227) — także dla podglądów kodu bez otwartego edytora.
         trackChanges { [weak self] in
             guard let self else { return }
-            SyntaxTheme.apply(self.workspace.settings)
+            SyntaxTheme.apply(self.workspace.settings)      // motywy i własny kolor tekstu
         }
         languageToken = trackChanges { [weak self] in
             guard let self else { return }

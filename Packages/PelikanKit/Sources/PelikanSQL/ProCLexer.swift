@@ -104,7 +104,7 @@ public enum ProCLexer {
     }
 
     /// Koniec wstawki EXEC: `body` — koniec treści SQL (średnik albo `END-EXEC`), `end` — za średnikiem kończącym,
-    /// `block` — blok PL/SQL zakończony `END-EXEC`. Blok `EXEC SQL EXECUTE` (bez IMMEDIATE) kończy się na `END-EXEC;`, pozostałe na
+    /// `block` — blok PL/SQL zakończony `END-EXEC`. Blok `EXEC SQL EXECUTE BEGIN|DECLARE …` kończy się na `END-EXEC;`, pozostałe na
     /// pierwszym średniku poza napisami i komentarzami.
     static func execEnd(_ text: [UInt16], from start: Int) -> (body: Int, end: Int, block: Bool) {
         let end = text.count
@@ -115,13 +115,63 @@ public enum ProCLexer {
             for u in s.utf16 { guard k < end, up(text[k]) == u else { return false }; k += 1 }
             return true
         }
-        var k = start
-        while k < end, text[k] == 32 || text[k] == 9 || text[k] == 10 || text[k] == 13 { k += 1 }
+        func isWord(_ c: UInt16) -> Bool { (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c <= 57) || c == 95 || c == 36 || c == 35 }
+        /// Białe znaki, komentarze `--` i `/* */` oraz etykiety `<<nazwa>>` — jedna reguła dla AT, CREATE i EXECUTE.
+        func skipTrivia(_ k: Int) -> Int {
+            var j = k
+            while j < end {
+                if text[j] == 32 || text[j] == 9 || text[j] == 10 || text[j] == 13 { j += 1 }
+                else if text[j] == 45, at(j + 1) == 45 { while j < end, text[j] != 10 { j += 1 } }
+                else if text[j] == 47, at(j + 1) == 42 {
+                    j += 2
+                    while j < end, !(text[j] == 42 && at(j + 1) == 47) { j += 1 }
+                    j = min(j + 2, end)
+                } else if text[j] == 60, at(j + 1) == 60 {
+                    j += 2
+                    while j < end, !(text[j] == 62 && at(j + 1) == 62) { j += 1 }
+                    j = min(j + 2, end)
+                } else { break }
+            }
+            return j
+        }
+        /// Słowo kluczowe `w` w pozycji `j` (całe słowo).
+        func kw(_ j: Int, _ w: String) -> Bool { matches(j, w) && !isWord(at(j + w.utf16.count)) }
+        var k = skipTrivia(start)
+        // `EXEC SQL AT :db EXECUTE …` / `AT nazwa` — klauzula bazy przed poleceniem.
+        if kw(k, "AT") {
+            k = skipTrivia(k + 2)
+            // Nazwa albo zmienna hosta, także strukturalna (`:ctx.db`, `:p->db`) — do białego znaku.
+            while k < end, !(text[k] == 32 || text[k] == 9 || text[k] == 10 || text[k] == 13),
+                  !(text[k] == 47 && at(k + 1) == 42), !(text[k] == 45 && at(k + 1) == 45) { k += 1 }
+            k = skipTrivia(k)
+        }
         var block = false
-        if matches(k, "EXECUTE") {
-            var j = k + 7
-            while j < end, text[j] == 32 || text[j] == 9 || text[j] == 10 || text[j] == 13 { j += 1 }
-            block = !matches(j, "IMMEDIATE")
+        // Składowany PL/SQL: `CREATE [OR REPLACE] PROCEDURE|FUNCTION|PACKAGE|TRIGGER|TYPE BODY … END; END-EXEC;` — blok,
+        // gdy przed następną wstawką EXEC jest END-EXEC; bez niego (specyfikacja wywołania `LANGUAGE C`, wyzwalacz
+        // z CALL, specyfikacja typu) polecenie kończy się średnikiem.
+        if kw(k, "CREATE") {
+            var j = skipTrivia(k + 6)
+            for w in ["OR", "REPLACE", "EDITIONABLE", "NONEDITIONABLE"] where kw(j, w) { j = skipTrivia(j + w.utf16.count) }
+            let stored = ["PROCEDURE", "FUNCTION", "PACKAGE", "TRIGGER"].contains { kw(j, $0) } || (kw(j, "TYPE") && kw(skipTrivia(j + 4), "BODY"))
+            if stored {
+                var e = j
+                var found = false
+                while e < end {
+                    if matches(e, "END-EXEC") { found = true; break }
+                    if kw(e, "EXEC"), e == 0 || !isWord(text[e - 1]), text[max(e - 1, 0)] != 45 {   // następna wstawka (nie END-EXEC)
+                        let t = skipTrivia(e + 4)
+                        if ["SQL", "ORACLE", "TOOLS", "IAF"].contains(where: { kw(t, $0) }) { break }
+                    }
+                    e += 1
+                }
+                block = found
+            }
+        }
+        // Blok PL/SQL tylko po BEGIN albo DECLARE; `EXECUTE IMMEDIATE …;` i dynamiczny SQL `EXECUTE s USING …;`
+        // kończą się średnikiem.
+        if kw(k, "EXECUTE") {
+            let j = skipTrivia(k + 7)
+            block = kw(j, "BEGIN") || kw(j, "DECLARE")
         }
         var i = start
         while i < end {

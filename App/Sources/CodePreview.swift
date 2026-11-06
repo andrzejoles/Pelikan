@@ -38,6 +38,12 @@ struct CodePreview: View {
         }
     }
 
+    /// Motywy z ustawień (obserwowane przez SwiftUI) — zmiana motywu odświeża podgląd (D227).
+    static var schemeKey: String {
+        guard let st = (NSApp.delegate as? AppDelegate)?.workspace.settings else { return "" }
+        return "\(st.syntaxSchemeLight)|\(st.syntaxSchemeDark)|\(st.customSyntaxSchemes.hashValue)|\(st.editorColors.hashValue)"
+    }
+
     private func openInSQLWindow() {
         guard let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
         ws.perform("file.new.sql", CommandArguments(["text": .string(shown)]))
@@ -49,6 +55,10 @@ struct CodePreview: View {
 struct HighlightedCodeView: NSViewRepresentable {
     let text: String
     var highlight = true
+    /// Motywy z ustawień; w kluczu odświeżenia razem z trybem systemu (domyślnie liczony w widoku nadrzędnym, który
+    /// przez to obserwuje ustawienia — każde użycie widoku odświeża się po zmianie motywu).
+    var schemeKey = CodePreview.schemeKey
+    @Environment(\.colorScheme) private var colorScheme
 
     func makeNSView(context: Context) -> NSScrollView {
         let scroll = NSTextView.scrollableTextView()
@@ -68,12 +78,18 @@ struct HighlightedCodeView: NSViewRepresentable {
 
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let tv = scroll.documentView as? NSTextView, let storage = tv.textStorage else { return }
-        let key = "\(highlight)|\(SyntaxTheme.current.id)|\(text)"
+        let key = "\(highlight)|\(schemeKey)|\(colorScheme)|\(text)"
         guard context.coordinator.last != key else { return }
         context.coordinator.last = key
+        // Idempotentne: podgląd może się odświeżyć przed obserwacją ustawień w AppDelegate (motywy i kolor tekstu).
+        if highlight, let st = (NSApp.delegate as? AppDelegate)?.workspace.settings { SyntaxTheme.apply(st) }
         let font = InterfaceFonts.shared.code
         storage.setAttributedString(NSAttributedString(string: text, attributes: [.font: font, .foregroundColor: NSColor.textColor]))
-        if highlight { SyntaxHighlighter().highlightAll(storage, font: font) }
+        if highlight {
+            let h = SyntaxHighlighter()
+            h.dark = colorScheme == .dark          // kroje z motywu trybu tego widoku
+            h.highlightAll(storage, font: font)
+        }
         // Tło motywu (D227) — kolory jasnego motywu na tle ciemnego okna byłyby nieczytelne.
         tv.drawsBackground = highlight && SyntaxTheme.hasBackground
         tv.backgroundColor = SyntaxTheme.background

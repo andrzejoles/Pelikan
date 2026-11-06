@@ -3833,3 +3833,28 @@ włączały go dopiero przyciski „Użyj w trybie jasnym/ciemnym”, a przycisk
 widocznego. Teraz kliknięcie motywu włącza go od razu w trybie, w którym jest system (jak wybór motywu w Xcode),
 a przyciski przypisują motyw drugiemu trybowi. Karta mówi, w którym trybie jest system, i ostrzega, gdy własny
 kolor tekstu albo tła z Edytor › Kolory czcionek przesłania motyw.
+
+### D229 · 2026-11-05 — Code review (medium) zmian 1.20.6–1.21.2: poprawki
+
+- **Pro*C:** `EXEC SQL EXECUTE s USING …;` (dynamiczny SQL) kończy się średnikiem — blokiem do `END-EXEC` jest tylko
+  `EXECUTE BEGIN|DECLARE …` (wcześniej cały dalszy kod C był kolorowany jak SQL).
+- **Podkreślenia diagnostyk** nakładane od nowa po ponownym kolorowaniu przy zmianie motywu i trybu systemu (przy
+  edycji — jak dotąd: analiza po zmianie). Kroje (pogrubienie, kursywa) buforowane według motywu i jego krojów —
+  zmiana pogrubienia w aktywnym motywie własnym działa od razu; bufor odświeżany raz na kolorowanie, nie przy tokenie.
+  `EXECUTE begin_stmt USING …` nie jest blokiem, a komentarz, etykieta `<<blk>>` przed BEGIN
+  ani klauzula `AT :db` przed EXECUTE go nie przerywają. Zmiana wielkości czcionki zachowuje podkreślenia.
+  Kroje biorą się z trybu wyglądu widoku przekazanego do kolorowania (nie z trybu aplikacji) — zmiana trybu działa od
+  razu, bez opóźnień. Po ponownym kolorowaniu wracają podkreślenia widoczne wcześniej, gdy tekst się od tamtej chwili
+  nie zmienił (licznik zmian; bez odczytu i zapisu obserwowanego stanu dokumentu w obserwacji motywu). Zmiana trybu
+  przy tych samych krojach nie leksuje tekstu. `EXEC SQL CREATE … PROCEDURE|FUNCTION|PACKAGE|TRIGGER|TYPE BODY` kończy
+  się na `END-EXEC`, gdy ten jest przed następną wstawką EXEC (inaczej — specyfikacja wywołania, wyzwalacz z CALL,
+  specyfikacja typu — średnikiem; bez zgadywania po słowach ciała); `AT :ctx.db` przed EXECUTE; `//` w SQL nie jest komentarzem (jak w Oracle).
+- **Tło w kolorze połączenia** liczone dynamicznie z tła motywu (wcześniej zostawało tło motywu z chwili otwarcia).
+- **Zmiana samego koloru** w motywie (przeciąganie w polu koloru) nie leksuje tekstu — tylko unieważnia układ (TextKit 2 układa leniwie widoczny fragment);
+  ponowne kolorowanie przy zmianie motywu, pogrubienia/kursywy albo trybu Pro*C. Otwarcie okna koloruje tekst raz.
+- **Import VS Code:** przecinek na końcu z komentarzem przed zamknięciem nie psuje JSONC.
+- **Podglądy kodu** odświeżają się po zmianie motywu i trybu systemu.
+- **Raporty:** wykrywanie błędu Oracle w treści raportu bez przeglądania megabajtowych raportów AWR.
+- Świadomie bez zmian: po pełnym kolorowaniu po edycji podkreślenia wracają dopiero z analizy; plik Pro*C kolorowany w całości przy każdej zmianie (D227), więc podkreślenia wracają po analizie.
+- Pominięte (nie błędy działania): znacznik uprawnień systemowych w zbiorze pakietów, osobne rozwiązywanie stylów
+  w podglądzie motywu.

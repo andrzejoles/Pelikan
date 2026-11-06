@@ -117,6 +117,12 @@ struct SyntaxSchemeTests {
         let v = try SyntaxSchemeImport.scheme(from: Data(vs.utf8), fileName: "dark.json")
         #expect(v.isDark && v.name == "VS" && v.style(.keyword).color == RGB(hex: "c586c0") && v.style(.function).bold)
         #expect(v.selection == RGB(hex: "1e1e1e")!.mixed(with: RGB(255, 255, 255), 128.0 / 255))
+        // Przecinek na końcu z komentarzem przed zamknięciem (częste w motywach VS Code).
+        let jsonc = """
+        {"type": "light", "colors": {"editor.background": "#ffffff", // tło
+        }, "tokenColors": [{"scope": "keyword", "settings": {"foreground": "#0000ff"}}, /* x */ ]}
+        """
+        #expect(try SyntaxSchemeImport.scheme(from: Data(jsonc.utf8), fileName: "l.json").style(.keyword).color == RGB(0, 0, 255))
         #expect(throws: SyntaxSchemeImport.Failure.self) { try SyntaxSchemeImport.scheme(from: Data("{}".utf8), fileName: "pusty.json") }
     }
 
