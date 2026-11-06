@@ -155,6 +155,12 @@ public final class SessionManager {
     @ObservationIgnored public let tunnels = SSHTunnelManager()
     /// Tunel, przez który połączyła się sesja — zwalniany dokładnie ten (nie wg bieżącej definicji ani nowszego tunelu).
     @ObservationIgnored private var sessionTunnels: [SessionKey: SSHTunnelManager.Tunnel] = [:]
+    /// Tunele sesji otwartych, jeszcze niezapisanych w mapie (klucz — tożsamość sesji).
+    @ObservationIgnored private var openedTunnels: [ObjectIdentifier: SSHTunnelManager.Tunnel] = [:]
+
+    private func releaseOpenedTunnel(of s: any DatabaseSession, connection: UUID) {
+        if let t = openedTunnels.removeValue(forKey: ObjectIdentifier(s)) { tunnels.release(t, of: connection) }
+    }
     /// Połączenia, dla których właściciel Maca potwierdził w tym uruchomieniu użycie zapisanych haseł (bazy i SSH, D56).
     @ObservationIgnored private var ownerConfirmed: Set<UUID> = []
     /// Sprawdzanie połączeń w toku (kolejny przebieg czeka na koniec poprzedniego) i czas ostatniego przebiegu.
@@ -223,9 +229,13 @@ public final class SessionManager {
     public func metadataSession(_ connection: UUID) async throws -> any DatabaseSession {
         await closeUnusedMetadataSession(connection)
         let key = metadataKey(connection: connection)
+        // Połączenie przez metadane (rozwinięcie gałęzi niepołączonego połączenia) otwiera też sesję główną — jak dotąd;
+        // „połączone” dla reszty aplikacji to istniejąca sesja główna.
+        let main = SessionKey(connectionID: connection, purpose: .main)
+        if key != main, sessions[main] == nil { _ = try await session(main) }
         do {
             return try await session(key)
-        } catch let e as OracleError where key.purpose != .main && [2391, 18, 20].contains(e.code) {
+        } catch let e as OracleError where key.purpose != .main && [2391, 18, 20, 12516, 12519, 12520].contains(e.code) {
             Log.connection.notice("Limit sesji — metadane w sesji głównej (\(e.code, privacy: .public))")
             metadataFallback.insert(connection)
             return try await session(SessionKey(connectionID: connection, purpose: .main))
@@ -347,7 +357,7 @@ public final class SessionManager {
             // Rozłączono w trakcie łączenia (np. sesja metadanych otwierana w tle): sesja i tunel zwolnione, a każdy
             // czekający na to otwarcie dostaje błąd zamiast zamkniętej sesji.
             guard self.disconnects[key.connectionID, default: 0] == generation else {
-                if let t = self.sessionTunnels.removeValue(forKey: key) { self.tunnels.release(t, of: key.connectionID) }
+                self.releaseOpenedTunnel(of: s, connection: key.connectionID)
                 await s.close()
                 throw CommandError.notConnected
             }
@@ -357,6 +367,13 @@ public final class SessionManager {
         connecting[key] = entry
         defer { if connecting[key]?.id == entry.id { connecting[key] = nil } }
         let s = try await task.value
+        // Rozłączenie między końcem otwierania a tym miejscem — sesja nie wraca do mapy.
+        guard disconnects[key.connectionID, default: 0] == generation else {
+            releaseOpenedTunnel(of: s, connection: key.connectionID)
+            await s.close()
+            throw CommandError.notConnected
+        }
+        if let t = openedTunnels.removeValue(forKey: ObjectIdentifier(s)) { sessionTunnels[key] = t }
         sessions[key] = s
         lastActivity[key] = Date()
         store.markUsed(key.connectionID)
@@ -446,11 +463,17 @@ public final class SessionManager {
                     try await initialize(s, def)
                     // Schemat z „Ustaw bieżący schemat…” — sesja główna i metadanych także po ponownym połączeniu.
                     if key.purpose == .main || key.purpose == .tool("metadata"), let schema = currentSchemaOverride[def.id] {
-                        _ = try await s.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)")
+                        // Schemat usunięty albo bez uprawnień — schemat z definicji zamiast odmowy każdego połączenia.
+                        do { _ = try await s.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)") } catch {
+                            Log.connection.notice("Bieżący schemat z „Ustaw bieżący schemat…” niedostępny — pominięty")
+                            currentSchemaOverride[def.id] = nil
+                        }
                     }
                 } catch { await s.close(); throw error }
                 connected = true
-                if let tunnel { sessionTunnels[key] = tunnel }
+                // Tunel przypisany do klucza dopiero przy zapisaniu sesji w mapie (`session`) — otwarcie nieaktualne po
+                // rozłączeniu zwalnia własny tunel, nie tunel nowszej sesji pod tym samym kluczem.
+                if let tunnel { openedTunnels[ObjectIdentifier(s)] = tunnel }
                 if credentials.newPassword == nil, let p = password {
                     if rememberOnSuccess { try? store.rememberPassword(p, for: def.id) }
                     sessionPasswords[def.id] = p
