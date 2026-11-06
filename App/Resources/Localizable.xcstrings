@@ -93493,6 +93493,34 @@
         }
       }
     },
+    "Tekst zmienił się w trakcie formatowania — sformatuj ponownie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The text changed while formatting — format again"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Text hat sich während der Formatierung geändert — erneut formatieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El texto cambió durante el formateo — vuelva a formatear"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст змінився під час форматування — відформатуйте ще раз"
+          }
+        }
+      }
+    },
     "Tekst zostanie zastąpiony źródłem z bazy." : {
       "localizations" : {
         "en" : {
@@ -137449,6 +137477,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "kompiliert"
+          }
+        }
+      }
+    },
+    "sortowanie…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sorting…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sortierung…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ordenando…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "сортування…"
           }
         }
       }

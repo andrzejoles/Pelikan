@@ -54,7 +54,7 @@ public final class ResultGridModel {
 
     public func setFilter(_ f: GridFilter?) {
         filter = f
-        applySort()
+        if f != nil, rows.count >= Self.backgroundSortRows { applySortInBackground() } else { applySort() }
     }
 
     /// Sortowanie lokalne (UG 7.2): klucze w kolejności ważności; pusta lista — kolejność z bazy.
@@ -92,27 +92,102 @@ public final class ResultGridModel {
 
     public func sort(_ keys: [SortKey]) {
         sortKeys = keys
-        applySort()
+        if !keys.isEmpty, rows.count >= Self.backgroundSortRows { applySortInBackground() } else { applySort() }
+    }
+
+    /// Od tylu pobranych wierszy sortowanie wybrane przez użytkownika liczy się w tle (tekst z porównaniem według języka
+    /// to ~1,7 s na 200 tys. wierszy — w wątku głównym zamrażało okno, D231).
+    nonisolated static let backgroundSortRows = 50_000
+    /// Sortowanie w tle w toku (pasek wyniku pokazuje stan; siatka do końca w poprzedniej kolejności).
+    public private(set) var isSorting = false
+    /// Zmienia się, gdy kolejność wierszy przyszła z sortowania w tle — sygnał przeładowania siatki.
+    public private(set) var orderVersion = 0
+    @ObservationIgnored private var sortTask: Task<Void, Never>?
+
+    func applySortInBackground() {
+        sortTask?.cancel()
+        let (data, cols, keys, f, fmt) = (rows, columns, sortKeys, filter, format)
+        isSorting = true
+        sortTask = Task { [weak self] in
+            let o = await Task.detached(priority: .userInitiated) { Self.computeOrder(data, columns: cols, keys: keys, filter: f, format: fmt) }.value
+            // Wynik nieaktualny (inne klucze, filtr albo nowe wiersze) — późniejsze sortowanie go zastąpi.
+            guard let self, !Task.isCancelled, self.sortKeys == keys, self.filter == f, self.rows.count == data.count else { return }
+            self.order = o
+            self.isSorting = false
+            self.orderVersion += 1
+        }
     }
 
     func applySort() {
-        guard !sortKeys.isEmpty || filter != nil else { order = nil; return }
-        let keys = sortKeys
-        let cols = columns
-        let data = rows
-        let fmt = format
+        sortTask?.cancel()
+        isSorting = false
+        order = Self.computeOrder(rows, columns: columns, keys: sortKeys, filter: filter, format: format)
+    }
+
+    /// Kolejność wierszy widoku: filtr lokalny, potem sortowanie stabilne; nil — bez filtra i sortowania.
+    nonisolated static func computeOrder(_ data: [[OracleValue]], columns cols: [ColumnInfo], keys: [SortKey], filter: GridFilter?,
+                                         format fmt: ValueFormat) -> [Int]? {
+        guard !keys.isEmpty || filter != nil else { return nil }
         let visible = filter.map { f in
             let likes = f.likePatterns()
             return data.indices.filter { f.matches(data[$0], columns: cols, format: fmt, likes: likes) }
         } ?? Array(data.indices)
-        guard !keys.isEmpty else { order = visible; return }
+        guard !keys.isEmpty else { return visible }
+        // Klucze liczone raz na wiersz (liczba jako Decimal, tekst sformatowany), nie przy każdym porównaniu — dawniej
+        // 200 tys. wierszy sortowało się 1,5–2 s w wątku głównym (zamrożone okno, D231).
+        let prepared = keys.map { k in (k, data.map { Self.sortKey($0[k.column]) }) }
+        let locale = Locale.current
         // Sortowanie stabilne: przy równych kluczach kolejność z bazy.
-        order = visible.sorted { a, b in
-            for k in keys {
-                let c = Self.compare(data[a][k.column], data[b][k.column], type: cols[k.column].type, caseSensitive: false)
+        return visible.sorted { a, b in
+            for (k, values) in prepared {
+                let c = Self.compareKeys(values[a], values[b], locale: locale)
                 if c != .orderedSame { return k.ascending ? c == .orderedAscending : c == .orderedDescending }
             }
             return a < b
+        }
+    }
+
+    /// Klucz sortowania wartości komórki — te same reguły co `compare` (liczby numerycznie, daty chronologicznie, tekst
+    /// bez rozróżniania wielkości liter, NULL na końcu przy rosnącym).
+    enum SortValue: Sendable {
+        case null, decimal(Decimal), double(Double), time([Int]), text(String)
+    }
+
+    nonisolated static func sortKey(_ v: OracleValue) -> SortValue {
+        switch v {
+        case .null: return .null
+        case .number(let n):
+            if let d = Decimal(string: n, locale: Locale(identifier: "en_US_POSIX")) { return .decimal(d) }
+            return .text(n)
+        case .double(let d): return .double(d)
+        case .timestamp(let t, _):
+            return .time([Int(t.year), Int(t.month), Int(t.day), Int(t.hour), Int(t.minute), Int(t.second), Int(t.fsecond)])
+        default: return .text(v.format(.default))
+        }
+    }
+
+    nonisolated static func compareKeys(_ x: SortValue, _ y: SortValue, locale: Locale) -> ComparisonResult {
+        switch (x, y) {
+        case (.null, .null): return .orderedSame
+        case (.null, _): return .orderedDescending
+        case (_, .null): return .orderedAscending
+        case (.decimal(let a), .decimal(let b)): return a == b ? .orderedSame : (a < b ? .orderedAscending : .orderedDescending)
+        case (.double(let a), .double(let b)): return a == b ? .orderedSame : (a < b ? .orderedAscending : .orderedDescending)
+        case (.time(let a), .time(let b)):
+            for (p, q) in zip(a, b) where p != q { return p < q ? .orderedAscending : .orderedDescending }
+            return .orderedSame
+        case (.text(let a), .text(let b)): return a.compare(b, options: [.caseInsensitive], locale: locale)
+        default: return text(x).compare(text(y), options: [.caseInsensitive], locale: locale)
+        }
+    }
+
+    private nonisolated static func text(_ v: SortValue) -> String {
+        switch v {
+        case .null: ""
+        case .decimal(let d): "\(d)"
+        case .double(let d): "\(d)"
+        case .time(let t): t.map(String.init).joined(separator: "-")
+        case .text(let s): s
         }
     }
 

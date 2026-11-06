@@ -19,6 +19,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     private let countLabel = NSTextField(labelWithString: "")
     private var tokens: [ObservationToken] = []
     private var lastRowCount = 0
+    private var lastOrderVersion = 0
     private var lastSort: [ResultGridModel.SortKey] = []
     private var lastFilter: String?
     private var valuePanel: NSView?
@@ -265,6 +266,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             + (edit.hasChanges ? "  ·  " + (grid.pendingSummary.isEmpty ? L10n.tr("zmiany do zatwierdzenia") : grid.pendingSummary.text) : "")
             + (tab.totals.isEmpty ? "" : "   ·   " + ColumnTotals.summary(grid, totals: tab.totals))
             + (grid.stoppedAtSizeLimit ? "   ·   " + L10n.tr("zatrzymano na limicie rozmiaru") : "")
+            + (grid.isSorting ? "   ·   " + L10n.tr("sortowanie…") : "")
         bar.needsLayout = true
         if edit.isEditing != lastEditing {
             lastEditing = edit.isEditing
@@ -295,8 +297,10 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             lastFocus = focus
             if let f = focus { focusCell(column: f) }
         }
-        if sort != lastSort {
+        let orderVersion = grid.orderVersion
+        if sort != lastSort || orderVersion != lastOrderVersion {
             lastSort = sort
+            lastOrderVersion = orderVersion
             updateSortIndicators()
             table.reloadData()
             lastRowCount = count

@@ -79,13 +79,13 @@ public enum GridCommands {
     }
 
     @MainActor
-    static func copy(_ ctx: CommandContext, _ format: ExportFormat, header: Bool) throws -> CommandResult {
+    static func copy(_ ctx: CommandContext, _ format: ExportFormat, header: Bool) async throws -> CommandResult {
         let d = try requireSelection(ctx)
         var o = ExportOptions()
         o.includeHeader = header
         o.format = ctx.workspace.settings.valueFormat
-        let text = ResultExporter.text(format, d, options: o)
-        let html = format == .tsv ? ResultExporter.text(.html, d, options: o) : nil
+        let text = await ResultExporter.textInBackground(format, d, options: o)
+        let html = format == .tsv ? await ResultExporter.textInBackground(.html, d, options: o) : nil
         ctx.workspace.ui?.copyToClipboard(text, html: html)
         return CommandResult(message: L10n.tr("Skopiowano wierszy: \(d.rows.count)"))
     }
@@ -125,12 +125,12 @@ public enum GridCommands {
                                       agent: .none, effect: .none,
                                       summary: L10n.tr("Kopiuje zaznaczone komórki (tekst z tabulatorami i HTML)."), inMenu: false,
                                       feature: "PD-GRID-015"),
-                    validate: hasGrid) { ctx in try copy(ctx, .tsv, header: false) },
+                    validate: hasGrid) { ctx in try await copy(ctx, .tsv, header: false) },
             Command(CommandDescriptor(id: "grid.copyWithHeader", title: L10n.tr("Kopiuj z nagłówkiem"), category: .edit, submenu: L10n.tr("Wynik"),
                                       pd: ["ctrl+shift+c"], mac: ["cmd+shift+c"], agent: .none, effect: .none,
                                       summary: L10n.tr("Kopiuje zaznaczone komórki z nagłówkami kolumn (tekst z tabulatorami i HTML)."),
                                       feature: "PD-GRID-015"),
-                    validate: hasGrid) { ctx in try copy(ctx, .tsv, header: true) },
+                    validate: hasGrid) { ctx in try await copy(ctx, .tsv, header: true) },
             Command(CommandDescriptor(id: "grid.copyHeader", title: L10n.tr("Kopiuj nagłówek"), category: .edit, submenu: L10n.tr("Wynik"),
                                       agent: .none, effect: .none, summary: L10n.tr("Kopiuje nazwy zaznaczonych kolumn."), feature: "PD-GRID-015"),
                     validate: hasGrid) { ctx in
@@ -141,7 +141,7 @@ public enum GridCommands {
             Command(CommandDescriptor(id: "grid.copyExpressionList", title: L10n.tr("Kopiuj jako listę wyrażeń"), category: .edit,
                                       submenu: L10n.tr("Wynik"), agent: .none, effect: .none,
                                       summary: L10n.tr("Kopiuje zaznaczenie jako warunek „kolumna IN (…)”."), feature: "PD-GRID-015"),
-                    validate: hasGrid) { ctx in try copy(ctx, .expressionList, header: false) },
+                    validate: hasGrid) { ctx in try await copy(ctx, .expressionList, header: false) },
             Command(CommandDescriptor(id: "grid.graph", title: L10n.tr("Wykres…"), category: .session, submenu: L10n.tr("Wynik"),
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Okno wykresu z bieżącej karty wyników: kategoria, serie, typ, styl, szablony, autoodświeżanie, eksport."),
@@ -161,10 +161,10 @@ public enum GridCommands {
                     _ = try requireSelection(ctx)
                     if let f = try await ctx.choose(L10n.tr("Kopiuj jako"),
                                                     copyAsFormats.map { (label: $0.displayName, value: $0) }) {
-                        return try copy(ctx, f, header: true)
+                        return try await copy(ctx, f, header: true)
                     }
                 }
-                return try copy(ctx, try formatArgument(ctx), header: true)
+                return try await copy(ctx, try formatArgument(ctx), header: true)
             },
             Command(CommandDescriptor(id: "grid.export", title: L10n.tr("Eksportuj wynik…"), category: .file,
                                       parameters: [CommandParameter("format", .string, L10n.tr("Format"), allowed: exportFormats.map(\.rawValue))],
@@ -175,7 +175,7 @@ public enum GridCommands {
                 let d = try requireSelection(ctx)
                 var o = ExportOptions()
                 o.format = ctx.workspace.settings.valueFormat
-                let data = format == .xlsx ? ResultExporter.xlsx([d], options: o) : Data(ResultExporter.text(format, d, options: o).utf8)
+                let data = await ResultExporter.encoded(format, [d], options: o)
                 let ok = await ctx.workspace.ui?.saveFile(suggestedName: d.title, fileExtension: format.fileExtension, data: data) ?? false
                 return CommandResult(message: ok ? L10n.tr("Zapisano wierszy: \(d.rows.count)") : nil)
             },
@@ -188,7 +188,7 @@ public enum GridCommands {
                 let sheets = doc.results.compactMap { tab in tab.grid?.exportData(columns: tab.columnOrder, title: tab.title) }
                 var o = ExportOptions()
                 o.format = ctx.workspace.settings.valueFormat
-                let data = ResultExporter.xlsx(sheets, includeSQL: true, options: o)
+                let data = await ResultExporter.encoded(.xlsx, sheets, includeSQL: true, options: o)
                 _ = await ctx.workspace.ui?.saveFile(suggestedName: doc.title, fileExtension: "xlsx", data: data)
                 return .ok
             },
