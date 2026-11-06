@@ -474,7 +474,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let cur = SyntaxTheme.scheme(dark: highlighter.dark)
         // Bez identyfikatora motywu: kolory są dynamiczne (zmianę samych kolorów obsługuje klucz kolorów niżej).
         let key = "\(highlighter.proC)|\(SyntaxTheme.fontSignature(cur))"
-        let colors = "\(SyntaxTheme.schemes.light.hashValue)|\(SyntaxTheme.schemes.dark.hashValue)"
+        // Tryb widoku w kluczu kolorów: przełączenie trybu przy tych samych krojach unieważnia układ (ułożone fragmenty
+        // TextKit 2 trzymają kolory poprzedniego trybu).
+        let colors = "\(highlighter.dark)|\(SyntaxTheme.schemes.light.hashValue)|\(SyntaxTheme.schemes.dark.hashValue)"
         if key != appliedSchemeKey {
             // Pierwsze przejście: tekst wczytany przed ustaleniem trybu Pro*C trzeba pokolorować od nowa.
             if appliedSchemeKey != nil || highlighter.proC { rehighlightAll() }

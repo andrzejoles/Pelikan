@@ -3846,14 +3846,14 @@ kolor tekstu albo tła z Edytor › Kolory czcionek przesłania motyw.
   Kroje biorą się z trybu wyglądu widoku przekazanego do kolorowania (nie z trybu aplikacji) — zmiana trybu działa od
   razu, bez opóźnień. Po ponownym kolorowaniu wracają podkreślenia widoczne wcześniej, gdy tekst się od tamtej chwili
   nie zmienił (licznik zmian; bez odczytu i zapisu obserwowanego stanu dokumentu w obserwacji motywu). Zmiana trybu
-  przy tych samych krojach nie leksuje tekstu. `EXEC SQL CREATE … PROCEDURE|FUNCTION|PACKAGE|TRIGGER|TYPE` kończy
-  się na `END-EXEC`; `//` w SQL nie jest komentarzem (jak w Oracle).
+  przy tych samych krojach nie leksuje tekstu. `EXEC SQL CREATE … PROCEDURE|FUNCTION|PACKAGE|TRIGGER|TYPE BODY` kończy
+  się na `END-EXEC` (specyfikacja typu — średnikiem); `AT :ctx.db` przed EXECUTE; `//` w SQL nie jest komentarzem (jak w Oracle).
 - **Tło w kolorze połączenia** liczone dynamicznie z tła motywu (wcześniej zostawało tło motywu z chwili otwarcia).
 - **Zmiana samego koloru** w motywie (przeciąganie w polu koloru) nie leksuje tekstu — tylko unieważnia układ (TextKit 2 układa leniwie widoczny fragment);
   ponowne kolorowanie przy zmianie motywu, pogrubienia/kursywy albo trybu Pro*C. Otwarcie okna koloruje tekst raz.
 - **Import VS Code:** przecinek na końcu z komentarzem przed zamknięciem nie psuje JSONC.
 - **Podglądy kodu** odświeżają się po zmianie motywu i trybu systemu.
 - **Raporty:** wykrywanie błędu Oracle w treści raportu bez przeglądania megabajtowych raportów AWR.
-- Świadomie bez zmian: plik Pro*C kolorowany w całości przy każdej zmianie (D227), więc podkreślenia wracają po analizie.
+- Świadomie bez zmian: po pełnym kolorowaniu po edycji podkreślenia wracają dopiero z analizy; plik Pro*C kolorowany w całości przy każdej zmianie (D227), więc podkreślenia wracają po analizie.
 - Pominięte (nie błędy działania): znacznik uprawnień systemowych w zbiorze pakietów, osobne rozwiązywanie stylów
   w podglądzie motywu.

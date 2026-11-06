@@ -121,8 +121,8 @@ public enum ProCLexer {
         // `EXEC SQL AT :db EXECUTE …` / `AT nazwa` — klauzula bazy przed poleceniem.
         if matches(k, "AT"), !isWord(at(k + 2)) {
             k = blank(k + 2)
-            if at(k) == 58 { k += 1 }
-            while k < end, isWord(text[k]) { k += 1 }
+            // Nazwa albo zmienna hosta, także strukturalna (`:ctx.db`, `:p->db`) — do białego znaku.
+            while k < end, !(text[k] == 32 || text[k] == 9 || text[k] == 10 || text[k] == 13) { k += 1 }
             k = blank(k)
         }
         var block = false
@@ -132,7 +132,14 @@ public enum ProCLexer {
             for w in ["OR", "REPLACE", "EDITIONABLE", "NONEDITIONABLE"] where matches(j, w) && !isWord(at(j + w.utf16.count)) {
                 j = blank(j + w.utf16.count)
             }
-            block = ["PROCEDURE", "FUNCTION", "PACKAGE", "TRIGGER", "TYPE"].contains { matches(j, $0) && !isWord(at(j + $0.utf16.count)) }
+            func kw(_ w: String) -> Bool { matches(j, w) && !isWord(at(j + w.utf16.count)) }
+            if kw("TYPE") {
+                // Tylko TYPE BODY jest blokiem PL/SQL; specyfikacja typu (AS OBJECT, AS TABLE OF, deklaracja) kończy się `;`.
+                j = blank(j + 4)
+                block = kw("BODY")
+            } else {
+                block = ["PROCEDURE", "FUNCTION", "PACKAGE", "TRIGGER"].contains { kw($0) }
+            }
         }
         if matches(k, "EXECUTE"), !isWord(at(k + 7)) {
             var j = k + 7

@@ -73,5 +73,10 @@ struct SyntaxClassifierTests {
         var c: [String: SyntaxStyle] = [:]
         for sp in ProCLexer.spans(ddl) { c[String(decoding: ddl[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
         #expect(c["END-EXEC"] == .keyword && c["return"] == .keyword && c["5"] == .number && c["y"] == nil)
+        // Specyfikacja typu kończy się średnikiem; AT ze zmienną strukturalną.
+        let ty = Array("EXEC SQL CREATE TYPE num_tab AS TABLE OF NUMBER;\nreturn 6;\nEXEC SQL AT :ctx.db EXECUTE BEGIN x := 1; y := 2; END; END-EXEC;\nreturn 7;\n".utf16)
+        var t: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(ty) { t[String(decoding: ty[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(t["6"] == .number && t["7"] == .number && t["END-EXEC"] == .keyword)
     }
 }
