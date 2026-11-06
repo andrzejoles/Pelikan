@@ -499,7 +499,7 @@ struct ImporterView: View {
     private func loadMapping() async {
         do {
             let o = ResultExporter.dictionaryName(owner), t = ResultExporter.dictionaryName(table)
-            let maps = try await TextImport.defaultMappings(owner: o, table: t, fieldNames: header, in: try await DataTransferUI.session(workspace, connection, tool: "importer"))
+            let maps = try await TextImport.defaultMappings(owner: o, table: t, fieldNames: header, in: try await DataTransferUI.session(workspace, connection, tool: excel ? "importer.excel" : "importer.text"))
             guard !maps.isEmpty else { message = L10n.tr("Brak tabeli \(owner).\(table)"); return }
             target = ImportTarget(owner: o, table: t, mappings: maps)
         } catch { message = error.localizedDescription }
@@ -526,7 +526,7 @@ struct ImporterView: View {
         defer { busy = false }
         do {
             try await DataTransferUI.guardChanges(workspace, connection: connection)
-            let r = try await TextImport.run(rows, fieldNames: header, target: t, in: try await DataTransferUI.session(workspace, connection, tool: "importer")) { n in message = L10n.tr("Zaimportowano \(n)…") }
+            let r = try await TextImport.run(rows, fieldNames: header, target: t, in: try await DataTransferUI.session(workspace, connection, tool: excel ? "importer.excel" : "importer.text")) { n in message = L10n.tr("Zaimportowano \(n)…") }
             message = DataTransferUI.summary(r)
         } catch { message = error.localizedDescription }
     }

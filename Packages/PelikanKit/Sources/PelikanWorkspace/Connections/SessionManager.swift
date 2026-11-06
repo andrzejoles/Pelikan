@@ -136,7 +136,14 @@ public final class SessionManager {
         if closed > 0 { Log.connection.info("Zamknięto \(closed) bezczynnych sesji okien (po \(minutes) min)") }
         return closed
     }
-    @ObservationIgnored private var connecting: [SessionKey: Task<any DatabaseSession, any Error>] = [:]
+    /// Otwierania w toku: zadanie, pokolenie rozłączeń połączenia i czy otwiera w tle (bez okien pytania).
+    private struct Pending {
+        let id = UUID()
+        let task: Task<any DatabaseSession, any Error>
+        let generation: Int
+        let quiet: Bool
+    }
+    @ObservationIgnored private var connecting: [SessionKey: Pending] = [:]
     @ObservationIgnored private let store: ConnectionStore
     @ObservationIgnored private var drivers: [DriverKind: any DatabaseDriver]
     @ObservationIgnored public weak var prompter: (any ConnectionPrompter)?
@@ -229,13 +236,14 @@ public final class SessionManager {
     @ObservationIgnored public var currentSchemaOverride: [UUID: String] = [:]
     /// Nieudane otwarcie sesji metadanych w tle — kolejna próba najwcześniej po minucie (limit sesji profilu, tunel).
     @ObservationIgnored private var metadataOpenFailed: [UUID: Date] = [:]
-    /// Sesje otwierane w tle (bez czynności użytkownika) — bez okien pytania o hasło: zamiast pytania błąd.
-    @ObservationIgnored private var quietKeys: Set<SessionKey> = []
+    /// Otwieranie w tle (bez czynności użytkownika): bez okien pytania o hasło i potwierdzenia właściciela — zamiast
+    /// pytania błąd. Wartość zadania (dziedziczona przez zadanie otwierania), więc dotyczy tylko tego otwierania.
+    @TaskLocal static var quietOpen = false
     /// Licznik rozłączeń połączenia — sesja otwierana w chwili rozłączenia nie wraca po nim do mapy.
     @ObservationIgnored private var disconnects: [UUID: Int] = [:]
 
     private func prompter(for key: SessionKey) -> (any ConnectionPrompter)? {
-        quietKeys.contains(key) ? nil : prompter
+        Self.quietOpen ? nil : prompter
     }
 
     /// Sesja metadanych, gdy połączenie jest otwarte (sesja główna istnieje) — dla czynności w tle (analiza kodu,
@@ -257,10 +265,8 @@ public final class SessionManager {
         if key == main { return m }
         if let s = sessions[key], !s.connectionLost { return s }
         if let failed = metadataOpenFailed[connection], Date().timeIntervalSince(failed) < 60 { return nil }
-        quietKeys.insert(key)
-        defer { quietKeys.remove(key) }
         do {
-            let s = try await metadataSession(connection)
+            let s = try await Self.$quietOpen.withValue(true) { try await metadataSession(connection) }
             metadataOpenFailed[connection] = nil
             return s
         } catch {
@@ -281,8 +287,8 @@ public final class SessionManager {
     /// Sesja otwarta albo właśnie otwierana (czeka na koniec otwierania; błąd otwarcia — nil).
     public func existingOrPendingSession(_ key: SessionKey) async -> (any DatabaseSession)? {
         if let s = sessions[key] { return s }
-        guard let pending = connecting[key] else { return nil }
-        return try? await pending.value
+        guard let pending = connecting[key], pending.generation == disconnects[key.connectionID, default: 0] else { return nil }
+        return try? await pending.task.value
     }
 
     /// Klucz, pod którym jest ta sesja (nil — już zamknięta, usunięta albo zastąpiona nową).
@@ -330,15 +336,12 @@ public final class SessionManager {
             onSessionLost?(key)
             Task.detached { await s.close() }
         }
-        if let pending = connecting[key] {
-            // Dołączenie do otwierania w tle (bez okien pytania): gdy odmówiło z braku hasła, otwarcie od nowa —
-            // już z pytaniem, bo prosi użytkownik.
-            let joinedQuiet = quietKeys.contains(key)
-            do { return try await pending.value } catch CommandError.cancelledByUser where joinedQuiet {
-                return try await session(key)
-            }
-        }
         let generation = disconnects[key.connectionID, default: 0]
+        // Dołączenie do otwierania w toku — tylko z bieżącego pokolenia (sprzed rozłączenia — nieaktualne). Otwieranie
+        // w tle odmówiło z braku hasła, a prosi użytkownik — otwarcie od nowa, już z pytaniem (bez rekurencji).
+        if let pending = connecting[key], pending.generation == generation {
+            do { return try await pending.task.value } catch CommandError.cancelledByUser where pending.quiet && !Self.quietOpen {}
+        }
         let task = Task { @MainActor in
             let s = try await self.open(key)
             // Rozłączono w trakcie łączenia (np. sesja metadanych otwierana w tle): sesja i tunel zwolnione, a każdy
@@ -350,8 +353,9 @@ public final class SessionManager {
             }
             return s
         }
-        connecting[key] = task
-        defer { connecting[key] = nil }
+        let entry = Pending(task: task, generation: generation, quiet: Self.quietOpen)
+        connecting[key] = entry
+        defer { if connecting[key]?.id == entry.id { connecting[key] = nil } }
         let s = try await task.value
         sessions[key] = s
         lastActivity[key] = Date()
@@ -481,6 +485,7 @@ public final class SessionManager {
     /// włączona, raz na połączenie w tym uruchomieniu (do rozłączenia).
     private func confirmOwner(_ def: ConnectionDefinition) async throws {
         guard settings().requireOwnerForSavedPasswords, !ownerConfirmed.contains(def.id) else { return }
+        guard !Self.quietOpen else { throw CommandError.cancelledByUser }
         guard await prompter?.authenticateOwner(reason: L10n.tr("użyć zapisanego hasła połączenia „\(def.displayName)”")) == true else {
             throw CommandError.cancelledByUser
         }

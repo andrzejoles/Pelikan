@@ -173,6 +173,32 @@ struct SessionManagerTests {
         #expect(ws.sessions.metadataKey(connection: def.id).purpose == .tool("metadata"))
     }
 
+    @Test("Sesja metadanych w tle bez okna pytania o hasło; otwarcie na żądanie użytkownika pyta")
+    func quietMetadataOpen() async throws {
+        final class MetaPasswordDriver: DatabaseDriver, @unchecked Sendable {
+            let kind = DriverKind.instantClient
+            let capabilities: DriverCapabilities = []
+            func availability() -> Result<Void, DatabaseError> { .success(()) }
+            func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession {
+                if options.tags.action?.contains("metadata") == true, credentials.password != "new" {
+                    throw OracleError(code: 1017, message: "ORA-01017: invalid username/password; logon denied")
+                }
+                return FakeSession()
+            }
+        }
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: MetaPasswordDriver()])
+        let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"), savePassword: false)
+        try ws.connections.upsert(def)
+        let prompter = FakePrompter(answers: [("good", false), ("new", false)])
+        ws.sessions.prompter = prompter
+        _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        #expect(prompter.asked == 1)
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) == nil)
+        #expect(prompter.asked == 1)
+        _ = try await ws.sessions.metadataSession(def.id)
+        #expect(prompter.asked == 2)
+    }
+
     @Test("Zapisane hasło: łączy bez pytania; skrypt inicjalizacji i bieżący schemat wykonane")
     func savedPassword() async throws {
         let (ws, driver) = make()

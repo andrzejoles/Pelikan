@@ -291,9 +291,10 @@ public enum Scheduler {
 @MainActor
 public enum SchedulerCommands {
     /// Sesja schedulera na wskazanym połączeniu (bez wskazanego — połączenie narzędzia).
-    public static func session(_ ws: Workspace, connection: UUID? = nil) async throws -> (UUID, any DatabaseSession) {
+    /// `purpose` — osobna sesja części narzędzia (np. `scheduler.detail` dla DDL zaznaczonego obiektu, D234).
+    public static func session(_ ws: Workspace, connection: UUID? = nil, purpose: String = "scheduler") async throws -> (UUID, any DatabaseSession) {
         guard let conn = connection ?? ws.toolConnection() else { throw CommandError.notConnected }
-        return (conn, try await ws.toolSession("scheduler", connection: conn))
+        return (conn, try await ws.toolSession(purpose, connection: conn))
     }
 
     /// Wykonuje polecenie schedulera po strażniku zmian (prod — potwierdzenie, tylko do odczytu — blokada).

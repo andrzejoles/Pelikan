@@ -263,8 +263,8 @@ public enum ConnectionCommands {
                 let metaKey = sm.metadataKey(connection: id)
                 // Także sesja metadanych otwierana właśnie teraz (mogła odczytać schemat przed zmianą).
                 if metaKey.purpose != .main, let meta = await sm.existingOrPendingSession(metaKey) {
-                    // Utracona sesja metadanych — nowa dostanie schemat przy otwarciu; główna już jest zmieniona.
-                    _ = try? await meta.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)")
+                    // Nieudana zmiana — sesja metadanych zamknięta: następna otworzy się już z nowym schematem.
+                    do { _ = try await meta.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)") } catch { await sm.close(metaKey) }
                 }
                 ctx.workspace.metadata(for: id)?.refresh()
                 return CommandResult(value: .string(try await s.scalar("select sys_context('userenv', 'current_schema') from dual") ?? schema))
