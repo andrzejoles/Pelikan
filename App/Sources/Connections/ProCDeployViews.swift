@@ -43,7 +43,9 @@ final class ProCDeployModel {
 
     /// Zamknięcie aplikacji: połączenia główne SSH (ControlPersist) nie zostają po niej na serwerach celów.
     func disconnectAll() {
-        for s in sessions.values { s.disconnect() }
+        // Równolegle: każde `ssh -O exit` czeka do 10 s na nieosiągalnym serwerze — kolejno wstrzymałoby zamknięcie.
+        let all = Array(sessions.values)
+        DispatchQueue.concurrentPerform(iterations: all.count) { all[$0].disconnect() }
         sessions = [:]
     }
 

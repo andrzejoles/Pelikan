@@ -68,7 +68,8 @@ struct SQLMonitorView: View {
 
     private func reload() async {
         do {
-            let s = try await workspace.toolSession("packs", connection: connection)
+            // Własna sesja listy: raporty ADDM i SQL Tuning Advisor (sesja „packs”) liczą się minutami.
+            let s = try await workspace.toolSession("packs.list", connection: connection)
             data = try await ManagementPacks.monitoredSQL(s)
             message = L10n.tr("Zapytania: \(data.rows.count)")
         } catch { message = error.localizedDescription }

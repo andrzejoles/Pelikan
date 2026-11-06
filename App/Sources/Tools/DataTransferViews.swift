@@ -35,19 +35,21 @@ struct TablePicker: View {
 /// wczytanie, import i zapis idą na nie, nie na połączenie aktywnego okna z chwili kliknięcia.
 @MainActor
 enum DataTransferUI {
-    static func session(_ ws: Workspace, _ connection: UUID?) async throws -> any DatabaseSession {
-        try await ws.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
+    /// Sesja narzędzia danych — osobna na narzędzie (`tool`): długi eksport nie wstrzymuje innych narzędzi, a DML
+    /// importu, generatora i porównania nie trafia do jednej wspólnej transakcji (D233).
+    static func session(_ ws: Workspace, _ connection: UUID?, tool: String) async throws -> any DatabaseSession {
+        try await ws.toolSession(DataTransferCommands.sessionPurpose + "." + tool, connection: connection)
     }
 
     static func schema(_ ws: Workspace, _ connection: UUID?) -> String { ws.sessions.connectedSchema(connection) ?? "" }
 
-    /// Zapis przez panel; nil — anulowano, błąd zapisu jest zgłaszany.
-    static func save(_ data: Data, name: String, types: [UTType]) throws -> URL? {
+    /// Zapis przez panel; nil — anulowano, błąd zapisu jest zgłaszany. Zapis pliku poza wątkiem głównym.
+    static func save(_ data: Data, name: String, types: [UTType]) async throws -> URL? {
         let p = NSSavePanel()
         p.nameFieldStringValue = name
         p.allowedContentTypes = types
         guard p.runModal() == .OK, let url = p.url else { return nil }
-        try data.write(to: url)
+        try await Task.detached(priority: .userInitiated) { try data.write(to: url) }.value
         return url
     }
 
@@ -95,8 +97,8 @@ struct ExportTablesView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 ToolConnectionPicker(workspace: workspace, connection: $connection)
-                TextField(L10n.tr("Schemat"), text: $owner).frame(maxWidth: 220).textFieldStyle(.roundedBorder).onSubmit { Task { await load() } }
-                Button(L10n.tr("Wczytaj")) { Task { await load() } }
+                TextField(L10n.tr("Schemat"), text: $owner).frame(maxWidth: 220).textFieldStyle(.roundedBorder).onSubmit { if !busy { Task { await load() } } }
+                Button(L10n.tr("Wczytaj")) { Task { await load() } }.disabled(busy)
                 Spacer()
                 Picker(L10n.tr("Metoda"), selection: $method) {
                     Text("SQL Inserts").tag(Method.sql)
@@ -149,7 +151,7 @@ struct ExportTablesView: View {
 
     private func load() async {
         do {
-            tables = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(owner), in: try await DataTransferUI.session(workspace, connection))
+            tables = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(owner), in: try await DataTransferUI.session(workspace, connection, tool: "eksport"))
             selected = []
             message = L10n.tr("Tabele: \(tables.count)")
         } catch { message = error.localizedDescription }
@@ -159,15 +161,15 @@ struct ExportTablesView: View {
         busy = true
         defer { busy = false }
         do {
-            let s = try await DataTransferUI.session(workspace, connection)
+            let s = try await DataTransferUI.session(workspace, connection, tool: "eksport")
             let o = ResultExporter.dictionaryName(owner)
             switch method {
             case .sql:
                 let text = try await TableTransfer.sqlInserts(Array(selected), owner: o, options: options, in: s) { t in message = L10n.tr("Eksport \(t)…") }
-                message = try DataTransferUI.save(Data(text.utf8), name: "\(o.lowercased()).sql", types: [.plainText]).map { L10n.tr("Zapisano \($0.lastPathComponent)") } ?? ""
+                message = try await DataTransferUI.save(Data(text.utf8), name: "\(o.lowercased()).sql", types: [.plainText]).map { L10n.tr("Zapisano \($0.lastPathComponent)") } ?? ""
             case .native:
                 let data = try await TableTransfer.exportNative(Array(selected), owner: o, whereClause: options.whereClause, in: s) { t in message = L10n.tr("Eksport \(t)…") }
-                message = try DataTransferUI.save(data, name: "\(o.lowercased()).pdt", types: [.data]).map { L10n.tr("Zapisano \($0.lastPathComponent)") } ?? ""
+                message = try await DataTransferUI.save(data, name: "\(o.lowercased()).pdt", types: [.data]).map { L10n.tr("Zapisano \($0.lastPathComponent)") } ?? ""
             case .dataPump:
                 message = L10n.tr("Data Pump — eksport w toku…")
                 let r = try await DataPump.export(schema: o, tables: selected.isEmpty ? nil : Array(selected), dumpFile: dumpFile, in: s)
@@ -255,8 +257,8 @@ struct ImportTablesView: View {
         busy = true
         defer { busy = false }
         do {
-            let data = try Data(contentsOf: url)
-            let (_, errors) = try await TableTransfer.importSQLScript(TextImport.decode(data).text, baseDirectory: url.deletingLastPathComponent(),
+            let text = try await Task.detached(priority: .userInitiated) { TextImport.decode(try Data(contentsOf: url)).text }.value
+            let (_, errors) = try await TableTransfer.importSQLScript(text, baseDirectory: url.deletingLastPathComponent(),
                                                                       connectionID: conn, in: workspace)
             message = L10n.tr("Skrypt wykonany; błędy: \(errors)")
         } catch { message = error.localizedDescription }
@@ -264,11 +266,16 @@ struct ImportTablesView: View {
 
     private func openNative() {
         guard let url = DataTransferUI.open(types: [.data]) else { return }
-        do {
-            file = try TableTransfer.unpackNative(Data(contentsOf: url))
-            selected = Set(file?.tables.map(\.name) ?? [])
-            message = L10n.tr("Tabele w pliku: \(file?.tables.count ?? 0)")
-        } catch { message = error.localizedDescription }
+        // Odczyt i rozpakowanie (LZFSE) dużego pliku poza wątkiem głównym.
+        busy = true
+        Task {
+            defer { busy = false }
+            do {
+                file = try await Task.detached(priority: .userInitiated) { try TableTransfer.unpackNative(Data(contentsOf: url)) }.value
+                selected = Set(file?.tables.map(\.name) ?? [])
+                message = L10n.tr("Tabele w pliku: \(file?.tables.count ?? 0)")
+            } catch { message = error.localizedDescription }
+        }
     }
 
     private func importNative() async {
@@ -278,7 +285,7 @@ struct ImportTablesView: View {
         do {
             try await DataTransferUI.guardChanges(workspace, connection: connection)
             let r = try await TableTransfer.importNative(file, tables: selected, intoOwner: ResultExporter.dictionaryName(owner), options: options,
-                                                         in: try await DataTransferUI.session(workspace, connection)) { t in message = L10n.tr("Import \(t)…") }
+                                                         in: try await DataTransferUI.session(workspace, connection, tool: "import")) { t in message = L10n.tr("Import \(t)…") }
             message = DataTransferUI.summary(r)
         } catch { message = error.localizedDescription }
     }
@@ -291,7 +298,7 @@ struct ImportTablesView: View {
             message = L10n.tr("Data Pump — import w toku…")
             let list = dumpTables.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty }
             let r = try await DataPump.importDump(dumpFile: dumpFile, tables: list.isEmpty ? nil : list, fromSchema: fromSchema, toSchema: owner,
-                                                  tableExists: tableExists, in: try await DataTransferUI.session(workspace, connection))
+                                                  tableExists: tableExists, in: try await DataTransferUI.session(workspace, connection, tool: "import"))
             message = "\(r.state)\n\(r.log)"
         } catch { message = error.localizedDescription }
     }
@@ -492,7 +499,7 @@ struct ImporterView: View {
     private func loadMapping() async {
         do {
             let o = ResultExporter.dictionaryName(owner), t = ResultExporter.dictionaryName(table)
-            let maps = try await TextImport.defaultMappings(owner: o, table: t, fieldNames: header, in: try await DataTransferUI.session(workspace, connection))
+            let maps = try await TextImport.defaultMappings(owner: o, table: t, fieldNames: header, in: try await DataTransferUI.session(workspace, connection, tool: "importer"))
             guard !maps.isEmpty else { message = L10n.tr("Brak tabeli \(owner).\(table)"); return }
             target = ImportTarget(owner: o, table: t, mappings: maps)
         } catch { message = error.localizedDescription }
@@ -519,7 +526,7 @@ struct ImporterView: View {
         defer { busy = false }
         do {
             try await DataTransferUI.guardChanges(workspace, connection: connection)
-            let r = try await TextImport.run(rows, fieldNames: header, target: t, in: try await DataTransferUI.session(workspace, connection)) { n in message = L10n.tr("Zaimportowano \(n)…") }
+            let r = try await TextImport.run(rows, fieldNames: header, target: t, in: try await DataTransferUI.session(workspace, connection, tool: "importer")) { n in message = L10n.tr("Zaimportowano \(n)…") }
             message = DataTransferUI.summary(r)
         } catch { message = error.localizedDescription }
     }
@@ -621,7 +628,7 @@ struct DataGeneratorView: View {
     private func add() async {
         do {
             let t = try await DataGenerator.defaultTable(owner: ResultExporter.dictionaryName(owner), table: ResultExporter.dictionaryName(newTable),
-                                                         in: try await DataTransferUI.session(workspace, connection))
+                                                         in: try await DataTransferUI.session(workspace, connection, tool: "generator"))
             guard !t.fields.isEmpty else { message = L10n.tr("Brak tabeli \(owner).\(newTable)"); return }
             tables.removeAll { $0.name == t.name }
             tables.append(t)
@@ -634,7 +641,7 @@ struct DataGeneratorView: View {
         busy = true
         defer { busy = false }
         do {
-            let s = try await DataTransferUI.session(workspace, connection)
+            let s = try await DataTransferUI.session(workspace, connection, tool: "generator")
             var g = DataGenerator(seed: mode == .preview ? 1 : UInt64.random(in: 1...UInt64.max), session: s)
             var defs = tables
             if mode == .preview { defs = defs.map { var t = $0; t.minRecords = min(t.minRecords, 20); t.maxRecords = min(t.maxRecords, 20); return t } }
@@ -675,8 +682,8 @@ struct CompareTableDataView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 ToolConnectionPicker(workspace: workspace, connection: $connection)
-                TextField(L10n.tr("Schemat źródłowy"), text: $owner).frame(maxWidth: 180).textFieldStyle(.roundedBorder).onSubmit { Task { await load() } }
-                Button(L10n.tr("Wczytaj")) { Task { await load() } }
+                TextField(L10n.tr("Schemat źródłowy"), text: $owner).frame(maxWidth: 180).textFieldStyle(.roundedBorder).onSubmit { if !busy { Task { await load() } } }
+                Button(L10n.tr("Wczytaj")) { Task { await load() } }.disabled(busy)
                 Spacer()
                 Picker(L10n.tr("Połączenie docelowe"), selection: $targetID) {
                     ForEach(workspace.connections.connections) { Text($0.displayName).tag(UUID?.some($0.id)) }
@@ -734,20 +741,20 @@ struct CompareTableDataView: View {
 
     private func load() async {
         do {
-            tables = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(owner), in: try await DataTransferUI.session(workspace, connection))
+            tables = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(owner), in: try await DataTransferUI.session(workspace, connection, tool: "porownanie"))
             selected = []
         } catch { message = error.localizedDescription }
     }
 
     private func target() async throws -> any DatabaseSession {
-        try await DataTransferCommands.session(workspace, connection: targetID)
+        try await DataTransferUI.session(workspace, targetID, tool: "porownanie.cel")
     }
 
     private func compare() async {
         busy = true
         defer { busy = false }
         do {
-            let s = try await DataTransferUI.session(workspace, connection)
+            let s = try await DataTransferUI.session(workspace, connection, tool: "porownanie")
             let t = try await target()
             var out: [TableDataDiff] = []
             var errors: [String] = []

@@ -155,6 +155,7 @@ struct EditorExternalToolsTests {
         a.isModified = true
         _ = ws.newDocument(.sql, text: "")
         ws.saveRecoverySnapshot()
+        ws.recovery.flush()     // zapis migawki idzie w tle (D233)
         let attrs = try FileManager.default.attributesOfItem(atPath: t.url.appendingPathComponent("Recovery/windows.json").path)
         #expect((attrs[.posixPermissions] as? Int) == 0o600)
         // Bez end(): drugi start widzi poprzednie uruchomienie jako nieczyste.

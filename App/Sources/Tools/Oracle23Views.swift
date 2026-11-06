@@ -79,7 +79,8 @@ struct DualityViewsView: View {
         guard let v = selected else { return }
         do {
             let (s, _) = try await Oracle23Commands.session(workspace, connection: connection)
-            detail = try await DualityViews.documents(v, in: s).joined(separator: "\n\n")
+            let text = try await DualityViews.documents(v, in: s).joined(separator: "\n\n")
+            if selected?.id == v.id { detail = text }   // inny widok wybrany w trakcie — bez cudzych dokumentów
         } catch { message = error.localizedDescription }
     }
 
@@ -87,7 +88,8 @@ struct DualityViewsView: View {
         guard let v = selected else { return }
         do {
             let (s, _) = try await Oracle23Commands.session(workspace, connection: connection)
-            detail = try await DualityViews.dataGuide(v, in: s).map { "\($0.path)  \($0.type)" }.joined(separator: "\n")
+            let text = try await DualityViews.dataGuide(v, in: s).map { "\($0.path)  \($0.type)" }.joined(separator: "\n")
+            if selected?.id == v.id { detail = text }
         } catch { message = error.localizedDescription }
     }
 }

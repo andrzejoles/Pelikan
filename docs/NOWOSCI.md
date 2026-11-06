@@ -2,6 +2,14 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.21.6 — narzędzia nie blokują się nawzajem
+
+- **Narzędzia danych** (eksport, import, generator, porównanie, kopiowanie schematu, kreator importu i inne) mają
+  osobne sesje: długi eksport nie wstrzymuje pozostałych, a zmiany jednego narzędzia nie trafiają do transakcji
+  drugiego. Eksport obiektów nie zatrzymuje listy sesji, a SQL Monitor — ADDM i SQL Tuning Advisora.
+- **Bez przycięć:** analiza kodu w edytorze dużych pakietów, otwieranie i zapis dużych plików eksportu oraz okresowa
+  migawka odzyskiwania okien działają w tle.
+
 ## 1.21.4 — pełne wartości CLOB i BLOB, sesje po zakończeniu, bez zamrażania
 
 - **Bez zamrażania okna:** sortowanie i filtr dużych wyników (od 50 000 wierszy) w tle, sortowanie kilka razy

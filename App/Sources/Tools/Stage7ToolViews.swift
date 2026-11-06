@@ -130,11 +130,15 @@ struct PredefinedReportsView: View {
     private func run(_ r: PredefinedReport) async {
         busy = true
         defer { busy = false }
+        let conn = connection
         do {
             let s = try await session()
             var v = Dictionary(uniqueKeysWithValues: r.variables.map { ($0.name, $0.defaultValue) })
             v.merge(values) { $1 }
-            result = try await PredefinedReports.run(r, values: v, in: s)
+            let res = try await PredefinedReports.run(r, values: v, in: s)
+            // Inny raport albo połączenie wybrane w trakcie — wynik nie trafia do widoku innego raportu.
+            guard selection == r.id, connection == conn else { return }
+            result = res
             detail = nil
             message = L10n.tr("Wierszy: \(result?.rows.count ?? 0)") + (result?.truncated == true ? " " + L10n.tr("(obcięto)") : "")
         } catch { message = error.localizedDescription }
@@ -143,12 +147,14 @@ struct PredefinedReportsView: View {
     private func showDetail(_ r: PredefinedReport, _ res: PredefinedReportResult) async {
         do {
             let s = try await session()
-            detail = try await PredefinedReports.detail(r, master: res, row: detailRow - 1, values: values, in: s)
+            let d = try await PredefinedReports.detail(r, master: res, row: detailRow - 1, values: values, in: s)
+            guard selection == r.id, result != nil else { return }
+            detail = d
         } catch { message = error.localizedDescription }
     }
 
     private func session() async throws -> any DatabaseSession {
-        try await workspace.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
+        try await workspace.toolSession(DataTransferCommands.sessionPurpose + ".predefined-reports", connection: connection)
     }
 
     private func export(_ r: PredefinedReport, _ f: ExportFormat) {
@@ -233,7 +239,7 @@ struct DatabaseDiffView: View {
         busy = true
         defer { busy = false }
         do {
-            let src = try await workspace.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
+            let src = try await workspace.toolSession(DataTransferCommands.sessionPurpose + ".database-diff", connection: connection)
             let dst = try await workspace.toolSession("diff", connection: targetID)
             diffs = try await DatabaseDiff.run(sourceOwner: sourceOwner.uppercased(), source: src, targetOwner: targetOwner.uppercased(), target: dst, options: options) { n, all in
                 message = L10n.tr("Porównano \(n) z \(all)")
@@ -317,7 +323,7 @@ struct CartView: View {
 
     private func script() async {
         do {
-            let s = try await workspace.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
+            let s = try await workspace.toolSession(DataTransferCommands.sessionPurpose + ".cart", connection: connection)
             let text = try await cart.deploymentScript(in: s) { message = L10n.tr("DDL: \($0)") }
             let d = workspace.newDocument(.sql, text: text)
             d.customTitle = cart.name
@@ -376,7 +382,7 @@ struct SchemaCopyView: View {
         log = []
         do {
             try await workspace.guardModification(["create table \(targetOwner).x (x number)"], connectionID: targetID)
-            let src = try await workspace.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
+            let src = try await workspace.toolSession(DataTransferCommands.sessionPurpose + ".schema-copy", connection: connection)
             let dst = try await workspace.toolSession("copy", connection: targetID)
             let r = try await SchemaCopy.run(sourceOwner: sourceOwner.uppercased(), source: src, targetOwner: targetOwner.uppercased(), target: dst, options: options) { log.append($0) }
             log.append(L10n.tr("Utworzono: \(r.created.count), pominięto: \(r.skipped.count), wierszy: \(r.rows), błędy: \(r.errors.count)"))
@@ -559,7 +565,7 @@ struct ImportWizardView: View {
     private func mapAutomatically() async {
         guard let s = source else { return }
         do {
-            let sess: (any DatabaseSession)? = state.createTable ? nil : try await workspace.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
+            let sess: (any DatabaseSession)? = state.createTable ? nil : try await workspace.toolSession(DataTransferCommands.sessionPurpose + ".import-wizard", connection: connection)
             var st = state
             try await ImportWizard.prepareMappings(&st, data: s, in: sess)
             state = st
@@ -573,7 +579,7 @@ struct ImportWizardView: View {
         do {
             guard let connection else { throw CommandError.notConnected }
             try await workspace.guardModification(["insert into \(state.owner).\(state.table) values (null)"], connectionID: connection)
-            let sess = try await workspace.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
+            let sess = try await workspace.toolSession(DataTransferCommands.sessionPurpose + ".import-wizard", connection: connection)
             let r = try await ImportWizard.execute(state, data: s, in: sess) { n in message = L10n.tr("Wierszy: \(n)") }
             message = L10n.tr("Wstawiono: \(r.inserted), zaktualizowano: \(r.updated), pominięto: \(r.skipped), błędy: \(r.errors.count)")
             if !r.errors.isEmpty { workspace.ui?.showObjectInfo(title: L10n.tr("Błędy importu"), columns: [L10n.tr("Błąd")], rows: r.errors.map { [$0] }) }

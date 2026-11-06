@@ -40,13 +40,14 @@ public struct DeploySummary: Sendable, Hashable {
                 s.remoteHead = st.remoteHead
                 s.warnings += st.warnings
                 if let from = serverHead, let to = st.remoteHead, from != to {
-                    let (commits, stat): ([String], String) = await Task.detached {
-                        guard LocalGit.hasCommit(repo: repo, from) else { return ([], "") }
-                        return ((try? LocalGit.commits(repo: repo, from: from, to: to)) ?? [], (try? LocalGit.diffStat(repo: repo, from: from, to: to)) ?? "")
+                    let (known, commits, stat): (Bool, [String], String) = await Task.detached {
+                        guard LocalGit.hasCommit(repo: repo, from) else { return (false, [], "") }
+                        return (true, (try? LocalGit.commits(repo: repo, from: from, to: to)) ?? [], (try? LocalGit.diffStat(repo: repo, from: from, to: to)) ?? "")
                     }.value
                     s.commits = commits
                     s.diffStat = stat
-                    if !LocalGit.hasCommit(repo: repo, from) {
+                    // Bez ponownego `git cat-file` w wątku głównym.
+                    if !known {
                         s.warnings.append(L10n.tr("Commita z serwera nie ma w lokalnym repo — lista zmian niedostępna"))
                     }
                 }

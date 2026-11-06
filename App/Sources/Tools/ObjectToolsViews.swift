@@ -52,8 +52,8 @@ struct ExportObjectsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 ToolConnectionPicker(workspace: workspace, connection: $connection)
-                TextField(L10n.tr("Schemat"), text: $owner).frame(maxWidth: 220).textFieldStyle(.roundedBorder).onSubmit { Task { await load() } }
-                Button(L10n.tr("Wczytaj")) { Task { await load() } }
+                TextField(L10n.tr("Schemat"), text: $owner).frame(maxWidth: 220).textFieldStyle(.roundedBorder).onSubmit { if !busy { Task { await load() } } }
+                Button(L10n.tr("Wczytaj")) { Task { await load() } }.disabled(busy)
             }
             ObjectPicker(objects: objects, selected: $selected)
             Form {
@@ -93,8 +93,9 @@ struct ExportObjectsView: View {
         _connection = State(initialValue: workspace.toolConnection())
     }
 
+    /// Własna sesja eksportu (dawniej sesja listy przeglądarki sesji — długi eksport DDL wstrzymywał jej odświeżanie).
     private func session() async throws -> any DatabaseSession {
-        try await workspace.toolSession("sessions", connection: connection)
+        try await workspace.toolSession("objects.export", connection: connection)
     }
 
     private func load() async {
@@ -146,8 +147,8 @@ struct CompareObjectsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 ToolConnectionPicker(workspace: workspace, connection: $connection)
-                TextField(L10n.tr("Schemat źródłowy"), text: $owner).frame(maxWidth: 200).textFieldStyle(.roundedBorder).onSubmit { Task { await load() } }
-                Button(L10n.tr("Wczytaj")) { Task { await load() } }
+                TextField(L10n.tr("Schemat źródłowy"), text: $owner).frame(maxWidth: 200).textFieldStyle(.roundedBorder).onSubmit { if !busy { Task { await load() } } }
+                Button(L10n.tr("Wczytaj")) { Task { await load() } }.disabled(busy)
                 Spacer()
                 Picker(L10n.tr("Połączenie docelowe"), selection: $targetID) {
                     ForEach(workspace.connections.connections) { Text($0.displayName).tag(UUID?.some($0.id)) }
@@ -214,7 +215,7 @@ struct CompareObjectsView: View {
 
     private func load() async {
         do {
-            objects = try await ObjectExport.objects(owner: owner.uppercased(), in: try await workspace.toolSession("sessions", connection: connection))
+            objects = try await ObjectExport.objects(owner: owner.uppercased(), in: try await workspace.toolSession("objects.compare", connection: connection))
             selected = []
             message = L10n.tr("Obiekty: \(objects.count)")
         } catch { message = error.localizedDescription }
@@ -226,7 +227,7 @@ struct CompareObjectsView: View {
         defer { busy = false }
         do {
             let target = try await workspace.toolSession("compare", connection: targetID)
-            diffs = try await ObjectCompare.compare(Array(selected), source: try await workspace.toolSession("sessions", connection: connection),
+            diffs = try await ObjectCompare.compare(Array(selected), source: try await workspace.toolSession("objects.compare", connection: connection),
                                                    targetOwner: targetOwner.uppercased(), target: target, options: options) { n in
                 message = L10n.tr("Porównano \(n) z \(selected.count)")
             }

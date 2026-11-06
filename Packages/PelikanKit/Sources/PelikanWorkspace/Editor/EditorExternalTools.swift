@@ -148,8 +148,19 @@ public final class RecoveryStore: Sendable {
 
     public init(directory: URL?) { self.directory = directory }
 
+    /// Kodowanie i zapis migawki poza wątkiem głównym (wszystkie niezapisane okna — przy dużych plikach dziesiątki ms
+    /// co kilkanaście sekund i przed każdym wykonaniem, D233); kolejka szeregowa zachowuje kolejność z `end`.
+    private let io = DispatchQueue(label: "pelikan.recovery", qos: .utility)
+
     /// Start aplikacji: zwraca migawkę z poprzedniego uruchomienia, jeśli zakończyło się nieczysto; zakłada znacznik.
     public func begin() -> Workset? {
+        io.sync { beginNow() }
+    }
+
+    /// Czeka na zapisy w toku (testy, zamykanie).
+    public func flush() { io.sync {} }
+
+    private func beginNow() -> Workset? {
         guard let dir = directory, let marker = markerURL, let snap = snapshotURL else { return nil }
         let crashed = FileManager.default.fileExists(atPath: marker.path)
         let previous = crashed ? (try? Data(contentsOf: snap)).flatMap { try? JSONDecoder().decode(Workset.self, from: $0) } : nil
@@ -162,6 +173,15 @@ public final class RecoveryStore: Sendable {
 
     /// Zapisuje migawkę niezapisanych okien (pusta — usuwa plik).
     public func save(_ w: Workset) {
+        io.sync { write(w) }
+    }
+
+    /// Jak `save`, bez czekania na zapis (timer i migawka przed wykonaniem).
+    public func saveInBackground(_ w: Workset) {
+        io.async { self.write(w) }
+    }
+
+    private func write(_ w: Workset) {
         guard let snap = snapshotURL else { return }
         guard !w.documents.isEmpty, let data = try? JSONEncoder().encode(w) else { try? FileManager.default.removeItem(at: snap); return }
         _ = FileManager.default.createFile(atPath: snap.path, contents: data, attributes: [.posixPermissions: 0o600])
@@ -169,13 +189,15 @@ public final class RecoveryStore: Sendable {
 
     /// Czyste zamknięcie: bez znacznika i migawki.
     public func end() {
-        if let m = markerURL { try? FileManager.default.removeItem(at: m) }
-        if let s = snapshotURL { try? FileManager.default.removeItem(at: s) }
+        io.sync {
+            if let m = markerURL { try? FileManager.default.removeItem(at: m) }
+            if let s = snapshotURL { try? FileManager.default.removeItem(at: s) }
+        }
     }
 
     /// Po decyzji o migawce z poprzedniego uruchomienia (przywrócona albo odrzucona).
     public func discardPrevious() {
-        if let s = snapshotURL { try? FileManager.default.removeItem(at: s) }
+        io.sync { if let s = snapshotURL { try? FileManager.default.removeItem(at: s) } }
     }
 }
 
@@ -283,7 +305,7 @@ extension Workspace {
     /// Okresowy zapis migawki (wywołuje aplikacja co interwał z Preferencji).
     public func saveRecoverySnapshot() {
         guard settings.recoveryEnabled else { return }
-        recovery.save(recoverySnapshot())
+        recovery.saveInBackground(recoverySnapshot())
     }
 
     /// Migawka przed wykonaniem (PD-FILE-001, opcja „przy każdym wykonaniu”): awaria w trakcie długiego polecenia nie
@@ -293,7 +315,7 @@ extension Workspace {
         guard settings.recoveryEnabled, settings.recoveryOnExecute else { return false }
         if let last = lastExecuteSnapshot, now.timeIntervalSince(last) < minimumInterval { return false }
         lastExecuteSnapshot = now
-        recovery.save(recoverySnapshot())
+        recovery.saveInBackground(recoverySnapshot())
         return true
     }
 
