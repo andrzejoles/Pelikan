@@ -669,7 +669,9 @@ extension Workspace {
     public func analyzeCode(_ doc: Document, names: Bool = true) async -> [EditorDiagnostic] {
         guard [.sql, .program, .test].contains(doc.kind) else { return [] }
         let text = doc.text
-        var found = CodeInspections.inspect(text, identifierLimit: settings.identifierLengthWarning)
+        // Inspekcje poza wątkiem głównym: pakiet 40 000 linii to ~0,26 s (release) przy każdej przerwie w pisaniu (D233).
+        let limit = settings.identifierLengthWarning
+        var found = await Task.detached(priority: .userInitiated) { CodeInspections.inspect(text, identifierLimit: limit) }.value
         if names, let c = effectiveConnection(of: doc), let s = sessions.existingSession(SessionKey(connectionID: c, purpose: .main)) {
             // Program z innego schematu (nagłówek z właścicielem): nazwy bez schematu — w schemacie właściciela.
             let schema = doc.kind == .program ? ProgramCompiler.units(in: text).first?.owner : nil

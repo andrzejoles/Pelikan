@@ -3920,3 +3920,31 @@ Dalszy przegląd (po D231) pod kątem pracy w wątku głównym, z pomiarami (kom
   szukanie w plikach, zawartość kodu, kolorowanie i analiza edytora — w tle; porównywanie i przenoszenie danych —
   funkcje pakietu poza aktorem głównym (bez `NonisolatedNonsendingByDefault`); okna modalne tylko na czas pytania.
 
+### D233 · 2026-11-06 — Pełny przegląd pracy w tle (174 zadania w 53 plikach interfejsu)
+
+Na prośbę właściciela przejrzane wszystkie miejsca uruchamiające zadania w tle (`Task {}` w interfejsie) i ich wywołania
+bazy, SSH i plików: wynik nieaktualny po zmianie zaznaczenia, wspólna sesja z długą operacją, ciężka praca w wątku
+głównym, praca po zamknięciu narzędzia, przyciski aktywne w trakcie. Poprawione (błędy i istotna ergonomia):
+- **Wspólna sesja „dane”** dla wszystkich narzędzi danych (eksport, import, import tekstu i Excela, generator,
+  porównanie danych, raporty predefiniowane, porównanie schematów, koszyk, kopiowanie schematu, kreator importu):
+  długi eksport wstrzymywał każde inne narzędzie, a DML dwóch narzędzi trafiał do jednej transakcji (wycofanie w jednym
+  cofało drugie). Teraz sesja na narzędzie (`dane.<narzędzie>`; cel porównania — osobna).
+- **Eksport obiektów użytkownika i porównanie obiektów** używały sesji listy przeglądarki sesji („sessions”) — długi
+  eksport DDL zatrzymywał jej odświeżanie. Teraz `objects.export`, `objects.compare`.
+- **SQL Monitor** dzielił sesję „packs” z ADDM i SQL Tuning Advisorem (minuty) — lista ma własną sesję.
+- **Wątek główny:** inspekcje kodu w edytorze po każdej przerwie w pisaniu (pakiet 40 000 linii — 0,26 s) w tle;
+  odczyt i rozpakowanie pliku formatu własnego, odczyt skryptu importu i zapis plików eksportu w tle; migawka
+  odzyskiwania okien (kodowanie JSON i zapis co ≥ 15 s i przed wykonaniem) na osobnej kolejce szeregowej.
+- **Wyniki nieaktualne:** raporty predefiniowane (inny raport albo połączenie wybrane w trakcie), dokumenty
+  i struktura widoków dualności JSON (inny widok).
+- **Przyciski:** „Wczytaj” w eksporcie i porównaniu (dane, obiekty) nieaktywne w trakcie operacji.
+- **Pro*C:** zamknięcie aplikacji rozłącza połączenia SSH celów równolegle (każde `ssh -O exit` do 10 s);
+  sprawdzenie commita serwera w lokalnym repo poza wątkiem głównym.
+- Bez zmian (sprawdzone): okna edytorów obiektów, diagramy, Query Builder, utPLSQL, okno testu, okno poleceń,
+  notatnik, panel plików i projekt (Git w tle, wyniki z kluczem), przeglądarka obiektów (gałęzie ładowane z licznikiem
+  i znacznikiem ładowania), raporty wydajności (stan uruchomienia), połączenia i logowanie (kolejka sesji),
+  szukanie w plikach (generacja wyników).
+- **Ograniczenie:** przeglądarka obiektów, podpowiedzi i analiza nazw korzystają z sesji głównej połączenia — długie
+  wczytywanie dużej gałęzi opóźnia podpowiedzi; w trybie Multi okna SQL mają własne sesje, więc zapytania okien ich
+  nie blokują. Osobna sesja metadanych — do decyzji właściciela (dodatkowa sesja na każde połączenie).
+
