@@ -59,6 +59,21 @@ public struct ExportOptions: Sendable {
 public enum ResultExporter {
     // MARK: Formaty tekstowe
 
+    /// Plik eksportu poza wątkiem głównym: tekst i XLSX dla setek tysięcy wierszy to sekundy pracy — w wątku
+    /// głównym zamrażały okno (D231).
+    public static func encoded(_ format: ExportFormat, _ sheets: [ExportData], includeSQL: Bool = false,
+                               options: ExportOptions = ExportOptions()) async -> Data {
+        await Task.detached(priority: .userInitiated) {
+            format == .xlsx ? xlsx(sheets, includeSQL: includeSQL, options: options)
+                            : Data(sheets.map { text(format, $0, options: options) }.joined(separator: "\n").utf8)
+        }.value
+    }
+
+    /// Tekst eksportu (schowek) poza wątkiem głównym.
+    public static func textInBackground(_ format: ExportFormat, _ data: ExportData, options: ExportOptions = ExportOptions()) async -> String {
+        await Task.detached(priority: .userInitiated) { text(format, data, options: options) }.value
+    }
+
     public static func text(_ format: ExportFormat, _ data: ExportData, options: ExportOptions = ExportOptions()) -> String {
         switch format {
         case .csv: delimited(data, separator: options.csvSeparator, options: options)

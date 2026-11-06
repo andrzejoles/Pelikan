@@ -567,13 +567,17 @@ public enum BuiltinCommands {
                 let options = ctx.workspace.settings.beautifier
                 let len = (doc.text as NSString).length
                 let sel = min(doc.selectedRange.lowerBound, len)..<min(doc.selectedRange.upperBound, len)
+                // Formatowanie poza wątkiem głównym (pakiet 50 000 linii to ~1 s, w kompilacji Debug kilka); tekst
+                // zmieniony w trakcie — wynik odrzucony, bez nadpisania wpisanych znaków (D231).
                 if sel.isEmpty {
-                    let f = try Beautifier.format(doc.text, options: options)
+                    let f = try await Task.detached(priority: .userInitiated) { try Beautifier.format(before, options: options) }.value
+                    guard doc.text == before else { throw CommandError.notAvailable(L10n.tr("Tekst zmienił się w trakcie formatowania — sformatuj ponownie")) }
                     let caret = min(sel.lowerBound, (f as NSString).length)
                     doc.text = f
                     doc.selectedRange = caret..<caret
                 } else {
-                    let (f, range) = try Beautifier.format(doc.text, range: sel, options: options)
+                    let (f, range) = try await Task.detached(priority: .userInitiated) { try Beautifier.format(before, range: sel, options: options) }.value
+                    guard doc.text == before else { throw CommandError.notAvailable(L10n.tr("Tekst zmienił się w trakcie formatowania — sformatuj ponownie")) }
                     doc.text = f
                     doc.selectedRange = range
                 }

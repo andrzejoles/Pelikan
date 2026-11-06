@@ -304,7 +304,7 @@ public enum SQLExecutor {
             let url = ExportDirectives.path(template, user: def?.target.user ?? "", database: def?.target.connectString ?? "", values: values,
                                             now: Date(), base: base)
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-            let bytes = format == .xlsx ? ResultExporter.xlsx([data], options: o) : Data(ResultExporter.text(format, data, options: o).utf8)
+            let bytes = await ResultExporter.encoded(format, [data], options: o)
             try bytes.write(to: url, options: .atomic)
             doc.output.append(L10n.tr("Wynik zapisany do pliku \(url.path) (wierszy: \(data.rows.count))"))
         }

@@ -422,7 +422,7 @@ enum GridStage8Commands {
         o.format = ws.settings.valueFormat
         let file = ctx.arguments.string("file")
         if file == "clipboard" {
-            ws.ui?.copyToClipboard(ResultExporter.text(format, data, options: o), html: nil)
+            ws.ui?.copyToClipboard(await ResultExporter.textInBackground(format, data, options: o), html: nil)
             return CommandResult(message: L10n.tr("Skopiowano wierszy: \(rows.count)"))
         }
         let url: URL
@@ -432,7 +432,7 @@ enum GridStage8Commands {
             guard let u = await ws.ui?.chooseSaveURL(suggestedName: data.title, fileExtension: format.fileExtension) else { throw CommandError.cancelledByUser }
             url = u
         }
-        let bytes = format == .xlsx ? ResultExporter.xlsx([data], options: o) : Data(ResultExporter.text(format, data, options: o).utf8)
+        let bytes = await ResultExporter.encoded(format, [data], options: o)
         try bytes.write(to: url, options: .atomic)
         doc.statusText = L10n.tr("Zapisano wierszy: \(rows.count) do \(url.lastPathComponent)")
         return CommandResult(message: doc.statusText, value: .int(Int64(rows.count)))

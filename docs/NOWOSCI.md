@@ -2,7 +2,10 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## 1.21.4 — pełne wartości CLOB i BLOB, sesje po zakończeniu
+## 1.21.4 — pełne wartości CLOB i BLOB, sesje po zakończeniu, bez zamrażania
+
+- **Bez zamrażania okna:** sortowanie i filtr dużych wyników (od 50 000 wierszy) w tle, sortowanie kilka razy
+  szybsze; eksport i kopiowanie wyniku oraz formatowanie kodu nie blokują interfejsu.
 
 - **Sesje:** po zakończeniu sesji (Kill) albo zerwaniu połączenia narzędzia, kompilacja i debuger łączą się ponownie
   same (wcześniej przestawały działać do ponownego uruchomienia). Przeglądarka sesji: szczegóły nadążają za

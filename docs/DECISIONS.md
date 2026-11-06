@@ -3904,3 +3904,19 @@ za zaznaczeniem. Przegląd aplikacji pod kątem pracy w tle — przyczyny i popr
   Metadane (przeglądarka obiektów, podpowiedzi) dzielą sesję główną — w trybie Multi okna mają własne sesje, więc
   zapytanie w oknie ich nie blokuje.
 
+### D232 · 2026-11-06 — Zamrażanie interfejsu: ciężka praca poza wątkiem głównym
+
+Dalszy przegląd (po D231) pod kątem pracy w wątku głównym, z pomiarami (kompilacja release):
+- **Sortowanie siatki:** 200 tys. wierszy — liczby 1,44 s, tekst 1,83 s w wątku głównym (klucz liczony przy każdym
+  porównaniu: parsowanie `Decimal`, formatowanie). Klucze liczone raz na wiersz: liczby 0,25 s; tekst z porównaniem
+  według języka (polskie „ł” po „l”) nadal ~1,7 s, więc od 50 000 wierszy sortowanie i filtr lokalny liczą się w tle
+  (`isSorting`, „sortowanie…” na pasku; siatka w poprzedniej kolejności do końca; nowsze sortowanie unieważnia
+  starsze). Mniejsze wyniki — jak dotąd od razu (bez migotania).
+- **Eksport i kopiowanie wyniku** (CSV, TSV, HTML, JSON, XML, XLSX, „Kopiuj do Excela”, dyrektywy eksportu okna SQL):
+  budowa pliku w tle (`ResultExporter.encoded`, `textInBackground`).
+- **Formatowanie kodu** (`edit.beautify`): pakiet 50 000 linii ~0,9 s — w tle; tekst zmieniony w trakcie — wynik
+  odrzucony z komunikatem (bez nadpisania wpisanych znaków).
+- Sprawdzone bez zmian: logowanie ODPI (przygotowanie, LDAP, Kerberos) na kolejce sesji; Git, procesy zewnętrzne,
+  szukanie w plikach, zawartość kodu, kolorowanie i analiza edytora — w tle; porównywanie i przenoszenie danych —
+  funkcje pakietu poza aktorem głównym (bez `NonisolatedNonsendingByDefault`); okna modalne tylko na czas pytania.
+

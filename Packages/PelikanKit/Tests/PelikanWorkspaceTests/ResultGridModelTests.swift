@@ -45,6 +45,30 @@ struct ResultGridModelTests {
          [.number("100"), .text("alfa"), .timestamp(OracleTimestamp(year: 2025, month: 1, day: 1), .date)]]
     }
 
+    @Test("Duży wynik: sortowanie i filtr w tle (bez zamrażania okna), wynik jak przy sortowaniu w wątku głównym")
+    func backgroundSort() async throws {
+        let n = ResultGridModel.backgroundSortRows + 1000
+        let data: [[OracleValue]] = (0..<n).map { i in [.number(String((i * 7919) % 100_003)), .text("ł\(i % 97)"), .null] }
+        let g = grid(data)
+        await g.fetchAll()
+        g.toggleSort(column: 0)
+        #expect(g.isSorting)
+        for _ in 0..<500 where g.isSorting { try await Task.sleep(for: .milliseconds(20)) }
+        #expect(!g.isSorting && g.orderVersion == 1)
+        let shown = (0..<200).map { Int(g.text(row: $0, column: 0))! }
+        #expect(shown == shown.sorted())
+        let expected = ResultGridModel.computeOrder(data, columns: columns, keys: g.sortKeys, filter: nil, format: ValueFormat())
+        #expect((0..<n).map { g.dataRow($0) } == expected)
+        // Nowsze sortowanie unieważnia starsze w toku.
+        g.toggleSort(column: 0)
+        g.toggleSort(column: 1)
+        for _ in 0..<500 where g.isSorting { try await Task.sleep(for: .milliseconds(20)) }
+        #expect(g.sortKeys.map(\.column) == [1] && g.text(row: 0, column: 1) == "ł0")
+        g.setFilter(GridFilter(groups: [[.init(column: "NAME", op: .eq, value: "ł5")]], text: "NAME = 'ł5'"))
+        for _ in 0..<500 where g.isSorting { try await Task.sleep(for: .milliseconds(20)) }
+        #expect(g.rowCount == (0..<n).filter { $0 % 97 == 5 }.count)
+    }
+
     @Test("Liczby numerycznie (nie tekstowo), NULL na końcu; malejąco; trzeci klik wyłącza")
     func numeric() async {
         let g = grid(sample)

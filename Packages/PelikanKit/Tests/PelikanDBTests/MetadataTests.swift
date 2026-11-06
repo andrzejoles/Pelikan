@@ -64,7 +64,9 @@ struct MetadataTests {
         let schema = try await m.currentSchema()
         let spec = DBObject(owner: schema, name: "EMP_API", type: .package)
         let src = try await m.source(of: spec)
-        #expect(src.uppercased().hasPrefix("CREATE OR REPLACE PACKAGE EMP_API"))
+        // Nazwa w cudzysłowie, gdy wcześniejszy test (eksport D194) skompilował pakiet z wyeksportowanego DDL.
+        let head = src.uppercased().replacingOccurrences(of: "\"", with: "")
+        #expect(head.hasPrefix("CREATE OR REPLACE PACKAGE EMP_API"))
         let ddl = try await m.ddl(of: DBObject(owner: schema, name: "DEPT", type: .table))
         #expect(ddl.contains("CREATE TABLE") && ddl.contains("\"DEPT\"") && ddl.hasSuffix(";"))
         let props = try await m.properties(of: DBObject(owner: schema, name: "DEPT", type: .table))
