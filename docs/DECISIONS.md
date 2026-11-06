@@ -3952,14 +3952,17 @@ głównym, praca po zamknięciu narzędzia, przyciski aktywne w trakcie. Poprawi
 
 Właściciel: „Wszędzie tam, gdzie to możliwe daj osobną sesję”. Dodatkowo do D231/D233:
 - **Metadane** (przeglądarka obiektów, podpowiedzi, analiza nazw w edytorze, opis obiektów, sprawdzanie zmian obiektów
-  okien programu, kosz) — sesja `metadata` zamiast głównej (`SessionManager.metadataKey`). Długie wczytanie dużej
-  gałęzi nie opóźnia podpowiedzi ani poleceń na sesji głównej, a w trybie Dual zapytania okien (sesja główna) nie
-  wstrzymują przeglądarki obiektów. Czynności w tle (analiza kodu, sprawdzanie zmian co minutę) otwierają ją tylko przy
-  otwartym połączeniu — bez łączenia od zera i pytania o hasło. Tryb jednej sesji — sesja główna (z założenia).
-  Skutek uboczny w trybie Dual: `ALTER SESSION SET CURRENT_SCHEMA` wpisane w oknie nie zmienia już schematu
-  przeglądarki obiektów (jak w trybie Multi); schemat z definicji połączenia ustawia każda sesja przy otwarciu.
+  okien programu, kosz) — w trybie Multi sesja `metadata` zamiast głównej (`SessionManager.metadataKey`): długie
+  wczytanie dużej gałęzi nie opóźnia podpowiedzi ani poleceń na sesji głównej. W trybach Dual i jednej sesji —
+  sesja główna: okna wykonują w niej polecenia, więc `ALTER SESSION SET CURRENT_SCHEMA` wpisane w oknie musi
+  obowiązywać też analizę nazw (code review). „Ustaw bieżący schemat…” zmienia schemat w sesji głównej i w sesji
+  metadanych (także otwieranej później; do rozłączenia). Czynności w tle (analiza kodu, sprawdzanie zmian) otwierają
+  sesję metadanych tylko przy otwartym połączeniu, a po nieudanym otwarciu (limit sesji profilu, tunel) czekają minutę
+  — bez logowania przy każdej przerwie w pisaniu.
 - **Raporty wydajności:** licencja, dostępność i migawki (`perf.list`) osobno od generowania raportu (`perf`).
 - **Scheduler:** DDL zaznaczonego obiektu (`scheduler.detail`) osobno od listy i kart przebiegów.
+- Komendy narzędzi danych (agent, paleta) — ta sama sesja co okno narzędzia (`DataTransferCommands.session(tool:)`).
+- Migawka odzyskiwania przed wykonaniem — zapis na dysk przed startem polecenia (okresowa — w tle, D233).
 - Pozostają wspólne (świadomie): sesja jednego narzędzia dla jego kolejnych kroków (operacje i tak idą po kolei
   w jednym oknie), sesja okna dla jego poleceń (transakcja okna), sesja kompilacji (kolejność kompilacji).
 

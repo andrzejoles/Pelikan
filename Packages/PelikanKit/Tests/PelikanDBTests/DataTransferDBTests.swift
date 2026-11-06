@@ -40,7 +40,7 @@ struct DataTransferDBTests {
     @Test("SQL Inserts: kolejność wg FK, drop/create z indeksem, wyłączone wyzwalacze i FK; import skryptem w oknie poleceń odtwarza dane")
     func sqlInserts() async throws {
         let (ws, conn) = try workspace()
-        let s = try await DataTransferCommands.session(ws)
+        let s = try await DataTransferCommands.session(ws, tool: "test")
         try await createTables(s)
         let before = try await snapshot(s)
         #expect(try await TableTransfer.orderByForeignKeys(["PELIKAN_DT_D", "PELIKAN_DT_M"], owner: schema, in: s) == ["PELIKAN_DT_M", "PELIKAN_DT_D"])
@@ -64,7 +64,7 @@ struct DataTransferDBTests {
     @Test("Format własny: eksport, usunięcie tabel, import z utworzeniem tabel; wybór tabel; czyszczenie przed importem")
     func native() async throws {
         let (ws, _) = try workspace()
-        let s = try await DataTransferCommands.session(ws)
+        let s = try await DataTransferCommands.session(ws, tool: "test")
         try await createTables(s)
         let before = try await snapshot(s)
         let data = try await TableTransfer.exportNative(["PELIKAN_DT_M", "PELIKAN_DT_D"], owner: schema, in: s)
@@ -87,7 +87,7 @@ struct DataTransferDBTests {
     @Test("Kolumny wirtualne, identity ALWAYS, INVISIBLE i TIMESTAMP WITH TIME ZONE: format własny, SQL Inserts, przenoszenie i porównanie (R7-03, R7-05)")
     func specialColumns() async throws {
         let (ws, conn) = try workspace()
-        let s = try await DataTransferCommands.session(ws)
+        let s = try await DataTransferCommands.session(ws, tool: "test")
         _ = try? await s.execute("drop table pelikan_dt_v purge")
         _ = try await s.execute("""
             create table pelikan_dt_v (id number generated always as identity (start with 100 increment by 10) primary key, v number,
@@ -160,7 +160,7 @@ struct DataTransferDBTests {
     @Test("Data Pump: eksport tabel do DATA_PUMP_DIR i import z TABLE_EXISTS_ACTION=REPLACE")
     func dataPump() async throws {
         let (ws, _) = try workspace()
-        let s = try await DataTransferCommands.session(ws)
+        let s = try await DataTransferCommands.session(ws, tool: "test")
         try await createTables(s)
         let before = try await snapshot(s)
         let e = try await DataPump.export(schema: schema, tables: ["PELIKAN_DT_M", "PELIKAN_DT_D"], dumpFile: "pelikan_dt.dmp", in: s)
@@ -177,7 +177,7 @@ struct DataTransferDBTests {
     @Test("Import tekstu: filtr, duplikaty pomijane i nadpisywane, błędne wiersze w raporcie, utworzenie tabeli z pliku")
     func textImport() async throws {
         let (ws, _) = try workspace()
-        let s = try await DataTransferCommands.session(ws)
+        let s = try await DataTransferCommands.session(ws, tool: "test")
         try await createTables(s)
         let csv = "id;nazwa;kwota\n1;pomijany;5\n3;\"Nowy; wiersz\";100,5\n4;filtr;0\nx;błąd;1\n"
         let f = TextImport.detect(csv)
@@ -211,7 +211,7 @@ struct DataTransferDBTests {
     @Test("Generator: domyślna definicja z kolumn, dane master/detail zapisane do bazy z kluczami obcymi")
     func generatorInsert() async throws {
         let (ws, _) = try workspace()
-        let s = try await DataTransferCommands.session(ws)
+        let s = try await DataTransferCommands.session(ws, tool: "test")
         try await createTables(s)
         _ = try await s.execute("delete from pelikan_dt_d")
         _ = try await s.execute("delete from pelikan_dt_m")
@@ -282,7 +282,7 @@ struct DataTransferDBTests {
     func compareData() async throws {
         let c = TestDatabase.config!
         let (ws, _) = try workspace()
-        let s = try await DataTransferCommands.session(ws)
+        let s = try await DataTransferCommands.session(ws, tool: "test")
         try await createTables(s)
         let sys = try await ODPISession.connect(target: ConnectionTarget(user: "SYSTEM", connectString: c.connectString),
                                                 credentials: Credentials(password: c.systemPassword), options: ConnectOptions())

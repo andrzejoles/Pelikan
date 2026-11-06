@@ -315,7 +315,8 @@ extension Workspace {
         guard settings.recoveryEnabled, settings.recoveryOnExecute else { return false }
         if let last = lastExecuteSnapshot, now.timeIntervalSince(last) < minimumInterval { return false }
         lastExecuteSnapshot = now
-        recovery.saveInBackground(recoverySnapshot())
+        // Na dysku przed startem polecenia — migawka ma przetrwać awarię w trakcie (najwyżej raz na `minimumInterval`).
+        recovery.save(recoverySnapshot())
         return true
     }
 

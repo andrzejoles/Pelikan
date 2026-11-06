@@ -200,16 +200,36 @@ public final class SessionManager {
     /// Sesja metadanych (przeglądarka obiektów, podpowiedzi, analiza nazw, odczyty słownika): osobna, żeby długie
     /// wczytanie dużej gałęzi albo zapytanie słownika nie opóźniały innych czynności na sesji głównej (D234). W trybie
     /// jednej sesji — sesja główna (wszystko w jednej sesji z założenia).
+    /// W trybie Dual okna wykonują polecenia w sesji głównej — metadane zostają w niej, żeby `ALTER SESSION SET
+    /// CURRENT_SCHEMA` wpisane w oknie działało też dla analizy nazw i przeglądarki obiektów (jak dotąd).
     public func metadataKey(connection: UUID) -> SessionKey {
-        settings().sessionMode == .single ? SessionKey(connectionID: connection, purpose: .main)
-            : SessionKey(connectionID: connection, purpose: .tool("metadata"))
+        settings().sessionMode == .multi ? SessionKey(connectionID: connection, purpose: .tool("metadata"))
+            : SessionKey(connectionID: connection, purpose: .main)
     }
 
-    /// Sesja metadanych, gdy połączenie jest otwarte (sesja główna istnieje) — bez łączenia od zera i bez pytania
-    /// o hasło (czynności w tle: analiza kodu, sprawdzanie zmian obiektów).
+    /// Schemat ustawiony komendą „Ustaw bieżący schemat…” — stosowany także w sesji metadanych otwieranej później.
+    @ObservationIgnored public var currentSchemaOverride: [UUID: String] = [:]
+    /// Nieudane otwarcie sesji metadanych w tle — kolejna próba najwcześniej po minucie (limit sesji profilu, tunel).
+    @ObservationIgnored private var metadataOpenFailed: [UUID: Date] = [:]
+
+    /// Sesja metadanych, gdy połączenie jest otwarte (sesja główna istnieje) — dla czynności w tle (analiza kodu,
+    /// sprawdzanie zmian obiektów). Pierwsze użycie otwiera ją z hasłem sesji głównej; po błędzie — przerwa minutowa,
+    /// bez ponawiania logowania przy każdej przerwie w pisaniu.
     public func metadataSessionIfConnected(_ connection: UUID) async -> (any DatabaseSession)? {
-        guard sessions[SessionKey(connectionID: connection, purpose: .main)] != nil else { return nil }
-        return try? await session(metadataKey(connection: connection))
+        let main = SessionKey(connectionID: connection, purpose: .main)
+        guard let m = sessions[main] else { return nil }
+        let key = metadataKey(connection: connection)
+        if key == main { return m }
+        if let s = sessions[key], !s.connectionLost { return s }
+        if let failed = metadataOpenFailed[connection], Date().timeIntervalSince(failed) < 60 { return nil }
+        do {
+            let s = try await session(key)
+            metadataOpenFailed[connection] = nil
+            return s
+        } catch {
+            metadataOpenFailed[connection] = Date()
+            return nil
+        }
     }
 
     public func compileKey(connection: UUID) -> SessionKey {
@@ -356,7 +376,12 @@ public final class SessionManager {
                     sessionPasswords[def.id] = np
                 }
                 // Nieudana inicjalizacja (skrypt startowy, NLS, Workspace Manager) — sesja zamknięta, tunel zwolniony.
-                do { try await initialize(s, def) } catch { await s.close(); throw error }
+                do {
+                    try await initialize(s, def)
+                    if key.purpose == .tool("metadata"), let schema = currentSchemaOverride[def.id] {
+                        _ = try await s.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)")
+                    }
+                } catch { await s.close(); throw error }
                 connected = true
                 if let tunnel { sessionTunnels[key] = tunnel }
                 if credentials.newPassword == nil, let p = password {
@@ -453,6 +478,9 @@ public final class SessionManager {
         sessionPasswords[connectionID] = nil
         ownerConfirmed.remove(connectionID)
         openConnections.removeAll { $0 == connectionID }
+        // Po ponownym połączeniu schemat z definicji połączenia (jak sesja główna).
+        currentSchemaOverride[connectionID] = nil
+        metadataOpenFailed[connectionID] = nil
     }
 
     private func noteOpen(_ connectionID: UUID) {

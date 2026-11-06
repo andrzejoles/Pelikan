@@ -13,7 +13,7 @@ enum ObjectAdminCommands {
     }
 
     /// Sesja metadanych połączenia obiektu (gałąź Object Browsera, argument `connection`, a bez nich — połączenie główne).
-    static func mainSession(_ ctx: CommandContext) async throws -> any DatabaseSession {
+    static func metadataSession(_ ctx: CommandContext) async throws -> any DatabaseSession {
         let conn = try ctx.objectConnection()
         return try await ctx.workspace.sessions.session(ctx.workspace.sessions.metadataKey(connection: conn))
     }
@@ -138,7 +138,7 @@ enum ObjectAdminCommands {
             command("ob.recycleBin", L10n.tr("Kosz"), submenu: nil, params: [CommandContext.toolConnectionParam], agent: .none, effect: .none,
                     summary: L10n.tr("Obiekty usunięte do kosza (USER_RECYCLEBIN): nazwa pierwotna, typ, czas usunięcia."), feature: "PD-OB-021",
                     validate: { $0.objectBrowserConnection != nil }) { ctx in
-                let items = try await ObjectAdmin.recycleBin(try await mainSession(ctx))
+                let items = try await ObjectAdmin.recycleBin(try await metadataSession(ctx))
                 if ctx.invoker == .user {
                     let text = items.isEmpty ? L10n.tr("Kosz jest pusty.") : items.map { "\($0.originalName)  \($0.type)  \($0.dropTime)  \($0.binName)" }.joined(separator: "\n")
                     ctx.ui?.showHTMLReport(title: L10n.tr("Kosz"), html: PackCommands.html(L10n.tr("Kosz"), text))

@@ -38,7 +38,7 @@ enum DataTransferUI {
     /// Sesja narzędzia danych — osobna na narzędzie (`tool`): długi eksport nie wstrzymuje innych narzędzi, a DML
     /// importu, generatora i porównania nie trafia do jednej wspólnej transakcji (D233).
     static func session(_ ws: Workspace, _ connection: UUID?, tool: String) async throws -> any DatabaseSession {
-        try await ws.toolSession(DataTransferCommands.sessionPurpose + "." + tool, connection: connection)
+        try await DataTransferCommands.session(ws, connection: connection, tool: tool)
     }
 
     static func schema(_ ws: Workspace, _ connection: UUID?) -> String { ws.sessions.connectedSchema(connection) ?? "" }
@@ -212,7 +212,7 @@ struct ImportTablesView: View {
                 Button(L10n.tr("Wybierz skrypt i importuj…")) { Task { await importSQL() } }.disabled(busy)
             case .native:
                 HStack {
-                    Button(L10n.tr("Otwórz plik…")) { openNative() }
+                    Button(L10n.tr("Otwórz plik…")) { openNative() }.disabled(busy)
                     TextField(L10n.tr("Schemat docelowy"), text: $owner).frame(maxWidth: 220).textFieldStyle(.roundedBorder)
                 }
                 HSplitView {

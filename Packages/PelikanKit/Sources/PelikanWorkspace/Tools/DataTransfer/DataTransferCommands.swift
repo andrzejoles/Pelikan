@@ -15,9 +15,10 @@ public enum DataTransferCommands {
     /// Przeznaczenie sesji narzędzi danych (osobna od okien użytkownika — import zatwierdza własne transakcje).
     public static let sessionPurpose = "dane"
 
-    /// Sesja narzędzi danych na wskazanym połączeniu (bez wskazanego — połączenie narzędzia).
-    public static func session(_ ws: Workspace, connection: UUID? = nil) async throws -> any DatabaseSession {
-        try await ws.toolSession(sessionPurpose, connection: connection ?? ws.toolConnection())
+    /// Sesja narzędzia danych na wskazanym połączeniu (bez wskazanego — połączenie narzędzia): osobna na narzędzie
+    /// (`dane.<tool>`) — ta sama dla okna narzędzia i jego komendy (agent, paleta), bez wspólnej transakcji (D233).
+    public static func session(_ ws: Workspace, connection: UUID? = nil, tool: String) async throws -> any DatabaseSession {
+        try await ws.toolSession(sessionPurpose + "." + tool, connection: connection ?? ws.toolConnection())
     }
 
     static func open(_ id: CommandID, _ title: String, _ tool: DataTransferTool, summary: String, feature: String) -> Command {

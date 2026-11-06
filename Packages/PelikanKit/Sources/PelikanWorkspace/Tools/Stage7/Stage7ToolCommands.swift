@@ -36,7 +36,7 @@ enum Stage7ToolCommands {
                 guard let id = ctx.arguments.string("report"), let r = PredefinedReports.report(id) else { throw CommandError.invalidArgument("report", L10n.tr("Nieznany raport")) }
                 var values = Dictionary(uniqueKeysWithValues: r.variables.map { ($0.name, $0.defaultValue) })
                 if let o = ctx.arguments.string("owner") { values["OWNER"] = o }
-                let s = try await DataTransferCommands.session(ctx.workspace)
+                let s = try await DataTransferCommands.session(ctx.workspace, tool: "predefined-reports")
                 let res = try await PredefinedReports.run(r, values: values, in: s)
                 if r.style == .dbmsOutput {
                     ctx.ui?.showObjectInfo(title: r.title, columns: ["OUTPUT"], rows: res.output.map { [$0] })
@@ -84,7 +84,7 @@ enum Stage7ToolCommands {
                     validate: { DataTransferCommands.connection($0) != nil }) { ctx in
                 let c = ctx.workspace.loadCart()
                 guard !c.items.isEmpty else { throw CommandError.notAvailable(L10n.tr("Koszyk jest pusty")) }
-                let s = try await DataTransferCommands.session(ctx.workspace)
+                let s = try await DataTransferCommands.session(ctx.workspace, tool: "cart")
                 let doc = ctx.workspace.newDocument(.sql, text: try await c.deploymentScript(in: s))
                 doc.customTitle = c.name
                 return .ok

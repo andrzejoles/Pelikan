@@ -116,7 +116,7 @@ struct SessionManagerTests {
         #expect(!doc.transactionOpen)
     }
 
-    @Test("Metadane: osobna sesja w trybach Multi i Dual (bez pytania o hasło w tle, gdy niepołączone); w trybie jednej sesji — główna")
+    @Test("Metadane: osobna sesja w trybie Multi (w tle tylko przy otwartym połączeniu); Dual i jedna sesja — główna")
     func metadataSession() async throws {
         let (ws, _) = make()
         let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"))
@@ -128,9 +128,23 @@ struct SessionManagerTests {
         #expect(meta !== main)
         #expect(try await ws.metadata(for: def.id)!.session() === meta)
         ws.settings.sessionMode = .dual
-        #expect(ws.sessions.metadataKey(connection: def.id).purpose == .tool("metadata"))
+        #expect(ws.sessions.metadataKey(connection: def.id).purpose == .main)
         ws.settings.sessionMode = .single
         #expect(ws.sessions.metadataKey(connection: def.id).purpose == .main)
+    }
+
+    @Test("Ustaw bieżący schemat: sesja główna i metadanych (także otwierana później); po rozłączeniu — z definicji")
+    func currentSchemaFollowsMetadata() async throws {
+        let (ws, driver) = make()
+        let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        _ = try await ws.invoke("connection.setCurrentSchema", CommandArguments(["connection": .string(def.id.uuidString), "schema": "HR"]))
+        let meta = try #require(await ws.sessions.metadataSessionIfConnected(def.id)) as! FakeSession
+        #expect(meta.executed.withLock { $0 }.contains("ALTER SESSION SET CURRENT_SCHEMA = HR"))
+        await ws.sessions.disconnect(def.id)
+        #expect(ws.sessions.currentSchemaOverride[def.id] == nil)
+        _ = driver
     }
 
     @Test("Zapisane hasło: łączy bez pytania; skrypt inicjalizacji i bieżący schemat wykonane")
