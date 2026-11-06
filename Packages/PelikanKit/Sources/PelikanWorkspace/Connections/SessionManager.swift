@@ -488,6 +488,8 @@ public final class SessionManager {
             } catch let e as OracleError where e.code == 1017 && attempt < 2 && !def.target.usesExternalCredentials {
                 // ORA-01017: błędne hasło — pytamy ponownie (zapisane hasło jest nieaktualne).
                 Log.connection.notice("Odmowa logowania (ORA-01017) — ponowne pytanie o hasło")
+                // Otwarcie w tle nie pyta — wtedy wpisane hasło zostaje (sesje użytkownika dalej bez pytania).
+                guard !Self.quietOpen else { throw CommandError.cancelledByUser }
                 sessionPasswords[def.id] = nil
                 guard let answer = await prompter(for: key)?.askPassword(for: def, reason: e.message) else { throw CommandError.cancelledByUser }
                 password = answer.password

@@ -91,6 +91,7 @@ struct ExportTablesView: View {
     @State private var options = TableExportOptions()
     @State private var dumpFile = "pelikan.dmp"
     @State private var message = ""
+    @State private var loadToken = 0
     @State private var busy = false
 
     var body: some View {
@@ -150,11 +151,12 @@ struct ExportTablesView: View {
     }
 
     private func load() async {
-        // Nowsze wczytanie (Enter po zmianie schematu) zastępuje wolniejsze wcześniejsze.
-        let o = owner, c = connection
+        // Nowsze wczytanie (Enter po zmianie schematu) zastępuje wolniejsze wcześniejsze; samo pisanie w polu — nie.
+        loadToken += 1
+        let token = loadToken, o = owner, c = connection
         do {
             let list = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(o), in: try await DataTransferUI.session(workspace, c, tool: "eksport"))
-            guard owner == o, connection == c else { return }
+            guard loadToken == token else { return }
             tables = list
             selected = []
             message = L10n.tr("Tabele: \(tables.count)")
@@ -680,6 +682,7 @@ struct CompareTableDataView: View {
     @State private var options = DataCompareOptions()
     @State private var diffs: [TableDataDiff] = []
     @State private var message = ""
+    @State private var loadToken = 0
     @State private var busy = false
 
     var body: some View {
@@ -744,10 +747,11 @@ struct CompareTableDataView: View {
     }
 
     private func load() async {
-        let o = owner, c = connection
+        loadToken += 1
+        let token = loadToken, o = owner, c = connection
         do {
             let list = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(o), in: try await DataTransferUI.session(workspace, c, tool: "porownanie"))
-            guard owner == o, connection == c else { return }
+            guard loadToken == token else { return }
             tables = list
             selected = []
         } catch { message = error.localizedDescription }
