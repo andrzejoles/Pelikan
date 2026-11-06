@@ -77,6 +77,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
 
     init(document: Document, fontSize: CGFloat = 13, secondary: Bool = false) {
         self.document = document
+        highlighter.dark = NSApp.effectiveAppearance.isDark     // przed pierwszym kolorowaniem; potem tryb widoku
         let ws0 = (NSApp.delegate as? AppDelegate)?.workspace
         ligatures = ws0?.settings.editorLigatures ?? true
         font = Self.makeFont(name: ws0?.settings.editorFontName ?? "SF Mono", size: fontSize, weight: ws0?.settings.editorFontWeight ?? .regular,
@@ -458,17 +459,17 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         }
     }
 
-    /// Zmiana trybu systemu: kolory są dynamiczne, ale pogrubienie i kursywa zależą od motywu trybu (D227). Po bieżącym
-    /// obiegu pętli — wtedy tryb aplikacji (SyntaxTheme.current, z którego kolorowanie bierze kroje) jest już nowy.
+    /// Zmiana trybu systemu: kolory są dynamiczne, ale pogrubienie i kursywa zależą od motywu trybu widoku (D227).
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        DispatchQueue.main.async { [weak self] in self?.applySchemeIfNeeded() }
+        applySchemeIfNeeded()
     }
 
-    /// Jedyne miejsce decyzji o ponownym kolorowaniu (D229): zmiana motywu bieżącego trybu, krojów albo trybu Pro*C —
+    /// Jedyne miejsce decyzji o ponownym kolorowaniu (D229): zmiana motywu trybu widoku, krojów albo trybu Pro*C —
     /// pełne kolorowanie; zmiana samych kolorów (dynamicznych) — tylko unieważnienie układu, bez leksowania.
     private func applySchemeIfNeeded() {
-        let cur = SyntaxTheme.current
+        highlighter.dark = effectiveAppearance.isDark
+        let cur = SyntaxTheme.scheme(dark: highlighter.dark)
         let key = "\(cur.id)|\(highlighter.proC)|\(SyntaxTheme.fontSignature(cur))"
         let colors = "\(SyntaxTheme.schemes.light.hashValue)|\(SyntaxTheme.schemes.dark.hashValue)"
         if key != appliedSchemeKey {
@@ -480,9 +481,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             if let tlm = textView.textLayoutManager {
                 // Leniwe: TextKit 2 układa od nowa tylko to, co widać, a resztę przy przewinięciu.
                 tlm.invalidateLayout(for: tlm.documentRange)
-            } else {
-                rehighlightAll()     // TextKit 1 (zgodność) — bez dynamicznego odświeżenia ułożonego tekstu
-            }
+            }   // TextKit 1 rozwiązuje dynamiczne kolory przy rysowaniu — wystarczy needsDisplay niżej
             appliedColorsKey = colors
         }
         textView.needsDisplay = true
@@ -496,11 +495,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         // Podkreślenia wracają z nowej analizy obecnego tekstu (stare zakresy mogą nie pasować). Po bieżącym obiegu
         // pętli — wywołanie z obserwacji (motyw, odcień) nie może czytać tekstu dokumentu, bo każda zmiana tekstu
         // uruchamiałaby wtedy tę obserwację ponownie.
-        guard !diagnostics.isEmpty else { return }
-        DispatchQueue.main.async { [weak self] in
-            self?.analyzedText = nil
-            self?.scheduleAnalysis(delay: 0)
-        }
+        // Zapamiętane podkreślenia — gdy dotyczą obecnego tekstu (tekst widoku, nie obserwowany tekst dokumentu: wywołanie
+        // z obserwacji motywu nie może zależeć od tekstu, bo każdy klawisz uruchamiałby ją ponownie).
+        guard !diagnostics.isEmpty, let analyzed = analyzedText, textView.string == analyzed else { return }
+        showDiagnostics(diagnostics)
     }
 
     private func load(_ text: String) {

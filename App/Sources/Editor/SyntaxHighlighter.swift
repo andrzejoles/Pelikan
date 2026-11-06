@@ -34,8 +34,7 @@ enum SyntaxTheme {
         return appearance.isDark ? s.dark : s.light
     }
 
-    /// Motyw trybu, w którym aplikacja jest teraz wyświetlana.
-    @MainActor static var current: SyntaxScheme { scheme(for: NSApp.effectiveAppearance) }
+    nonisolated static func scheme(dark: Bool) -> SyntaxScheme { dark ? schemes.dark : schemes.light }
 
     nonisolated static func ns(_ c: RGB) -> NSColor { NSColor(srgbRed: CGFloat(c.r) / 255, green: CGFloat(c.g) / 255, blue: CGFloat(c.b) / 255, alpha: 1) }
 
@@ -101,8 +100,8 @@ enum SyntaxTheme {
     }
 
     /// Krój z pogrubieniem/kursywą stylu w motywie bieżącego trybu (nil — bez zmiany kroju).
-    @MainActor static func font(for style: SyntaxStyle, base: NSFont) -> NSFont? {
-        let t = current.style(style)
+    @MainActor static func font(for style: SyntaxStyle, base: NSFont, dark: Bool) -> NSFont? {
+        let t = scheme(dark: dark).style(style)
         guard t.bold || t.italic else { return nil }
         var f = base
         if t.bold { f = NSFontManager.shared.convert(f, toHaveTrait: .boldFontMask) }
@@ -128,18 +127,20 @@ final class SyntaxHighlighter {
     var lineStarts: [Int] { lexer.lineStarts }
     /// Tekst C z wstawkami EXEC SQL (pliki .pc, .c, .h).
     var proC = false
+    /// Tryb wyglądu widoku (kroje z motywu tego trybu; kolory dynamiczne rozwiązuje AppKit) — ustawia właściciel.
+    var dark = false
     private var fonts: [SyntaxStyle: NSFont] = [:]
     private var fontsBase: NSFont?
     private var fontsScheme: String?
 
     /// Bufor krojów odświeżany raz na kolorowanie (nie przy każdym tokenie): klucz — motyw i jego kroje.
     private func refreshFonts(_ base: NSFont) {
-        let key = "\(SyntaxTheme.generation)|\(NSApp.effectiveAppearance.isDark)"
+        let key = "\(SyntaxTheme.generation)|\(dark)"
         guard fontsBase != base || fontsScheme != key else { return }
         fonts = [:]
         fontsBase = base
         fontsScheme = key
-        for s in SyntaxStyle.allCases { if let f = SyntaxTheme.font(for: s, base: base) { fonts[s] = f } }
+        for s in SyntaxStyle.allCases { if let f = SyntaxTheme.font(for: s, base: base, dark: dark) { fonts[s] = f } }
     }
 
     /// Pełne przeliczenie (otwarcie pliku, zmiana całego tekstu albo motywu).
@@ -147,11 +148,11 @@ final class SyntaxHighlighter {
         refreshFonts(font)
         let text = Self.utf16(of: storage)
         storage.beginEditing()
-        storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
         if proC {
             lexer.lexAll(text, onLine: { _ in }, onToken: { _ in })
-            applyProC(text, storage: storage, font: font)
+            applyProC(text, storage: storage, font: font)       // czyści atrybuty całego tekstu sam
         } else {
+            storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
             lexer.lexAll(text, onLine: { _ in }, onToken: { self.color($0, text, in: storage, font: font) })
             overlayJavaScript(text, storage: storage, font: font)
         }

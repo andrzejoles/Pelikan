@@ -3843,8 +3843,9 @@ kolor tekstu albo tła z Edytor › Kolory czcionek przesłania motyw.
   zmiana pogrubienia w aktywnym motywie własnym działa od razu; bufor odświeżany raz na kolorowanie, nie przy tokenie.
   `EXECUTE begin_stmt USING …` nie jest blokiem, a komentarz, etykieta `<<blk>>` przed BEGIN
   ani klauzula `AT :db` przed EXECUTE go nie przerywają. Zmiana wielkości czcionki zachowuje podkreślenia.
-  Po ponownym kolorowaniu podkreślenia daje nowa analiza obecnego tekstu (uruchamiana poza obserwacją — odczyt tekstu
-  w obserwacji motywu przerysowywałby edytor przy każdym klawiszu).
+  Kroje biorą się z trybu wyglądu widoku przekazanego do kolorowania (nie z trybu aplikacji) — zmiana trybu działa od
+  razu, bez opóźnień. Po ponownym kolorowaniu zapamiętane podkreślenia wracają, gdy dotyczą tekstu widoku (bez
+  odczytu obserwowanego tekstu dokumentu w obserwacji motywu).
 - **Tło w kolorze połączenia** liczone dynamicznie z tła motywu (wcześniej zostawało tło motywu z chwili otwarcia).
 - **Zmiana samego koloru** w motywie (przeciąganie w polu koloru) nie leksuje tekstu — tylko unieważnia układ (TextKit 2 układa leniwie widoczny fragment);
   ponowne kolorowanie przy zmianie motywu, pogrubienia/kursywy albo trybu Pro*C. Otwarcie okna koloruje tekst raz.

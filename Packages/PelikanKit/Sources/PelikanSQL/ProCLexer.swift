@@ -158,7 +158,7 @@ public enum ProCLexer {
                 i += 1
                 while i < end, text[i] != 39 { i += 1 }
                 i += 1
-            } else if c == 45, at(i + 1) == 45 {
+            } else if (c == 45 && at(i + 1) == 45) || (c == 47 && at(i + 1) == 47) {   // -- i // do końca linii
                 while i < end, text[i] != 10 { i += 1 }
             } else if c == 47, at(i + 1) == 42 {
                 i += 2
