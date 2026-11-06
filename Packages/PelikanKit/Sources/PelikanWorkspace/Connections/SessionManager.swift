@@ -167,6 +167,8 @@ public final class SessionManager {
     // MARK: Połączenie główne
 
     /// Wywoływane po zmianie połączenia głównego (zestawy preferencji połączeń, PD-PREF-002).
+    /// Sesja z utraconym połączeniem zastąpiona przy następnym użyciu (okna tracą znacznik otwartej transakcji — wycofał ją serwer).
+    @ObservationIgnored public var onSessionLost: (@MainActor (SessionKey) -> Void)?
     @ObservationIgnored public var onMainConnectionChange: (@MainActor () -> Void)?
 
     public func setMainConnection(_ id: UUID?) {
@@ -241,7 +243,14 @@ public final class SessionManager {
 
     /// Sesja dla klucza: istniejąca albo nowa (pyta o hasło, obsługuje wygasłe hasło, wykonuje skrypt inicjalizacji).
     public func session(_ key: SessionKey) async throws -> any DatabaseSession {
-        if let s = sessions[key] { return s }
+        if let s = sessions[key] {
+            guard s.connectionLost else { return s }
+            // Sesja z utraconym połączeniem (zerwane, zakończona przez KILL, DPI-1080) — każda sesja, nie tylko okna:
+            // narzędzia, kompilacja, debuger, agent. Bez tego każde kolejne wywołanie trafiało w martwą sesję.
+            dropLost(key)
+            onSessionLost?(key)
+            Task.detached { await s.close() }
+        }
         if let pending = connecting[key] { return try await pending.value }
         let task = Task { @MainActor in try await self.open(key) }
         connecting[key] = task

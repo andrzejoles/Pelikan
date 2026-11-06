@@ -147,6 +147,77 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     struct State {
         var cursors: [UInt64: Cursor] = [:]
         var next: UInt64 = 1
+        /// Lokatory obciętych LOB-ów (pełna treść na żądanie, `readLOB`), od najstarszego; ponad limit najstarsze odrzucane.
+        var lobs: [UInt64: (lob: LOB, kind: LOBValue.Kind)] = [:]
+        var lobOrder: [UInt64] = []
+    }
+    static let maxLOBLocators = 20_000
+
+    func keep(_ lob: LOB, kind: LOBValue.Kind) -> LOBLocator {
+        state.withLock { s in
+            let id = s.next
+            s.next += 1
+            s.lobs[id] = (lob, kind)
+            s.lobOrder.append(id)
+            if s.lobOrder.count > Self.maxLOBLocators {
+                let drop = s.lobOrder.count - Self.maxLOBLocators
+                for old in s.lobOrder.prefix(drop) { s.lobs[old] = nil }
+                s.lobOrder.removeFirst(drop)
+            }
+            return LOBLocator(id)
+        }
+    }
+
+    /// Porcja LOB z lokatora. OracleNIO nie pozwala czytać od wskazanej pozycji (`readChunks` zawsze od początku, a dla
+    /// CLOB przesuwa pozycję w bajtach), więc porcję kopiuje serwer (DBMS_LOB.COPY do tymczasowego LOB-a) i czytamy ją
+    /// w całości; CLOB najwyżej `maxCLOBRead` znaków na porcję (zob. `readCLOB`).
+    public func readLOB(_ locator: LOBLocator, offset: UInt64, amount: UInt64) async throws -> LOBValue {
+        guard let (lob, kind) = state.withLock({ $0.lobs[locator.id] }) else {
+            throw DatabaseError.unsupported("Lokator LOB nie jest już dostępny — wykonaj zapytanie ponownie")
+        }
+        let size = UInt64(lob.estimatedSize)
+        let isText = kind == .clob || kind == .nclob
+        guard offset >= 1, offset <= size, amount > 0 else {
+            return LOBValue(kind: kind, text: isText ? "" : nil, bytes: isText ? nil : Data(), length: size, truncated: false)
+        }
+        if kind == .bfile {
+            // BFILE: bez kopii po stronie serwera — od początku do żądanej porcji (rzadkie, pliki zewnętrzne).
+            var data = Data()
+            let end = Int(min(size, offset - 1 + amount))
+            for try await chunk in lob.readChunks(on: connection) {
+                data.append(contentsOf: chunk.readableBytesView)
+                if data.count >= end { break }
+            }
+            let from = min(data.count, Int(offset - 1))
+            return LOBValue(kind: kind, bytes: Data(data[data.startIndex + from ..< data.startIndex + min(end, data.count)]), length: size, truncated: false)
+        }
+        let n = min(amount, size - offset + 1, isText ? UInt64(Self.maxCLOBRead) : amount)
+        let type = kind == .nclob ? "nclob" : kind == .clob ? "clob" : "blob"
+        var b = OracleBindings(capacity: 4)
+        b.append(lob, context: .default, bindName: "l")
+        b.append(OracleNumber(Int(n)), context: .default, bindName: "n")
+        b.append(OracleNumber(Int(offset)), context: .default, bindName: "p")
+        let out = OracleRef(dataType: kind == .nclob ? .nCLOB : kind == .clob ? .clob : .blob)
+        b.append(out, bindName: "o", isReturning: false)
+        let sql = "declare t \(type); begin dbms_lob.createtemporary(t, true); dbms_lob.copy(t, :l, :n, 1, :p); :o := t; end;"
+        do { _ = try await connection.execute(OracleStatement(unsafeSQL: sql, binds: b)) } catch { throw failure(error) }
+        let part = try out.decode(as: LOB.self)
+        // Porcja czytana bezpośrednio (nie przez `readCLOB`, który zachowałby lokator) i zwalniana od razu.
+        var data = Data()
+        do {
+            if isText {
+                var it = part.readChunks(ofSize: Int(n), on: connection).makeAsyncIterator()
+                if let chunk = try await it.next() { data.append(contentsOf: chunk.readableBytesView) }
+            } else {
+                for try await chunk in part.readChunks(on: connection) { data.append(contentsOf: chunk.readableBytesView) }
+            }
+        } catch {
+            try? await part.free(on: connection)
+            throw failure(error)
+        }
+        try? await part.free(on: connection)
+        if isText { return LOBValue(kind: kind, text: Self.clobText(data, characters: Int(n)), length: size, truncated: false) }
+        return LOBValue(kind: kind, bytes: data, length: size, truncated: false)
     }
 
     init(connection: OracleConnection, options: ConnectOptions) {
@@ -301,7 +372,9 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             }
             // Obcięte: odczyt przerwany na limicie albo ostatnia porcja przekroczyła limit (prefix niżej ucina).
             let truncated = data.count > lobLimit || (stopped && total > data.count)
-            return .lob(LOBValue(kind: t == .blob ? .blob : .bfile, bytes: data.prefix(lobLimit), length: UInt64(total), truncated: truncated))
+            let kind: LOBValue.Kind = t == .blob ? .blob : .bfile
+            return .lob(LOBValue(kind: kind, bytes: data.prefix(lobLimit), length: UInt64(total), truncated: truncated,
+                                 locator: truncated ? keep(lob, kind: kind) : nil))
         case .intervalDS:
             let i = try cell.decode(IntervalDS.self, context: .default)
             return .intervalDS(days: Int32(i.days), hours: Int32(i.hours), minutes: Int32(i.minutes), seconds: Int32(i.seconds),
@@ -407,7 +480,7 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             so.arraySize = Int(options.fetchArraySize ?? self.options.fetchArraySize)
             rows = try await connection.execute(stmt, options: so)
         } catch {
-            throw Self.map(error)
+            throw failure(error)
         }
         var result = ExecutionResult(kind: Self.kind(sql))
         let columns = rows.columns.map(Self.columnInfo)
@@ -501,7 +574,8 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             if let chunk = try await it.next() { data.append(contentsOf: chunk.readableBytesView) }
         }
         let text = Self.clobText(data, characters: amount)
-        return LOBValue(kind: kind, text: text, length: UInt64(size), truncated: size > amount || text.utf16.count < amount)
+        let truncated = size > amount || text.utf16.count < amount
+        return LOBValue(kind: kind, text: text, length: UInt64(size), truncated: truncated, locator: truncated ? keep(lob, kind: kind) : nil)
     }
 
     /// Tekst CLOB, gdy wiadomo, ile znaków (jednostek UTF-16) odczytano: UTF-8 (zestaw znaków bazy o stałej szerokości),
@@ -550,7 +624,9 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
                 if data.count >= lobLimit { break }
             }
             let total = UInt64(lob.estimatedSize)
-            return .lob(LOBValue(kind: .blob, bytes: data.prefix(lobLimit), length: total, truncated: Int(total) > min(data.count, lobLimit)))
+            let truncated = Int(total) > min(data.count, lobLimit)
+            return .lob(LOBValue(kind: .blob, bytes: data.prefix(lobLimit), length: total, truncated: truncated,
+                                 locator: truncated ? keep(lob, kind: .blob) : nil))
         default: return .text(try ref.decode(as: String.self))
         }
     }
@@ -575,9 +651,9 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
                 out.append(values)
             }
         } catch let e as OracleError {
-            throw e
+            throw failure(e)
         } catch {
-            throw Self.map(error)
+            throw failure(error)
         }
         return RowBatch(rows: out, hasMore: true)
     }
@@ -587,18 +663,29 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     }
 
     public func commit() async throws {
-        do { try await connection.commit() } catch { throw Self.map(error) }
+        do { try await connection.commit() } catch { throw failure(error) }
     }
 
     public func rollback() async throws {
-        do { try await connection.rollback() } catch { throw Self.map(error) }
+        do { try await connection.rollback() } catch { throw failure(error) }
     }
 
     /// OracleNIO nie udostępnia przerwania wywołania (break) — możliwość wyłączona w `capabilities`.
     public func breakExecution() {}
 
+    /// Połączenie OracleNIO zamknięte (zerwane albo sesja zakończona po stronie serwera) albo błąd utraty połączenia.
+    public var connectionLost: Bool { connection.isClosed || lostFlag.withLock { $0 } }
+    private let lostFlag = Mutex(false)
+
+    /// Błąd OracleNIO jako błąd Pelikana; utrata połączenia zapamiętana (`connectionLost`).
+    func failure(_ error: any Error) -> any Error {
+        let e = Self.map(error)
+        if (e as? OracleError)?.isConnectionLost == true { lostFlag.withLock { $0 = true } }
+        return e
+    }
+
     public func ping() async throws {
-        do { try await connection.ping() } catch { throw Self.map(error) }
+        do { try await connection.ping() } catch { throw failure(error) }
     }
 
     public func setTags(_ tags: SessionTags) async throws {
@@ -616,7 +703,7 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     }
 
     public func close() async {
-        state.withLock { $0.cursors.removeAll() }
+        state.withLock { $0.cursors.removeAll(); $0.lobs.removeAll(); $0.lobOrder.removeAll() }
         // Wylogowanie zatwierdza otwartą transakcję (OCISessionEnd/OracleNIO): jak w ODPISession — ROLLBACK przed
         // zamknięciem, decyzję o COMMIT podejmuje wcześniej interfejs (D10).
         try? await connection.rollback()

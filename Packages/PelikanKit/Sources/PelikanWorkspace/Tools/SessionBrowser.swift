@@ -118,7 +118,12 @@ public enum SessionBrowser {
 
     /// `ALTER SYSTEM KILL SESSION 'sid,serial#' [IMMEDIATE]` (UG 16.1 Kill).
     public static func kill(sid: Int, serial: Int, immediate: Bool, in s: any DatabaseSession) async throws {
-        _ = try await s.execute("alter system kill session '\(sid),\(serial)'\(immediate ? " immediate" : "")")
+        do {
+            _ = try await s.execute("alter system kill session '\(sid),\(serial)'\(immediate ? " immediate" : "")")
+        } catch {
+            // ORA-00031 „sesja oznaczona do zakończenia” — sesja zajęta zakończy się sama; to sukces, nie błąd.
+            guard "\(error)".contains("ORA-00031") else { throw error }
+        }
     }
 
     /// `:sid` i `:serial#` jako zmienne wiązane (nazwa `serial#` jest niedozwolona — zamiana na `:serial_`).
@@ -140,6 +145,12 @@ public enum SessionCommands {
     /// Sesja przeglądarki sesji na połączeniu narzędzia (bez wskazanego — `Workspace.toolConnection()`).
     public static func toolSession(_ ws: Workspace, connection: UUID? = nil) async throws -> any DatabaseSession {
         try await ws.toolSession("sessions", connection: connection ?? ws.toolConnection())
+    }
+
+    /// Sesja zmian (Kill, akcje): osobna od listy i szczegółów — KILL bez IMMEDIATE czeka do 60 s na zakończenie
+    /// sesji i wstrzymywałby w tym czasie przeglądanie.
+    static func adminSession(_ ws: Workspace, connection: UUID) async throws -> any DatabaseSession {
+        try await ws.toolSession("sessions.admin", connection: connection)
     }
 
     static let sessionParams = [CommandParameter("sid", .integer, required: true, "SID"), CommandParameter("serial", .integer, required: true, "SERIAL#")]
@@ -185,7 +196,7 @@ public enum SessionCommands {
                                        buttons: [L10n.tr("Zakończ sesję (Kill)"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
                 }
                 try await SessionBrowser.kill(sid: Int(sid), serial: Int(serial), immediate: ctx.arguments.bool("immediate") ?? true,
-                                         in: try await toolSession(ctx.workspace, connection: conn))
+                                         in: try await adminSession(ctx.workspace, connection: conn))
                 return CommandResult(message: L10n.tr("Sesja \(sid),\(serial) zakończona"))
             },
             Command(CommandDescriptor(id: "sessions.action", title: L10n.tr("Akcja sesji"), category: .tools, submenu: L10n.tr("Sesje"),
@@ -201,7 +212,7 @@ public enum SessionCommands {
                 }
                 let conn = try ctx.toolConnection()
                 try await ctx.workspace.guardModification([item.sql], connectionID: conn)
-                try await SessionBrowser.perform(item, sid: Int(sid), serial: Int(serial), in: try await toolSession(ctx.workspace, connection: conn))
+                try await SessionBrowser.perform(item, sid: Int(sid), serial: Int(serial), in: try await adminSession(ctx.workspace, connection: conn))
                 return CommandResult(message: L10n.tr("Wykonano: \(item.name)"))
             },
         ]

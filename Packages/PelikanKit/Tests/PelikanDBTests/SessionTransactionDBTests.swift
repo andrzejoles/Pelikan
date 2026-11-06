@@ -98,6 +98,24 @@ struct SessionTransactionDBTests {
         await ws.sessions.disconnectAll()
     }
 
+    @Test("Sesja narzędzia zakończona przez KILL: wykryta jako utracona i zastąpiona nową przy następnym użyciu")
+    func killedToolSessionReconnects() async throws {
+        let (ws, def, _) = try workspace()
+        let key = SessionKey(connectionID: def.id, purpose: .tool("sessions"))
+        let victim = try await ws.sessions.session(key)
+        let sid = try #require(try await victim.scalar("select sys_context('userenv', 'sid') from dual"))
+        let serial = try #require(try await victim.scalar("select serial# from v$session where sid = sys_context('userenv', 'sid')"))
+        let admin = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .tool("sessions.admin")))
+        try await SessionBrowser.kill(sid: Int(sid)!, serial: Int(serial)!, immediate: true, in: admin)
+        // Pierwsze wywołanie po zakończeniu — błąd utraty połączenia (ORA-00028/03113…), sesja oznaczona jako utracona.
+        _ = try? await victim.scalar("select 1 from dual")
+        #expect(victim.connectionLost)
+        let fresh = try await ws.sessions.session(key)
+        #expect(fresh !== victim)
+        #expect(try await fresh.scalar("select 1 from dual") == "1")
+        await ws.sessions.disconnectAll()
+    }
+
     @Test("Test łącza: zapytanie przez łącze nie zostawia transakcji rozproszonej w sesji głównej (tryb Dual)")
     func linkTestLeavesNoTransaction() async throws {
         let c = TestDatabase.config!

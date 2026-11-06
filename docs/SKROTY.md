@@ -156,6 +156,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj jako… | `grid.copyAs` |  |  | Brak | PD-GRID-013 |
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | PD-GRID-014 |
 | Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | PD-GRID-003 |
+| Wynik › Zapisz wartość komórki do pliku… | `grid.saveValue` |  |  | Brak | PD-GRID-023 |
+| Wynik › Otwórz wartość komórki w programie zewnętrznym | `grid.openValueExternally` |  |  | Brak | PD-GRID-023 |
 | Wstaw fragment kodu | `edit.insertSnippet` |  |  | Brak | SC-SNIP-001 |
 | Zapisz fragment kodu | `snippets.save` |  |  | Brak | SC-SNIP-001 |
 | Usuń fragment kodu | `snippets.remove` |  |  | Brak | SC-SNIP-001 |

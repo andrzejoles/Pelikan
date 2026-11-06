@@ -162,7 +162,11 @@ sobre la cuadrícula. Con resultados muy grandes, Pelikan pregunta antes de supe
   editor de datos grandes con vistas de texto, XML, JSON, HTML, imagen, PDF y hexadecimal, formato JSON/XML y guardado
   en archivo.
 - El **Panel de valores** (**Vista › Panel de valores**, ⌥⌘V) muestra junto a la cuadrícula la celda actual como texto,
-  JSON, XML, HTML, imagen o hexadecimal.
+  JSON, XML, HTML, imagen o hexadecimal. Un CLOB se obtiene completo (también de consultas sin ROWID: vistas, uniones,
+  funciones); un valor binario (BLOB), solo a petición: **Obtener todo** o guardar en archivo. Botones del panel y menú
+  contextual de la cuadrícula: **Guardar valor de la celda en archivo…** (valor completo, leído por partes) y **Abrir
+  valor de la celda en una aplicación externa** (texto en el editor externo de Preferencias, p. ej. BBEdit; los cambios
+  no vuelven a la base de datos).
 - La **Vista de registro único** muestra la fila actual en vertical con los tipos y comentarios de las columnas. La
   activa y desactiva el botón de la barra sobre la cuadrícula o **Registro** en la pestaña **Resultado** de la cinta;
   cada pestaña de resultado recuerda su estado.

@@ -2,6 +2,18 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.21.4 — pełne wartości CLOB i BLOB, sesje po zakończeniu
+
+- **Sesje:** po zakończeniu sesji (Kill) albo zerwaniu połączenia narzędzia, kompilacja i debuger łączą się ponownie
+  same (wcześniej przestawały działać do ponownego uruchomienia). Przeglądarka sesji: szczegóły nadążają za
+  zaznaczeniem, Kill nie wstrzymuje przeglądania; tak samo Scheduler, panel DBA i Instance Viewer.
+
+- **Panel wartości** pokazuje cały CLOB (wcześniej pierwsze 4000 bajtów), także z widoków, złączeń i funkcji — bez
+  ROWID. BLOB pobierany tylko na żądanie: **Pobierz całość**.
+- **Zapisz wartość komórki do pliku…** — pełna wartość LOB (porcjami z bazy, bez limitu siatki) z panelu, menu
+  kontekstowego siatki i Large Data Editor; **Kolumna do plików…** też zapisuje całe LOB-y.
+- **Otwórz wartość komórki w programie zewnętrznym** — cały tekst w edytorze zewnętrznym z Ustawień (np. BBEdit).
+
 ## 1.21.3 — poprawki kolorowania po przeglądzie kodu
 
 - **Pro*C:** poprawne końce wstawek `EXEC SQL` — dynamiczny SQL `EXECUTE s USING …;`, specyfikacja typu, specyfikacja

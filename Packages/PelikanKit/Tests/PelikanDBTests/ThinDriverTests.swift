@@ -158,10 +158,12 @@ struct ThinSessionTests {
         await s.close()
     }
 
-    @Test("CLOB powyżej 32 600 znaków (kolumna i OUT) jak w Instant Client; limit LOB daje znacznik obcięcia")
+    @Test("CLOB powyżej 32 600 znaków (kolumna i OUT) jak w Instant Client; limit LOB daje znacznik obcięcia", .enabled(if: TestDatabase.isAvailable))
     func longCLOB() async throws {
-        let thin = try await connect()
+        // Najpierw Instant Client: gdy go brak, test kończy się przed otwarciem połączenia thin (OracleNIO zgłasza
+        // asercję przy zwolnieniu niezamkniętego połączenia).
         let odpi = try await TestDatabase.connect()
+        let thin = try await connect()
         let ascii = "select xmlagg(xmlelement(e, lpad(level, 6, '0'))).getclobval() from dual connect by level <= 3000"
         let polish = "select xmlagg(xmlelement(e, 'żółć' || lpad(level, 6, '0'))).getclobval() from dual connect by level <= 3000"
         for sql in [ascii, polish] {
@@ -180,6 +182,42 @@ struct ThinSessionTests {
         let batch = try await thin.fetch(try #require(r.resultSet).id, maxRows: 1)
         if case .lob(let l) = batch.rows.first?.first { #expect(l.text?.count == 1000 && l.truncated && l.text?.hasPrefix("<E>żółć") == true) }
         else { Issue.record("limit") }
+        await thin.close()
+        await odpi.close()
+    }
+
+    @Test("Obcięty LOB z lokatora w całości (CLOB > 65 535 znaków, BLOB) po zamknięciu wyniku — thin i Instant Client", .enabled(if: TestDatabase.isAvailable))
+    func fullLOBFromLocator() async throws {
+        // Najpierw Instant Client: gdy go brak, test kończy się przed otwarciem połączenia thin (OracleNIO zgłasza
+        // asercję przy zwolnieniu niezamkniętego połączenia).
+        let odpi = try await TestDatabase.connect()
+        let thin = try await connect()
+        let clob = "select xmlagg(xmlelement(e, 'żółć' || lpad(level, 6, '0'))).getclobval() from dual connect by level <= 6000"
+        let blob = "select xmlagg(xmlelement(e, lpad(level, 6, '0'))).getblobval(nls_charset_id('AL32UTF8')) from dual connect by level <= 6000"
+        let reference = try #require(try await odpi.queryAll(clob).rows.first?.first)
+        guard case .lob(let ref) = reference, let refText = ref.text else { Issue.record("CLOB \(reference)"); return }
+        #expect(refText.count > 65_535 && !ref.truncated)
+        for s in [thin, odpi] as [any DatabaseSession] {
+            for (sql, isText) in [(clob, true), (blob, false)] {
+                let r = try await s.execute(sql, binds: [], options: ExecuteOptions(lobLimit: 4000))
+                let id = try #require(r.resultSet).id
+                let batch = try await s.fetch(id, maxRows: 1)
+                await s.closeResultSet(id)
+                guard case .lob(let l) = batch.rows.first?.first else { Issue.record("LOB \(s.info.driver)"); continue }
+                #expect(l.truncated && l.locator != nil)
+                let full = try await s.fullLOB(l)
+                #expect(!full.truncated)
+                if isText {
+                    #expect(full.text == refText, "\(s.info.driver): \(full.text?.count ?? 0) z \(refText.count)")
+                } else {
+                    #expect(full.bytes.map { String(decoding: $0, as: UTF8.self) } == refText.replacingOccurrences(of: "żółć", with: ""))
+                }
+                // Strumień porcjami (zapis do pliku) — ta sama treść.
+                var streamed = Data()
+                try await s.streamLOB(l, chunk: 10_000) { part in streamed.append(part.bytes ?? Data((part.text ?? "").utf8)) }
+                #expect(streamed == (full.bytes ?? Data((full.text ?? "").utf8)))
+            }
+        }
         await thin.close()
         await odpi.close()
     }

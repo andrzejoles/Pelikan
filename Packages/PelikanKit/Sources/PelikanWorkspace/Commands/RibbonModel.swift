@@ -504,7 +504,7 @@ public enum RibbonModel {
                 .small("grid.cancelChanges"), .small("grid.revertRowChanges"),
                 .menu(L10n.tr("Zmiany"), symbol: "pencil.and.list.clipboard", commands: [
                     "grid.nextPendingChange", "grid.previousPendingChange", "grid.copyChangesSQL", separator,
-                    "grid.chooseDate", "grid.largeData", "grid.upperCase", "grid.lowerCase",
+                    "grid.chooseDate", "grid.largeData", "grid.saveValue", "grid.openValueExternally", "grid.upperCase", "grid.lowerCase",
                 ]),
             ]),
             RibbonGroup(L10n.tr("Transakcja"), [

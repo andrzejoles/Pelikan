@@ -158,7 +158,11 @@ Einstellungen überschritten wird.
   (⌥⌘L) öffnet den Editor für große Daten mit den Ansichten Text, XML, JSON, HTML, Bild, PDF und Hex, mit
   JSON/XML-Formatierung und Speichern in eine Datei.
 - Der **Wertebereich** (**Ansicht › Wertebereich**, ⌥⌘V) zeigt neben dem Raster die aktuelle Zelle als Text, JSON, XML,
-  HTML, Bild oder Hex.
+  HTML, Bild oder Hex. Ein CLOB wird vollständig geladen (auch aus Abfragen ohne ROWID: Sichten, Joins, Funktionen);
+  ein Binärwert (BLOB) nur auf Anforderung: **Alles laden** oder in Datei speichern. Schaltflächen des Bereichs und
+  Kontextmenü des Rasters: **Zellwert in Datei speichern…** (vollständiger Wert, stückweise aus der Datenbank) und
+  **Zellwert in externer Anwendung öffnen** (Text im externen Editor aus den Einstellungen, z. B. BBEdit; Änderungen
+  gelangen nicht zurück).
 - Die **Einzeldatensatzansicht** zeigt die aktuelle Zeile senkrecht mit den Typen und Kommentaren der Spalten. Die
   Schaltfläche in der Leiste über dem Raster oder **Datensatz** auf dem Menüband-Tab **Ergebnis** schaltet sie ein und
   aus; jeder Ergebnis-Tab merkt sich seinen Zustand.

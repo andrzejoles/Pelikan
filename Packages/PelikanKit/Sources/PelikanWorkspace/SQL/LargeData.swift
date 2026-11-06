@@ -43,6 +43,45 @@ public enum LargeDataFormat: String, Sendable {
     }
 }
 
+extension ResultGridModel {
+    /// Ile pełnych treści LOB trzymać w pamięci siatki (panel wartości wraca do nich bez ponownego pobierania).
+    static let fullLOBCacheCount = 8
+
+    /// Pełna treść LOB komórki, gdy już pobrana (panel wartości, Large Data Editor).
+    public func cachedFullLOB(_ l: LOBValue) -> LOBValue? {
+        guard l.truncated else { return l }
+        guard let loc = l.locator else { return nil }
+        return fullLOBs.last { $0.0 == loc }?.1
+    }
+
+    /// Pełna treść obciętego LOB-a z lokatora (bez ROWID — także widoki, złączenia, funkcje), do `limit` jednostek.
+    public func fullLOB(_ l: LOBValue, limit: UInt64 = 256 << 20) async throws -> LOBValue {
+        if let c = cachedFullLOB(l), !c.truncated || c.length > limit { return c }
+        let full = try await session.fullLOB(l, limit: limit)
+        if let loc = l.locator {
+            fullLOBs.removeAll { $0.0 == loc }
+            fullLOBs.append((loc, full))
+            if fullLOBs.count > Self.fullLOBCacheCount { fullLOBs.removeFirst(fullLOBs.count - Self.fullLOBCacheCount) }
+        }
+        return full
+    }
+
+    /// Zapis pełnej wartości LOB do pliku porcjami (bez wczytywania całości do pamięci): CLOB w UTF-8, BLOB bez zmian.
+    public func writeLOB(_ l: LOBValue, to url: URL) async throws {
+        FileManager.default.createFile(atPath: url.path, contents: nil)
+        let h = try FileHandle(forWritingTo: url)
+        defer { try? h.close() }
+        try h.truncate(atOffset: 0)
+        if let c = cachedFullLOB(l), !c.truncated {
+            try h.write(contentsOf: c.bytes ?? Data((c.text ?? "").utf8))
+            return
+        }
+        try await session.streamLOB(l) { part in
+            try h.write(contentsOf: part.bytes ?? Data((part.text ?? "").utf8))
+        }
+    }
+}
+
 /// Model Large Data Editor dla komórki siatki: pełna treść (ponowne pobranie po ROWID, gdy w siatce obcięta),
 /// format, formatowanie JSON/XML, zapis zmian do siatki (zatwierdzany razem z resztą zmian przez Post).
 @MainActor
@@ -89,9 +128,20 @@ public final class LargeDataModel {
         format = LargeDataFormat.detect(text: t, bytes: b)
     }
 
-    /// Pełna treść LOB (siatka pobiera do limitu) — ponowne zapytanie po ROWID; bez ROWID zostaje obcięta.
+    /// Pełna treść LOB (siatka pobiera do limitu): z lokatora zachowanego przez sterownik, a bez niego (np. wartość
+    /// spoza sterownika) — ponowne zapytanie po ROWID; bez obu zostaje obcięta.
     public func loadFull(limit: Int = 256 << 20) async throws {
-        guard truncated, let rid = grid.rowidColumn, let name = grid.edit.target?.qualifiedName ?? ResultExporter.tableName(fromQuery: grid.sql).map(ResultExporter.qualifiedIdentifier) else { return }
+        guard truncated else { return }
+        if case .lob(let l) = grid.value(row: row, column: column), l.locator != nil {
+            isLoading = true
+            defer { isLoading = false }
+            let full = try await grid.fullLOB(l, limit: UInt64(limit))
+            guard !modified else { return }
+            text = full.text; bytes = full.bytes; totalLength = full.length; truncated = full.truncated
+            format = LargeDataFormat.detect(text: text, bytes: bytes)
+            return
+        }
+        guard let rid = grid.rowidColumn, let name = grid.edit.target?.qualifiedName ?? ResultExporter.tableName(fromQuery: grid.sql).map(ResultExporter.qualifiedIdentifier) else { return }
         let col = grid.edit.target?.tableColumn[column] ?? grid.columns[column].name
         isLoading = true
         defer { isLoading = false }
@@ -123,6 +173,15 @@ public final class LargeDataModel {
 
     /// Treść do zapisu w pliku.
     public var fileData: Data { bytes ?? Data((text ?? "").utf8) }
+
+    /// Zapis do pliku: zmieniona albo pełna treść z pamięci; obcięty LOB z lokatorem — całość porcjami z bazy.
+    public func write(to url: URL) async throws {
+        if !modified, truncated, case .lob(let l) = grid.value(row: row, column: column), l.locator != nil {
+            try await grid.writeLOB(l, to: url)
+        } else {
+            try fileData.write(to: url)
+        }
+    }
 
     /// Treść karty „Tekst”: tekst kolumny albo bajty BLOB/RAW jako UTF-8; nil, gdy bajty nie są poprawnym UTF-8
     /// (obraz, ZIP) — karta pokazuje wtedy zrzut szesnastkowy tylko do odczytu, bo zapis jego tekstu zastąpiłby

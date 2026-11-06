@@ -20,6 +20,11 @@ struct SessionBrowserView: View {
     @State private var autoRefresh = false
     @State private var interval = 10.0
     @State private var editing = false
+    /// Odświeżenie szczegółów po przeładowaniu listy (klucz zadania szczegółów).
+    @State private var detailTick = 0
+    /// Przeładowanie w toku — kolejne prośby (auto-odświeżanie, filtr) łączone w jedno następne.
+    @State private var reloading = false
+    @State private var reloadAgain = false
 
     private let shown = ["SID", "SERIAL#", "USERNAME", "STATUS", "OSUSER", "MACHINE", "PROGRAM", "MODULE", "ACTION", "SQL_ID", "PREV_SQL_ID", "EVENT", "LOGON_TIME"]
     private var queries: SessionQueries { workspace.settings.sessionQueries }
@@ -133,8 +138,9 @@ struct SessionBrowserView: View {
             selection = nil
             Task { await reload() }
         }
-        .onChange(of: selection) { Task { await loadDetail() } }
-        .onChange(of: detailName) { Task { await loadDetail() } }
+        // Szczegóły w zadaniu z kluczem: zmiana zaznaczenia anuluje poprzednie pobranie, a jego wynik nie nadpisuje
+        // bieżącego (dawniej każde kliknięcie dokładało zapytanie do kolejki sesji i wyniki przychodziły po kolei).
+        .task(id: "\(selection.map { "\($0)" } ?? "")|\(detailName)|\(detailTick)") { await loadDetail() }
         .sheet(isPresented: $editing) { SessionQueriesEditor(workspace: workspace, done: { editing = false }) }
     }
 
@@ -143,8 +149,14 @@ struct SessionBrowserView: View {
         _connection = State(initialValue: workspace.toolConnection())
     }
 
+    /// Lista sesji — osobna sesja narzędzia; szczegóły — druga, żeby długie zapytanie listy (GV$SESSION na RAC) albo
+    /// Kill (osobna sesja komendy) nie wstrzymywały przeglądania.
     private func session() async throws -> any DatabaseSession {
         try await workspace.toolSession("sessions", connection: connection)
+    }
+
+    private func detailSession() async throws -> any DatabaseSession {
+        try await workspace.toolSession("sessions.detail", connection: connection)
     }
 
     /// Karta planu bieżącego zapytania sesji (D220): SQL_ID, a gdy sesja nic nie wykonuje — PREV_SQL_ID.
@@ -181,20 +193,35 @@ struct SessionBrowserView: View {
     }
 
     private func reload() async {
-        do {
-            let s = try await session()
-            rows = try await SessionBrowser.list(filter: filter, in: s)
-            message = L10n.tr("Sesje: \(rows.count)")
-            await loadDetail()
-        } catch { message = error.localizedDescription }
+        guard !reloading else { reloadAgain = true; return }
+        reloading = true
+        defer { reloading = false }
+        repeat {
+            reloadAgain = false
+            let (f, c) = (filter, connection)
+            do {
+                let s = try await session()
+                let list = try await SessionBrowser.list(filter: f, in: s)
+                // Połączenie albo filtr zmienione w trakcie — wynik nieaktualny, następne przeładowanie go zastąpi.
+                guard f == filter, c == connection else { reloadAgain = true; continue }
+                rows = list
+                message = L10n.tr("Sesje: \(rows.count)")
+                detailTick += 1
+            } catch { message = error.localizedDescription }
+        } while reloadAgain
     }
 
     private func loadDetail() async {
         guard detailName != Self.planTab else { detail = nil; return }
         guard let r = selected, let item = queries.details.first(where: { $0.name == detailName }) else { detail = nil; return }
         do {
-            detail = try await SessionBrowser.detail(item, sid: r.sid, serial: r.serial, in: try await session())
-        } catch { message = error.localizedDescription; detail = nil }
+            let d = try await SessionBrowser.detail(item, sid: r.sid, serial: r.serial, in: try await detailSession())
+            guard !Task.isCancelled else { return }
+            detail = d
+        } catch {
+            guard !Task.isCancelled else { return }
+            message = error.localizedDescription; detail = nil
+        }
     }
 
     private func kill(immediate: Bool) {
@@ -333,7 +360,7 @@ struct SessionPlanView: View {
         busy = true
         defer { busy = false }
         do {
-            let s = try await workspace.toolSession("sessions", connection: connection)
+            let s = try await workspace.toolSession("sessions.detail", connection: connection)
             var q = PerfReportRequest(reportID: "sql.planCursor", sqlID: sqlID, format: format)
             q.source = .cursorCache
             q.child = child
