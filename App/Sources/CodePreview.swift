@@ -78,11 +78,11 @@ struct HighlightedCodeView: NSViewRepresentable {
 
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let tv = scroll.documentView as? NSTextView, let storage = tv.textStorage else { return }
-        // Idempotentne: podgląd może się odświeżyć przed obserwacją ustawień w AppDelegate.
-        if let st = (NSApp.delegate as? AppDelegate)?.workspace.settings { SyntaxTheme.apply(st) }
         let key = "\(highlight)|\(schemeKey)|\(colorScheme)|\(text)"
         guard context.coordinator.last != key else { return }
         context.coordinator.last = key
+        // Idempotentne: podgląd może się odświeżyć przed obserwacją ustawień w AppDelegate (motywy i kolor tekstu).
+        if highlight, let st = (NSApp.delegate as? AppDelegate)?.workspace.settings { SyntaxTheme.apply(st) }
         let font = InterfaceFonts.shared.code
         storage.setAttributedString(NSAttributedString(string: text, attributes: [.font: font, .foregroundColor: NSColor.textColor]))
         if highlight {

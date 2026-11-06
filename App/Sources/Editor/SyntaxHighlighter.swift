@@ -41,6 +41,9 @@ enum SyntaxTheme {
     /// Ustawienia → motywy i odświeżenie (zwraca true, gdy coś się zmieniło).
     @MainActor @discardableResult
     static func apply(_ settings: PelikanWorkspace.Settings) -> Bool {
+        // Własny kolor tekstu edytora (PD-PREF-005) — ustawiany tylko tutaj (jedno źródło dla edytorów i podglądów).
+        let plain = settings.editorColors.text.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
+        if plain != customPlain { customPlain = plain; generation += 1 }
         let new = Schemes(light: settings.activeSyntaxScheme(dark: false), dark: settings.activeSyntaxScheme(dark: true))
         let old = schemes
         guard old.light != new.light || old.dark != new.dark else { return false }
@@ -127,6 +130,8 @@ final class SyntaxHighlighter {
     var lineStarts: [Int] { lexer.lineStarts }
     /// Tekst C z wstawkami EXEC SQL (pliki .pc, .c, .h).
     var proC = false
+    /// Numer zmiany motywów, z którym ostatnio kolorowano (−1 — jeszcze nie kolorowano).
+    private(set) var fontGeneration = -1
     /// Tryb wyglądu widoku (kroje z motywu tego trybu; kolory dynamiczne rozwiązuje AppKit) — ustawia właściciel.
     var dark = false
     private var fonts: [SyntaxStyle: NSFont] = [:]
@@ -136,6 +141,7 @@ final class SyntaxHighlighter {
     /// Bufor krojów odświeżany raz na kolorowanie (nie przy każdym tokenie): klucz — motyw i jego kroje.
     private func refreshFonts(_ base: NSFont) {
         let key = "\(SyntaxTheme.generation)|\(dark)"
+        fontGeneration = SyntaxTheme.generation
         guard fontsBase != base || fontsScheme != key else { return }
         fonts = [:]
         fontsBase = base

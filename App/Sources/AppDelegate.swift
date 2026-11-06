@@ -142,9 +142,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         // Motywy kolorowania składni (D227) — także dla podglądów kodu bez otwartego edytora.
         trackChanges { [weak self] in
             guard let self else { return }
-            SyntaxTheme.apply(self.workspace.settings)
-            // Własny kolor tekstu edytora (PD-PREF-005) — jedno miejsce, także dla podglądów bez otwartego edytora.
-            SyntaxTheme.customPlain = self.workspace.settings.editorColors.text.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
+            SyntaxTheme.apply(self.workspace.settings)      // motywy i własny kolor tekstu
         }
         languageToken = trackChanges { [weak self] in
             guard let self else { return }

@@ -78,5 +78,10 @@ struct SyntaxClassifierTests {
         var t: [String: SyntaxStyle] = [:]
         for sp in ProCLexer.spans(ty) { t[String(decoding: ty[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
         #expect(t["6"] == .number && t["7"] == .number && t["END-EXEC"] == .keyword)
+        // Specyfikacja wywołania kończy się średnikiem.
+        let cs = Array("EXEC SQL CREATE OR REPLACE FUNCTION f RETURN NUMBER AS LANGUAGE C NAME \"f\" LIBRARY lib;\nreturn 8;\n".utf16)
+        var q: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(cs) { q[String(decoding: cs[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(q["8"] == .number && q["return"] == .keyword)
     }
 }

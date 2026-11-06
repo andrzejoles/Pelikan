@@ -152,8 +152,32 @@ public enum ProCLexer {
             if kw(j, "TYPE") {
                 // Tylko TYPE BODY jest blokiem PL/SQL; specyfikacja typu (AS OBJECT, AS TABLE OF, deklaracja) kończy się `;`.
                 block = kw(skipTrivia(j + 4), "BODY")
-            } else {
-                block = ["PROCEDURE", "FUNCTION", "PACKAGE", "TRIGGER"].contains { kw(j, $0) }
+            } else if ["PROCEDURE", "FUNCTION", "PACKAGE", "TRIGGER"].contains(where: { kw(j, $0) }) {
+                // Specyfikacja wywołania (`AS LANGUAGE C …`, `AS EXTERNAL …`) i wyzwalacz z `CALL` kończą się średnikiem.
+                var e = j                                           // pierwszy średnik poza napisem '…'
+                while e < end, text[e] != 59 {
+                    if text[e] == 39 { e += 1; while e < end, text[e] != 39 { e += 1 } }
+                    e += 1
+                }
+                block = true
+                var w = j
+                while w < min(e, end) {
+                    if isWord(text[w]) {
+                        let s0 = w
+                        while w < end, isWord(text[w]) { w += 1 }
+                        if kw(s0, "LANGUAGE") || kw(s0, "EXTERNAL") || kw(s0, "CALL") || kw(s0, "BEGIN") || kw(s0, "IS") || kw(s0, "AS") {
+                            // Pierwsze rozstrzygające słowo: AS/IS/BEGIN — ciało PL/SQL (blok), chyba że zaraz po AS/IS jest
+                            // LANGUAGE albo EXTERNAL; CALL — wywołanie.
+                            if kw(s0, "CALL") || kw(s0, "LANGUAGE") || kw(s0, "EXTERNAL") { block = false; break }
+                            if kw(s0, "AS") || kw(s0, "IS") {
+                                let n = skipTrivia(w)
+                                block = !(kw(n, "LANGUAGE") || kw(n, "EXTERNAL"))
+                                break
+                            }
+                            if kw(s0, "BEGIN") { break }
+                        }
+                    } else { w += 1 }
+                }
             }
         }
         // Blok PL/SQL tylko po BEGIN albo DECLARE; `EXECUTE IMMEDIATE …;` i dynamiczny SQL `EXECUTE s USING …;`

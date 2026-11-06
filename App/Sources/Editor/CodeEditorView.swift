@@ -124,10 +124,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             let colors = ws.settings.editorColors
             let base = colors.background.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? SyntaxTheme.background
             let plain = colors.text.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
-            // SyntaxTheme.customPlain ustawia obserwator w AppDelegate; tu tylko odświeżenie tego edytora po zmianie.
+            // SyntaxTheme.customPlain ustawia SyntaxTheme.apply (jedno źródło); tu odświeżenie tego edytora po zmianie.
+            SyntaxTheme.apply(ws.settings)
             let plainChanged = plain != self.appliedPlain
             self.appliedPlain = plain
-            SyntaxTheme.customPlain = plain     // gdy ten obserwator uruchomi się przed obserwatorem aplikacji
             self.textView.insertionPointColor = SyntaxTheme.cursor
             self.textView.selectedTextAttributes = [.backgroundColor: SyntaxTheme.selection]
             if ws.settings.colorWindowBackground, let c = ws.indicatorColor(for: self.document) {
@@ -476,10 +476,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let key = "\(highlighter.proC)|\(SyntaxTheme.fontSignature(cur))"
         // Tryb widoku w kluczu kolorów: przełączenie trybu przy tych samych krojach unieważnia układ (ułożone fragmenty
         // TextKit 2 trzymają kolory poprzedniego trybu).
-        let colors = "\(highlighter.dark)|\(SyntaxTheme.schemes.light.hashValue)|\(SyntaxTheme.schemes.dark.hashValue)"
+        let colors = "\(highlighter.dark)|\(SyntaxTheme.generation)"
         if key != appliedSchemeKey {
             // Pierwsze przejście: tekst wczytany przed ustaleniem trybu Pro*C trzeba pokolorować od nowa.
-            if appliedSchemeKey != nil || highlighter.proC { rehighlightAll() }
+            // …albo gdy motywy zmieniły się od kolorowania przy wczytaniu (kroje z poprzedniego motywu).
+            if appliedSchemeKey != nil || highlighter.proC || highlighter.fontGeneration != SyntaxTheme.generation { rehighlightAll() }
             appliedSchemeKey = key
             appliedColorsKey = colors
         } else if colors != appliedColorsKey {
