@@ -140,7 +140,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             }
             // Kolor tekstu z Preferencji jest w dynamicznym kolorze — ułożone fragmenty trzeba unieważnić.
             if plainChanged {
-                if let tlm = self.textView.textLayoutManager { tlm.invalidateLayout(for: tlm.documentRange) } else { self.rehighlightAll() }
+                if let tlm = self.textView.textLayoutManager { tlm.invalidateLayout(for: tlm.documentRange) }   // TextKit 1: needsDisplay niżej
             }
             self.textView.needsDisplay = true
         })
@@ -493,9 +493,14 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private func rehighlightAll() {
         guard let storage = textView.textStorage, storage.length > 0 else { return }
         highlighter.highlightAll(storage, font: font)
-        // Zakresy diagnostyk tylko, gdy analiza dotyczyła obecnego tekstu (porównanie raz, przy zmianie motywu, trybu
-        // albo czcionki); po edycji podkreślenia nakłada analiza zaplanowana po zmianie.
-        if !diagnostics.isEmpty, document.text == analyzedText { showDiagnostics(diagnostics) }
+        // Podkreślenia wracają z nowej analizy obecnego tekstu (stare zakresy mogą nie pasować). Po bieżącym obiegu
+        // pętli — wywołanie z obserwacji (motyw, odcień) nie może czytać tekstu dokumentu, bo każda zmiana tekstu
+        // uruchamiałaby wtedy tę obserwację ponownie.
+        guard !diagnostics.isEmpty else { return }
+        DispatchQueue.main.async { [weak self] in
+            self?.analyzedText = nil
+            self?.scheduleAnalysis(delay: 0)
+        }
     }
 
     private func load(_ text: String) {

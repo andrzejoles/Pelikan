@@ -83,7 +83,15 @@ struct HighlightedCodeView: NSViewRepresentable {
         context.coordinator.last = key
         let font = InterfaceFonts.shared.code
         storage.setAttributedString(NSAttributedString(string: text, attributes: [.font: font, .foregroundColor: NSColor.textColor]))
-        if highlight { SyntaxHighlighter().highlightAll(storage, font: font) }
+        if highlight {
+            SyntaxHighlighter().highlightAll(storage, font: font)
+            // Przy zmianie trybu systemu SwiftUI odświeża widok, zanim tryb aplikacji (kroje z SyntaxTheme.current) jest
+            // nowy — drugie kolorowanie po bieżącym obiegu pętli.
+            DispatchQueue.main.async { [weak storage] in
+                guard let storage, storage.string == text else { return }
+                SyntaxHighlighter().highlightAll(storage, font: font)
+            }
+        }
         // Tło motywu (D227) — kolory jasnego motywu na tle ciemnego okna byłyby nieczytelne.
         tv.drawsBackground = highlight && SyntaxTheme.hasBackground
         tv.backgroundColor = SyntaxTheme.background
