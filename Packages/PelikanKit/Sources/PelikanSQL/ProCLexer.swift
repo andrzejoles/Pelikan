@@ -115,56 +115,52 @@ public enum ProCLexer {
             for u in s.utf16 { guard k < end, up(text[k]) == u else { return false }; k += 1 }
             return true
         }
-        func blank(_ k: Int) -> Int { var k = k; while k < end, text[k] == 32 || text[k] == 9 || text[k] == 10 || text[k] == 13 { k += 1 }; return k }
         func isWord(_ c: UInt16) -> Bool { (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c <= 57) || c == 95 || c == 36 || c == 35 }
-        var k = blank(start)
-        // `EXEC SQL AT :db EXECUTE …` / `AT nazwa` — klauzula bazy przed poleceniem.
-        if matches(k, "AT"), !isWord(at(k + 2)) {
-            k = blank(k + 2)
-            // Nazwa albo zmienna hosta, także strukturalna (`:ctx.db`, `:p->db`) — do białego znaku.
-            while k < end, !(text[k] == 32 || text[k] == 9 || text[k] == 10 || text[k] == 13) { k += 1 }
-            k = blank(k)
-        }
-        var block = false
-        // Składowany PL/SQL: `CREATE [OR REPLACE] PROCEDURE|FUNCTION|PACKAGE|TRIGGER|TYPE … END; END-EXEC;`.
-        if matches(k, "CREATE"), !isWord(at(k + 6)) {
-            var j = blank(k + 6)
-            for w in ["OR", "REPLACE", "EDITIONABLE", "NONEDITIONABLE"] where matches(j, w) && !isWord(at(j + w.utf16.count)) {
-                j = blank(j + w.utf16.count)
-            }
-            func kw(_ w: String) -> Bool { matches(j, w) && !isWord(at(j + w.utf16.count)) }
-            if kw("TYPE") {
-                // Tylko TYPE BODY jest blokiem PL/SQL; specyfikacja typu (AS OBJECT, AS TABLE OF, deklaracja) kończy się `;`.
-                j = blank(j + 4)
-                block = kw("BODY")
-            } else {
-                block = ["PROCEDURE", "FUNCTION", "PACKAGE", "TRIGGER"].contains { kw($0) }
-            }
-        }
-        if matches(k, "EXECUTE"), !isWord(at(k + 7)) {
-            var j = k + 7
-            // Białe znaki, komentarze i etykiety <<nazwa>> przed BEGIN/DECLARE.
+        /// Białe znaki, komentarze `--` i `/* */` oraz etykiety `<<nazwa>>` — jedna reguła dla AT, CREATE i EXECUTE.
+        func skipTrivia(_ k: Int) -> Int {
+            var j = k
             while j < end {
                 if text[j] == 32 || text[j] == 9 || text[j] == 10 || text[j] == 13 { j += 1 }
                 else if text[j] == 45, at(j + 1) == 45 { while j < end, text[j] != 10 { j += 1 } }
                 else if text[j] == 47, at(j + 1) == 42 {
                     j += 2
                     while j < end, !(text[j] == 42 && at(j + 1) == 47) { j += 1 }
-                    j += 2
+                    j = min(j + 2, end)
                 } else if text[j] == 60, at(j + 1) == 60 {
                     j += 2
                     while j < end, !(text[j] == 62 && at(j + 1) == 62) { j += 1 }
-                    j += 2
+                    j = min(j + 2, end)
                 } else { break }
             }
-            // Blok PL/SQL tylko po BEGIN albo DECLARE; `EXECUTE IMMEDIATE …;` i dynamiczny SQL `EXECUTE s USING …;`
-            // kończą się średnikiem.
-            func word(_ w: String) -> Bool {
-                guard matches(j, w) else { return false }
-                let n = at(j + w.utf16.count)
-                return !((n >= 65 && n <= 90) || (n >= 97 && n <= 122) || (n >= 48 && n <= 57) || n == 95 || n == 36 || n == 35)
+            return j
+        }
+        /// Słowo kluczowe `w` w pozycji `j` (całe słowo).
+        func kw(_ j: Int, _ w: String) -> Bool { matches(j, w) && !isWord(at(j + w.utf16.count)) }
+        var k = skipTrivia(start)
+        // `EXEC SQL AT :db EXECUTE …` / `AT nazwa` — klauzula bazy przed poleceniem.
+        if kw(k, "AT") {
+            k = skipTrivia(k + 2)
+            // Nazwa albo zmienna hosta, także strukturalna (`:ctx.db`, `:p->db`) — do białego znaku.
+            while k < end, !(text[k] == 32 || text[k] == 9 || text[k] == 10 || text[k] == 13) { k += 1 }
+            k = skipTrivia(k)
+        }
+        var block = false
+        // Składowany PL/SQL: `CREATE [OR REPLACE] PROCEDURE|FUNCTION|PACKAGE|TRIGGER|TYPE BODY … END; END-EXEC;`.
+        if kw(k, "CREATE") {
+            var j = skipTrivia(k + 6)
+            for w in ["OR", "REPLACE", "EDITIONABLE", "NONEDITIONABLE"] where kw(j, w) { j = skipTrivia(j + w.utf16.count) }
+            if kw(j, "TYPE") {
+                // Tylko TYPE BODY jest blokiem PL/SQL; specyfikacja typu (AS OBJECT, AS TABLE OF, deklaracja) kończy się `;`.
+                block = kw(skipTrivia(j + 4), "BODY")
+            } else {
+                block = ["PROCEDURE", "FUNCTION", "PACKAGE", "TRIGGER"].contains { kw(j, $0) }
             }
-            block = word("BEGIN") || word("DECLARE")
+        }
+        // Blok PL/SQL tylko po BEGIN albo DECLARE; `EXECUTE IMMEDIATE …;` i dynamiczny SQL `EXECUTE s USING …;`
+        // kończą się średnikiem.
+        if kw(k, "EXECUTE") {
+            let j = skipTrivia(k + 7)
+            block = kw(j, "BEGIN") || kw(j, "DECLARE")
         }
         var i = start
         while i < end {

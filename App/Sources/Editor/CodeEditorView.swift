@@ -124,10 +124,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             let colors = ws.settings.editorColors
             let base = colors.background.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? SyntaxTheme.background
             let plain = colors.text.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
-            // Porównanie z kolorem tego edytora (customPlain jest wspólny — pierwszy edytor zmienia go za wszystkie).
+            // SyntaxTheme.customPlain ustawia obserwator w AppDelegate; tu tylko odświeżenie tego edytora po zmianie.
             let plainChanged = plain != self.appliedPlain
             self.appliedPlain = plain
-            SyntaxTheme.customPlain = plain
+            SyntaxTheme.customPlain = plain     // gdy ten obserwator uruchomi się przed obserwatorem aplikacji
             self.textView.insertionPointColor = SyntaxTheme.cursor
             self.textView.selectedTextAttributes = [.backgroundColor: SyntaxTheme.selection]
             if ws.settings.colorWindowBackground, let c = ws.indicatorColor(for: self.document) {
