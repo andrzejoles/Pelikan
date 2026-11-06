@@ -160,7 +160,7 @@ struct ExportTablesView: View {
             tables = list
             selected = []
             message = L10n.tr("Tabele: \(tables.count)")
-        } catch { message = error.localizedDescription }
+        } catch { if loadToken == token { message = error.localizedDescription } }
     }
 
     private func export() async {
@@ -754,7 +754,7 @@ struct CompareTableDataView: View {
             guard loadToken == token else { return }
             tables = list
             selected = []
-        } catch { message = error.localizedDescription }
+        } catch { if loadToken == token { message = error.localizedDescription } }
     }
 
     private func target() async throws -> any DatabaseSession {

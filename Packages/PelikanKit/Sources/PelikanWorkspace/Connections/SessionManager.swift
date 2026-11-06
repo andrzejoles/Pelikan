@@ -253,8 +253,6 @@ public final class SessionManager {
     /// Licznik rozłączeń połączenia — sesja otwierana w chwili rozłączenia nie wraca po nim do mapy.
     @ObservationIgnored private var disconnects: [UUID: Int] = [:]
 
-
-    /// Sesja do odczytów słownika w tle, gdy połączenie jest otwarte (sesja główna istnieje).
     /// Po zmianie trybu z Multi na Dual albo jedną sesję: osobna sesja metadanych nie jest już używana — zamknięta
     /// przy pierwszym użyciu metadanych (bez sesji serwera do rozłączenia).
     public func closeUnusedMetadataSession(_ connection: UUID) async {
@@ -263,6 +261,7 @@ public final class SessionManager {
         await close(separate)
     }
 
+    /// Sesja do odczytów słownika w tle, gdy połączenie jest otwarte (sesja główna istnieje).
     public func metadataSessionIfConnected(_ connection: UUID) async -> (any DatabaseSession)? {
         // Bez otwierania sesji (czynności w tle: analiza kodu, sprawdzanie zmian) — istniejąca sesja metadanych, a gdy
         // jej jeszcze nie ma (otwiera ją dopiero czynność użytkownika: przeglądarka, podpowiedź), sesja główna.
@@ -453,8 +452,7 @@ public final class SessionManager {
                     if key.purpose == .main || key.purpose == .tool("metadata"), let schema = currentSchemaOverride[def.id] {
                         // Schemat usunięty albo bez uprawnień — schemat z definicji zamiast odmowy każdego połączenia.
                         do { _ = try await s.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)") } catch {
-                            Log.connection.notice("Bieżący schemat z „Ustaw bieżący schemat…” niedostępny — pominięty")
-                            currentSchemaOverride[def.id] = nil
+                            Log.connection.notice("Bieżący schemat z „Ustaw bieżący schemat…” niedostępny — pominięty w tej sesji")
                         }
                     }
                 } catch { await s.close(); throw error }

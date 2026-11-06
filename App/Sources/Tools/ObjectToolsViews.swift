@@ -141,6 +141,7 @@ struct CompareObjectsView: View {
     @State private var diffs: [ObjectDifference] = []
     @State private var diffSelection: ObjectDifference.ID?
     @State private var message = ""
+    @State private var loadToken = 0
     @State private var busy = false
 
     var body: some View {
@@ -214,11 +215,16 @@ struct CompareObjectsView: View {
     }
 
     private func load() async {
+        // Nowsze wczytanie zastępuje wolniejsze wcześniejsze (wynik i błąd).
+        loadToken += 1
+        let token = loadToken
         do {
-            objects = try await ObjectExport.objects(owner: owner.uppercased(), in: try await workspace.toolSession("objects.compare", connection: connection))
+            let list = try await ObjectExport.objects(owner: owner.uppercased(), in: try await workspace.toolSession("objects.compare", connection: connection))
+            guard loadToken == token else { return }
+            objects = list
             selected = []
             message = L10n.tr("Obiekty: \(objects.count)")
-        } catch { message = error.localizedDescription }
+        } catch { if loadToken == token { message = error.localizedDescription } }
     }
 
     private func compare() async {

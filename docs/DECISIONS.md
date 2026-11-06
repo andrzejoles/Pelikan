@@ -3972,4 +3972,11 @@ Właściciel: „Wszędzie tam, gdzie to możliwe daj osobną sesję”. Dodatko
 - Migawka odzyskiwania przed wykonaniem — zapis na dysk przed startem polecenia (okresowa — w tle, D233).
 - Pozostają wspólne (świadomie): sesja jednego narzędzia dla jego kolejnych kroków (operacje i tak idą po kolei
   w jednym oknie), sesja okna dla jego poleceń (transakcja okna), sesja kompilacji (kolejność kompilacji).
+- **Code review (medium, 9 rund) zmian 1.21.5 → 1.21.6:** poprawione błędy i istotna ergonomia (bieżący schemat
+  w sesji metadanych, tryb Dual na sesji głównej, limit sesji, tunel i hasło przy rozłączeniu w trakcie otwierania,
+  nieaktualne wyniki raportów i list, migawka przed wykonaniem na dysku); po 8. rundzie uproszczenie — czynności
+  w tle nie otwierają sesji (usunięte okna „w tle”, blokada po odmowie i przerwy). Runda 9 bez istotnych błędów.
+  Pominięte świadomie: liczba sesji narzędzi (decyzja właściciela), zamknięcie sesji metadanych przy zmianie trybu
+  w trakcie zapytania (ODPI kończy zapytanie przed zamknięciem), rzadkie wyścigi z rozłączeniem w chwili rejestracji
+  sesji, porządki nazw.
 
