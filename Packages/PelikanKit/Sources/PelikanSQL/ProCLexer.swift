@@ -141,43 +141,30 @@ public enum ProCLexer {
         if kw(k, "AT") {
             k = skipTrivia(k + 2)
             // Nazwa albo zmienna hosta, także strukturalna (`:ctx.db`, `:p->db`) — do białego znaku.
-            while k < end, !(text[k] == 32 || text[k] == 9 || text[k] == 10 || text[k] == 13) { k += 1 }
+            while k < end, !(text[k] == 32 || text[k] == 9 || text[k] == 10 || text[k] == 13),
+                  !(text[k] == 47 && at(k + 1) == 42), !(text[k] == 45 && at(k + 1) == 45) { k += 1 }
             k = skipTrivia(k)
         }
         var block = false
-        // Składowany PL/SQL: `CREATE [OR REPLACE] PROCEDURE|FUNCTION|PACKAGE|TRIGGER|TYPE BODY … END; END-EXEC;`.
+        // Składowany PL/SQL: `CREATE [OR REPLACE] PROCEDURE|FUNCTION|PACKAGE|TRIGGER|TYPE BODY … END; END-EXEC;` — blok,
+        // gdy przed następną wstawką EXEC jest END-EXEC; bez niego (specyfikacja wywołania `LANGUAGE C`, wyzwalacz
+        // z CALL, specyfikacja typu) polecenie kończy się średnikiem.
         if kw(k, "CREATE") {
             var j = skipTrivia(k + 6)
             for w in ["OR", "REPLACE", "EDITIONABLE", "NONEDITIONABLE"] where kw(j, w) { j = skipTrivia(j + w.utf16.count) }
-            if kw(j, "TYPE") {
-                // Tylko TYPE BODY jest blokiem PL/SQL; specyfikacja typu (AS OBJECT, AS TABLE OF, deklaracja) kończy się `;`.
-                block = kw(skipTrivia(j + 4), "BODY")
-            } else if ["PROCEDURE", "FUNCTION", "PACKAGE", "TRIGGER"].contains(where: { kw(j, $0) }) {
-                // Specyfikacja wywołania (`AS LANGUAGE C …`, `AS EXTERNAL …`) i wyzwalacz z `CALL` kończą się średnikiem.
-                var e = j                                           // pierwszy średnik poza napisem '…'
-                while e < end, text[e] != 59 {
-                    if text[e] == 39 { e += 1; while e < end, text[e] != 39 { e += 1 } }
+            let stored = ["PROCEDURE", "FUNCTION", "PACKAGE", "TRIGGER"].contains { kw(j, $0) } || (kw(j, "TYPE") && kw(skipTrivia(j + 4), "BODY"))
+            if stored {
+                var e = j
+                var found = false
+                while e < end {
+                    if matches(e, "END-EXEC") { found = true; break }
+                    if kw(e, "EXEC"), e == 0 || !isWord(text[e - 1]), text[max(e - 1, 0)] != 45 {   // następna wstawka (nie END-EXEC)
+                        let t = skipTrivia(e + 4)
+                        if ["SQL", "ORACLE", "TOOLS", "IAF"].contains(where: { kw(t, $0) }) { break }
+                    }
                     e += 1
                 }
-                block = true
-                var w = j
-                while w < min(e, end) {
-                    if isWord(text[w]) {
-                        let s0 = w
-                        while w < end, isWord(text[w]) { w += 1 }
-                        if kw(s0, "LANGUAGE") || kw(s0, "EXTERNAL") || kw(s0, "CALL") || kw(s0, "BEGIN") || kw(s0, "IS") || kw(s0, "AS") {
-                            // Pierwsze rozstrzygające słowo: AS/IS/BEGIN — ciało PL/SQL (blok), chyba że zaraz po AS/IS jest
-                            // LANGUAGE albo EXTERNAL; CALL — wywołanie.
-                            if kw(s0, "CALL") || kw(s0, "LANGUAGE") || kw(s0, "EXTERNAL") { block = false; break }
-                            if kw(s0, "AS") || kw(s0, "IS") {
-                                let n = skipTrivia(w)
-                                block = !(kw(n, "LANGUAGE") || kw(n, "EXTERNAL"))
-                                break
-                            }
-                            if kw(s0, "BEGIN") { break }
-                        }
-                    } else { w += 1 }
-                }
+                block = found
             }
         }
         // Blok PL/SQL tylko po BEGIN albo DECLARE; `EXECUTE IMMEDIATE …;` i dynamiczny SQL `EXECUTE s USING …;`

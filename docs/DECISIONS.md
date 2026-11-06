@@ -3847,7 +3847,8 @@ kolor tekstu albo tła z Edytor › Kolory czcionek przesłania motyw.
   razu, bez opóźnień. Po ponownym kolorowaniu wracają podkreślenia widoczne wcześniej, gdy tekst się od tamtej chwili
   nie zmienił (licznik zmian; bez odczytu i zapisu obserwowanego stanu dokumentu w obserwacji motywu). Zmiana trybu
   przy tych samych krojach nie leksuje tekstu. `EXEC SQL CREATE … PROCEDURE|FUNCTION|PACKAGE|TRIGGER|TYPE BODY` kończy
-  się na `END-EXEC` (specyfikacja typu — średnikiem); `AT :ctx.db` przed EXECUTE; `//` w SQL nie jest komentarzem (jak w Oracle).
+  się na `END-EXEC`, gdy ten jest przed następną wstawką EXEC (inaczej — specyfikacja wywołania, wyzwalacz z CALL,
+  specyfikacja typu — średnikiem; bez zgadywania po słowach ciała); `AT :ctx.db` przed EXECUTE; `//` w SQL nie jest komentarzem (jak w Oracle).
 - **Tło w kolorze połączenia** liczone dynamicznie z tła motywu (wcześniej zostawało tło motywu z chwili otwarcia).
 - **Zmiana samego koloru** w motywie (przeciąganie w polu koloru) nie leksuje tekstu — tylko unieważnia układ (TextKit 2 układa leniwie widoczny fragment);
   ponowne kolorowanie przy zmianie motywu, pogrubienia/kursywy albo trybu Pro*C. Otwarcie okna koloruje tekst raz.

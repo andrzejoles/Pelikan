@@ -480,7 +480,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         if key != appliedSchemeKey {
             // Pierwsze przejście: tekst wczytany przed ustaleniem trybu Pro*C trzeba pokolorować od nowa.
             // …albo gdy motywy zmieniły się od kolorowania przy wczytaniu (kroje z poprzedniego motywu).
-            if appliedSchemeKey != nil || highlighter.proC || highlighter.fontGeneration != SyntaxTheme.generation { rehighlightAll() }
+            if appliedSchemeKey != nil || highlighter.proC || highlighter.fontGeneration != SyntaxTheme.generation
+                || highlighter.fontDark.map({ $0 != highlighter.dark }) == true { rehighlightAll() }
             appliedSchemeKey = key
             appliedColorsKey = colors
         } else if colors != appliedColorsKey {
