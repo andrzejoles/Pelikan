@@ -116,7 +116,7 @@ struct SessionManagerTests {
         #expect(!doc.transactionOpen)
     }
 
-    @Test("Metadane: osobna sesja w trybie Multi (w tle tylko przy otwartym połączeniu); Dual i jedna sesja — główna")
+    @Test("Metadane: osobna sesja w trybie Multi (czynności w tle jej nie otwierają); Dual i jedna sesja — główna")
     func metadataSession() async throws {
         let (ws, _) = make()
         let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"))
@@ -124,9 +124,11 @@ struct SessionManagerTests {
         #expect(ws.sessions.metadataKey(connection: def.id).purpose == .tool("metadata"))
         #expect(await ws.sessions.metadataSessionIfConnected(def.id) == nil)
         let main = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
-        let meta = try #require(await ws.sessions.metadataSessionIfConnected(def.id))
+        // Czynności w tle nie otwierają sesji — do pierwszej czynności użytkownika sesja główna.
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) === main)
+        let meta = try await ws.metadata(for: def.id)!.session()
         #expect(meta !== main)
-        #expect(try await ws.metadata(for: def.id)!.session() === meta)
+        #expect(await ws.sessions.metadataSessionIfConnected(def.id) === meta)
         ws.settings.sessionMode = .dual
         #expect(ws.sessions.metadataKey(connection: def.id).purpose == .main)
         // Po zmianie trybu osobna sesja metadanych zamknięta przy pierwszym użyciu metadanych.
@@ -144,7 +146,7 @@ struct SessionManagerTests {
         try ws.connections.upsert(def, password: "good")
         _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
         _ = try await ws.invoke("connection.setCurrentSchema", CommandArguments(["connection": .string(def.id.uuidString), "schema": "HR"]))
-        let meta = try #require(await ws.sessions.metadataSessionIfConnected(def.id)) as! FakeSession
+        let meta = try await ws.sessions.metadataSession(def.id) as! FakeSession
         #expect(meta.executed.withLock { $0 }.contains("ALTER SESSION SET CURRENT_SCHEMA = HR"))
         await ws.sessions.disconnect(def.id)
         #expect(ws.sessions.currentSchemaOverride[def.id] == nil)
@@ -171,40 +173,6 @@ struct SessionManagerTests {
         #expect(await ws.sessions.metadataSessionIfConnected(def.id) === main)
         await ws.sessions.disconnect(def.id)
         #expect(ws.sessions.metadataKey(connection: def.id).purpose == .tool("metadata"))
-    }
-
-    @Test("Sesja metadanych w tle bez okna pytania o hasło; otwarcie na żądanie użytkownika pyta")
-    func quietMetadataOpen() async throws {
-        final class MetaPasswordDriver: DatabaseDriver, @unchecked Sendable {
-            let kind = DriverKind.instantClient
-            let capabilities: DriverCapabilities = []
-            func availability() -> Result<Void, DatabaseError> { .success(()) }
-            let metaAttempts = Mutex(0)
-            func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession {
-                if options.tags.action?.contains("metadata") == true { metaAttempts.withLock { $0 += 1 } }
-                if options.tags.action?.contains("metadata") == true, credentials.password != "new" {
-                    throw OracleError(code: 1017, message: "ORA-01017: invalid username/password; logon denied")
-                }
-                return FakeSession()
-            }
-        }
-        let driver = MetaPasswordDriver()
-        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: driver])
-        let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"), savePassword: false)
-        try ws.connections.upsert(def)
-        let prompter = FakePrompter(answers: [("good", false), ("new", false)])
-        ws.sessions.prompter = prompter
-        _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
-        #expect(prompter.asked == 1)
-        #expect(await ws.sessions.metadataSessionIfConnected(def.id) == nil)
-        #expect(prompter.asked == 1)
-        // Odmowa w tle — bez kolejnych prób złym hasłem (blokada konta), do otwarcia przez użytkownika.
-        let attempts = driver.metaAttempts.withLock { $0 }
-        #expect(await ws.sessions.metadataSessionIfConnected(def.id) == nil)
-        #expect(driver.metaAttempts.withLock { $0 } == attempts)
-        _ = try await ws.sessions.metadataSession(def.id)
-        #expect(prompter.asked == 2)
-        #expect(await ws.sessions.metadataSessionIfConnected(def.id) != nil)
     }
 
     @Test("Zapisane hasło: łączy bez pytania; skrypt inicjalizacji i bieżący schemat wykonane")
@@ -498,19 +466,17 @@ struct ConnectionCheckTests {
         let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: "u", connectString: "h/s"), savePassword: false)
         try ws.connections.upsert(def, password: "good")
         let key = SessionKey(connectionID: def.id, purpose: .main)
-        _ = try await ws.sessions.session(key)
+        // Analiza w tle nie otwiera sesji metadanych (D234) — sesja główna, dopóki metadanych nie otworzy użytkownik.
+        let s1 = try await ws.sessions.session(key)
         let doc = ws.newDocument(.sql)
         doc.connectionID = def.id
         doc.text = "select * from t;"
         await ws.analyzeCode(doc)
-        // Analiza nazw na sesji metadanych (D234).
-        let s1 = try #require(ws.sessions.existingSession(ws.sessions.metadataKey(connection: def.id)))
         #expect(ws.nameSources.keys.map(\.session) == [ObjectIdentifier(s1)])
+        #expect(ws.sessions.existingSession(ws.sessions.metadataKey(connection: def.id)) == nil)
         await ws.sessions.disconnect(def.id)
-        _ = try await ws.sessions.session(key)
+        let s2 = try await ws.sessions.session(key)
         await ws.analyzeCode(doc)
-        let s2 = try #require(ws.sessions.existingSession(ws.sessions.metadataKey(connection: def.id)))
-        #expect(s2 !== s1)
         #expect(ws.nameSources.keys.map(\.session) == [ObjectIdentifier(s2)])
         ws.metadata(for: def.id)?.refresh()
         #expect(ws.nameSources.isEmpty)

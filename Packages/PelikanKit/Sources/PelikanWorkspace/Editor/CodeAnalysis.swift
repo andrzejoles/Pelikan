@@ -663,9 +663,8 @@ public actor CachedNameSource: NameResolutionSource {
 }
 
 extension Workspace {
-    /// Analiza tekstu okna: inspekcje zawsze, nieznane nazwy — gdy połączenie okna ma otwartą sesję główną. W trybie
-    /// Multi pierwsza analiza otwiera sesję metadanych (logowanie hasłem sesji głównej, bez okien pytania; po błędzie —
-    /// minuta przerwy, przy limicie sesji — sesja główna, D234). Wynik trafia do `diagnostics` (podkreślenia w edytorze, lista problemów).
+    /// Analiza tekstu okna: inspekcje zawsze, nieznane nazwy — gdy połączenie okna ma otwartą sesję główną (analiza
+    /// nie łączy z bazą: sesja metadanych, jeśli już otwarta, inaczej główna — D234). Wynik trafia do `diagnostics` (podkreślenia w edytorze, lista problemów).
     @discardableResult
     public func analyzeCode(_ doc: Document, names: Bool = true) async -> [EditorDiagnostic] {
         guard [.sql, .program, .test].contains(doc.kind) else { return [] }

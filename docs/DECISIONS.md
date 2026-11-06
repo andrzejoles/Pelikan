@@ -3956,14 +3956,16 @@ Właściciel: „Wszędzie tam, gdzie to możliwe daj osobną sesję”. Dodatko
   wczytanie dużej gałęzi nie opóźnia podpowiedzi ani poleceń na sesji głównej. W trybach Dual i jednej sesji —
   sesja główna: okna wykonują w niej polecenia, więc `ALTER SESSION SET CURRENT_SCHEMA` wpisane w oknie musi
   obowiązywać też analizę nazw (code review). „Ustaw bieżący schemat…” zmienia schemat w sesji głównej i w sesji
-  metadanych (także otwieranej później; do rozłączenia). Czynności w tle (analiza kodu, sprawdzanie zmian) otwierają
-  sesję metadanych tylko przy otwartym połączeniu, a po nieudanym otwarciu (limit sesji profilu, tunel) czekają minutę
-  — bez logowania przy każdej przerwie w pisaniu.
+  metadanych (także otwieranej później; do rozłączenia). Czynności w tle (analiza kodu, sprawdzanie zmian obiektów)
+  nie otwierają sesji: korzystają z sesji metadanych, gdy już jest (otwiera ją czynność użytkownika — przeglądarka,
+  podpowiedź, opis), a do tego czasu z głównej. Uproszczenie po 8 rundach code review: otwieranie w tle wymagało
+  trybu bez pytań o hasło, blokady po odmowie (ponawianie złym hasłem blokowałoby konto) i przerw po błędzie — każda
+  poprawka dokładała kolejne przypadki brzegowe.
 - **Raporty wydajności:** licencja, dostępność i migawki (`perf.list`) osobno od generowania raportu (`perf`).
 - **Scheduler:** DDL zaznaczonego obiektu (`scheduler.detail`) osobno od listy i kart przebiegów.
-- Limit sesji profilu (ORA-02391, ORA-00018, ORA-00020) przy otwieraniu sesji metadanych — metadane wracają do
-  sesji głównej do rozłączenia (przeglądarka obiektów działa jak przed zmianą). Sesje otwierane w tle nie pokazują
-  okien pytania o hasło; rozłączenie w trakcie ich otwierania zwalnia sesję i tunel.
+- Limit sesji profilu (ORA-02391, ORA-00018, ORA-00020; listener: ORA-12516/12519/12520) przy otwieraniu sesji
+  metadanych — metadane wracają na 5 minut do sesji głównej (przeglądarka obiektów działa jak przed zmianą).
+  Rozłączenie w trakcie otwierania sesji zwalnia ją i jej tunel, bez zapamiętania hasła i potwierdzenia właściciela.
 - Bezczynne sesje narzędzi nie są zamykane automatycznie (jak dotąd): zamknięcie w trakcie długiej operacji narzędzia
   przerwałoby ją; sesje otwierają się dopiero przy pierwszym użyciu narzędzia i zamykają przy rozłączeniu.
 - Komendy narzędzi danych (agent, paleta) — ta sama sesja co okno narzędzia (`DataTransferCommands.session(tool:)`).
