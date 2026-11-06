@@ -73,9 +73,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     /// Motyw i tryb kolorowania, z którymi pokolorowano tekst (zmiana — ponowne kolorowanie).
     private var appliedSchemeKey: String?
     private var appliedColorsKey: String?
+    private var appliedPlain: NSColor?
     /// Licznik zmian tekstu, dla którego policzono `diagnostics`.
     private var diagnosticsEdits = -1
-    private var appearanceSchemeID: String?
 
     init(document: Document, fontSize: CGFloat = 13, secondary: Bool = false) {
         self.document = document
@@ -122,7 +122,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             // Własne kolory edytora (PD-PREF-005) — tło jako baza odcienia połączenia; bez nich kolory motywu (D227).
             let colors = ws.settings.editorColors
             let base = colors.background.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? SyntaxTheme.background
-            SyntaxTheme.customPlain = colors.text.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
+            let plain = colors.text.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
+            // Porównanie z kolorem tego edytora (customPlain jest wspólny — pierwszy edytor zmienia go za wszystkie).
+            let plainChanged = plain != self.appliedPlain
+            self.appliedPlain = plain
+            SyntaxTheme.customPlain = plain
             self.textView.insertionPointColor = SyntaxTheme.cursor
             self.textView.selectedTextAttributes = [.backgroundColor: SyntaxTheme.selection]
             if ws.settings.colorWindowBackground, let c = ws.indicatorColor(for: self.document) {
@@ -137,7 +141,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
                 self.textView.backgroundColor = base
             }
             // Kolor tekstu z Preferencji jest w dynamicznym kolorze — ułożone fragmenty trzeba unieważnić.
-            if let tlm = self.textView.textLayoutManager { tlm.invalidateLayout(for: tlm.documentRange) }
+            if plainChanged, let tlm = self.textView.textLayoutManager { tlm.invalidateLayout(for: tlm.documentRange) }
             self.textView.needsDisplay = true
         })
         // Motywy kolorowania składni (D227) i kolorowanie Pro*C według rozszerzenia pliku.
@@ -145,26 +149,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
             _ = (ws.settings.syntaxSchemeLight, ws.settings.syntaxSchemeDark, ws.settings.customSyntaxSchemes)
             SyntaxTheme.apply(ws.settings)
-            let proC = self.document.fileURL.map { ProCLexer.fileExtensions.contains($0.pathExtension.lowercased()) } ?? false
-            // Ponowne kolorowanie tylko przy zmianie motywu, kroju (pogrubienie/kursywa) albo trybu Pro*C; sama zmiana
-            // koloru (kolory są dynamiczne) — tylko odświeżenie rysowania (przeciąganie w polu koloru nie leksuje tekstu).
-            let key = Self.schemeKey(proC: proC)
-            let colors = "\(SyntaxTheme.schemes.light.hashValue)|\(SyntaxTheme.schemes.dark.hashValue)"
-            let first = self.appliedSchemeKey == nil
-            if key != self.appliedSchemeKey {
-                self.appliedSchemeKey = key
-                self.highlighter.proC = proC
-                // Pierwsze przejście: tekst wczytany przed ustaleniem trybu Pro*C trzeba pokolorować od nowa.
-                if !first || proC { self.rehighlightAll() }
-                self.appearanceSchemeID = SyntaxTheme.current.id
-            } else if colors != self.appliedColorsKey, let tlm = self.textView.textLayoutManager {
-                // Bez leksowania: unieważnienie układu (leniwe — TextKit 2 układa od nowa tylko to, co widać, a resztę
-                // przy przewinięciu; bez tego wcześniej ułożone fragmenty zachowałyby stare kolory).
-                tlm.invalidateLayout(for: tlm.documentRange)
-            }
-            self.appliedColorsKey = colors
-            self.textView.needsDisplay = true
-            self.ruler.needsDisplay = true
+            self.highlighter.proC = self.document.fileURL.map { ProCLexer.fileExtensions.contains($0.pathExtension.lowercased()) } ?? false
+            self.applySchemeIfNeeded()
         })
         tokens.append(trackChanges { [weak self] in self?.syncFromModel() })
         // Nowa sesja edycji (otwarcie, zapis, wczytanie — także jednego pliku okna pary): zmiany zapomniane po
@@ -472,22 +458,35 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         }
     }
 
-    /// Zmiana trybu systemu: kolory są dynamiczne, ale pogrubienie i kursywa zależą od motywu trybu (D227).
+    /// Zmiana trybu systemu: kolory są dynamiczne, ale pogrubienie i kursywa zależą od motywu trybu (D227). Po bieżącym
+    /// obiegu pętli — wtedy tryb aplikacji (SyntaxTheme.current, z którego kolorowanie bierze kroje) jest już nowy.
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        // Ten sam tryb co kolorowanie (krój z motywu trybu aplikacji, SyntaxTheme.current).
-        let key = SyntaxTheme.current.id
-        guard key != appearanceSchemeID else { return }
-        appearanceSchemeID = key
-        rehighlightAll()
-        // Klucz motywu zgodny z nowym trybem — późniejsza zmiana samego koloru nie wymusza pełnego kolorowania.
-        if appliedSchemeKey != nil { appliedSchemeKey = Self.schemeKey(proC: highlighter.proC) }
-        ruler.needsDisplay = true
+        DispatchQueue.main.async { [weak self] in self?.applySchemeIfNeeded() }
     }
 
-    /// Klucz ponownego kolorowania: motyw bieżącego trybu, tryb Pro*C i kroje obu motywów (kolory są dynamiczne).
-    static func schemeKey(proC: Bool) -> String {
-        "\(SyntaxTheme.current.id)|\(proC)|\(SyntaxTheme.fontSignature(SyntaxTheme.schemes.light))|\(SyntaxTheme.fontSignature(SyntaxTheme.schemes.dark))"
+    /// Jedyne miejsce decyzji o ponownym kolorowaniu (D229): zmiana motywu bieżącego trybu, krojów albo trybu Pro*C —
+    /// pełne kolorowanie; zmiana samych kolorów (dynamicznych) — tylko unieważnienie układu, bez leksowania.
+    private func applySchemeIfNeeded() {
+        let cur = SyntaxTheme.current
+        let key = "\(cur.id)|\(highlighter.proC)|\(SyntaxTheme.fontSignature(cur))"
+        let colors = "\(SyntaxTheme.schemes.light.hashValue)|\(SyntaxTheme.schemes.dark.hashValue)"
+        if key != appliedSchemeKey {
+            // Pierwsze przejście: tekst wczytany przed ustaleniem trybu Pro*C trzeba pokolorować od nowa.
+            if appliedSchemeKey != nil || highlighter.proC { rehighlightAll() }
+            appliedSchemeKey = key
+            appliedColorsKey = colors
+        } else if colors != appliedColorsKey {
+            if let tlm = textView.textLayoutManager {
+                // Leniwe: TextKit 2 układa od nowa tylko to, co widać, a resztę przy przewinięciu.
+                tlm.invalidateLayout(for: tlm.documentRange)
+            } else {
+                rehighlightAll()     // TextKit 1 (zgodność) — bez dynamicznego odświeżenia ułożonego tekstu
+            }
+            appliedColorsKey = colors
+        }
+        textView.needsDisplay = true
+        ruler.needsDisplay = true
     }
 
     /// Pełne ponowne kolorowanie bez zmiany tekstu (motyw, tryb systemu) — z podkreśleniami diagnostyk.
