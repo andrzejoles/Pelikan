@@ -68,5 +68,10 @@ struct SyntaxClassifierTests {
         var a: [String: SyntaxStyle] = [:]
         for sp in ProCLexer.spans(at) { a[String(decoding: at[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
         #expect(a["END-EXEC"] == .keyword && a["return"] == .keyword && a["4"] == .number)
+        // Składowany PL/SQL do END-EXEC.
+        let ddl = Array("EXEC SQL CREATE OR REPLACE PROCEDURE p AS BEGIN x := 1; y := 2; END; END-EXEC;\nreturn 5;\n".utf16)
+        var c: [String: SyntaxStyle] = [:]
+        for sp in ProCLexer.spans(ddl) { c[String(decoding: ddl[sp.start..<(sp.start + sp.length)], as: UTF16.self)] = sp.style }
+        #expect(c["END-EXEC"] == .keyword && c["return"] == .keyword && c["5"] == .number && c["y"] == nil)
     }
 }

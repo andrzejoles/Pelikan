@@ -74,6 +74,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private var appliedSchemeKey: String?
     private var appliedColorsKey: String?
     private var appliedPlain: NSColor?
+    /// Licznik zmian tekstu w chwili pokazania `diagnostics` — po pełnym kolorowaniu wracają, gdy tekst się nie zmienił.
+    private var diagnosticsEdits = -1
 
     init(document: Document, fontSize: CGFloat = 13, secondary: Bool = false) {
         self.document = document
@@ -470,7 +472,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private func applySchemeIfNeeded() {
         highlighter.dark = effectiveAppearance.isDark
         let cur = SyntaxTheme.scheme(dark: highlighter.dark)
-        let key = "\(cur.id)|\(highlighter.proC)|\(SyntaxTheme.fontSignature(cur))"
+        // Bez identyfikatora motywu: kolory są dynamiczne (zmianę samych kolorów obsługuje klucz kolorów niżej).
+        let key = "\(highlighter.proC)|\(SyntaxTheme.fontSignature(cur))"
         let colors = "\(SyntaxTheme.schemes.light.hashValue)|\(SyntaxTheme.schemes.dark.hashValue)"
         if key != appliedSchemeKey {
             // Pierwsze przejście: tekst wczytany przed ustaleniem trybu Pro*C trzeba pokolorować od nowa.
@@ -492,13 +495,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private func rehighlightAll() {
         guard let storage = textView.textStorage, storage.length > 0 else { return }
         highlighter.highlightAll(storage, font: font)
-        // Podkreślenia wracają z nowej analizy obecnego tekstu (stare zakresy mogą nie pasować). Po bieżącym obiegu
-        // pętli — wywołanie z obserwacji (motyw, odcień) nie może czytać tekstu dokumentu, bo każda zmiana tekstu
-        // uruchamiałaby wtedy tę obserwację ponownie.
-        // Zapamiętane podkreślenia — gdy dotyczą obecnego tekstu (tekst widoku, nie obserwowany tekst dokumentu: wywołanie
-        // z obserwacji motywu nie może zależeć od tekstu, bo każdy klawisz uruchamiałby ją ponownie).
-        guard !diagnostics.isEmpty, let analyzed = analyzedText, textView.string == analyzed else { return }
-        showDiagnostics(diagnostics)
+        // Te same podkreślenia, które były widoczne, gdy tekst od tamtej chwili się nie zmienił (licznik zmian — nie
+        // obserwowany tekst dokumentu: wywołanie z obserwacji motywu nie może od niego zależeć). Bez podpowiedzi na
+        // pasku stanu — ta czyta i zapisuje obserwowany stan dokumentu.
+        guard !diagnostics.isEmpty, diagnosticsEdits == textEdits else { return }
+        showDiagnostics(diagnostics, updateTip: false)
     }
 
     private func load(_ text: String) {
@@ -623,8 +624,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     }
 
     /// Podkreślenie falowane (kropkowane): błąd — czerwone, ostrzeżenie — pomarańczowe; atrybuty renderowania, bez zmiany tekstu.
-    private func showDiagnostics(_ list: [EditorDiagnostic]) {
+    private func showDiagnostics(_ list: [EditorDiagnostic], updateTip: Bool = true) {
         diagnostics = list
+        diagnosticsEdits = textEdits
         // Atrybuty magazynu tekstu, nie renderowania: TextKit 2 nie rysuje podkreślenia z atrybutów renderowania
         // (podkreślenia były niewidoczne — wykryte zrzutem w tle). Zmiana atrybutów nie zmienia tekstu ani historii cofania;
         // kolorowanie składni nadpisuje edytowaną linię, a analiza po zmianie nakłada podkreślenia ponownie.
@@ -639,7 +641,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             storage.addAttribute(.underlineColor, value: d.severity == .error ? NSColor.systemRed : NSColor.systemOrange, range: r)
         }
         storage.endEditing()
-        updateDiagnosticTip()
+        if updateTip { updateDiagnosticTip() }
     }
 
     /// Komunikat problemu pod kursorem: podpowiedź edytora i pasek stanu okna.

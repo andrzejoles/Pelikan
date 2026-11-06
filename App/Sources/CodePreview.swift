@@ -34,7 +34,7 @@ struct CodePreview: View {
             }
             .controlSize(.small)
             .font(.uiSecondary)
-            HighlightedCodeView(text: shown, highlight: highlight, schemeKey: Self.schemeKey)
+            HighlightedCodeView(text: shown, highlight: highlight)
         }
     }
 
@@ -55,8 +55,9 @@ struct CodePreview: View {
 struct HighlightedCodeView: NSViewRepresentable {
     let text: String
     var highlight = true
-    /// Motywy z ustawień; w kluczu odświeżenia razem z trybem systemu.
-    var schemeKey = ""
+    /// Motywy z ustawień; w kluczu odświeżenia razem z trybem systemu (domyślnie liczony w widoku nadrzędnym, który
+    /// przez to obserwuje ustawienia — każde użycie widoku odświeża się po zmianie motywu).
+    var schemeKey = CodePreview.schemeKey
     @Environment(\.colorScheme) private var colorScheme
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -77,6 +78,7 @@ struct HighlightedCodeView: NSViewRepresentable {
 
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let tv = scroll.documentView as? NSTextView, let storage = tv.textStorage else { return }
+        // Idempotentne: podgląd może się odświeżyć przed obserwacją ustawień w AppDelegate.
         if let st = (NSApp.delegate as? AppDelegate)?.workspace.settings { SyntaxTheme.apply(st) }
         let key = "\(highlight)|\(schemeKey)|\(colorScheme)|\(text)"
         guard context.coordinator.last != key else { return }

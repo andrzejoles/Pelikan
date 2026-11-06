@@ -126,12 +126,20 @@ public enum ProCLexer {
             k = blank(k)
         }
         var block = false
+        // Składowany PL/SQL: `CREATE [OR REPLACE] PROCEDURE|FUNCTION|PACKAGE|TRIGGER|TYPE … END; END-EXEC;`.
+        if matches(k, "CREATE"), !isWord(at(k + 6)) {
+            var j = blank(k + 6)
+            for w in ["OR", "REPLACE", "EDITIONABLE", "NONEDITIONABLE"] where matches(j, w) && !isWord(at(j + w.utf16.count)) {
+                j = blank(j + w.utf16.count)
+            }
+            block = ["PROCEDURE", "FUNCTION", "PACKAGE", "TRIGGER", "TYPE"].contains { matches(j, $0) && !isWord(at(j + $0.utf16.count)) }
+        }
         if matches(k, "EXECUTE"), !isWord(at(k + 7)) {
             var j = k + 7
             // Białe znaki, komentarze i etykiety <<nazwa>> przed BEGIN/DECLARE.
             while j < end {
                 if text[j] == 32 || text[j] == 9 || text[j] == 10 || text[j] == 13 { j += 1 }
-                else if (text[j] == 45 && at(j + 1) == 45) || (text[j] == 47 && at(j + 1) == 47) { while j < end, text[j] != 10 { j += 1 } }
+                else if text[j] == 45, at(j + 1) == 45 { while j < end, text[j] != 10 { j += 1 } }
                 else if text[j] == 47, at(j + 1) == 42 {
                     j += 2
                     while j < end, !(text[j] == 42 && at(j + 1) == 47) { j += 1 }
@@ -158,7 +166,7 @@ public enum ProCLexer {
                 i += 1
                 while i < end, text[i] != 39 { i += 1 }
                 i += 1
-            } else if (c == 45 && at(i + 1) == 45) || (c == 47 && at(i + 1) == 47) {   // -- i // do końca linii
+            } else if c == 45, at(i + 1) == 45 {
                 while i < end, text[i] != 10 { i += 1 }
             } else if c == 47, at(i + 1) == 42 {
                 i += 2
