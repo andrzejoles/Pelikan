@@ -13,29 +13,26 @@ extension Workspace {
     }
 
     /// Sesja narzędzia o danym przeznaczeniu na wskazanym połączeniu (osobna od sesji okien użytkownika). Przy limicie
-    /// sesji (`SessionManager.isSessionLimit`) narzędzia tylko czytające dostają sesję główną (tryb Multi, bez otwartej
-    /// transakcji); narzędzia zmieniające dane — komunikat: ich COMMIT/ROLLBACK, DDL i ALTER SESSION w sesji
-    /// współdzielonej sięgałyby cudzych zmian (także drugiego narzędzia w tej samej sesji) — D235.
+    /// sesji (`SessionManager.isSessionLimit`) narzędzia z krótkimi odczytami dostają sesję główną (tryb Multi, bez
+    /// otwartej transakcji); pozostałe — komunikat: COMMIT/ROLLBACK, DDL, ALTER SESSION i stan pakietów w sesji
+    /// współdzielonej sięgałyby cudzej pracy, a długie operacje blokowałyby ją — D235.
     public func toolSession(_ purpose: String, connection: UUID?) async throws -> any DatabaseSession {
         guard let connection else { throw CommandError.notConnected }
         do {
             return try await sessions.session(SessionKey(connectionID: connection, purpose: .tool(purpose)))
         } catch let e as OracleError where SessionManager.isSessionLimit(e) {
             guard Self.readOnlyToolPurposes.contains(purpose) else {
-                throw CommandError.notAvailable(L10n.tr("Osiągnięto limit sesji bazy — zamknij nieużywane okna i narzędzia (narzędzie zmieniające dane potrzebuje własnej sesji)"))
+                throw CommandError.notAvailable(L10n.tr("Osiągnięto limit sesji bazy — zamknij nieużywane okna i narzędzia (to narzędzie potrzebuje własnej sesji)"))
             }
             Log.connection.notice("Limit sesji — narzędzie tylko do odczytu w sesji głównej (\(e.code, privacy: .public))")
             return try await mainSessionForTool(connection)
         }
     }
 
-    /// Narzędzia, które tylko czytają (listy, raporty, porównania, eksport DDL i danych do pliku) — przy limicie sesji
-    /// mogą pracować w sesji głównej.
-    nonisolated static let readOnlyToolPurposes: Set<String> = [
-        "sessions", "sessions.detail", "objects.export", "objects.compare", "compare", "diff", "perf", "perf.list",
-        "packs.list", "scheduler.detail", "instance", "dane.eksport", "dane.predefined-reports",
-        "dane.database-diff", "dane.cart",
-    ]
+    /// Narzędzia z krótkimi, bezstanowymi odczytami (podgląd bazy przy limicie sesji) — mogą pracować w sesji głównej.
+    /// Bez narzędzi zmieniających stan sesji (transformacje DBMS_METADATA w eksporcie DDL), uruchamiających doradców
+    /// (raporty wydajności, SQL Tuning) i długich operacji, które blokowałyby sesję główną (eksport, porównania).
+    nonisolated static let readOnlyToolPurposes: Set<String> = ["sessions", "sessions.detail", "perf.list", "packs.list", "instance"]
 
     /// Sesja główna dla narzędzia odczytu przy limicie sesji: tylko tryb Multi (w Dual i jednej sesji okna wykonują w niej
     /// polecenia) i bez otwartej transakcji.

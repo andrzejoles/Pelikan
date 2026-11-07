@@ -10,9 +10,9 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
 
 ## 1.21.8 — narzędzia przy limicie sesji
 
-- **Limit sesji konta** (SESSIONS_PER_USER i podobne): narzędzie tylko czytające (listy, raporty, eksport,
-  porównania), któremu baza odmówi nowej sesji, pracuje w sesji głównej (tryb Multi, bez otwartej transakcji);
-  narzędzia zmieniające dane pokazują komunikat, co zrobić.
+- **Limit sesji konta** (SESSIONS_PER_USER i podobne): lista sesji, Instance Viewer, lista raportów wydajności
+  i SQL Monitor działają wtedy w sesji głównej (tryb Multi, bez otwartej transakcji); pozostałe narzędzia pokazują
+  komunikat, co zrobić.
 
 ## 1.21.6 — narzędzia nie blokują się nawzajem
 

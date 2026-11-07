@@ -49,8 +49,10 @@ public enum GridCommands {
             ? (target as? ResultTab).flatMap { t in t.grid.map { (t, $0) } } : activeGrid(ws)
         guard let (tab, grid) = resolved, grid.rowCount > 0, !grid.columns.isEmpty else { return nil }
         let lob = grid.columns.firstIndex { $0.type.isLOB }
-        guard let r = row ?? tab.selectedRows?.first ?? (lob != nil ? 0 : nil),
-              let c = column ?? tab.currentColumn ?? lob,
+        // Bez zaznaczenia — cała domyślna komórka z kolumny LOB (nie wcześniej kliknięta kolumna innego typu).
+        let selected = tab.selectedRows?.first
+        guard let r = row ?? selected ?? (lob != nil ? 0 : nil),
+              let c = column ?? (selected != nil ? tab.currentColumn ?? lob : lob),
               r >= 0, r < grid.rowCount, c >= 0, c < grid.columns.count else { return nil }
         return (tab, grid, r, c)
     }

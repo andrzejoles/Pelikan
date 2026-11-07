@@ -3984,13 +3984,13 @@ Właściciel: „Wszędzie tam, gdzie to możliwe daj osobną sesję”. Dodatko
 
 Właściciel: „Dodaj powrót do sesji głównej przy limicie także dla narzędzi”. `Workspace.toolSession`: gdy baza odmówi
 nowej sesji z powodu limitu (ORA-02391, ORA-00018, ORA-00020, listener ORA-12516/12519/12520 —
-`SessionManager.isSessionLimit`), narzędzie **tylko czytające** (`readOnlyToolPurposes`: listy sesji i szczegóły,
-eksport i porównanie obiektów, raporty wydajności i SQL Monitor, Scheduler — DDL, Instance Viewer, eksport danych,
-raporty predefiniowane, porównanie schematów, koszyk) dostaje sesję główną — tylko w trybie Multi i bez otwartej
-transakcji. Narzędzia zmieniające dane (import, generator, wyrównanie danych, kopiowanie schematu, kreator importu)
-— komunikat: ich COMMIT/ROLLBACK, DDL i ALTER SESSION w sesji współdzielonej sięgałyby cudzych zmian (okna w trybie
-Dual/jednej sesji, drugiego narzędzia w tej samej sesji) — zasada z 3 rund code review. Każde otwarcie narzędzia
-najpierw próbuje własnej sesji (bez pamiętania limitu — po zamknięciu okien sesja jest od razu dostępna).
+`SessionManager.isSessionLimit`), narzędzie z **krótkimi, bezstanowymi odczytami** (`readOnlyToolPurposes`: lista
+sesji i jej szczegóły, lista raportów wydajności, SQL Monitor, Instance Viewer — podgląd bazy przy limicie) dostaje
+sesję główną, tylko w trybie Multi i bez otwartej transakcji. Pozostałe narzędzia — komunikat: zmiany danych
+(COMMIT/ROLLBACK, DDL), zmiany stanu sesji (ALTER SESSION, transformacje DBMS_METADATA w eksporcie DDL), doradcy
+(raporty wydajności, SQL Tuning) i długie operacje (eksport, porównania) w sesji współdzielonej sięgałyby cudzej pracy
+albo blokowałyby sesję główną (okna w trybie Dual/jednej sesji, metadane przy limicie, drugie narzędzie) — zawężane
+w 4 rundach code review. Każde otwarcie narzędzia najpierw próbuje własnej sesji.
 
 ### D236 · 2026-11-07 — Dane binarne: format po sygnaturze i podgląd Quick Look; Large Data Editor z menu siatki
 
@@ -4002,7 +4002,8 @@ najpierw próbuje własnej sesji (bez pamiętania limitu — po zamknięciu okie
 - **Podgląd Quick Look** zamiast przeglądarki (właściciel: „zrób podgląd przez Quick Look”): `QLPreviewView` w panelu
   wartości (tryb „Podgląd”) i w Large Data Editor (karta „Podgląd”) dla formatów nietekstowych. Generatory Quick Look
   działają poza procesem aplikacji, bez skryptów i sieci (treść z bazy jest niezaufana); plik tymczasowy 0600
-  w katalogu tymczasowym, usuwany przy zmianie treści i zamknięciu. W panelu dane binarne nadal tylko na żądanie —
+  w katalogu procesu (0700), zapisywany w tle, usuwany przy zmianie treści i zamknięciu, a po awarii — przy następnym
+  starcie (katalogi procesów, które już nie działają). W panelu dane binarne nadal tylko na żądanie —
   podgląd po „Pobierz całość” (z ucięciem byłby uszkodzony).
 - **Large Data Editor z menu kontekstowego siatki** („jest teraz niedostępne” mimo zaznaczonej komórki): komenda
   szukała siatki w aktywnej karcie wyniku aktywnego okna, a nie w siatce, w której kliknięto (inna karta wyniku,

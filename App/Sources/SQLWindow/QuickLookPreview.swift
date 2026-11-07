@@ -21,11 +21,13 @@ final class QuickLookFile {
         }
         remove()
         self.key = key
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-preview", isDirectory: true)
+        let dir = Self.directory
         let file = dir.appendingPathComponent(UUID().uuidString).appendingPathExtension(format.fileExtension)
         writing = Task { [weak self] in
             let ok = await Task.detached(priority: .userInitiated) { () -> Bool in
+                // Katalog główny i katalog procesu tylko dla użytkownika (wartości z bazy).
                 try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+                try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: QuickLookFile.root.path)
                 return FileManager.default.createFile(atPath: file.path, contents: data, attributes: [.posixPermissions: 0o600])
             }.value
             guard let self, !Task.isCancelled, self.key == key else { try? FileManager.default.removeItem(at: file); return }
@@ -33,6 +35,25 @@ final class QuickLookFile {
             guard ok else { self.key = nil; return }
             self.url = file
             ready(file)
+        }
+    }
+
+    nonisolated static var root: URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-preview", isDirectory: true)
+    }
+
+    /// Katalog podglądów tego procesu (druga uruchomiona kopia aplikacji ma własny).
+    nonisolated static var directory: URL {
+        root.appendingPathComponent(String(ProcessInfo.processInfo.processIdentifier), isDirectory: true)
+    }
+
+    /// Start aplikacji: pliki podglądów po awarii albo wymuszonym zamknięciu (treść z bazy nie zostaje na dysku) —
+    /// katalogi procesów, które już nie działają.
+    nonisolated static func removeStaleFiles() {
+        let fm = FileManager.default
+        for name in (try? fm.contentsOfDirectory(atPath: root.path)) ?? [] {
+            guard let pid = Int32(name), pid != ProcessInfo.processInfo.processIdentifier, kill(pid, 0) != 0 else { continue }
+            try? fm.removeItem(at: root.appendingPathComponent(name))
         }
     }
 

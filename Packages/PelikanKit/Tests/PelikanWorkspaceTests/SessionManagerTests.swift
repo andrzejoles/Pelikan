@@ -175,7 +175,7 @@ struct SessionManagerTests {
         #expect(ws.sessions.metadataKey(connection: def.id).purpose == .tool("metadata"))
     }
 
-    @Test("Limit sesji przy narzędziu: odczyt — sesja główna (Multi, bez transakcji); zmiana danych, Dual albo transakcja — komunikat")
+    @Test("Limit sesji przy narzędziu: krótki odczyt — sesja główna (Multi, bez transakcji); inne narzędzia, Dual albo transakcja — komunikat")
     func toolFallbackOnSessionLimit() async throws {
         final class TxSession: DatabaseSession, @unchecked Sendable {
             let info = SessionInfo(driver: .instantClient, driverVersion: "fake", clientVersion: "0", server: ServerVersion(major: 23),
@@ -213,16 +213,17 @@ struct SessionManagerTests {
         let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"))
         try ws.connections.upsert(def, password: "good")
         let main = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
-        #expect(try await ws.toolSession("dane.eksport", connection: def.id) === main)
-        // Narzędzie zmieniające dane — nigdy w sesji współdzielonej.
+        #expect(try await ws.toolSession("sessions", connection: def.id) === main)
+        // Narzędzie zmieniające dane albo stan sesji (eksport DDL) — nigdy w sesji współdzielonej.
         await #expect(throws: CommandError.self) { try await ws.toolSession("dane.import", connection: def.id) }
+        await #expect(throws: CommandError.self) { try await ws.toolSession("objects.export", connection: def.id) }
         // Otwarta transakcja w sesji głównej — także odczyt nie dostaje jej (sprawdzenie DBMS_TRANSACTION).
         driver.main.transaction.withLock { $0 = true }
-        await #expect(throws: CommandError.self) { try await ws.toolSession("dane.eksport", connection: def.id) }
+        await #expect(throws: CommandError.self) { try await ws.toolSession("sessions", connection: def.id) }
         driver.main.transaction.withLock { $0 = false }
         // Tryb Dual: okna w sesji głównej — bez sesji głównej dla narzędzi.
         ws.settings.sessionMode = .dual
-        await #expect(throws: CommandError.self) { try await ws.toolSession("dane.eksport", connection: def.id) }
+        await #expect(throws: CommandError.self) { try await ws.toolSession("sessions", connection: def.id) }
     }
 
     @Test("Zapisane hasło: łączy bez pytania; skrypt inicjalizacji i bieżący schemat wykonane")

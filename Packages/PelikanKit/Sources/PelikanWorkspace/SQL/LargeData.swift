@@ -75,8 +75,9 @@ public enum LargeDataFormat: String, Sendable {
             }
             if b.starts(with: [0x50, 0x4B, 0x03, 0x04]) {
                 // Dokumenty Office Open XML to ZIP — katalog części w nazwach pierwszych wpisów.
-                let head = b.prefix(64 * 1024)
-                func has(_ s: String) -> Bool { head.range(of: Data(s.utf8)) != nil }
+                // Nazwy części: nagłówki lokalne na początku i katalog centralny na końcu archiwum (64 KB z każdej strony).
+                let head = b.prefix(64 * 1024), tail = b.suffix(64 * 1024)
+                func has(_ s: String) -> Bool { head.range(of: Data(s.utf8)) != nil || tail.range(of: Data(s.utf8)) != nil }
                 if has("[Content_Types].xml") || has("_rels/") {
                     if has("word/document") { return .docx }
                     if has("xl/workbook") { return .xlsx }

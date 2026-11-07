@@ -58521,30 +58521,30 @@
         }
       }
     },
-    "Osiągnięto limit sesji bazy — zamknij nieużywane okna i narzędzia (narzędzie zmieniające dane potrzebuje własnej sesji)" : {
+    "Osiągnięto limit sesji bazy — zamknij nieużywane okna i narzędzia (to narzędzie potrzebuje własnej sesji)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The database session limit has been reached — close unused windows and tools (a tool that changes data needs its own session)"
+            "value" : "The database session limit has been reached — close unused windows and tools (this tool needs its own session)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Das Sitzungslimit der Datenbank ist erreicht — nicht benötigte Fenster und Werkzeuge schließen (ein Werkzeug, das Daten ändert, braucht eine eigene Sitzung)"
+            "value" : "Das Sitzungslimit der Datenbank ist erreicht — nicht benötigte Fenster und Werkzeuge schließen (dieses Werkzeug braucht eine eigene Sitzung)"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se alcanzó el límite de sesiones de la base de datos — cierre ventanas y herramientas sin usar (una herramienta que modifica datos necesita su propia sesión)"
+            "value" : "Se alcanzó el límite de sesiones de la base de datos — cierre ventanas y herramientas sin usar (esta herramienta necesita su propia sesión)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Досягнуто ліміту сеансів бази — закрийте непотрібні вікна й інструменти (інструменту, що змінює дані, потрібен власний сеанс)"
+            "value" : "Досягнуто ліміту сеансів бази — закрийте непотрібні вікна й інструменти (цьому інструменту потрібен власний сеанс)"
           }
         }
       }

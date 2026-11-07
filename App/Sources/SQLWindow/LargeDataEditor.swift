@@ -152,11 +152,12 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
             : (model.isBinary && !model.format.isText ? 1 : 0)
     }
 
-    /// Użytkownik sam wybrał kartę — bez automatycznej zmiany po dociągnięciu całej treści.
-    private var userChoseMode = false
+    /// Jednorazowa zmiana karty po dociągnięciu całej treści (edytor otwiera się z treścią obciętą do limitu siatki);
+    /// wyłączona, gdy użytkownik sam wybierze kartę, i po pierwszej zmianie — nie przy edycji zmieniającej format.
+    private lazy var autoTabArmed = model.truncated
 
     @objc private func userModeChanged() {
-        userChoseMode = true
+        autoTabArmed = false
         modeChanged()
     }
 
@@ -165,10 +166,13 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         // Edytor otwiera się z treścią obciętą do limitu siatki; po dociągnięciu całości (np. DOCX) — karta dla pełnej
         // treści, o ile użytkownik nie wybrał innej.
         var rebuilt = false
-        if !userChoseMode, !loading, mode.selectedSegment != preferredSegment {
-            mode.selectedSegment = preferredSegment
-            modeChanged()
-            rebuilt = true
+        if autoTabArmed, !loading, !model.truncated {
+            autoTabArmed = false
+            if mode.selectedSegment != preferredSegment {
+                mode.selectedSegment = preferredSegment
+                modeChanged()
+                rebuilt = true
+            }
         }
         let format = model.format
         _ = model.text
@@ -199,6 +203,11 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
     }
 
     @objc private func modeChanged() {
+        // Podgląd już pokazany — tylko treść (bez zdejmowania widoku: Quick Look nie miga i nie traci pozycji).
+        if mode.selectedSegment == 5, let ql = quickLook, ql.superview === content {
+            quickLookFile.show(model.fileData, format: model.format, key: "\(model.contentVersion)", in: ql)
+            return
+        }
         content.subviews.forEach { $0.removeFromSuperview() }
         let view: NSView
         let tv = textView.documentView as! NSTextView

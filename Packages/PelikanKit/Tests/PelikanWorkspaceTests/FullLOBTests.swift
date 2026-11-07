@@ -123,6 +123,9 @@ struct BinaryFormatTests {
         #expect(f([0x50, 0x4B, 0x03, 0x04] + Array("....[Content_Types].xml....word/document.xml".utf8)) == .docx)
         #expect(f([0x50, 0x4B, 0x03, 0x04] + Array("....[Content_Types].xml....xl/workbook.xml".utf8)) == .xlsx)
         #expect(f([0x50, 0x4B, 0x03, 0x04, 0, 0]) == .zip)
+        // Część główna dokumentu dopiero w katalogu centralnym na końcu archiwum.
+        let late: [UInt8] = [0x50, 0x4B, 0x03, 0x04] + [UInt8](repeating: 0x41, count: 100_000) + Array("[Content_Types].xml word/document.xml".utf8)
+        #expect(f(late) == .docx)
         #expect(f([0x00, 0x01, 0x02, 0xFF]) == .binary)
         #expect(LargeDataFormat.docx.isPreviewable && !LargeDataFormat.binary.isPreviewable && !LargeDataFormat.json.isPreviewable)
         let p = CellValuePresentation.make(.lob(LOBValue(kind: .blob, bytes: Data(Array("%PDF-1.7".utf8)), length: 8, truncated: false)),
