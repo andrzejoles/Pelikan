@@ -175,32 +175,54 @@ struct SessionManagerTests {
         #expect(ws.sessions.metadataKey(connection: def.id).purpose == .tool("metadata"))
     }
 
-    @Test("Limit sesji przy narzędziu: sesja główna bez otwartej transakcji; z transakcją okna w sesji głównej — czytelny błąd")
+    @Test("Limit sesji przy narzędziu: odczyt — sesja główna (Multi, bez transakcji); zmiana danych, Dual albo transakcja — komunikat")
     func toolFallbackOnSessionLimit() async throws {
+        final class TxSession: DatabaseSession, @unchecked Sendable {
+            let info = SessionInfo(driver: .instantClient, driverVersion: "fake", clientVersion: "0", server: ServerVersion(major: 23),
+                                   capabilities: [], currentSchema: "U", sessionUser: "U")
+            let transaction = Mutex(false)
+            func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult {
+                guard sql.lowercased().contains("local_transaction_id") else { return ExecutionResult(kind: .other) }
+                var r = ExecutionResult(kind: .query)
+                r.resultSet = ResultSetDescriptor(id: ResultSetID(1), columns: [ColumnInfo(name: "X", type: .varchar2, typeName: "VARCHAR2")])
+                return r
+            }
+            func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch {
+                RowBatch(rows: [[transaction.withLock { $0 } ? .text("1.2.3") : .null]], hasMore: false)
+            }
+            func closeResultSet(_ resultSet: ResultSetID) async {}
+            func commit() async throws {}
+            func rollback() async throws {}
+            func breakExecution() {}
+            func ping() async throws {}
+            func setTags(_ tags: SessionTags) async throws {}
+            func close() async {}
+        }
         final class ToolLimitedDriver: DatabaseDriver, @unchecked Sendable {
             let kind = DriverKind.instantClient
             let capabilities: DriverCapabilities = []
+            let main = TxSession()
             func availability() -> Result<Void, DatabaseError> { .success(()) }
             func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession {
                 if options.tags.action?.hasPrefix("narzędzie") == true { throw OracleError(code: 2391, message: "ORA-02391: exceeded simultaneous SESSIONS_PER_USER limit") }
-                return FakeSession()
+                return main
             }
         }
-        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: ToolLimitedDriver()])
+        let driver = ToolLimitedDriver()
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: driver])
         let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"))
         try ws.connections.upsert(def, password: "good")
-        ws.sessions.setMainConnection(def.id)
         let main = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
         #expect(try await ws.toolSession("dane.eksport", connection: def.id) === main)
-        #expect(ws.sessions.toolLimitActive(def.id))
-        // Tryb Dual: okno w sesji głównej z otwartą transakcją — narzędzie nie może jej zatwierdzić.
-        ws.settings.sessionMode = .dual
-        let doc = ws.newDocument(.sql)
-        doc.connectionID = def.id
-        doc.transactionOpen = true
+        // Narzędzie zmieniające dane — nigdy w sesji współdzielonej.
         await #expect(throws: CommandError.self) { try await ws.toolSession("dane.import", connection: def.id) }
-        await ws.sessions.disconnect(def.id)
-        #expect(!ws.sessions.toolLimitActive(def.id))
+        // Otwarta transakcja w sesji głównej — także odczyt nie dostaje jej (sprawdzenie DBMS_TRANSACTION).
+        driver.main.transaction.withLock { $0 = true }
+        await #expect(throws: CommandError.self) { try await ws.toolSession("dane.eksport", connection: def.id) }
+        driver.main.transaction.withLock { $0 = false }
+        // Tryb Dual: okna w sesji głównej — bez sesji głównej dla narzędzi.
+        ws.settings.sessionMode = .dual
+        await #expect(throws: CommandError.self) { try await ws.toolSession("dane.eksport", connection: def.id) }
     }
 
     @Test("Zapisane hasło: łączy bez pytania; skrypt inicjalizacji i bieżący schemat wykonane")

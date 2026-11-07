@@ -37,20 +37,31 @@ public enum GridCommands {
         }
     }
 
-    /// Komórka komend jednej komórki: zaznaczony wiersz i bieżąca kolumna; bez zaznaczenia (zaraz po wykonaniu
-    /// zapytania, wstążka) — pierwszy wiersz i pierwsza kolumna LOB (inaczej pierwsza kolumna).
-    /// `target` — karta wyniku, z której wywołano komendę (menu kontekstowe, dwuklik, panel wartości): ta siatka,
-    /// a nie aktywna karta aktywnego okna (inna karta wyniku, karta bez siatki, okno w tle).
+    /// Komórka komend jednej komórki: wskazana (`row`, `column` — menu kontekstowe: komórka spod kursora, bez zmiany
+    /// zaznaczenia wielu wierszy), inaczej zaznaczony wiersz i bieżąca kolumna. Bez zaznaczenia (wstążka zaraz po
+    /// wykonaniu) — pierwszy wiersz tylko w wyniku z kolumną LOB; zaznaczenie spoza siatki (po odświeżeniu) — brak.
+    /// `target` — karta wyniku, z której wywołano komendę (menu, dwuklik, panel wartości): ta siatka, nie aktywna karta
+    /// aktywnego okna; karta bez siatki — brak komórki.
     @MainActor
-    static func currentCell(_ ws: Workspace, target: AnyObject? = nil) -> (ResultTab, ResultGridModel, row: Int, column: Int)? {
-        // Wskazana karta bez siatki (komunikat) — brak komórki, nie siatka innego okna.
+    static func currentCell(_ ws: Workspace, target: AnyObject? = nil, row: Int? = nil, column: Int? = nil)
+        -> (ResultTab, ResultGridModel, row: Int, column: Int)? {
         let resolved: (ResultTab, ResultGridModel)? = target is ResultTab
             ? (target as? ResultTab).flatMap { t in t.grid.map { (t, $0) } } : activeGrid(ws)
         guard let (tab, grid) = resolved, grid.rowCount > 0, !grid.columns.isEmpty else { return nil }
-        // Zaznaczenie i kolumna sprzed odświeżenia mogą wykraczać poza nową siatkę (mniej wierszy albo kolumn).
-        let row = tab.selectedRows?.first.flatMap { $0 < grid.rowCount ? $0 : nil } ?? 0
-        let column = tab.currentColumn.flatMap { $0 < grid.columns.count ? $0 : nil } ?? grid.columns.firstIndex { $0.type.isLOB } ?? 0
-        return (tab, grid, row, column)
+        let lob = grid.columns.firstIndex { $0.type.isLOB }
+        guard let r = row ?? tab.selectedRows?.first ?? (lob != nil ? 0 : nil),
+              let c = column ?? tab.currentColumn ?? lob,
+              r >= 0, r < grid.rowCount, c >= 0, c < grid.columns.count else { return nil }
+        return (tab, grid, r, c)
+    }
+
+    /// Argumenty komórki z menu kontekstowego (0-based wiersz widoku i kolumna danych).
+    static let cellParams = [CommandParameter("row", .integer, L10n.tr("Wiersz widoku (od 0; domyślnie zaznaczony)")),
+                             CommandParameter("column", .integer, L10n.tr("Kolumna (od 0; domyślnie bieżąca)"))]
+
+    @MainActor
+    static func currentCell(_ ctx: CommandContext) -> (ResultTab, ResultGridModel, row: Int, column: Int)? {
+        currentCell(ctx.workspace, target: ctx.target, row: ctx.arguments.int("row").map(Int.init), column: ctx.arguments.int("column").map(Int.init))
     }
 
     @MainActor
@@ -209,23 +220,23 @@ public enum GridCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "grid.largeData", title: L10n.tr("Large Data Editor…"), category: .edit, submenu: L10n.tr("Wynik"),
-                                      mac: ["cmd+alt+l"], agent: .none, effect: .uiState,
+                                      mac: ["cmd+alt+l"], parameters: cellParams, agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera bieżącą komórkę (LOB, LONG, RAW, długi tekst) w edytorze dużych danych."),
                                       feature: "PD-GRID-003"),
                     validate: { ws in currentCell(ws) != nil }, acceptsTarget: true) { ctx in
-                guard let (_, grid, row, col) = currentCell(ctx.workspace, target: ctx.target) else { return .ok }
+                guard let (_, grid, row, col) = currentCell(ctx) else { throw CommandError.notAvailable(L10n.tr("Zaznacz komórkę")) }
                 let model = LargeDataModel(grid: grid, row: row, column: col)
                 ctx.workspace.ui?.showLargeDataEditor(model)
                 try await model.loadFull()
                 return .ok
             },
             Command(CommandDescriptor(id: "grid.saveValue", title: L10n.tr("Zapisz wartość komórki do pliku…"), category: .edit, submenu: L10n.tr("Wynik"),
-                                      parameters: [CommandParameter("file", .string, L10n.tr("Plik"))],
+                                      parameters: [CommandParameter("file", .string, L10n.tr("Plik"))] + cellParams,
                                       agent: .none, effect: .external,
                                       summary: L10n.tr("Zapisuje pełną wartość bieżącej komórki (CLOB w UTF-8, BLOB bez zmian) do pliku — LOB pobierany z bazy porcjami, bez limitu siatki."),
                                       feature: "PD-GRID-023"),
                     validate: { ws in currentCell(ws) != nil }, acceptsTarget: true) { ctx in
-                guard let (_, grid, row, col) = currentCell(ctx.workspace, target: ctx.target) else { return .ok }
+                guard let (_, grid, row, col) = currentCell(ctx) else { throw CommandError.notAvailable(L10n.tr("Zaznacz komórkę")) }
                 let v = grid.value(row: row, column: col)
                 var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
                 if url == nil { url = await ctx.ui?.chooseSaveURL(suggestedName: grid.columns[col].name, fileExtension: Self.valueFileExtension(v)) }
@@ -234,11 +245,11 @@ public enum GridCommands {
                 return CommandResult(message: L10n.tr("Zapisano wartość do pliku \(url.lastPathComponent)"), value: .string(url.path))
             },
             Command(CommandDescriptor(id: "grid.openValueExternally", title: L10n.tr("Otwórz wartość komórki w programie zewnętrznym"), category: .edit, submenu: L10n.tr("Wynik"),
-                                      agent: .none, effect: .external,
+                                      parameters: cellParams, agent: .none, effect: .external,
                                       summary: L10n.tr("Zapisuje pełną wartość bieżącej komórki do pliku tymczasowego i otwiera go w edytorze zewnętrznym z ustawień (tekst) albo w programie skojarzonym z formatem. Zmiany w pliku nie wracają do bazy."),
                                       feature: "PD-GRID-023"),
                     validate: { ws in currentCell(ws) != nil }, acceptsTarget: true) { ctx in
-                guard let (_, grid, row, col) = currentCell(ctx.workspace, target: ctx.target) else { return .ok }
+                guard let (_, grid, row, col) = currentCell(ctx) else { throw CommandError.notAvailable(L10n.tr("Zaznacz komórkę")) }
                 let v = grid.value(row: row, column: col)
                 let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-value-\(UUID().uuidString.prefix(8))", isDirectory: true)
                 try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

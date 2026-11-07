@@ -3980,17 +3980,17 @@ Właściciel: „Wszędzie tam, gdzie to możliwe daj osobną sesję”. Dodatko
   w trakcie zapytania (ODPI kończy zapytanie przed zamknięciem), rzadkie wyścigi z rozłączeniem w chwili rejestracji
   sesji, porządki nazw.
 
-### D235 · 2026-11-07 — Narzędzia przy limicie sesji: sesja główna (decyzja właściciela)
+### D235 · 2026-11-07 — Narzędzia przy limicie sesji: sesja główna dla narzędzi odczytu (decyzja właściciela)
 
-Właściciel: „Dodaj powrót do sesji głównej przy limicie także dla narzędzi”. `Workspace.toolSession`: odmowa nowej
-sesji z powodu limitu (ORA-02391, ORA-00018, ORA-00020, listener ORA-12516/12519/12520 —
-`SessionManager.isSessionLimit`) — narzędzie dostaje sesję główną połączenia, a przez 5 minut kolejne narzędzia bez
-własnej sesji idą od razu do głównej (bez serii nieudanych logowań). Zabezpieczenie: narzędzia danych zatwierdzają
-własne zmiany, więc w sesji z otwartą transakcją (okno w trybie Dual/jednej sesji albo DBMS_TRANSACTION) zatwierdziłyby
-też cudzą — wtedy zamiast sesji głównej komunikat (zatwierdź/wycofaj albo zamknij nieużywane okna i narzędzia).
-Rozłączenie kasuje stan limitu. Code review: tylko w trybie Multi — w trybach Dual i jednej sesji okna wykonują
-polecenia w sesji głównej, więc COMMIT/ROLLBACK/DDL narzędzia sięgałyby zmian okna rozpoczętych już po sprawdzeniu
-transakcji; tam komunikat o limicie.
+Właściciel: „Dodaj powrót do sesji głównej przy limicie także dla narzędzi”. `Workspace.toolSession`: gdy baza odmówi
+nowej sesji z powodu limitu (ORA-02391, ORA-00018, ORA-00020, listener ORA-12516/12519/12520 —
+`SessionManager.isSessionLimit`), narzędzie **tylko czytające** (`readOnlyToolPurposes`: listy sesji i szczegóły,
+eksport i porównanie obiektów, raporty wydajności i SQL Monitor, Scheduler — DDL, Instance Viewer, eksport danych,
+raporty predefiniowane, porównanie schematów, koszyk) dostaje sesję główną — tylko w trybie Multi i bez otwartej
+transakcji. Narzędzia zmieniające dane (import, generator, wyrównanie danych, kopiowanie schematu, kreator importu)
+— komunikat: ich COMMIT/ROLLBACK, DDL i ALTER SESSION w sesji współdzielonej sięgałyby cudzych zmian (okna w trybie
+Dual/jednej sesji, drugiego narzędzia w tej samej sesji) — zasada z 3 rund code review. Każde otwarcie narzędzia
+najpierw próbuje własnej sesji (bez pamiętania limitu — po zamknięciu okien sesja jest od razu dostępna).
 
 ### D236 · 2026-11-07 — Dane binarne: format po sygnaturze i podgląd Quick Look; Large Data Editor z menu siatki
 

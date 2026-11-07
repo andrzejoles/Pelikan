@@ -34,6 +34,12 @@ struct CellValuePanelView: View {
         return "\(c.row):\(c.column):\(lob?.locator?.id ?? 0)"
     }
 
+    /// Komórka panelu jako argumenty komend jednej komórki.
+    private var cellArguments: CommandArguments {
+        guard let c = cell else { return .empty }
+        return CommandArguments(["row": .int(Int64(c.row)), "column": .int(Int64(c.column))])
+    }
+
     private var isText: Bool { lob.map { $0.kind == .clob || $0.kind == .nclob } ?? false }
 
     private var presentation: CellValuePresentation? {
@@ -64,9 +70,9 @@ struct CellValuePanelView: View {
                             Button(L10n.tr("Pobierz całość")) { requested = key }
                                 .help(L10n.tr("Pobiera całą wartość binarną z bazy do podglądu"))
                         }
-                        Button { _ = workspace.perform("grid.saveValue", target: tab) } label: { Image(systemName: "square.and.arrow.down") }
+                        Button { _ = workspace.perform("grid.saveValue", cellArguments, target: tab) } label: { Image(systemName: "square.and.arrow.down") }
                             .iconLabel(L10n.tr("Zapisz wartość komórki do pliku…"))
-                        Button { _ = workspace.perform("grid.openValueExternally", target: tab) } label: { Image(systemName: "arrow.up.forward.app") }
+                        Button { _ = workspace.perform("grid.openValueExternally", cellArguments, target: tab) } label: { Image(systemName: "arrow.up.forward.app") }
                             .iconLabel(L10n.tr("Otwórz wartość komórki w programie zewnętrznym"))
                     }
                     .controlSize(.small)

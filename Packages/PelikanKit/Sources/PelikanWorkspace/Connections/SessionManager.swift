@@ -225,12 +225,6 @@ public final class SessionManager {
         [2391, 18, 20, 12516, 12519, 12520].contains(e.code)
     }
 
-    /// Limit sesji przy narzędziach — przez 5 minut narzędzia bez własnej sesji korzystają z głównej (bez kolejnych
-    /// nieudanych logowań przy każdym narzędziu).
-    @ObservationIgnored private var toolLimit: [UUID: Date] = [:]
-    public func toolLimitActive(_ connection: UUID) -> Bool { toolLimit[connection].map { Date().timeIntervalSince($0) < 300 } ?? false }
-    public func noteToolLimit(_ connection: UUID) { toolLimit[connection] = Date() }
-
     /// Połączenia, na których osobnej sesji metadanych nie dało się otworzyć z powodu limitu sesji — metadane w sesji
     /// głównej zamiast błędu; chwila przejścia, po 5 minutach ponowna próba (błędy listenera bywają chwilowe).
     @ObservationIgnored private var metadataFallback: [UUID: Date] = [:]
@@ -569,7 +563,6 @@ public final class SessionManager {
         // Po ponownym połączeniu schemat z definicji połączenia (jak sesja główna).
         currentSchemaOverride[connectionID] = nil
         metadataFallback[connectionID] = nil
-        toolLimit[connectionID] = nil
         for key in sessions.keys where key.connectionID == connectionID {
             await close(key)
         }
@@ -588,7 +581,6 @@ public final class SessionManager {
         ownerConfirmed.removeAll()
         currentSchemaOverride.removeAll()
         metadataFallback.removeAll()
-        toolLimit.removeAll()
     }
 
     /// Stan połączenia na liście.

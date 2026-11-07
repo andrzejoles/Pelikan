@@ -45,6 +45,8 @@ final class QuickLookFile {
 
     /// Treść w widoku: plik zapisany w tle, przypisany po zapisie (bez ponownego ładowania tego samego pliku).
     func show(_ data: Data, format: LargeDataFormat, key: String, in view: QLPreviewView) {
+        // Nowa treść: poprzedni podgląd znika od razu (jego plik jest usuwany) — do zapisu nowego pliku widok pusty.
+        if key != self.key { view.previewItem = nil }
         prepare(data, format: format, key: key) { [weak view] url in
             guard let view, (view.previewItem as? URL) != url else { return }
             view.previewItem = url as NSURL

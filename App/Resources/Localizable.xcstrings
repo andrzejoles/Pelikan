@@ -34665,6 +34665,34 @@
         }
       }
     },
+    "Kolumna (od 0; domyślnie bieżąca)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Column (from 0; current by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalte (ab 0; standardmäßig die aktuelle)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Columna (desde 0; por defecto la actual)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стовпець (від 0; типово поточний)"
+          }
+        }
+      }
+    },
     "Kolumna (od 1)" : {
       "localizations" : {
         "en" : {
@@ -58489,6 +58517,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Оригінальна"
+          }
+        }
+      }
+    },
+    "Osiągnięto limit sesji bazy — zamknij nieużywane okna i narzędzia (narzędzie zmieniające dane potrzebuje własnej sesji)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The database session limit has been reached — close unused windows and tools (a tool that changes data needs its own session)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Sitzungslimit der Datenbank ist erreicht — nicht benötigte Fenster und Werkzeuge schließen (ein Werkzeug, das Daten ändert, braucht eine eigene Sitzung)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se alcanzó el límite de sesiones de la base de datos — cierre ventanas y herramientas sin usar (una herramienta que modifica datos necesita su propia sesión)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Досягнуто ліміту сеансів бази — закрийте непотрібні вікна й інструменти (інструменту, що змінює дані, потрібен власний сеанс)"
           }
         }
       }
@@ -106789,6 +106845,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Рядок не містить SQL_ID ані HASH_VALUE (стовпець SQL_ID, PREV_SQL_ID, HASH_VALUE… або клітинка зі значенням SQL_ID)"
+          }
+        }
+      }
+    },
+    "Wiersz widoku (od 0; domyślnie zaznaczony)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View row (from 0; selected by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ansichtszeile (ab 0; standardmäßig die ausgewählte)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fila de la vista (desde 0; por defecto la seleccionada)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рядок подання (від 0; типово вибраний)"
           }
         }
       }

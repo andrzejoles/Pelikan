@@ -164,9 +164,11 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         let loading = model.isLoading
         // Edytor otwiera się z treścią obciętą do limitu siatki; po dociągnięciu całości (np. DOCX) — karta dla pełnej
         // treści, o ile użytkownik nie wybrał innej.
+        var rebuilt = false
         if !userChoseMode, !loading, mode.selectedSegment != preferredSegment {
             mode.selectedSegment = preferredSegment
             modeChanged()
+            rebuilt = true
         }
         let format = model.format
         _ = model.text
@@ -182,7 +184,7 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         (textView.documentView as? NSTextView)?.isEditable = model.isEditable && mode.selectedSegment == 0 && !binaryText
         // Edycja w widoku zmienia model, a śledzenie ponawia `refresh` asynchronicznie — już po zdjęciu `updating`.
         // Widok, który pokazuje dokładnie treść modelu, zostaje bez przebudowy (fokus, kursor, cofanie — R4-03).
-        if !updating, !textViewShowsModel { modeChanged() }
+        if !rebuilt, !updating, !textViewShowsModel { modeChanged() }
         mode.setEnabled(format.isImage, forSegment: 2)
         mode.setEnabled(format == .pdf, forSegment: 3)
         mode.setEnabled(format.isText, forSegment: 4)

@@ -370,7 +370,9 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         tab.currentColumn = c
         let type = grid.columns[c].type
         let large = type.isLOB || [.long, .longRaw, .raw, .json, .xmltype].contains(type) || grid.text(row: table.clickedRow, column: c).count > 20
-        if large, !grid.isEditable(column: c) || type.isLOB { workspace.perform("grid.largeData", target: tab) }
+        if large, !grid.isEditable(column: c) || type.isLOB {
+            workspace.perform("grid.largeData", CommandArguments(["row": .int(Int64(table.clickedRow)), "column": .int(Int64(c))]), target: tab)
+        }
     }
 
     private func visibleColumns() -> [Int] {
@@ -630,9 +632,9 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     }
 
     /// Komórka spod kursora menu jako bieżąca (prawy klik nie zmienia zaznaczenia tabeli).
-    private func adoptClickedCell(single: Bool = false) {
+    private func adoptClickedCell() {
         if let c = dataColumn(atTableColumn: table.clickedColumn) { tab.currentColumn = c }
-        if table.clickedRow >= 0, single ? tab.selectedRows != [table.clickedRow] : !(tab.selectedRows ?? []).contains(table.clickedRow) {
+        if table.clickedRow >= 0, !(tab.selectedRows ?? []).contains(table.clickedRow) {
             table.selectRowIndexes([table.clickedRow], byExtendingSelection: false)
             tab.selectedRows = [table.clickedRow]
         }
@@ -692,9 +694,11 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         // Komendy jednej komórki działają na komórce spod kursora — prawy klik nie zaznacza jej w tabeli (dawniej
         // „Large Data Editor… jest teraz niedostępne” bez wcześniejszego zaznaczenia). Eksport i reszta — zaznaczenie.
         if Self.cellCommands.contains(id) {
-            // Komenda jednej komórki — kliknięty wiersz staje się zaznaczeniem także wewnątrz zaznaczenia wielu wierszy.
-            adoptClickedCell(single: true)
-            workspace.perform(CommandID(rawValue: id), target: tab)
+            // Komenda jednej komórki: komórka spod kursora jako argument — bez zmiany zaznaczenia wielu wierszy.
+            var args: [String: JSONValue] = [:]
+            if table.clickedRow >= 0 { args["row"] = .int(Int64(table.clickedRow)) }
+            if let c = dataColumn(atTableColumn: table.clickedColumn) { args["column"] = .int(Int64(c)) }
+            workspace.perform(CommandID(rawValue: id), CommandArguments(args), target: tab)
         } else {
             workspace.perform(CommandID(rawValue: id))
         }

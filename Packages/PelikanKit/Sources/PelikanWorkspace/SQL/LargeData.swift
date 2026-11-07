@@ -50,12 +50,14 @@ public enum LargeDataFormat: String, Sendable {
             if b.starts(with: Array("BM".utf8)), b.count > 18 {
                 func u32(_ o: Int) -> Int { (0..<4).reduce(0) { $0 | Int(b[b.startIndex + o + $1]) << (8 * $1) } }
                 // Rozmiar z nagłówka ≥ dostępne bajty (wartość może być ucięta do limitu siatki).
-                if u32(2) >= b.count, [12, 40, 52, 56, 108, 124].contains(u32(14)) { return .bmp }
+                // bfSize może być 0 (dozwolone dla BI_RGB) albo ≥ dostępne bajty (wartość ucięta do limitu siatki).
+                if u32(2) == 0 || u32(2) >= b.count, [12, 40, 52, 56, 108, 124].contains(u32(14)) { return .bmp }
             }
             if b.starts(with: Array("RIFF".utf8)), b.count >= 12, b.subdata(in: b.startIndex + 8 ..< b.startIndex + 12) == Data("WEBP".utf8) { return .webp }
             if b.count >= 12, b.subdata(in: b.startIndex + 4 ..< b.startIndex + 8) == Data("ftyp".utf8) {
                 let brand = String(decoding: b.subdata(in: b.startIndex + 8 ..< b.startIndex + 12), as: UTF8.self)
-                if ["heic", "heix", "mif1", "msf1", "hevc"].contains(brand) { return .heic }
+                // Marki HEIC/HEVC (mif1/msf1 dzieli z AVIF — bez zgadywania).
+                if ["heic", "heix", "hevc", "hevx"].contains(brand) { return .heic }
             }
             if b.starts(with: [0x1F, 0x8B]) { return .gzip }
             if b.starts(with: [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1]) {
