@@ -630,9 +630,9 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     }
 
     /// Komórka spod kursora menu jako bieżąca (prawy klik nie zmienia zaznaczenia tabeli).
-    private func adoptClickedCell() {
+    private func adoptClickedCell(single: Bool = false) {
         if let c = dataColumn(atTableColumn: table.clickedColumn) { tab.currentColumn = c }
-        if table.clickedRow >= 0, !(tab.selectedRows ?? []).contains(table.clickedRow) {
+        if table.clickedRow >= 0, single ? tab.selectedRows != [table.clickedRow] : !(tab.selectedRows ?? []).contains(table.clickedRow) {
             table.selectRowIndexes([table.clickedRow], byExtendingSelection: false)
             tab.selectedRows = [table.clickedRow]
         }
@@ -692,7 +692,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         // Komendy jednej komórki działają na komórce spod kursora — prawy klik nie zaznacza jej w tabeli (dawniej
         // „Large Data Editor… jest teraz niedostępne” bez wcześniejszego zaznaczenia). Eksport i reszta — zaznaczenie.
         if Self.cellCommands.contains(id) {
-            adoptClickedCell()
+            // Komenda jednej komórki — kliknięty wiersz staje się zaznaczeniem także wewnątrz zaznaczenia wielu wierszy.
+            adoptClickedCell(single: true)
             workspace.perform(CommandID(rawValue: id), target: tab)
         } else {
             workspace.perform(CommandID(rawValue: id))

@@ -1,4 +1,5 @@
 import AppKit
+import CryptoKit
 import PelikanWorkspace
 import Quartz
 import SwiftUI
@@ -22,6 +23,9 @@ final class QuickLookFile {
         self.key = key
         return file
     }
+
+    /// Tożsamość treści (skrót SHA-256 — `Data.hashValue` obejmuje tylko początek danych).
+    static func digest(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
 
     func remove() {
         if let url { try? FileManager.default.removeItem(at: url) }

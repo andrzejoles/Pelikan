@@ -3988,12 +3988,16 @@ sesji z powodu limitu (ORA-02391, ORA-00018, ORA-00020, listener ORA-12516/12519
 własnej sesji idą od razu do głównej (bez serii nieudanych logowań). Zabezpieczenie: narzędzia danych zatwierdzają
 własne zmiany, więc w sesji z otwartą transakcją (okno w trybie Dual/jednej sesji albo DBMS_TRANSACTION) zatwierdziłyby
 też cudzą — wtedy zamiast sesji głównej komunikat (zatwierdź/wycofaj albo zamknij nieużywane okna i narzędzia).
-Rozłączenie kasuje stan limitu.
+Rozłączenie kasuje stan limitu. Code review: tylko w trybie Multi — w trybach Dual i jednej sesji okna wykonują
+polecenia w sesji głównej, więc COMMIT/ROLLBACK/DDL narzędzia sięgałyby zmian okna rozpoczętych już po sprawdzeniu
+transakcji; tam komunikat o limicie.
 
 ### D236 · 2026-11-07 — Dane binarne: format po sygnaturze i podgląd Quick Look; Large Data Editor z menu siatki
 
 - **Format po sygnaturze** (`LargeDataFormat.detect`): oprócz PNG, JPEG, GIF, PDF — TIFF, BMP, WebP, HEIC, GZIP,
-  ZIP i dokumenty Office Open XML (DOCX/XLSX/PPTX — ZIP z katalogiem `word/`, `xl/`, `ppt/`), stary Office (OLE).
+  ZIP i dokumenty Office Open XML (DOCX/XLSX/PPTX — ZIP z `[Content_Types].xml` i `word/document`, `xl/workbook`,
+  `ppt/presentation`), stary Office (OLE: DOC/XLS/PPT po nazwie strumienia; nieznany — dane binarne); BMP po nagłówku
+  (rozmiar pliku i nagłówka DIB), nie po samym „BM”.
   Rozpoznany format daje rozszerzenie przy zapisie do pliku i w programie zewnętrznym.
 - **Podgląd Quick Look** zamiast przeglądarki (właściciel: „zrób podgląd przez Quick Look”): `QLPreviewView` w panelu
   wartości (tryb „Podgląd”) i w Large Data Editor (karta „Podgląd”) dla formatów nietekstowych. Generatory Quick Look

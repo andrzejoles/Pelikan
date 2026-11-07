@@ -33,6 +33,11 @@ extension Workspace {
 
     /// Sesja główna dla narzędzia przy limicie sesji — odmowa, gdy okno ma w niej otwartą transakcję.
     private func mainSessionForTool(_ connection: UUID) async throws -> any DatabaseSession {
+        // Tylko tryb Multi: okna mają tam własne sesje. W trybach Dual i jednej sesji okna wykonują polecenia w sesji
+        // głównej — COMMIT, ROLLBACK, DDL i ALTER SESSION narzędzia sięgałyby ich zmian także po sprawdzeniu niżej.
+        guard settings.sessionMode == .multi else {
+            throw CommandError.notAvailable(L10n.tr("Osiągnięto limit sesji bazy — zamknij nieużywane okna i narzędzia (w trybie Multi narzędzie skorzystałoby z sesji głównej)"))
+        }
         let mainKey = SessionKey(connectionID: connection, purpose: .main)
         let main = try await sessions.session(mainKey)
         let windowTransaction = documents.contains { $0.transactionOpen && sessionKey(for: $0) == mainKey }

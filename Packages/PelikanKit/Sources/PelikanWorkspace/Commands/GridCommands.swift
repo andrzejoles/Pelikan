@@ -43,10 +43,13 @@ public enum GridCommands {
     /// a nie aktywna karta aktywnego okna (inna karta wyniku, karta bez siatki, okno w tle).
     @MainActor
     static func currentCell(_ ws: Workspace, target: AnyObject? = nil) -> (ResultTab, ResultGridModel, row: Int, column: Int)? {
-        let resolved: (ResultTab, ResultGridModel)? = (target as? ResultTab).flatMap { t in t.grid.map { (t, $0) } } ?? activeGrid(ws)
+        // Wskazana karta bez siatki (komunikat) — brak komórki, nie siatka innego okna.
+        let resolved: (ResultTab, ResultGridModel)? = target is ResultTab
+            ? (target as? ResultTab).flatMap { t in t.grid.map { (t, $0) } } : activeGrid(ws)
         guard let (tab, grid) = resolved, grid.rowCount > 0, !grid.columns.isEmpty else { return nil }
-        let row = tab.selectedRows?.first ?? 0
-        let column = tab.currentColumn ?? grid.columns.firstIndex { $0.type.isLOB } ?? 0
+        // Zaznaczenie i kolumna sprzed odświeżenia mogą wykraczać poza nową siatkę (mniej wierszy albo kolumn).
+        let row = tab.selectedRows?.first.flatMap { $0 < grid.rowCount ? $0 : nil } ?? 0
+        let column = tab.currentColumn.flatMap { $0 < grid.columns.count ? $0 : nil } ?? grid.columns.firstIndex { $0.type.isLOB } ?? 0
         return (tab, grid, row, column)
     }
 

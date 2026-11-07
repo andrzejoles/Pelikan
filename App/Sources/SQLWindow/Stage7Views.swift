@@ -141,7 +141,8 @@ struct CellValuePanelView: View {
             HTMLPreview(html: p.text)
         case .preview:
             if let d = p.data, !p.truncated {
-                QuickLookPreview(data: d, format: p.format, id: "\(key)|\(d.count)")
+                // Nowa siatka po ponownym wykonaniu — nowy podgląd (bez skrótu dużych danych przy każdym odświeżeniu).
+                QuickLookPreview(data: d, format: p.format, id: "\(ObjectIdentifier(grid).hashValue)|\(key)|\(d.count)")
             } else {
                 Text(L10n.tr("Podgląd po pobraniu całej wartości — „Pobierz całość”")).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

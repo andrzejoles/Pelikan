@@ -58493,6 +58493,34 @@
         }
       }
     },
+    "Osiągnięto limit sesji bazy — zamknij nieużywane okna i narzędzia (w trybie Multi narzędzie skorzystałoby z sesji głównej)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The database session limit has been reached — close unused windows and tools (in Multi mode the tool would use the main session)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Sitzungslimit der Datenbank ist erreicht — nicht benötigte Fenster und Werkzeuge schließen (im Modus Multi würde das Werkzeug die Hauptsitzung verwenden)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se alcanzó el límite de sesiones de la base de datos — cierre ventanas y herramientas sin usar (en modo Multi la herramienta usaría la sesión principal)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Досягнуто ліміту сеансів бази — закрийте непотрібні вікна й інструменти (у режимі Multi інструмент використав би основний сеанс)"
+          }
+        }
+      }
+    },
     "Osiągnięto limit sesji bazy, a sesja główna ma otwartą transakcję — zatwierdź albo wycofaj ją, albo zamknij nieużywane okna i narzędzia" : {
       "localizations" : {
         "en" : {

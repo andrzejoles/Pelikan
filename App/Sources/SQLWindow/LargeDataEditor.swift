@@ -108,7 +108,7 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         root.widthAnchor.constraint(greaterThanOrEqualToConstant: 480).isActive = true
         root.heightAnchor.constraint(greaterThanOrEqualToConstant: 320).isActive = true
         view = root
-        mode.selectedSegment = model.format.isImage ? 2 : model.format == .pdf ? 3 : model.format.isPreviewable ? 5
+        mode.selectedSegment = model.format.isImage ? 2 : model.format == .pdf ? 3 : model.format.isPreviewable && !model.truncated ? 5
             : (model.isBinary && !model.format.isText ? 1 : 0)
         modeChanged()
     }
@@ -195,7 +195,7 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
             view = pdfView
         case 5:
             let data = model.fileData
-            if let url = quickLookFile.file(for: data, format: model.format, key: "\(data.count)|\(data.hashValue)") {
+            if let url = quickLookFile.file(for: data, format: model.format, key: QuickLookFile.digest(data)) {
                 quickLook.previewItem = url as NSURL
             }
             view = quickLook
