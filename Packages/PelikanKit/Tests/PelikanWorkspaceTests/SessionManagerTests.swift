@@ -175,6 +175,34 @@ struct SessionManagerTests {
         #expect(ws.sessions.metadataKey(connection: def.id).purpose == .tool("metadata"))
     }
 
+    @Test("Limit sesji przy narzędziu: sesja główna bez otwartej transakcji; z transakcją okna w sesji głównej — czytelny błąd")
+    func toolFallbackOnSessionLimit() async throws {
+        final class ToolLimitedDriver: DatabaseDriver, @unchecked Sendable {
+            let kind = DriverKind.instantClient
+            let capabilities: DriverCapabilities = []
+            func availability() -> Result<Void, DatabaseError> { .success(()) }
+            func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession {
+                if options.tags.action?.hasPrefix("narzędzie") == true { throw OracleError(code: 2391, message: "ORA-02391: exceeded simultaneous SESSIONS_PER_USER limit") }
+                return FakeSession()
+            }
+        }
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: ToolLimitedDriver()])
+        let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        ws.sessions.setMainConnection(def.id)
+        let main = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        #expect(try await ws.toolSession("dane.eksport", connection: def.id) === main)
+        #expect(ws.sessions.toolLimitActive(def.id))
+        // Tryb Dual: okno w sesji głównej z otwartą transakcją — narzędzie nie może jej zatwierdzić.
+        ws.settings.sessionMode = .dual
+        let doc = ws.newDocument(.sql)
+        doc.connectionID = def.id
+        doc.transactionOpen = true
+        await #expect(throws: CommandError.self) { try await ws.toolSession("dane.import", connection: def.id) }
+        await ws.sessions.disconnect(def.id)
+        #expect(!ws.sessions.toolLimitActive(def.id))
+    }
+
     @Test("Zapisane hasło: łączy bez pytania; skrypt inicjalizacji i bieżący schemat wykonane")
     func savedPassword() async throws {
         let (ws, driver) = make()

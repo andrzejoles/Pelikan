@@ -3980,3 +3980,13 @@ Właściciel: „Wszędzie tam, gdzie to możliwe daj osobną sesję”. Dodatko
   w trakcie zapytania (ODPI kończy zapytanie przed zamknięciem), rzadkie wyścigi z rozłączeniem w chwili rejestracji
   sesji, porządki nazw.
 
+### D235 · 2026-11-07 — Narzędzia przy limicie sesji: sesja główna (decyzja właściciela)
+
+Właściciel: „Dodaj powrót do sesji głównej przy limicie także dla narzędzi”. `Workspace.toolSession`: odmowa nowej
+sesji z powodu limitu (ORA-02391, ORA-00018, ORA-00020, listener ORA-12516/12519/12520 —
+`SessionManager.isSessionLimit`) — narzędzie dostaje sesję główną połączenia, a przez 5 minut kolejne narzędzia bez
+własnej sesji idą od razu do głównej (bez serii nieudanych logowań). Zabezpieczenie: narzędzia danych zatwierdzają
+własne zmiany, więc w sesji z otwartą transakcją (okno w trybie Dual/jednej sesji albo DBMS_TRANSACTION) zatwierdziłyby
+też cudzą — wtedy zamiast sesji głównej komunikat (zatwierdź/wycofaj albo zamknij nieużywane okna i narzędzia).
+Rozłączenie kasuje stan limitu.
+

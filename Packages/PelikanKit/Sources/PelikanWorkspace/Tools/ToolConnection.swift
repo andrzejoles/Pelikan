@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanLog
 
 /// Połączenie narzędzi — jedna reguła dla okien i komend narzędzi (wcześniej kopia w każdym narzędziu).
 /// Okno narzędzia ustala połączenie raz, przy otwarciu (`toolConnection()`), pokazuje je i używa go do wszystkich
@@ -11,10 +12,35 @@ extension Workspace {
         activeDocument.flatMap { effectiveConnection(of: $0) } ?? sessions.mainConnectionID
     }
 
-    /// Sesja narzędzia o danym przeznaczeniu na wskazanym połączeniu (osobna od sesji okien użytkownika).
+    /// Sesja narzędzia o danym przeznaczeniu na wskazanym połączeniu (osobna od sesji okien użytkownika). Przy limicie
+    /// sesji (ORA-02391, ORA-00018, ORA-00020, listener ORA-12516/12519/12520) — sesja główna, jak metadane (D235),
+    /// ale tylko bez otwartej transakcji okien na niej: narzędzia danych zatwierdzają własne zmiany, więc w sesji
+    /// z cudzą transakcją zatwierdziłyby i ją.
     public func toolSession(_ purpose: String, connection: UUID?) async throws -> any DatabaseSession {
         guard let connection else { throw CommandError.notConnected }
-        return try await sessions.session(SessionKey(connectionID: connection, purpose: .tool(purpose)))
+        let key = SessionKey(connectionID: connection, purpose: .tool(purpose))
+        if sessions.existingSession(key) == nil, sessions.toolLimitActive(connection) {
+            return try await mainSessionForTool(connection)
+        }
+        do {
+            return try await sessions.session(key)
+        } catch let e as OracleError where SessionManager.isSessionLimit(e) {
+            Log.connection.notice("Limit sesji — narzędzie w sesji głównej (\(e.code, privacy: .public))")
+            sessions.noteToolLimit(connection)
+            return try await mainSessionForTool(connection)
+        }
+    }
+
+    /// Sesja główna dla narzędzia przy limicie sesji — odmowa, gdy okno ma w niej otwartą transakcję.
+    private func mainSessionForTool(_ connection: UUID) async throws -> any DatabaseSession {
+        let mainKey = SessionKey(connectionID: connection, purpose: .main)
+        let main = try await sessions.session(mainKey)
+        let windowTransaction = documents.contains { $0.transactionOpen && sessionKey(for: $0) == mainKey }
+        let open = (try? await SessionUtilities.transactionOpen(main)) ?? true
+        if windowTransaction || open {
+            throw CommandError.notAvailable(L10n.tr("Osiągnięto limit sesji bazy, a sesja główna ma otwartą transakcję — zatwierdź albo wycofaj ją, albo zamknij nieużywane okna i narzędzia"))
+        }
+        return main
     }
 }
 

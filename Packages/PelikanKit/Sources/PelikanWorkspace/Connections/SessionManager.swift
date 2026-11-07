@@ -222,6 +222,17 @@ public final class SessionManager {
 
     /// Połączenia, na których osobnej sesji metadanych nie da się otworzyć (limit sesji profilu: ORA-02391, ORA-00018,
     /// ORA-00020) — metadane wracają do sesji głównej do rozłączenia, zamiast przestać działać.
+    /// Odmowa nowej sesji z powodu limitu: profil (SESSIONS_PER_USER), sesje i procesy instancji, listener.
+    public nonisolated static func isSessionLimit(_ e: OracleError) -> Bool {
+        [2391, 18, 20, 12516, 12519, 12520].contains(e.code)
+    }
+
+    /// Limit sesji przy narzędziach — przez 5 minut narzędzia bez własnej sesji korzystają z głównej (bez kolejnych
+    /// nieudanych logowań przy każdym narzędziu).
+    @ObservationIgnored private var toolLimit: [UUID: Date] = [:]
+    public func toolLimitActive(_ connection: UUID) -> Bool { toolLimit[connection].map { Date().timeIntervalSince($0) < 300 } ?? false }
+    public func noteToolLimit(_ connection: UUID) { toolLimit[connection] = Date() }
+
     /// Chwila przejścia na sesję główną — po 5 minutach ponowna próba osobnej sesji (błędy listenera bywają chwilowe).
     @ObservationIgnored private var metadataFallback: [UUID: Date] = [:]
 
@@ -235,7 +246,7 @@ public final class SessionManager {
         if key != main, sessions[main] == nil { _ = try await session(main) }
         do {
             return try await session(key)
-        } catch let e as OracleError where key.purpose != .main && [2391, 18, 20, 12516, 12519, 12520].contains(e.code) {
+        } catch let e as OracleError where key.purpose != .main && Self.isSessionLimit(e) {
             Log.connection.notice("Limit sesji — metadane w sesji głównej (\(e.code, privacy: .public))")
             metadataFallback[connection] = Date()
             return try await session(SessionKey(connectionID: connection, purpose: .main))
@@ -559,6 +570,7 @@ public final class SessionManager {
         // Po ponownym połączeniu schemat z definicji połączenia (jak sesja główna).
         currentSchemaOverride[connectionID] = nil
         metadataFallback[connectionID] = nil
+        toolLimit[connectionID] = nil
         for key in sessions.keys where key.connectionID == connectionID {
             await close(key)
         }
@@ -577,6 +589,7 @@ public final class SessionManager {
         ownerConfirmed.removeAll()
         currentSchemaOverride.removeAll()
         metadataFallback.removeAll()
+        toolLimit.removeAll()
     }
 
     /// Stan połączenia na liście.

@@ -58493,6 +58493,34 @@
         }
       }
     },
+    "Osiągnięto limit sesji bazy, a sesja główna ma otwartą transakcję — zatwierdź albo wycofaj ją, albo zamknij nieużywane okna i narzędzia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The database session limit has been reached and the main session has an open transaction — commit or roll it back, or close unused windows and tools"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Sitzungslimit der Datenbank ist erreicht und die Hauptsitzung hat eine offene Transaktion — bestätigen oder zurücksetzen oder nicht benötigte Fenster und Werkzeuge schließen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se alcanzó el límite de sesiones de la base de datos y la sesión principal tiene una transacción abierta — confírmela o reviértala, o cierre ventanas y herramientas sin usar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Досягнуто ліміту сеансів бази, а основний сеанс має відкриту транзакцію — підтвердьте або відкотіть її чи закрийте непотрібні вікна й інструменти"
+          }
+        }
+      }
+    },
     "Osobisty" : {
       "localizations" : {
         "en" : {
