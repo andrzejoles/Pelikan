@@ -2,7 +2,7 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## 1.21.9 — podgląd danych binarnych, Large Data Editor z menu siatki
+## 1.22.0 — podgląd danych binarnych, Large Data Editor z menu siatki
 
 - **Large Data Editor** otwiera się z menu kontekstowego siatki dla klikniętej komórki (wcześniej bywał „niedostępny”).
 - **Podgląd Quick Look** w panelu wartości i w Large Data Editor: PDF, obrazy (także TIFF, WebP, HEIC), dokumenty
