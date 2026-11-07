@@ -1,5 +1,5 @@
 {
-  "originHash" : "ef830e78ed1b763c4be5979d0f060e65cb856ecd2f4f98adb54ebc5e2aaf83c6",
+  "originHash" : "3624da7f30f4531b71b82f5116b4d982ce988e93978a06932706f881375a6f2a",
   "pins" : [
     {
       "identity" : "eventsource",
@@ -17,14 +17,6 @@
       "state" : {
         "revision" : "aa3626829160917d4378330617971977cbd78f5b",
         "version" : "1.0.1"
-      }
-    },
-    {
-      "identity" : "oracle-nio",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/lovetodream/oracle-nio.git",
-      "state" : {
-        "revision" : "7cda9e0c416a0cb21acf070ba70ce4ff575121b0"
       }
     },
     {
@@ -160,15 +152,6 @@
       "state" : {
         "revision" : "a18ee16b8039866fd919bdb4e8e906882d4ecc75",
         "version" : "2.13.0"
-      }
-    },
-    {
-      "identity" : "swift-syntax",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftlang/swift-syntax.git",
-      "state" : {
-        "revision" : "050f1a346fbbac0ca2cfb15a95274f7bd1cf0ccf",
-        "version" : "604.0.0"
       }
     },
     {

@@ -112,37 +112,62 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     let options: ConnectOptions
     private let state = Mutex(State())
 
-    /// Kursor z iteratorem OracleNIO. Iterator nie jest bezpieczny wątkowo, a `fetch` tego samego wyniku może przyjść
-    /// równolegle (dociąganie przy przewijaniu i eksport, agent i okno) — pobrania czekają na siebie (`acquire`).
+    /// Kursor wyniku: strumień wierszy OracleNIO i wiersze dobrane do bufora (`settle`). Używany tylko w kolejce sesji
+    /// (`lane`), więc bez własnej synchronizacji.
     final class Cursor: @unchecked Sendable {
-        var iterator: OracleRowSequence.AsyncIterator
-        var finished = false
+        /// Strumień OracleNIO; nil — wyczerpany albo zakończony po dobraniu (połączenie wolne).
+        var iterator: OracleRowSequence.AsyncIterator?
+        /// Wiersze dobrane przed innym poleceniem w sesji, od `bufferStart`.
+        var buffer: [OracleRow] = []
+        var bufferStart = 0
+        /// Wiersze już oddane (`fetch`) — razem z buforem do `settleRowLimit`.
+        var delivered = 0
+        /// Wynik ucięty na `settleRowLimit` (dalsze wiersze odrzucone przy dobieraniu).
+        var cut = false
+        /// Błąd z dobierania — zgłaszany po oddaniu dobranych wierszy.
+        var pendingError: (any Error)?
         let columns: [ColumnInfo]
         let lobLimit: Int
-        private let gate = Mutex<(busy: Bool, waiters: [CheckedContinuation<Void, Never>])>((false, []))
+        /// Kolumny LOB/BFILE: ich treść czytają osobne operacje, więc przed konwersją strumień musi być zamknięty.
+        let hasLOBs: Bool
+
         init(iterator: OracleRowSequence.AsyncIterator, columns: [ColumnInfo], lobLimit: Int) {
             self.iterator = iterator; self.columns = columns; self.lobLimit = lobLimit
+            self.hasLOBs = columns.contains { $0.type.isLOB }
         }
 
-        func acquire() async {
-            await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
-                let free = gate.withLock { g -> Bool in
-                    if !g.busy { g.busy = true; return true }
-                    g.waiters.append(c)
-                    return false
+        var exhausted: Bool { iterator == nil && bufferStart >= buffer.count && pendingError == nil }
+
+        func next() async throws -> OracleRow? {
+            if bufferStart < buffer.count {
+                let row = buffer[bufferStart]
+                bufferStart += 1
+                if bufferStart >= 10_000 {    // oddane wiersze zwalniane porcjami
+                    buffer.removeFirst(bufferStart)
+                    bufferStart = 0
                 }
-                if free { c.resume() }
+                return row
             }
-        }
-
-        func release() {
-            let next = gate.withLock { g -> CheckedContinuation<Void, Never>? in
-                if g.waiters.isEmpty { g.busy = false; return nil }
-                return g.waiters.removeFirst()
+            if let e = pendingError {
+                pendingError = nil
+                throw e
             }
-            next?.resume()
+            guard iterator != nil, let row = try await iterator!.next() else {
+                iterator = nil
+                return nil
+            }
+            return row
         }
     }
+
+    /// Kolejka operacji sesji: OracleNIO przyjmuje kolejne polecenie dopiero po wyczerpaniu strumienia wierszy
+    /// zapytania (wcześniejsze czeka w nieskończoność — zakleszczenie przy odczycie LOB-a z niepełnego wyniku albo
+    /// DBMS_OUTPUT po zapytaniu z wieloma wierszami). Operacje idą więc po kolei (jak szeregowa kolejka ODPI), a otwarty
+    /// strumień jest przed nimi dobierany do bufora wyniku (`settle`).
+    let lane = AsyncLane()
+
+    /// Najwięcej wierszy wyniku przy dobieraniu do bufora; dalsze odrzucane, wynik oznaczony (`RowBatch.limitedTo`).
+    static let settleRowLimit = 100_000
 
     struct State {
         var cursors: [UInt64: Cursor] = [:]
@@ -150,73 +175,76 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
         /// Lokatory obciętych LOB-ów (pełna treść na żądanie, `readLOB`), od najstarszego; ponad limit najstarsze odrzucane.
         var lobs: [UInt64: (lob: LOB, kind: LOBValue.Kind)] = [:]
         var lobOrder: [UInt64] = []
-        /// DBMS_SQL niedostępny dla użytkownika (odebrany PUBLIC) — sprawdzanie typów kolumn wyłączone do końca sesji.
-        var describeUnavailable = false
+        /// Wynik z otwartym strumieniem OracleNIO (najwyżej jeden — połączenie obsługuje jedno polecenie naraz).
+        var live: UInt64?
     }
     static let maxLOBLocators = 20_000
 
-    /// Kody typów kolumn (wewnętrzne kody Oracle z DBMS_SQL.DESCRIBE_COLUMNS2), które dekoder wierszy OracleNIO
-    /// obsługuje: VARCHAR2/NVARCHAR2, NUMBER, BINARY_INTEGER, LONG, ROWID, DATE, RAW, LONG RAW, CHAR/NCHAR,
-    /// BINARY_FLOAT, BINARY_DOUBLE, kursor, typy obiektowe i XMLTYPE, CLOB/NCLOB, BLOB, JSON, VECTOR, TIMESTAMP (także
-    /// WITH [LOCAL] TIME ZONE), INTERVAL DAY TO SECOND, BOOLEAN. Każdy inny (INTERVAL YEAR TO MONTH 182, BFILE 114,
-    /// UROWID 208, REF 111…) kończy proces w bibliotece (`fatalError` „not implemented”), zanim wartość dotrze do
-    /// Pelikana — takie zapytanie jest odrzucane przed wykonaniem.
-    static let decodableTypeCodes: [Int] = [1, 2, 3, 8, 11, 12, 23, 24, 96, 100, 101, 102, 109, 112, 113, 119, 127, 180, 181, 183, 231, 252]
-
-    /// Opis kolumn zapytania bez jego wykonania (DBMS_SQL.PARSE nie wykonuje SELECT) — pierwsza kolumna typu spoza
-    /// `decodableTypeCodes` jako „nazwa|kod”, nil — wszystkie obsługiwane.
-    static let describeBlock = """
-        declare
-          c integer;
-          n integer;
-          d dbms_sql.desc_tab2;
-          r varchar2(300);
-        begin
-          c := dbms_sql.open_cursor;
-          begin
-            dbms_sql.parse(c, :q, dbms_sql.native);
-            dbms_sql.describe_columns2(c, n, d);
-            for i in 1 .. n loop
-              if d(i).col_type not in (\(decodableTypeCodes.map(String.init).joined(separator: ", "))) then
-                r := substr(d(i).col_name, 1, 128) || '|' || d(i).col_type;
-                exit;
-              end if;
-            end loop;
-          exception when others then
-            dbms_sql.close_cursor(c);
-            raise;
-          end;
-          dbms_sql.close_cursor(c);
-          :bad := r;
-        end;
-        """
-
-    /// Pierwsza kolumna zapytania, której OracleNIO nie dekoduje (nazwa, kod typu); nil — można wykonać. Błąd
-    /// sprawdzenia (składnia, uprawnienia, za długi tekst) nie blokuje: zwykłe wykonanie poda właściwy błąd.
-    func undecodableColumn(_ sql: String) async -> (name: String, code: Int)? {
-        guard !state.withLock({ $0.describeUnavailable }) else { return nil }
-        var b = OracleBindings(capacity: 2)
-        b.append(sql, context: .default, bindName: "q")
-        let out = OracleRef(dataType: .varchar)
-        b.append(out, bindName: "bad", isReturning: false)
-        do {
-            _ = try await connection.execute(OracleStatement(unsafeSQL: Self.describeBlock, binds: b))
-        } catch {
-            let e = failure(error)
-            // PLS-00201 (DBMS_SQL niezadeklarowany — brak uprawnienia): bez kolejnych prób w tej sesji.
-            if let o = e as? OracleError, o.code == 6550, o.message.uppercased().contains("DBMS_SQL") {
-                state.withLock { $0.describeUnavailable = true }
+    /// Dobiera otwarty strumień wyniku do bufora (do `settleRowLimit` wierszy łącznie) — zwalnia połączenie.
+    func settle(_ c: Cursor) async {
+        while c.iterator != nil {
+            if c.delivered + (c.buffer.count - c.bufferStart) >= Self.settleRowLimit {
+                c.cut = true
+                c.iterator = nil    // koniec strumienia: OracleNIO przerywa pobieranie i zamyka kursor
+                break
             }
-            return nil
+            do {
+                guard let row = try await c.iterator!.next() else {
+                    c.iterator = nil
+                    break
+                }
+                c.buffer.append(row)
+            } catch {
+                c.iterator = nil
+                c.pendingError = failure(error)
+            }
         }
-        guard let r = try? out.decode(as: String.self), let bar = r.lastIndex(of: "|"), let code = Int(r[r.index(after: bar)...]) else { return nil }
-        return (String(r[..<bar]), code)
     }
 
-    /// Komunikat odrzucenia (PelikanDB i sterowniki nie mają katalogu tekstów interfejsu — jak komunikaty lokatorów).
-    static func undecodableMessage(column: String, code: Int) -> String {
-        let type = [182: "INTERVAL YEAR TO MONTH", 114: "BFILE", 208: "UROWID", 111: "REF"][code].map { "typu \($0)" } ?? "typu o kodzie \(code)"
-        return "Sterownik thin nie odczytuje kolumny \(column) \(type) — użyj połączenia przez Instant Client albo przekształć kolumnę w zapytaniu (np. TO_CHAR(\(column)))."
+    /// Dobiera wynik z otwartym strumieniem (jeśli jest), zanim kolejna operacja zajmie połączenie.
+    func settleLive() async {
+        let c = state.withLock { s -> Cursor? in
+            defer { s.live = nil }
+            return s.live.flatMap { s.cursors[$0] }
+        }
+        if let c { await settle(c) }
+    }
+
+    /// Największa porcja jednego odczytu BFILE (bajty).
+    static let maxBFILERead: UInt64 = 1 << 20
+
+    /// BFILE: plik otwierany na czas odczytu i zamykany po nim (jak Instant Client); rozmiar z serwera — lokator BFILE
+    /// nie niesie metadanych. Od `offset` (od 1) najwyżej `amount` bajtów.
+    func readBFILE(_ lob: LOB, offset: UInt64, amount: UInt64) async throws -> (data: Data, size: UInt64) {
+        // Rozmiar bez otwierania (brakujący plik — 0, pusta wartość bez błędu, jak Instant Client); otwarcie tylko do odczytu.
+        let size: UInt64
+        do {
+            size = UInt64(max(0, try await lob.size(on: connection)))
+        } catch {
+            let e = failure(error)
+            // Brakujący plik (ORA-22288 przy długości): Instant Client podaje długość 0 — pusta wartość bez błędu.
+            if (e as? OracleError)?.code == 22288 { return (Data(), 0) }
+            throw e
+        }
+        guard offset >= 1, offset <= size, amount > 0 else { return (Data(), size) }
+        do { try await lob.open(on: connection) } catch { throw failure(error) }
+        do {
+            var data = Data()
+            let end = min(size, offset - 1 + amount)    // ostatni bajt (włącznie)
+            var position = offset
+            while position <= end {
+                let n = min(end - position + 1, Self.maxBFILERead)
+                guard let chunk = try await lob.read(offset: Int(position), amount: Int(n), on: connection),
+                      chunk.readableBytes > 0 else { break }
+                data.append(contentsOf: chunk.readableBytesView)
+                position += UInt64(chunk.readableBytes)
+            }
+            try? await lob.close(on: connection)
+            return (data, size)
+        } catch {
+            try? await lob.close(on: connection)
+            throw failure(error)
+        }
     }
 
     func keep(_ lob: LOB, kind: LOBValue.Kind) -> LOBLocator {
@@ -250,24 +278,25 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     /// CLOB przesuwa pozycję w bajtach), więc porcję kopiuje serwer (DBMS_LOB.COPY do tymczasowego LOB-a) i czytamy ją
     /// w całości; CLOB najwyżej `maxCLOBRead` znaków na porcję (zob. `readCLOB`).
     public func readLOB(_ locator: LOBLocator, offset: UInt64, amount: UInt64) async throws -> LOBValue {
+        try await lane.run {
+            await self.settleLive()
+            return try await self.readLOBInLane(locator, offset: offset, amount: amount)
+        }
+    }
+
+    func readLOBInLane(_ locator: LOBLocator, offset: UInt64, amount: UInt64) async throws -> LOBValue {
         guard let (lob, kind) = state.withLock({ $0.lobs[locator.id] }) else {
             throw DatabaseError.unsupported("Lokator LOB nie jest już dostępny — wykonaj zapytanie ponownie")
+        }
+        if kind == .bfile {
+            // BFILE: porcja prosto z pliku (bez kopii po stronie serwera).
+            let (data, size) = try await readBFILE(lob, offset: offset, amount: amount)
+            return LOBValue(kind: kind, bytes: data, length: size, truncated: false)
         }
         let size = UInt64(lob.estimatedSize)
         let isText = kind == .clob || kind == .nclob
         guard offset >= 1, offset <= size, amount > 0 else {
             return LOBValue(kind: kind, text: isText ? "" : nil, bytes: isText ? nil : Data(), length: size, truncated: false)
-        }
-        if kind == .bfile {
-            // BFILE: bez kopii po stronie serwera — od początku do żądanej porcji (rzadkie, pliki zewnętrzne).
-            var data = Data()
-            let end = Int(min(size, offset - 1 + amount))
-            for try await chunk in lob.readChunks(on: connection) {
-                data.append(contentsOf: chunk.readableBytesView)
-                if data.count >= end { break }
-            }
-            let from = min(data.count, Int(offset - 1))
-            return LOBValue(kind: kind, bytes: Data(data[data.startIndex + from ..< data.startIndex + min(end, data.count)]), length: size, truncated: false)
         }
         let n = min(amount, size - offset + 1, isText ? UInt64(Self.maxCLOBRead) : amount)
         let type = kind == .nclob ? "nclob" : kind == .clob ? "clob" : "blob"
@@ -341,6 +370,18 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             return OracleError(code: 3113, message: "ORA-03113: koniec pliku w kanale komunikacyjnym (\(e.code))")
         }
         if e.code == .statementCancelled { return OracleError(code: 1013, message: "ORA-01013: przerwano wykonanie") }
+        if e.code == .messageDecodingFailure {
+            // Odpowiedź nieczytelna dla biblioteki (np. kolumna typu REF): OracleNIO zamyka połączenie. Komunikat bez
+            // opisu błędu biblioteki — zawiera zrzut bajtów odpowiedzi, a w nich mogą być dane z bazy.
+            let detail = e.underlying.map { String(describing: $0) } ?? ""
+            // Opis przyczyny w postaci „…unsupported data type \'intRef\'…” (apostrofy poprzedzone ukośnikiem albo nie).
+            let type = detail.range(of: #"unsupported data type \\?'[A-Za-z]+"#, options: .regularExpression).map { r -> String in
+                let raw = String(detail[r].reversed().prefix { $0.isLetter }.reversed())
+                return ["intRef": "REF", "osl": "MLSLABEL"][raw] ?? raw
+            }
+            let what = type.map { "nie obsługuje typu danych \($0) w wyniku" } ?? "nie odczytał odpowiedzi serwera"
+            return OracleError(code: 3113, message: "ORA-03113: sterownik thin \(what) — połączenie zamknięte. Dla tego zapytania użyj połączenia przez Instant Client albo przekształć kolumnę (np. REFTOHEX, TO_CHAR).")
+        }
         return DatabaseError.unsupported("OracleNIO: \(e.code)\(e.underlying.map { " — \($0)" } ?? "")")
     }
 
@@ -380,7 +421,7 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
         case .nCLOB: .nclob
         case .blob: .blob
         case .bFile: .bfile
-        case .rowID, .uRowID: .rowid
+        case .rowID, .uRowID: .rowid    // jak Instant Client (ODPI zgłasza UROWID jako ROWID)
         case .boolean: .boolean
         case .json: .json
         case .vector: .vector
@@ -435,11 +476,31 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             return .boolean(try cell.decode(Bool.self, context: .default))
         case .raw, .longRAW:
             return .raw(Data(buf.readBytes(length: buf.readableBytes) ?? []))
-        case .rowID, .uRowID:
+        case .rowID:
             return .rowid(try cell.decode(String.self, context: .default))
+        case .uRowID:
+            // Tekst UROWID z dekodera (fizyczny jak ROWID, logiczny „*…” dla tabel IOT).
+            return .rowid(String(decoding: buf.readableBytesView, as: UTF8.self))
+        case .intervalYM:
+            // Lata (4 bajty, przesunięte o 2^31) i miesiące (bajt, przesunięty o 60) — jak Instant Client.
+            guard let b = buf.readBytes(length: buf.readableBytes), b.count >= 5 else { return .null }
+            let years = Int64(b[0..<4].reduce(UInt32(0)) { $0 << 8 | UInt32($1) }) - 0x8000_0000
+            return .intervalYM(years: Int32(clamping: years), months: Int32(b[4]) - 60)
         case .clob, .nCLOB:
             return .lob(try await readCLOB(try cell.decode(LOB.self, context: .default), kind: t == .clob ? .clob : .nclob, limit: lobLimit))
-        case .blob, .bFile:
+        case .bFile:
+            // BFILE do brakującego pliku albo katalogu bez uprawnienia (ORA-22288, ORA-22285) — błąd w komórce jak
+            // w Instant Client, pozostałe wiersze dalej.
+            let lob = try cell.decode(LOB.self, context: .default)
+            do {
+                let (data, size) = try await readBFILE(lob, offset: 1, amount: UInt64(max(0, lobLimit)))
+                let truncated = size > UInt64(data.count)
+                return .lob(LOBValue(kind: .bfile, bytes: data, length: size, truncated: truncated,
+                                     locator: truncated ? keep(lob, kind: .bfile) : nil))
+            } catch {
+                return .lob(LOBValue(kind: .bfile, length: 0, truncated: false, readError: LOBValue.errorText(error)))
+            }
+        case .blob:
             let lob = try cell.decode(LOB.self, context: .default)
             var data = Data()
             var stopped = false
@@ -450,9 +511,8 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             }
             // Obcięte: odczyt przerwany na limicie albo ostatnia porcja przekroczyła limit (prefix niżej ucina).
             let truncated = data.count > lobLimit || (stopped && total > data.count)
-            let kind: LOBValue.Kind = t == .blob ? .blob : .bfile
-            return .lob(LOBValue(kind: kind, bytes: data.prefix(lobLimit), length: UInt64(total), truncated: truncated,
-                                 locator: truncated ? keep(lob, kind: kind) : nil))
+            return .lob(LOBValue(kind: .blob, bytes: data.prefix(lobLimit), length: UInt64(total), truncated: truncated,
+                                 locator: truncated ? keep(lob, kind: .blob) : nil))
         case .intervalDS:
             let i = try cell.decode(IntervalDS.self, context: .default)
             return .intervalDS(days: Int32(i.days), hours: Int32(i.hours), minutes: Int32(i.minutes), seconds: Int32(i.seconds),
@@ -548,12 +608,14 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     }
 
     public func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult {
-        let start = ContinuousClock.now
-        // Zapytanie z kolumną, której OracleNIO nie dekoduje, zakończyłoby proces aplikacji — odrzucane przed wykonaniem
-        // (jeden dodatkowy obieg sieci na zapytanie; decyzja właściciela, D238).
-        if Self.kind(sql) == .query, let bad = await undecodableColumn(sql) {
-            throw DatabaseError.unsupported(Self.undecodableMessage(column: bad.name, code: bad.code))
+        try await lane.run {
+            await self.settleLive()
+            return try await self.executeInLane(sql, binds: binds, options: options)
         }
+    }
+
+    func executeInLane(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult {
+        let start = ContinuousClock.now
         let (b, refs) = try bindings(binds)
         let stmt = OracleStatement(unsafeSQL: sql, binds: b)
         let rows: OracleRowSequence
@@ -573,6 +635,7 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
                 let id = s.next
                 s.next += 1
                 s.cursors[id] = Cursor(iterator: rows.makeAsyncIterator(), columns: columns, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
+                s.live = id
                 return id
             }
             result.resultSet = ResultSetDescriptor(id: ResultSetID(id), columns: columns)
@@ -629,8 +692,16 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
         return (nil, ident(words[k]), type)
     }
 
+    /// `scalar` w trakcie operacji w kolejce sesji (bez ponownego wejścia do niej).
+    func scalarInLane(_ sql: String, binds: [BindVariable]) async throws -> String? {
+        let r = try await executeInLane(sql, binds: binds, options: ExecuteOptions())
+        guard let rs = r.resultSet else { return nil }
+        defer { dropCursor(rs.id) }
+        return try await fetchInLane(rs.id, maxRows: 1).rows.first?.first.flatMap { $0.displayText }
+    }
+
     func compileWarning(_ object: (owner: String?, name: String, type: String)) async throws -> OracleError? {
-        let count = try await scalar("""
+        let count = try await scalarInLane("""
             select count(*) from all_errors where attribute = 'ERROR'
                and owner = nvl(:o, sys_context('userenv', 'current_schema')) and name = :n and type = :t
             """, binds: [BindVariable(name: "o", value: object.owner.map { .text($0) } ?? .null),
@@ -715,42 +786,63 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     }
 
     public func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch {
+        try await lane.run { try await self.fetchInLane(resultSet, maxRows: maxRows) }
+    }
+
+    func fetchInLane(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch {
         guard let cursor = state.withLock({ $0.cursors[resultSet.raw] }) else { throw DatabaseError.unknownResultSet }
-        await cursor.acquire()
-        defer { cursor.release() }
+        // Inny wynik z otwartym strumieniem zwalnia połączenie; ten z LOB-ami — też sam (treść LOB-ów czytają osobne
+        // operacje, które czekałyby na koniec jego strumienia).
+        if state.withLock({ $0.live }) != resultSet.raw { await settleLive() }
+        if cursor.hasLOBs, cursor.iterator != nil {
+            await settle(cursor)
+            state.withLock { if $0.live == resultSet.raw { $0.live = nil } }
+        }
         var out: [[OracleValue]] = []
-        if cursor.finished { return RowBatch(rows: out, hasMore: false) }
         out.reserveCapacity(min(maxRows, 10_000))
         do {
-            while out.count < maxRows {
-                guard let row = try await cursor.iterator.next() else {
-                    cursor.finished = true
-                    _ = state.withLock { $0.cursors.removeValue(forKey: resultSet.raw) }
-                    return RowBatch(rows: out, hasMore: false)
-                }
+            while out.count < maxRows, let row = try await cursor.next() {
                 var values: [OracleValue] = []
                 values.reserveCapacity(cursor.columns.count)
                 for cell in row { values.append(try await value(cell, lobLimit: cursor.lobLimit)) }
                 out.append(values)
+                cursor.delivered += 1
             }
-        } catch let e as OracleError {
-            throw failure(e)
         } catch {
             throw failure(error)
         }
+        if cursor.exhausted {
+            dropCursor(resultSet)
+            return RowBatch(rows: out, hasMore: false, limitedTo: cursor.cut ? cursor.delivered : nil)
+        }
+        if cursor.iterator != nil { state.withLock { $0.live = resultSet.raw } }
         return RowBatch(rows: out, hasMore: true)
     }
 
+    /// Wynik usunięty: strumień (jeśli otwarty) kończy OracleNIO, gdy iterator zniknie razem z kursorem.
+    func dropCursor(_ resultSet: ResultSetID) {
+        state.withLock { s in
+            s.cursors[resultSet.raw] = nil
+            if s.live == resultSet.raw { s.live = nil }
+        }
+    }
+
     public func closeResultSet(_ resultSet: ResultSetID) async {
-        _ = state.withLock { $0.cursors.removeValue(forKey: resultSet.raw) }
+        dropCursor(resultSet)
     }
 
     public func commit() async throws {
-        do { try await connection.commit() } catch { throw failure(error) }
+        try await lane.run {
+            await self.settleLive()
+            do { try await self.connection.commit() } catch { throw self.failure(error) }
+        }
     }
 
     public func rollback() async throws {
-        do { try await connection.rollback() } catch { throw failure(error) }
+        try await lane.run {
+            await self.settleLive()
+            do { try await self.connection.rollback() } catch { throw self.failure(error) }
+        }
     }
 
     /// OracleNIO nie udostępnia przerwania wywołania (break) — możliwość wyłączona w `capabilities`.
@@ -768,7 +860,11 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     }
 
     public func ping() async throws {
-        do { try await connection.ping() } catch { throw failure(error) }
+        try await lane.run {
+            // Otwarty strumień wyniku — połączenie żyje; bez dobierania wyniku tylko dla sprawdzenia.
+            guard self.state.withLock({ $0.live }) == nil else { return }
+            do { try await self.connection.ping() } catch { throw self.failure(error) }
+        }
     }
 
     public func setTags(_ tags: SessionTags) async throws {
@@ -786,10 +882,40 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     }
 
     public func close() async {
-        state.withLock { $0.cursors.removeAll(); $0.lobs.removeAll(); $0.lobOrder.removeAll() }
+        state.withLock { $0.cursors.removeAll(); $0.lobs.removeAll(); $0.lobOrder.removeAll(); $0.live = nil }
         // Wylogowanie zatwierdza otwartą transakcję (OCISessionEnd/OracleNIO): jak w ODPISession — ROLLBACK przed
         // zamknięciem, decyzję o COMMIT podejmuje wcześniej interfejs (D10).
         try? await connection.rollback()
         try? await connection.close()
+    }
+}
+
+/// Kolejka asynchroniczna (FIFO): jedna operacja naraz, pozostałe czekają bez blokowania wątków.
+final class AsyncLane: Sendable {
+    private let gate = Mutex<(busy: Bool, waiters: [CheckedContinuation<Void, Never>])>((false, []))
+
+    func run<T>(_ body: () async throws -> T) async rethrows -> T {
+        await acquire()
+        defer { release() }
+        return try await body()
+    }
+
+    private func acquire() async {
+        await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
+            let free = gate.withLock { g -> Bool in
+                if !g.busy { g.busy = true; return true }
+                g.waiters.append(c)
+                return false
+            }
+            if free { c.resume() }
+        }
+    }
+
+    private func release() {
+        let next = gate.withLock { g -> CheckedContinuation<Void, Never>? in
+            if g.waiters.isEmpty { g.busy = false; return nil }
+            return g.waiters.removeFirst()
+        }
+        next?.resume()
     }
 }

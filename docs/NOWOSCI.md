@@ -2,6 +2,19 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.22.2 — sterownik thin: koniec zawieszeń, nowe typy danych
+
+- **Sterownik thin bez zawieszeń:** zapytanie z większą liczbą wierszy niż jedna porcja nie zawiesza już okna SQL;
+  działa odczyt LOB-ów w dużych wynikach, zamykanie wyników i polecenia po utracie połączenia. Gdy sesja jest
+  potrzebna do innego polecenia przy otwartym wyniku, sterownik dobiera ten wynik do pamięci (do 100 000 wierszy —
+  powyżej siatka pokazuje informację; pełny wynik daje Instant Client).
+- **Sterownik thin — typy danych jak w Instant Client:** INTERVAL YEAR TO MONTH, UROWID (także ROWID tabel IOT) i BFILE
+  (treść pliku, zapis do pliku, podgląd); bez dodatkowego wywołania przed każdym zapytaniem z 1.22.1.
+- **Sterownik thin — pusty wynik z kolumnami:** siatka pustego zapytania ma nagłówki, a „Edit data” pustej tabeli
+  pozwala wstawić pierwszy wiersz.
+- **Sterownik thin — stabilność:** kolumna typu REF daje czytelny błąd zamiast zamknięcia aplikacji; zamykane wyniki
+  zwalniają kursory serwera (wcześniej ORA-01000 po wielu zapytaniach).
+
 ## 1.22.1 — sterownik thin bez awarii na nietypowych kolumnach
 
 - **Sterownik thin:** zapytanie z kolumną INTERVAL YEAR TO MONTH, BFILE albo UROWID (ROWID tabel IOT) pokazuje błąd

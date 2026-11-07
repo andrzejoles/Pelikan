@@ -137985,6 +137985,34 @@
         }
       }
     },
+    "sterownik thin: tylko pierwsze %@ wierszy (całość — Instant Client)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "thin driver: first %@ rows only (full result — Instant Client)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thin-Treiber: nur die ersten %@ Zeilen (vollständiges Ergebnis — Instant Client)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "controlador thin: solo las primeras %@ filas (resultado completo — Instant Client)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "драйвер thin: лише перші %@ рядків (повний результат — Instant Client)"
+          }
+        }
+      }
+    },
     "sukces" : {
       "localizations" : {
         "en" : {

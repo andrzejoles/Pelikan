@@ -4054,6 +4054,8 @@ zapytaniu thin). Instant Client tego problemu nie ma.
 
 ### D238 · 2026-11-07 — Thin: sprawdzanie typów kolumn przed zapytaniem (decyzja właściciela)
 
+_Zastąpione przez D239 (poprawka dekodera w kopii OracleNIO, bez dodatkowego wywołania przed zapytaniem)._
+
 Właściciel wybrał z D237 drugą drogę: sprawdzanie typów kolumn przed każdym zapytaniem przez sterownik thin, kosztem
 jednego obiegu sieci. `ThinSession.execute` dla zapytań (SELECT/WITH) najpierw opisuje kolumny blokiem PL/SQL
 z DBMS_SQL.PARSE i DESCRIBE_COLUMNS2 — parsowanie nie wykonuje zapytania (bez skutków ubocznych funkcji, bez blokad
@@ -4063,4 +4065,35 @@ z nazwą kolumny i radą (Instant Client albo TO_CHAR) zamiast końca procesu; s
 sprawdzenia (składnia, uprawnienia, tekst ponad 32 767 bajtów) nie blokuje — zwykłe wykonanie zgłasza właściwy błąd;
 DBMS_SQL niedostępny (odebrany PUBLIC na bazach utwardzonych, PLS-00201) — sprawdzanie wyłączone do końca sesji, bez
 dodatkowego obiegu. Instant Client bez zmian.
+
+### D239 · 2026-11-07 — Thin: kopia OracleNIO z poprawkami dekodera i protokołu zamiast sprawdzania przed zapytaniem
+
+Właściciel po wydaniu 1.22.1: „popraw jeszcze sposób działania na sterowniku thin” — sprawdzanie typów kolumn z D238
+było dodatkowym wywołaniem w sesji przed każdym zapytaniem (zmieniało PREV_SQL_ID: `dbms_xplan.display_cursor()` bez
+SQL_ID pokazywał sprawdzenie; podnosiło liczniki SQL*Net na karcie Statystyki). Poprawka u źródła: OracleNIO dołączony
+jako pakiet lokalny `Packages/Vendor/oracle-nio` (ten sam commit 7cda9e0, licencja Apache 2.0, lista zmian
+w `PELIKAN.md`, każdy zmieniony plik oznaczony) — `main` biblioteki nie ma tych poprawek. Dekoder obsługuje INTERVAL
+YEAR TO MONTH, UROWID (także logiczny ROWID tabel IOT ponad 253 bajty) i BFILE (otwarcie pliku na czas odczytu, rozmiar
+z serwera, odczyt porcjami od miejsca; brakujący plik — pusta wartość, katalog bez dostępu — błąd w komórce, jak Instant
+Client); typ nieobsługiwany (REF) — czytelny błąd i zamknięcie połączenia zamiast końca procesu. Przy okazji, na testach
+z bazą lokalną, wyszły i są poprawione dalsze błędy biblioteki, z których każdy kończył proces albo zawieszał sesję:
+liczby w protokole o długości 3, 5–7 bajtów i ze znakiem (np. rozmiar pliku 1,2 MB); kontekst LOB-a po błędzie serwera;
+znacznik przerwania przy zamykaniu niepełnego wyniku (zawieszenie) i niezamykane kursory serwera (ORA-01000 po ~300
+wynikach); stan polecenia po błędzie (zmieniana kopia); wylogowanie na rozsynchronizowanym połączeniu; zadania do
+zamkniętego kanału (np. ROLLBACK po zerwaniu połączenia czekał bez końca); pusty wynik bez opisu kolumn (siatka bez
+nagłówków, „Edit data” pustej tabeli bez możliwości wstawienia wiersza). Zależność swift-syntax (makra biblioteki) ubyła
+z grafu pakietów. Sprawdzanie z D238 usunięte.
+
+### D240 · 2026-11-07 — Thin: kolejka operacji sesji i dobieranie otwartego wyniku
+
+Błąd znaleziony przy D239, obecny od wprowadzenia sterownika thin: połączenie OracleNIO przyjmuje kolejne polecenie
+dopiero po wyczerpaniu strumienia wierszy zapytania. Zapytanie z większą liczbą wierszy niż jedna porcja pobierania
+zawieszało więc okno SQL (odczyt DBMS_OUTPUT po zapytaniu czekał bez końca), odczyt LOB-ów w wyniku ponad porcję,
+COMMIT, podpowiedzi na sesji głównej itd. Sterownik thin szereguje teraz operacje sesji (`AsyncLane`, jak szeregowa
+kolejka ODPI), a przed operacją innej niż dociąganie tego samego wyniku dobiera otwarty strumień do bufora wyniku —
+siatka dociąga dalej z bufora bez obiegów sieci. Wynik z kolumnami LOB/BFILE dobierany jest przed odczytem ich treści.
+Limit dobierania: 100 000 wierszy wyniku (pamięć, czas); dalsze odrzucane, a siatka pokazuje w pasku „sterownik thin:
+tylko pierwsze N wierszy (całość — Instant Client)” (`RowBatch.limitedTo`). Bez innego polecenia w trakcie wynik jest
+czytany na bieżąco i pełny. Koszt: przy dużym wyniku okno SQL czeka po zapytaniu na dobranie (porcje po 500 wierszy —
+najwyżej 200 obiegów sieci). Instant Client bez zmian (wiele otwartych kursorów naraz).
 
