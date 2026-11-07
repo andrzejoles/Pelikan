@@ -4045,10 +4045,22 @@ Sprawdzone bez zmian (dojrzałe): granice agenta (READ ONLY, blokada `WITH FUNCT
 gniazdo 0600 z `getpeereid` i tokenem, limit ramek), widoki HTML (bez JavaScriptu i nawigacji), polecenia powłoki
 (cytowanie), zapis plików (atomowo, dowiązania i prawa, kodowanie), konwersje liczb i dostęp do tablic (sprawdzane).
 
-Świadomie bez zmian — do decyzji właściciela: **sterownik thin kończy proces na kolumnie INTERVAL YEAR TO MONTH albo
+Do decyzji właściciela (rozstrzygnięte w D238): **sterownik thin kończył proces na kolumnie INTERVAL YEAR TO MONTH albo
 BFILE** (`fatalError` w dekoderze wierszy OracleNIO, zanim wartość dotrze do Pelikana). Próba ominięcia
 (`prefetchRows = 0` — najpierw opis kolumn) zapętla OracleNIO przy zapytaniach wymagających definicji kolumn (LOB) —
 wycofana. Możliwe drogi: własna kopia OracleNIO z dekoderem rzucającym błąd (albo obsługą tych typów) i zgłoszenie
 u autora, albo sprawdzanie typów przed zapytaniem (DBMS_SQL.DESCRIBE_COLUMNS — dodatkowy obieg sieci przy każdym
 zapytaniu thin). Instant Client tego problemu nie ma.
+
+### D238 · 2026-11-07 — Thin: sprawdzanie typów kolumn przed zapytaniem (decyzja właściciela)
+
+Właściciel wybrał z D237 drugą drogę: sprawdzanie typów kolumn przed każdym zapytaniem przez sterownik thin, kosztem
+jednego obiegu sieci. `ThinSession.execute` dla zapytań (SELECT/WITH) najpierw opisuje kolumny blokiem PL/SQL
+z DBMS_SQL.PARSE i DESCRIBE_COLUMNS2 — parsowanie nie wykonuje zapytania (bez skutków ubocznych funkcji, bez blokad
+FOR UPDATE). Kolumna typu spoza obsługiwanych przez dekoder OracleNIO (lista dozwolonych kodów
+`decodableTypeCodes`, nie zakazanych — także UROWID z tabel IOT i REF, które również kończyły proces) daje błąd
+z nazwą kolumny i radą (Instant Client albo TO_CHAR) zamiast końca procesu; sesja działa dalej. Błąd samego
+sprawdzenia (składnia, uprawnienia, tekst ponad 32 767 bajtów) nie blokuje — zwykłe wykonanie zgłasza właściwy błąd;
+DBMS_SQL niedostępny (odebrany PUBLIC na bazach utwardzonych, PLS-00201) — sprawdzanie wyłączone do końca sesji, bez
+dodatkowego obiegu. Instant Client bez zmian.
 

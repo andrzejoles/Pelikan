@@ -225,6 +225,28 @@ struct ThinSessionTests {
         await odpi.close()
     }
 
+    @Test("Kolumny, których OracleNIO nie dekoduje (INTERVAL YEAR TO MONTH, BFILE, UROWID): czytelny błąd zamiast końca procesu; sesja dalej działa")
+    func undecodableColumns() async throws {
+        let s = try await connect()
+        let cases = [("select interval '1-2' year to month iv from dual", "INTERVAL YEAR TO MONTH"),
+                     ("select bfilename('DATA_PUMP_DIR', 'x.txt') bf from dual", "BFILE"),
+                     ("select cast(rowid as urowid) ur from dual", "UROWID")]
+        for (sql, type) in cases {
+            do {
+                _ = try await s.execute(sql)
+                Issue.record("bez błędu: \(sql)")
+            } catch let e as DatabaseError {
+                #expect(e.localizedDescription.contains(type), "\(e.localizedDescription)")
+            }
+        }
+        // Obsługiwane typy, zmienne wiązane i błąd składni — bez zmian (błąd z wykonania, nie ze sprawdzenia).
+        let (_, rows) = try await s.queryAll("select 1 n, :x t, systimestamp ts, interval '1' day id from dual",
+                                             binds: [BindVariable(name: "x", value: .text("a"))])
+        #expect(rows.first?.first == .number("1") && rows.first?[1] == .text("a"))
+        await #expect(throws: OracleError.self) { _ = try await s.execute("select nieistniejaca_kolumna from dual") }
+        await s.close()
+    }
+
     @Test("Równoległe pobieranie z jednego wyniku: wiersze bez powtórzeń i braków")
     func concurrentFetch() async throws {
         let s = try await connect()
