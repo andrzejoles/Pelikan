@@ -6301,6 +6301,34 @@
         }
       }
     },
+    "Baza odmówiła nowej sesji (%@) — zamknij nieużywane okna i narzędzia albo spróbuj za chwilę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The database refused a new session (%@) — close unused windows and tools or try again shortly"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datenbank hat eine neue Sitzung abgelehnt (%@) — nicht benötigte Fenster und Werkzeuge schließen oder gleich erneut versuchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La base de datos rechazó una nueva sesión (%@) — cierre ventanas y herramientas sin usar o inténtelo de nuevo en un momento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "База відмовила в новому сеансі (%@) — закрийте непотрібні вікна й інструменти або спробуйте трохи згодом"
+          }
+        }
+      }
+    },
     "Bez agregacji (ostatnia wartość)" : {
       "localizations" : {
         "en" : {
@@ -58517,34 +58545,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Оригінальна"
-          }
-        }
-      }
-    },
-    "Osiągnięto limit sesji bazy — zamknij nieużywane okna i narzędzia (to narzędzie potrzebuje własnej sesji)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The database session limit has been reached — close unused windows and tools (this tool needs its own session)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Sitzungslimit der Datenbank ist erreicht — nicht benötigte Fenster und Werkzeuge schließen (dieses Werkzeug braucht eine eigene Sitzung)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se alcanzó el límite de sesiones de la base de datos — cierre ventanas y herramientas sin usar (esta herramienta necesita su propia sesión)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Досягнуто ліміту сеансів бази — закрийте непотрібні вікна й інструменти (цьому інструменту потрібен власний сеанс)"
           }
         }
       }

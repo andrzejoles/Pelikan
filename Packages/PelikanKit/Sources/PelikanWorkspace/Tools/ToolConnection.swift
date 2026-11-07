@@ -18,13 +18,21 @@ extension Workspace {
     /// współdzielonej sięgałyby cudzej pracy, a długie operacje blokowałyby ją — D235.
     public func toolSession(_ purpose: String, connection: UUID?) async throws -> any DatabaseSession {
         guard let connection else { throw CommandError.notConnected }
+        let key = SessionKey(connectionID: connection, purpose: .tool(purpose))
+        let readOnly = Self.readOnlyToolPurposes.contains(purpose)
+        // Narzędzie odczytu z odświeżaniem (Instance Viewer co kilka sekund) po odmowie — przez minutę od razu sesja
+        // główna, bez nieudanego logowania przy każdym odświeżeniu.
+        if readOnly, sessions.existingSession(key) == nil, sessions.readOnlyFallbackActive(connection) {
+            return try await mainSessionForTool(connection)
+        }
         do {
-            return try await sessions.session(SessionKey(connectionID: connection, purpose: .tool(purpose)))
+            return try await sessions.session(key)
         } catch let e as OracleError where SessionManager.isSessionLimit(e) {
-            guard Self.readOnlyToolPurposes.contains(purpose) else {
-                throw CommandError.notAvailable(L10n.tr("Osiągnięto limit sesji bazy — zamknij nieużywane okna i narzędzia (to narzędzie potrzebuje własnej sesji)"))
+            guard readOnly else {
+                throw CommandError.notAvailable(L10n.tr("Baza odmówiła nowej sesji (\(e.message)) — zamknij nieużywane okna i narzędzia albo spróbuj za chwilę"))
             }
             Log.connection.notice("Limit sesji — narzędzie tylko do odczytu w sesji głównej (\(e.code, privacy: .public))")
+            sessions.noteReadOnlyFallback(connection)
             return try await mainSessionForTool(connection)
         }
     }

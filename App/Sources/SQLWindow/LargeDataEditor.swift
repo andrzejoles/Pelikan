@@ -152,6 +152,17 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
             : (model.isBinary && !model.format.isText ? 1 : 0)
     }
 
+    /// Karta pasuje do bieżącej treści (te same warunki co dostępność kart).
+    private func segmentFits(_ i: Int) -> Bool {
+        switch i {
+        case 2: model.format.isImage
+        case 3: model.format == .pdf
+        case 4: model.format.isText
+        case 5: model.format.isPreviewable && !model.truncated
+        default: true
+        }
+    }
+
     /// Jednorazowa zmiana karty po dociągnięciu całej treści (edytor otwiera się z treścią obciętą do limitu siatki);
     /// wyłączona, gdy użytkownik sam wybierze kartę, i po pierwszej zmianie — nie przy edycji zmieniającej format.
     private lazy var autoTabArmed = model.truncated
@@ -166,6 +177,12 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         // Edytor otwiera się z treścią obciętą do limitu siatki; po dociągnięciu całości (np. DOCX) — karta dla pełnej
         // treści, o ile użytkownik nie wybrał innej.
         var rebuilt = false
+        // Wybrana karta przestała pasować do treści (np. wczytany plik tekstowy na karcie Podgląd) — karta dla treści.
+        if !segmentFits(mode.selectedSegment) {
+            mode.selectedSegment = preferredSegment
+            modeChanged()
+            rebuilt = true
+        }
         if autoTabArmed, !loading, !model.truncated {
             autoTabArmed = false
             if mode.selectedSegment != preferredSegment {
@@ -189,10 +206,7 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         // Edycja w widoku zmienia model, a śledzenie ponawia `refresh` asynchronicznie — już po zdjęciu `updating`.
         // Widok, który pokazuje dokładnie treść modelu, zostaje bez przebudowy (fokus, kursor, cofanie — R4-03).
         if !rebuilt, !updating, !textViewShowsModel { modeChanged() }
-        mode.setEnabled(format.isImage, forSegment: 2)
-        mode.setEnabled(format == .pdf, forSegment: 3)
-        mode.setEnabled(format.isText, forSegment: 4)
-        mode.setEnabled(format.isPreviewable && !model.truncated, forSegment: 5)
+        for i in 2...5 { mode.setEnabled(segmentFits(i), forSegment: i) }
     }
 
     /// Widok tekstu jest w oknie i ma tę samą treść co model (np. właśnie wpisaną).

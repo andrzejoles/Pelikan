@@ -225,6 +225,12 @@ public final class SessionManager {
         [2391, 18, 20, 12516, 12519, 12520].contains(e.code)
     }
 
+    /// Odmowa sesji narzędziu odczytu (limit) — przez minutę narzędzia odczytu bez własnej sesji idą od razu do
+    /// głównej (odświeżanie co kilka sekund bez serii nieudanych logowań); narzędzia zmieniające dane próbują zawsze.
+    @ObservationIgnored private var readOnlyFallback: [UUID: Date] = [:]
+    public func readOnlyFallbackActive(_ connection: UUID) -> Bool { readOnlyFallback[connection].map { Date().timeIntervalSince($0) < 60 } ?? false }
+    public func noteReadOnlyFallback(_ connection: UUID) { readOnlyFallback[connection] = Date() }
+
     /// Połączenia, na których osobnej sesji metadanych nie dało się otworzyć z powodu limitu sesji — metadane w sesji
     /// głównej zamiast błędu; chwila przejścia, po 5 minutach ponowna próba (błędy listenera bywają chwilowe).
     @ObservationIgnored private var metadataFallback: [UUID: Date] = [:]
@@ -563,6 +569,7 @@ public final class SessionManager {
         // Po ponownym połączeniu schemat z definicji połączenia (jak sesja główna).
         currentSchemaOverride[connectionID] = nil
         metadataFallback[connectionID] = nil
+        readOnlyFallback[connectionID] = nil
         for key in sessions.keys where key.connectionID == connectionID {
             await close(key)
         }
@@ -581,6 +588,7 @@ public final class SessionManager {
         ownerConfirmed.removeAll()
         currentSchemaOverride.removeAll()
         metadataFallback.removeAll()
+        readOnlyFallback.removeAll()
     }
 
     /// Stan połączenia na liście.

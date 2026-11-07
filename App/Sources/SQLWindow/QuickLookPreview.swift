@@ -21,16 +21,18 @@ final class QuickLookFile {
         }
         remove()
         self.key = key
-        let dir = Self.directory
-        let file = dir.appendingPathComponent(UUID().uuidString).appendingPathExtension(format.fileExtension)
+        let file = Self.processDirectory?.appendingPathComponent(UUID().uuidString).appendingPathExtension(format.fileExtension)
         writing = Task { [weak self] in
+            // Plik 0600 od chwili utworzenia (PrivateFile, D186) w katalogu procesu 0700; inny system plików — bez podglądu.
             let ok = await Task.detached(priority: .userInitiated) { () -> Bool in
-                // Katalog główny i katalog procesu tylko dla użytkownika (wartości z bazy).
-                try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-                try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: QuickLookFile.root.path)
-                return FileManager.default.createFile(atPath: file.path, contents: data, attributes: [.posixPermissions: 0o600])
+                guard let file else { return false }
+                guard (try? PrivateFile.write(data, to: file)) == true else { try? FileManager.default.removeItem(at: file); return false }
+                return true
             }.value
-            guard let self, !Task.isCancelled, self.key == key else { try? FileManager.default.removeItem(at: file); return }
+            guard let self, !Task.isCancelled, self.key == key, let file else {
+                if let file { try? FileManager.default.removeItem(at: file) }
+                return
+            }
             // Nieudany zapis (brak miejsca, uprawnienia) — bez klucza, żeby następne odświeżenie spróbowało ponownie.
             guard ok else { self.key = nil; return }
             self.url = file
@@ -42,18 +44,37 @@ final class QuickLookFile {
         FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-preview", isDirectory: true)
     }
 
-    /// Katalog podglądów tego procesu (druga uruchomiona kopia aplikacji ma własny).
-    nonisolated static var directory: URL {
-        root.appendingPathComponent(String(ProcessInfo.processInfo.processIdentifier), isDirectory: true)
-    }
-
-    /// Start aplikacji: pliki podglądów po awarii albo wymuszonym zamknięciu (treść z bazy nie zostaje na dysku) —
-    /// katalogi procesów, które już nie działają.
-    nonisolated static func removeStaleFiles() {
+    /// Katalog podglądów tego uruchomienia (0700) z plikiem blokady trzymanym do końca procesu (`flock`): druga kopia
+    /// aplikacji ma własny, a katalog po awarii rozpoznaje się po zwolnionej blokadzie (bez zgadywania po numerze
+    /// procesu, który system mógł już przydzielić innemu programowi). nil — katalogu nie da się utworzyć.
+    nonisolated static let processDirectory: URL? = {
         let fm = FileManager.default
-        for name in (try? fm.contentsOfDirectory(atPath: root.path)) ?? [] {
-            guard let pid = Int32(name), pid != ProcessInfo.processInfo.processIdentifier, kill(pid, 0) != 0 else { continue }
-            try? fm.removeItem(at: root.appendingPathComponent(name))
+        try? fm.createDirectory(at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        _ = chmod(root.path, 0o700)
+        let dir = root.appendingPathComponent("\(ProcessInfo.processInfo.processIdentifier)-\(UUID().uuidString.prefix(8))", isDirectory: true)
+        guard (try? fm.createDirectory(at: dir, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])) != nil else { return nil }
+        let fd = open(dir.appendingPathComponent(".lock").path, O_CREAT | O_RDWR | O_CLOEXEC, 0o600)
+        guard fd >= 0, flock(fd, LOCK_EX | LOCK_NB) == 0 else { return nil }
+        return dir     // deskryptor celowo otwarty do końca procesu — trzyma blokadę
+    }()
+
+    /// Start aplikacji: katalogi podglądów po awarii albo wymuszonym zamknięciu (treść z bazy nie zostaje na dysku) —
+    /// te, których blokady nikt nie trzyma. W tle (pliki mogą mieć setki MB).
+    nonisolated static func removeStaleFiles() {
+        Task.detached(priority: .utility) {
+            let fm = FileManager.default
+            for name in (try? fm.contentsOfDirectory(atPath: root.path)) ?? [] {
+                let dir = root.appendingPathComponent(name)
+                let fd = open(dir.appendingPathComponent(".lock").path, O_RDWR | O_CLOEXEC)
+                if fd >= 0 {
+                    let free = flock(fd, LOCK_EX | LOCK_NB) == 0
+                    close(fd)
+                    guard free else { continue }
+                } else if let m = (try? fm.attributesOfItem(atPath: dir.path))?[.modificationDate] as? Date, Date().timeIntervalSince(m) < 60 {
+                    continue     // katalog innej kopii aplikacji tworzony właśnie teraz (blokada za chwilę)
+                }
+                try? fm.removeItem(at: dir)
+            }
         }
     }
 

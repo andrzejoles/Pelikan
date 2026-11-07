@@ -3990,7 +3990,9 @@ sesję główną, tylko w trybie Multi i bez otwartej transakcji. Pozostałe nar
 (COMMIT/ROLLBACK, DDL), zmiany stanu sesji (ALTER SESSION, transformacje DBMS_METADATA w eksporcie DDL), doradcy
 (raporty wydajności, SQL Tuning) i długie operacje (eksport, porównania) w sesji współdzielonej sięgałyby cudzej pracy
 albo blokowałyby sesję główną (okna w trybie Dual/jednej sesji, metadane przy limicie, drugie narzędzie) — zawężane
-w 4 rundach code review. Każde otwarcie narzędzia najpierw próbuje własnej sesji.
+w 4 rundach code review. Każde otwarcie narzędzia najpierw próbuje własnej sesji; po odmowie narzędzia odczytu przez
+minutę idą od razu do głównej (odświeżanie co kilka sekund bez serii nieudanych logowań), a komunikat pozostałych
+podaje kod błędu (limit profilu albo chwilowa odmowa listenera).
 
 ### D236 · 2026-11-07 — Dane binarne: format po sygnaturze i podgląd Quick Look; Large Data Editor z menu siatki
 
@@ -4002,8 +4004,9 @@ w 4 rundach code review. Każde otwarcie narzędzia najpierw próbuje własnej s
 - **Podgląd Quick Look** zamiast przeglądarki (właściciel: „zrób podgląd przez Quick Look”): `QLPreviewView` w panelu
   wartości (tryb „Podgląd”) i w Large Data Editor (karta „Podgląd”) dla formatów nietekstowych. Generatory Quick Look
   działają poza procesem aplikacji, bez skryptów i sieci (treść z bazy jest niezaufana); plik tymczasowy 0600
-  w katalogu procesu (0700), zapisywany w tle, usuwany przy zmianie treści i zamknięciu, a po awarii — przy następnym
-  starcie (katalogi procesów, które już nie działają). W panelu dane binarne nadal tylko na żądanie —
+  (`PrivateFile`, D186) w katalogu uruchomienia (0700) z blokadą `flock`, zapisywany w tle, usuwany przy zmianie
+  treści i zamknięciu, a po awarii — przy następnym starcie w tle (katalogi bez trzymanej blokady). Stary Office:
+  katalog pliku z nagłówka OLE (sektor 0x30), nie tylko początek pliku. W panelu dane binarne nadal tylko na żądanie —
   podgląd po „Pobierz całość” (z ucięciem byłby uszkodzony).
 - **Large Data Editor z menu kontekstowego siatki** („jest teraz niedostępne” mimo zaznaczonej komórki): komenda
   szukała siatki w aktywnej karcie wyniku aktywnego okna, a nie w siatce, w której kliknięto (inna karta wyniku,

@@ -63,9 +63,21 @@ public enum LargeDataFormat: String, Sendable {
             if b.starts(with: [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1]) {
                 // Stary Office (OLE): rodzaj z nazwy strumienia w katalogu pliku — UTF-16LE zakończona NUL (nie dowolny
                 // tekst w treści); w pierwszych 256 KB (stały koszt w panelu wartości); nieznany — dane binarne.
-                let head = b.prefix(256 * 1024)
+                // Katalog: pierwszy sektor z nagłówka (0x30), rozmiar sektora 2^(0x1E); przeszukiwane 64 KB katalogu
+                // i 256 KB od początku — stały koszt niezależnie od rozmiaru pliku.
+                func u16(_ o: Int) -> Int { Int(b[b.startIndex + o]) | Int(b[b.startIndex + o + 1]) << 8 }
+                func u32(_ o: Int) -> Int { (0..<4).reduce(0) { $0 | Int(b[b.startIndex + o + $1]) << (8 * $1) } }
+                var areas = [b.prefix(256 * 1024)]
+                if b.count >= 0x34 {
+                    let shift = u16(0x1E), sector = u32(0x30)
+                    if (7...16).contains(shift), sector < 0xFFFF_FFFA {
+                        let start = (sector + 1) << shift
+                        if start < b.count { areas.append(b[(b.startIndex + start)...].prefix(64 * 1024)) }
+                    }
+                }
                 func has(_ name: String) -> Bool {
-                    head.range(of: Data((name.utf16 + [0]).flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] })) != nil
+                    let pattern = Data((name.utf16 + [0]).flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] })
+                    return areas.contains { $0.range(of: pattern) != nil }
                 }
                 // Najpierw nazwy jednoznaczne; „Book” (Excel 5/95) na końcu — mogłoby wystąpić w treści innych plików.
                 if has("WordDocument") { return .doc }
