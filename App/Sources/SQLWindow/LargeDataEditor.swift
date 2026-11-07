@@ -219,7 +219,10 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
     @objc private func modeChanged() {
         // Podgląd już pokazany — tylko treść (bez zdejmowania widoku: Quick Look nie miga i nie traci pozycji).
         if mode.selectedSegment == 5, let ql = quickLook, ql.superview === content {
-            quickLookFile.show(model.fileData, format: model.format, key: "\(model.contentVersion)", in: ql)
+            // Ta sama treść — bez odczytu `fileData` (przy tekście byłaby to kopia całej wartości).
+            if quickLookFile.currentKey != "\(model.contentVersion)" {
+                quickLookFile.show(model.fileData, format: model.format, key: "\(model.contentVersion)", in: ql)
+            }
             return
         }
         content.subviews.forEach { $0.removeFromSuperview() }

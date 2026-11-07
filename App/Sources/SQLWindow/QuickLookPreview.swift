@@ -10,6 +10,8 @@ import SwiftUI
 final class QuickLookFile {
     private(set) var url: URL?
     private var key: String?
+    /// Klucz bieżącej treści (zapisanej albo zapisywanej).
+    var currentKey: String? { key }
     private var writing: Task<Void, Never>?
 
     /// Plik dla treści (`key` — tożsamość treści: bez ponownego zapisu tych samych danych); `ready` dostaje plik po
@@ -29,12 +31,12 @@ final class QuickLookFile {
                 guard (try? PrivateFile.write(data, to: file)) == true else { try? FileManager.default.removeItem(at: file); return false }
                 return true
             }.value
-            guard let self, !Task.isCancelled, self.key == key, let file else {
+            guard let self, !Task.isCancelled, self.key == key else {
                 if let file { try? FileManager.default.removeItem(at: file) }
                 return
             }
             // Nieudany zapis (brak miejsca, uprawnienia) — bez klucza, żeby następne odświeżenie spróbowało ponownie.
-            guard ok else { self.key = nil; return }
+            guard ok, let file else { self.key = nil; return }
             self.url = file
             ready(file)
         }
@@ -54,7 +56,11 @@ final class QuickLookFile {
         let dir = root.appendingPathComponent("\(ProcessInfo.processInfo.processIdentifier)-\(UUID().uuidString.prefix(8))", isDirectory: true)
         guard (try? fm.createDirectory(at: dir, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])) != nil else { return nil }
         let fd = open(dir.appendingPathComponent(".lock").path, O_CREAT | O_RDWR | O_CLOEXEC, 0o600)
-        guard fd >= 0, flock(fd, LOCK_EX | LOCK_NB) == 0 else { return nil }
+        guard fd >= 0, flock(fd, LOCK_EX | LOCK_NB) == 0 else {
+            if fd >= 0 { close(fd) }
+            try? fm.removeItem(at: dir)
+            return nil
+        }
         return dir     // deskryptor celowo otwarty do końca procesu — trzyma blokadę
     }()
 
@@ -66,12 +72,15 @@ final class QuickLookFile {
             for name in (try? fm.contentsOfDirectory(atPath: root.path)) ?? [] {
                 let dir = root.appendingPathComponent(name)
                 let fd = open(dir.appendingPathComponent(".lock").path, O_RDWR | O_CLOEXEC)
+                // Katalog innej kopii aplikacji tworzony właśnie teraz (blokada jeszcze niezałożona) — pominięty.
+                if let m = (try? fm.attributesOfItem(atPath: dir.path))?[.modificationDate] as? Date, Date().timeIntervalSince(m) < 60 {
+                    if fd >= 0 { close(fd) }
+                    continue
+                }
                 if fd >= 0 {
                     let free = flock(fd, LOCK_EX | LOCK_NB) == 0
                     close(fd)
                     guard free else { continue }
-                } else if let m = (try? fm.attributesOfItem(atPath: dir.path))?[.modificationDate] as? Date, Date().timeIntervalSince(m) < 60 {
-                    continue     // katalog innej kopii aplikacji tworzony właśnie teraz (blokada za chwilę)
                 }
                 try? fm.removeItem(at: dir)
             }

@@ -161,8 +161,9 @@ struct CellValuePanelView: View {
                 // i koniec — zmiana wartości tej samej długości) bez skrótu całych danych przy każdym odświeżeniu.
                 QuickLookPreview(data: d, format: p.format, id: "\(ObjectIdentifier(grid).hashValue)|\(key)|\(Self.fingerprint(d))")
             } else if lob?.locator != nil {
-                Text(L10n.tr("Podgląd po pobraniu całej wartości — „Pobierz całość”")).foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Podczas pobierania i po błędzie (komunikaty nad treścią) — bez wskazówki o przycisku.
+                Text(loading == key || loadError != nil ? "" : L10n.tr("Podgląd po pobraniu całej wartości — „Pobierz całość”"))
+                    .foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 // Wartość ucięta bez możliwości pobrania całości — zrzut szesnastkowy pobranej części, jak dotąd.
                 ReadOnlyTextView(text: p.rendered(.hex), id: "\(key)|hex|\(p.data?.count ?? 0)")

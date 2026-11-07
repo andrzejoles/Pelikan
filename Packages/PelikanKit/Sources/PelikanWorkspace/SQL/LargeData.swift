@@ -46,13 +46,12 @@ public enum LargeDataFormat: String, Sendable {
             if b.starts(with: Array("GIF8".utf8)) { return .gif }
             if b.starts(with: Array("%PDF".utf8)) { return .pdf }
             if b.starts(with: [0x49, 0x49, 0x2A, 0x00]) || b.starts(with: [0x4D, 0x4D, 0x00, 0x2A]) { return .tiff }
-            // BMP: „BM”, rozmiar pliku z nagłówka zgodny z długością i znany rozmiar nagłówka DIB (sam „BM” to też tekst).
-            if b.starts(with: Array("BM".utf8)), b.count > 18 {
-                func u32(_ o: Int) -> Int { (0..<4).reduce(0) { $0 | Int(b[b.startIndex + o + $1]) << (8 * $1) } }
-                // Rozmiar z nagłówka ≥ dostępne bajty (wartość może być ucięta do limitu siatki).
-                // bfSize może być 0 (dozwolone dla BI_RGB) albo ≥ dostępne bajty (wartość ucięta do limitu siatki).
-                if u32(2) == 0 || u32(2) >= b.count, [12, 40, 52, 56, 108, 124].contains(u32(14)) { return .bmp }
-            }
+            func u16(_ o: Int) -> Int { Int(b[b.startIndex + o]) | Int(b[b.startIndex + o + 1]) << 8 }
+            func u32(_ o: Int) -> Int { (0..<4).reduce(0) { $0 | Int(b[b.startIndex + o + $1]) << (8 * $1) } }
+            // BMP: „BM” i znany rozmiar nagłówka DIB (sam „BM” to też tekst); bfSize 0 (dozwolone dla BI_RGB) albo co
+            // najmniej rozmiar nagłówków — wartość bywa ucięta do limitu siatki albo ma dane po obrazie.
+            if b.starts(with: Array("BM".utf8)), b.count > 18, u32(2) == 0 || u32(2) >= 26,
+               [12, 40, 52, 56, 108, 124].contains(u32(14)) { return .bmp }
             if b.starts(with: Array("RIFF".utf8)), b.count >= 12, b.subdata(in: b.startIndex + 8 ..< b.startIndex + 12) == Data("WEBP".utf8) { return .webp }
             if b.count >= 12, b.subdata(in: b.startIndex + 4 ..< b.startIndex + 8) == Data("ftyp".utf8) {
                 let brand = String(decoding: b.subdata(in: b.startIndex + 8 ..< b.startIndex + 12), as: UTF8.self)
@@ -65,8 +64,6 @@ public enum LargeDataFormat: String, Sendable {
                 // tekst w treści); w pierwszych 256 KB (stały koszt w panelu wartości); nieznany — dane binarne.
                 // Katalog: pierwszy sektor z nagłówka (0x30), rozmiar sektora 2^(0x1E); przeszukiwane 64 KB katalogu
                 // i 256 KB od początku — stały koszt niezależnie od rozmiaru pliku.
-                func u16(_ o: Int) -> Int { Int(b[b.startIndex + o]) | Int(b[b.startIndex + o + 1]) << 8 }
-                func u32(_ o: Int) -> Int { (0..<4).reduce(0) { $0 | Int(b[b.startIndex + o + $1]) << (8 * $1) } }
                 var areas = [b.prefix(256 * 1024)]
                 if b.count >= 0x34 {
                     let shift = u16(0x1E), sector = u32(0x30)
