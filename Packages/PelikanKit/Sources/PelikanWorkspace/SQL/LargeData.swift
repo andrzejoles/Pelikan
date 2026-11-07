@@ -61,9 +61,10 @@ public enum LargeDataFormat: String, Sendable {
                 // Stary Office (OLE): rodzaj z nazwy strumienia w katalogu pliku (UTF-16LE); nieznany — dane binarne.
                 let head = b.prefix(1 << 20)
                 func has(_ name: String) -> Bool { head.range(of: Data(name.utf16.flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] })) != nil }
+                // Najpierw nazwy jednoznaczne; „Book” (Excel 5/95) na końcu — mogłoby wystąpić w treści innych plików.
                 if has("WordDocument") { return .doc }
-                if has("Workbook") || has("Book") { return .xls }
                 if has("PowerPoint Document") { return .ppt }
+                if has("Workbook") || has("Book") { return .xls }
                 return .binary
             }
             if b.starts(with: [0x50, 0x4B, 0x03, 0x04]) {
@@ -135,13 +136,16 @@ public final class LargeDataModel {
     public let grid: ResultGridModel
     public let row: Int
     public let column: Int
-    public private(set) var text: String?
-    public private(set) var bytes: Data?
+    public private(set) var text: String? { didSet { contentVersion &+= 1 } }
+    public private(set) var bytes: Data? { didSet { contentVersion &+= 1 } }
     public private(set) var totalLength: UInt64
     public private(set) var truncated: Bool
     public private(set) var format: LargeDataFormat
     public private(set) var isLoading = false
     public var modified = false
+    /// Zmienia się przy każdej zmianie treści (dociągnięcie całości, edycja, wczytanie z pliku) — tożsamość treści
+    /// dla podglądów bez porównywania dużych danych.
+    public private(set) var contentVersion = 0
 
     public var columnName: String { grid.columns[column].name }
     public var typeName: String { grid.columns[column].typeName }

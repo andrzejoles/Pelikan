@@ -16,7 +16,8 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
     private let imageView = NSImageView()
     private let pdfView = PDFView()
     /// Podgląd Quick Look (dokumenty Office, archiwa, obrazy i PDF — formaty rozpoznane po sygnaturze).
-    private lazy var quickLook: QLPreviewView = QLPreviewView(frame: .zero, style: .normal)!
+    /// Tworzony przy pierwszym użyciu karty „Podgląd” (bez widoku Quick Look w oknie, które go nie pokazuje).
+    private var quickLook: QLPreviewView?
     private let quickLookFile = QuickLookFile()
     /// Podgląd HTML (PD-LDE-001): bez JavaScriptu, CSP bez zasobów zewnętrznych, bez nawigacji.
     private lazy var webView = WKWebView.localHTML()
@@ -194,11 +195,15 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
             pdfView.document = PDFDocument(data: model.fileData)
             view = pdfView
         case 5:
+            let ql = quickLook ?? QLPreviewView(frame: .zero, style: .normal)!
+            quickLook = ql
             let data = model.fileData
-            if let url = quickLookFile.file(for: data, format: model.format, key: QuickLookFile.digest(data)) {
-                quickLook.previewItem = url as NSURL
+            // Klucz: wersja treści modelu (dociągnięcie, edycja, plik) — ten sam plik przy zwykłym odświeżeniu.
+            quickLookFile.prepare(data, format: model.format, key: "\(model.contentVersion)|\(data.count)") { [weak ql] url in
+                guard let ql, (ql.previewItem as? URL) != url else { return }
+                ql.previewItem = url as NSURL
             }
-            view = quickLook
+            view = ql
         case 4:
             webView.loadHTMLString(LargeDataModel.htmlPreviewDocument(model.text ?? String(decoding: model.fileData, as: UTF8.self)), baseURL: nil)
             view = webView
@@ -283,7 +288,7 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
 
     /// Zamknięcie narzędzia: ostatnie zmiany z edytora zewnętrznego i koniec jego śledzenia.
     private func finish() {
-        quickLook.close()
+        quickLook?.close()
         quickLookFile.remove()
         externalTimer?.invalidate()
         externalEdit?.checkForChanges()
