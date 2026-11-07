@@ -73,7 +73,10 @@ extension SQLPlusEngine {
         case "REPEAT":
             // REPEAT n sekundy — powtarza bufor n razy co podaną liczbę sekund (przerywane przez Przerwij).
             guard let n = args.first.flatMap(Int.init), n > 0 else { throw SQLPlusError(L10n.tr("REPEAT liczba [sekundy]")) }
-            let seconds = args.count > 1 ? Double(args[1].replacingOccurrences(of: ",", with: ".")) ?? 1 : 1
+            // Odstęp 0…86 400 s; wartość nieliczbowa, nieskończona albo NaN — 1 s (konwersja na milisekundy nie może
+            // przekroczyć zakresu liczby całkowitej).
+            let parsed = args.count > 1 ? Double(args[1].replacingOccurrences(of: ",", with: ".")) ?? 1 : 1
+            let seconds = parsed.isFinite ? min(max(parsed, 0), 86_400) : 1
             guard let b = state.buffer else { throw SQLPlusError(L10n.tr("SP2-0103: Bufor SQL jest pusty.")) }
             for i in 1...n {
                 if cancelled { return .stopped }

@@ -152,7 +152,7 @@ results Pelikan asks before the size limit from Settings is exceeded.
   image or hex. A CLOB is fetched in full (also from queries without ROWID: views, joins, functions); a binary value
   (BLOB) only on request: **Fetch All** or save to file. Panel buttons and the grid context menu: **Save Cell Value to
   File…** (full value, read from the database in chunks) and **Open Cell Value in External Application** (text in the
-  external editor from Preferences, e.g. BBEdit; changes are not written back).
+  external editor from Preferences, e.g. BBEdit; changes are not written back). Binary data recognised by content (PDF, images, Office documents, archives) — **Preview** mode (Quick Look).
 - **Single record view** shows the current row vertically with the column types and comments. The button in the bar
   above the grid or **Record** on the **Result** ribbon tab turns it on and off; each result tab keeps its own state.
 - A **nested cursor** (`CURSOR(…)` in a query) opens in a new result tab.

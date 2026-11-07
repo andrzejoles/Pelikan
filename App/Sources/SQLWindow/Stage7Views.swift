@@ -34,6 +34,29 @@ struct CellValuePanelView: View {
         return "\(c.row):\(c.column):\(lob?.locator?.id ?? 0)"
     }
 
+    /// Pełna treść już pobrana (albo w pamięci siatki) — obcięta wtedy tylko ponad limit pamięci.
+    private var fullLoaded: Bool {
+        guard let l = lob else { return false }
+        return full?.key == key || grid.cachedFullLOB(l) != nil
+    }
+
+    /// Opis obciętej wartości: co widać i jak dostać całość.
+    private var truncationNote: String {
+        if lob?.locator == nil { return L10n.tr("Wartość obcięta do pobranej długości — pełna w Large Data Editor") }
+        if fullLoaded {
+            let mb = ResultGridModel.fullLOBLimit >> 20
+            return L10n.tr("Pokazano pierwsze \(mb) MB wartości — całość: zapis do pliku albo program zewnętrzny")
+        }
+        if isText { return L10n.tr("Pobieranie pełnej wartości…") }
+        return L10n.tr("Podgląd początku wartości — całość: „Pobierz całość” albo zapis do pliku")
+    }
+
+    /// Komórka panelu jako argumenty komend jednej komórki.
+    private var cellArguments: CommandArguments {
+        guard let c = cell else { return .empty }
+        return CommandArguments(["row": .int(Int64(c.row)), "column": .int(Int64(c.column))])
+    }
+
     private var isText: Bool { lob.map { $0.kind == .clob || $0.kind == .nclob } ?? false }
 
     private var presentation: CellValuePresentation? {
@@ -60,13 +83,13 @@ struct CellValuePanelView: View {
                     HStack(spacing: 6) {
                         Text(sizeText(l)).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(1)
                         Spacer()
-                        if p.truncated, !isText, l.locator != nil, loading != key {
+                        if p.truncated, !isText, l.locator != nil, loading != key, !fullLoaded {
                             Button(L10n.tr("Pobierz całość")) { requested = key }
                                 .help(L10n.tr("Pobiera całą wartość binarną z bazy do podglądu"))
                         }
-                        Button { _ = workspace.perform("grid.saveValue") } label: { Image(systemName: "square.and.arrow.down") }
+                        Button { _ = workspace.perform("grid.saveValue", cellArguments, target: tab) } label: { Image(systemName: "square.and.arrow.down") }
                             .iconLabel(L10n.tr("Zapisz wartość komórki do pliku…"))
-                        Button { _ = workspace.perform("grid.openValueExternally") } label: { Image(systemName: "arrow.up.forward.app") }
+                        Button { _ = workspace.perform("grid.openValueExternally", cellArguments, target: tab) } label: { Image(systemName: "arrow.up.forward.app") }
                             .iconLabel(L10n.tr("Otwórz wartość komórki w programie zewnętrznym"))
                     }
                     .controlSize(.small)
@@ -79,9 +102,7 @@ struct CellValuePanelView: View {
                 } else if let e = loadError {
                     Text(e).font(.uiSecondary).foregroundStyle(.red)
                 } else if p.truncated {
-                    Text(lob?.locator == nil ? L10n.tr("Wartość obcięta do pobranej długości — pełna w Large Data Editor")
-                                             : L10n.tr("Podgląd początku wartości — całość: „Pobierz całość” albo zapis do pliku"))
-                        .font(.uiSecondary).foregroundStyle(.orange)
+                    Text(truncationNote).font(.uiSecondary).foregroundStyle(.orange)
                 }
                 content(p, mode.flatMap { p.modes.contains($0) ? $0 : nil } ?? p.detected)
             } else {
@@ -112,6 +133,16 @@ struct CellValuePanelView: View {
         }
     }
 
+    /// Odcisk treści: rozmiar i skrót pierwszych i ostatnich 64 KB (stały koszt także dla dużych wartości).
+    static func fingerprint(_ d: Data) -> Int {
+        // `combine(bytes:)` — wszystkie bajty (skrót `Data` jako wartości obejmuje tylko jej początek).
+        var h = Hasher()
+        h.combine(d.count)
+        d.prefix(65_536).withUnsafeBytes { h.combine(bytes: $0) }
+        d.suffix(65_536).withUnsafeBytes { h.combine(bytes: $0) }
+        return h.finalize()
+    }
+
     private func sizeText(_ l: LOBValue) -> String {
         let n = ByteCountFormatter.string(fromByteCount: Int64(l.length), countStyle: .file)
         return l.kind == .clob || l.kind == .nclob ? L10n.tr("\(l.length) znaków") : n
@@ -124,6 +155,7 @@ struct CellValuePanelView: View {
         case .xml: "XML"
         case .html: "HTML"
         case .image: L10n.tr("Obraz")
+        case .preview: L10n.tr("Podgląd")
         case .hex: "Hex"
         }
     }
@@ -138,6 +170,19 @@ struct CellValuePanelView: View {
             }
         case .html:
             HTMLPreview(html: p.text)
+        case .preview:
+            if let d = p.data, !p.truncated {
+                // Tożsamość treści: siatka (nowa po ponownym wykonaniu), komórka i odcisk danych (rozmiar, początek
+                // i koniec — zmiana wartości tej samej długości) bez skrótu całych danych przy każdym odświeżeniu.
+                QuickLookPreview(data: d, format: p.format, id: "\(ObjectIdentifier(grid).hashValue)|\(key)|\(Self.fingerprint(d))")
+            } else if lob?.locator != nil {
+                // Podczas pobierania i po błędzie (komunikaty nad treścią) — bez wskazówki o przycisku.
+                Text(loading == key || loadError != nil ? "" : L10n.tr("Podgląd po pobraniu całej wartości — „Pobierz całość”"))
+                    .foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                // Wartość ucięta bez możliwości pobrania całości — zrzut szesnastkowy pobranej części, jak dotąd.
+                ReadOnlyTextView(text: p.rendered(.hex), id: "\(key)|hex|\(p.data?.count ?? 0)")
+            }
         default:
             ReadOnlyTextView(text: p.rendered(m), id: "\(key)|\(m.rawValue)|\(p.text.utf16.count)|\(p.data?.count ?? 0)")
         }

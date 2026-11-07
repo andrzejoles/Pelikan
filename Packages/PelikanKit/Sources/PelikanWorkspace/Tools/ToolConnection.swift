@@ -13,31 +13,43 @@ extension Workspace {
     }
 
     /// Sesja narzędzia o danym przeznaczeniu na wskazanym połączeniu (osobna od sesji okien użytkownika). Przy limicie
-    /// sesji (ORA-02391, ORA-00018, ORA-00020, listener ORA-12516/12519/12520) — sesja główna, jak metadane (D235),
-    /// ale tylko bez otwartej transakcji okien na niej: narzędzia danych zatwierdzają własne zmiany, więc w sesji
-    /// z cudzą transakcją zatwierdziłyby i ją.
+    /// sesji (`SessionManager.isSessionLimit`) narzędzia z krótkimi odczytami dostają sesję główną (tryb Multi, bez
+    /// otwartej transakcji); pozostałe — komunikat: COMMIT/ROLLBACK, DDL, ALTER SESSION i stan pakietów w sesji
+    /// współdzielonej sięgałyby cudzej pracy, a długie operacje blokowałyby ją — D235.
     public func toolSession(_ purpose: String, connection: UUID?) async throws -> any DatabaseSession {
         guard let connection else { throw CommandError.notConnected }
         let key = SessionKey(connectionID: connection, purpose: .tool(purpose))
-        if sessions.existingSession(key) == nil, sessions.toolLimitActive(connection) {
+        let readOnly = Self.readOnlyToolPurposes.contains(purpose)
+        // Narzędzie odczytu z odświeżaniem (Instance Viewer co kilka sekund) po odmowie — przez minutę od razu sesja
+        // główna, bez nieudanego logowania przy każdym odświeżeniu.
+        if readOnly, sessions.existingSession(key) == nil, sessions.readOnlyFallbackActive(connection) {
             return try await mainSessionForTool(connection)
         }
         do {
             return try await sessions.session(key)
         } catch let e as OracleError where SessionManager.isSessionLimit(e) {
-            Log.connection.notice("Limit sesji — narzędzie w sesji głównej (\(e.code, privacy: .public))")
-            sessions.noteToolLimit(connection)
+            guard readOnly else {
+                throw CommandError.notAvailable(L10n.tr("Baza odmówiła nowej sesji (\(e.message)) — zamknij nieużywane okna i narzędzia albo spróbuj za chwilę"))
+            }
+            Log.connection.notice("Limit sesji — narzędzie tylko do odczytu w sesji głównej (\(e.code, privacy: .public))")
+            sessions.noteReadOnlyFallback(connection)
             return try await mainSessionForTool(connection)
         }
     }
 
-    /// Sesja główna dla narzędzia przy limicie sesji — odmowa, gdy okno ma w niej otwartą transakcję.
+    /// Narzędzia z krótkimi, bezstanowymi odczytami (podgląd bazy przy limicie sesji) — mogą pracować w sesji głównej.
+    /// Bez narzędzi zmieniających stan sesji (transformacje DBMS_METADATA w eksporcie DDL), uruchamiających doradców
+    /// (raporty wydajności, SQL Tuning) i długich operacji, które blokowałyby sesję główną (eksport, porównania).
+    nonisolated static let readOnlyToolPurposes: Set<String> = ["sessions", "sessions.detail", "perf.list", "packs.list", "instance"]
+
+    /// Sesja główna dla narzędzia odczytu przy limicie sesji: tylko tryb Multi (w Dual i jednej sesji okna wykonują w niej
+    /// polecenia) i bez otwartej transakcji.
     private func mainSessionForTool(_ connection: UUID) async throws -> any DatabaseSession {
-        let mainKey = SessionKey(connectionID: connection, purpose: .main)
-        let main = try await sessions.session(mainKey)
-        let windowTransaction = documents.contains { $0.transactionOpen && sessionKey(for: $0) == mainKey }
-        let open = (try? await SessionUtilities.transactionOpen(main)) ?? true
-        if windowTransaction || open {
+        guard settings.sessionMode == .multi else {
+            throw CommandError.notAvailable(L10n.tr("Osiągnięto limit sesji bazy — zamknij nieużywane okna i narzędzia (w trybie Multi narzędzie skorzystałoby z sesji głównej)"))
+        }
+        let main = try await sessions.session(SessionKey(connectionID: connection, purpose: .main))
+        if (try? await SessionUtilities.transactionOpen(main)) ?? true {
             throw CommandError.notAvailable(L10n.tr("Osiągnięto limit sesji bazy, a sesja główna ma otwartą transakcję — zatwierdź albo wycofaj ją, albo zamknij nieużywane okna i narzędzia"))
         }
         return main

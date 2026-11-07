@@ -376,6 +376,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     /// Odzyskiwanie po awarii (PD-FILE-001): okna z poprzedniego, nieczysto zakończonego uruchomienia i okresowa migawka.
     private func startRecovery() {
+        QuickLookFile.removeStaleFiles()
         if let previous = workspace.recovery.begin() {
             workspace.pendingRecovery = previous
             Task { @MainActor in

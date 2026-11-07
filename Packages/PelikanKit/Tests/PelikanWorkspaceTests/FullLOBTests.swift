@@ -12,6 +12,8 @@ final class LocatorSession: DatabaseSession, @unchecked Sendable {
     let bytes: Data?
     let row: [[OracleValue]]
     let reads = Mutex(0)
+    let released = Mutex<[LOBLocator]>([])
+    func releaseLOBs(_ locators: [LOBLocator]) async { released.withLock { $0 += locators } }
     init(text: String? = nil, bytes: Data? = nil, preview: Int) {
         self.text = text; self.bytes = bytes
         let kind: LOBValue.Kind = text != nil ? .clob : .blob
@@ -87,11 +89,60 @@ struct FullLOBTests {
         #expect(g.cachedFullLOB(l) == nil)
     }
 
+    @Test("Wynik zamknięty albo zastąpiony zwalnia lokatory swoich LOB-ów (LOB-y tymczasowe nie zajmują TEMP)")
+    func locatorsReleasedWithGrid() async throws {
+        let s = LocatorSession(text: String(repeating: "x", count: 10_000), preview: 4000)
+        do {
+            let g = await grid(s, type: .clob)
+            #expect(g.rowCount == 1)
+        }
+        for _ in 0..<200 where s.released.withLock({ $0.isEmpty }) { try await Task.sleep(for: .milliseconds(10)) }
+        #expect(s.released.withLock { $0 } == [LOBLocator(7)])
+    }
+
     @Test("Wartość nieobcięta: bez odczytu z bazy")
     func notTruncated() async throws {
         let s = LocatorSession(text: "abc", preview: 10)
         let l = LOBValue(kind: .clob, text: "abc", length: 3, truncated: false)
         #expect(try await s.fullLOB(l) == l)
         #expect(s.reads.withLock { $0 } == 0)
+    }
+}
+
+@Suite("Rozpoznanie formatu danych binarnych po sygnaturze (podgląd Quick Look)")
+struct BinaryFormatTests {
+    @Test("Obrazy, PDF, Office (ZIP), GZIP, stary Office (OLE); nieznane — hex")
+    func signatures() {
+        func f(_ b: [UInt8]) -> LargeDataFormat { LargeDataFormat.detect(text: nil, bytes: Data(b)) }
+        #expect(f([0x49, 0x49, 0x2A, 0x00, 1]) == .tiff)
+        #expect(f(Array("RIFF".utf8) + [0, 0, 0, 0] + Array("WEBP".utf8)) == .webp)
+        #expect(f([0, 0, 0, 24] + Array("ftypheic".utf8)) == .heic)
+        #expect(f([0x1F, 0x8B, 8, 0]) == .gzip)
+        let ole: [UInt8] = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1, 0]
+        #expect(f(ole) == .binary)
+        #expect(f(ole + ("Workbook".utf16 + [0]).flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] }) == .xls)
+        #expect(f(ole + ("WordDocument".utf16 + [0]).flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] }) == .doc)
+        #expect(f(Array("BMW zamówienie 123 dla klienta".utf8)) == .text)
+        var bmp: [UInt8] = Array("BM".utf8) + [30, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 12, 0, 0, 0]
+        bmp += [UInt8](repeating: 0, count: 30 - bmp.count)
+        #expect(f(bmp) == .bmp)
+        #expect(f([0x50, 0x4B, 0x03, 0x04] + Array("password/notes.txt".utf8)) == .zip)
+        // BMP ucięty do limitu siatki (rozmiar z nagłówka większy niż pobrane bajty) — nadal BMP.
+        var cut = bmp
+        cut[2] = 0xFF; cut[3] = 0xFF
+        #expect(f(cut) == .bmp)
+        // „Book” w treści pliku OLE (nie nazwa strumienia zakończona NUL) — bez zgadywania Excela.
+        #expect(f(ole + "Booking".utf16.flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] }) == .binary)
+        #expect(f([0x50, 0x4B, 0x03, 0x04] + Array("....[Content_Types].xml....word/document.xml".utf8)) == .docx)
+        #expect(f([0x50, 0x4B, 0x03, 0x04] + Array("....[Content_Types].xml....xl/workbook.xml".utf8)) == .xlsx)
+        #expect(f([0x50, 0x4B, 0x03, 0x04, 0, 0]) == .zip)
+        // Część główna dokumentu dopiero w katalogu centralnym na końcu archiwum.
+        let late: [UInt8] = [0x50, 0x4B, 0x03, 0x04] + [UInt8](repeating: 0x41, count: 100_000) + Array("[Content_Types].xml word/document.xml".utf8)
+        #expect(f(late) == .docx)
+        #expect(f([0x00, 0x01, 0x02, 0xFF]) == .binary)
+        #expect(LargeDataFormat.docx.isPreviewable && !LargeDataFormat.binary.isPreviewable && !LargeDataFormat.json.isPreviewable)
+        let p = CellValuePresentation.make(.lob(LOBValue(kind: .blob, bytes: Data(Array("%PDF-1.7".utf8)), length: 8, truncated: false)),
+                                           column: ColumnInfo(name: "D", type: .blob, typeName: "BLOB"), format: ValueFormat())
+        #expect(p.detected == .preview && p.format == .pdf && p.modes.contains(.hex))
     }
 }

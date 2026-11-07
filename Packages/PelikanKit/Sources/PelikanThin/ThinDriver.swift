@@ -168,6 +168,18 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
         }
     }
 
+    public func releaseLOBs(_ locators: [LOBLocator]) async {
+        let ids = Set(locators.map(\.id))
+        guard !ids.isEmpty else { return }
+        let removed = state.withLock { s -> [LOB] in
+            let out = ids.compactMap { s.lobs.removeValue(forKey: $0)?.lob }
+            s.lobOrder.removeAll { ids.contains($0) }
+            return out
+        }
+        // LOB tymczasowy zwalniany na serwerze przy najbliższym obiegu (`free` pomija trwałe — po flagach lokatora).
+        for lob in removed { try? await lob.free(on: connection) }
+    }
+
     /// Porcja LOB z lokatora. OracleNIO nie pozwala czytać od wskazanej pozycji (`readChunks` zawsze od początku, a dla
     /// CLOB przesuwa pozycję w bajtach), więc porcję kopiuje serwer (DBMS_LOB.COPY do tymczasowego LOB-a) i czytamy ją
     /// w całości; CLOB najwyżej `maxCLOBRead` znaków na porcję (zob. `readCLOB`).

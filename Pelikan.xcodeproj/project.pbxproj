@@ -42,6 +42,7 @@
 		37B96C07C2FC724B8DBAF74C /* TableSorting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BF8FF2B449C2E023BDF4F33 /* TableSorting.swift */; };
 		3F56C561C61FB014C6F3166F /* ToolWindows.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA27E74D0C918323B465606B /* ToolWindows.swift */; };
 		40419B4A25B38AB31CFDF7A6 /* Oracle23Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5038ED2FB68FC68A88C5209 /* Oracle23Views.swift */; };
+		418A381EE70A26F88F29B1F1 /* QuickLookPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1039C246E3B95C0338C0F4A9 /* QuickLookPreview.swift */; };
 		41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */; };
 		44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */; };
 		4B2E4E88BF993838C0CB2BB9 /* PelikanQuickLook.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F146BB88877192EE38E4B80D /* PelikanQuickLook.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -180,6 +181,7 @@
 		0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionBrowserView.swift; sourceTree = "<group>"; };
 		0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		100FC1DAA3B4236C5DCD0146 /* PelikanKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PelikanKit; path = Packages/PelikanKit; sourceTree = SOURCE_ROOT; };
+		1039C246E3B95C0338C0F4A9 /* QuickLookPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickLookPreview.swift; sourceTree = "<group>"; };
 		10B4748E08F3E0074F5CE892 /* ReportWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportWindowViewController.swift; sourceTree = "<group>"; };
 		16B2BB118EADAF6ADD890DD1 /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
 		1BF8FF2B449C2E023BDF4F33 /* TableSorting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableSorting.swift; sourceTree = "<group>"; };
@@ -456,6 +458,7 @@
 				4DCBCC640C9755CF573D7C56 /* GridStage8Views.swift */,
 				3CD00EBBD1B1E5BDF5BE3469 /* GridToolViews.swift */,
 				578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */,
+				1039C246E3B95C0338C0F4A9 /* QuickLookPreview.swift */,
 				DCAA0454A6D4E853A00B93A6 /* ResultCommandBar.swift */,
 				F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */,
 				6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */,
@@ -946,6 +949,7 @@
 				01E050840A2E7D66AB4414D8 /* ProjectView.swift in Sources */,
 				2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */,
 				CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */,
+				418A381EE70A26F88F29B1F1 /* QuickLookPreview.swift in Sources */,
 				76955536F96C855C6F680CD5 /* ReportWindowViewController.swift in Sources */,
 				C1D60C1E2ED0FCDF0F4BF4F3 /* ResultCommandBar.swift in Sources */,
 				FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */,

@@ -162,7 +162,7 @@ Einstellungen überschritten wird.
   ein Binärwert (BLOB) nur auf Anforderung: **Alles laden** oder in Datei speichern. Schaltflächen des Bereichs und
   Kontextmenü des Rasters: **Zellwert in Datei speichern…** (vollständiger Wert, stückweise aus der Datenbank) und
   **Zellwert in externer Anwendung öffnen** (Text im externen Editor aus den Einstellungen, z. B. BBEdit; Änderungen
-  gelangen nicht zurück).
+  gelangen nicht zurück). Binärdaten, nach Inhalt erkannt (PDF, Bilder, Office-Dokumente, Archive) — Modus **Vorschau** (Quick Look).
 - Die **Einzeldatensatzansicht** zeigt die aktuelle Zeile senkrecht mit den Typen und Kommentaren der Spalten. Die
   Schaltfläche in der Leiste über dem Raster oder **Datensatz** auf dem Menüband-Tab **Ergebnis** schaltet sie ein und
   aus; jeder Ergebnis-Tab merkt sich seinen Zustand.

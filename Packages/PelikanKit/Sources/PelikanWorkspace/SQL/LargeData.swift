@@ -4,10 +4,12 @@ import PelikanDB
 
 /// Rozpoznany format treści (UG 27: Large Data Editor — tekst, RTF/XML/HTML, obraz, hex).
 public enum LargeDataFormat: String, Sendable {
-    case text, xml, json, html, rtf, png, jpeg, gif, pdf, binary
+    case text, xml, json, html, rtf, png, jpeg, gif, tiff, bmp, webp, heic, pdf, zip, docx, xlsx, pptx, gzip, doc, xls, ppt, binary
 
-    public var isImage: Bool { [.png, .jpeg, .gif].contains(self) }
+    public var isImage: Bool { [.png, .jpeg, .gif, .tiff, .bmp, .webp, .heic].contains(self) }
     public var isText: Bool { [.text, .xml, .json, .html, .rtf].contains(self) }
+    /// Rozpoznany format pliku, który Quick Look umie pokazać (obrazy, PDF, dokumenty Office, archiwa).
+    public var isPreviewable: Bool { !isText && self != .binary }
 
     public var fileExtension: String {
         switch self {
@@ -19,18 +21,79 @@ public enum LargeDataFormat: String, Sendable {
         case .png: "png"
         case .jpeg: "jpg"
         case .gif: "gif"
+        case .tiff: "tiff"
+        case .bmp: "bmp"
+        case .webp: "webp"
+        case .heic: "heic"
         case .pdf: "pdf"
+        case .zip: "zip"
+        case .docx: "docx"
+        case .xlsx: "xlsx"
+        case .pptx: "pptx"
+        case .gzip: "gz"
+        case .doc: "doc"
+        case .xls: "xls"
+        case .ppt: "ppt"
         case .binary: "bin"
         }
     }
 
-    /// Rozpoznanie po sygnaturze bajtów i początku tekstu.
+    /// Rozpoznanie po sygnaturze bajtów (magic number) i początku tekstu.
     public static func detect(text: String?, bytes: Data?) -> LargeDataFormat {
         if let b = bytes, !b.isEmpty {
             if b.starts(with: [0x89, 0x50, 0x4E, 0x47]) { return .png }
             if b.starts(with: [0xFF, 0xD8, 0xFF]) { return .jpeg }
             if b.starts(with: Array("GIF8".utf8)) { return .gif }
             if b.starts(with: Array("%PDF".utf8)) { return .pdf }
+            if b.starts(with: [0x49, 0x49, 0x2A, 0x00]) || b.starts(with: [0x4D, 0x4D, 0x00, 0x2A]) { return .tiff }
+            func u16(_ o: Int) -> Int { Int(b[b.startIndex + o]) | Int(b[b.startIndex + o + 1]) << 8 }
+            func u32(_ o: Int) -> Int { (0..<4).reduce(0) { $0 | Int(b[b.startIndex + o + $1]) << (8 * $1) } }
+            // BMP: „BM” i znany rozmiar nagłówka DIB (sam „BM” to też tekst); bfSize 0 (dozwolone dla BI_RGB) albo co
+            // najmniej rozmiar nagłówków — wartość bywa ucięta do limitu siatki albo ma dane po obrazie.
+            if b.starts(with: Array("BM".utf8)), b.count > 18, u32(2) == 0 || u32(2) >= 26,
+               [12, 40, 52, 56, 108, 124].contains(u32(14)) { return .bmp }
+            if b.starts(with: Array("RIFF".utf8)), b.count >= 12, b.subdata(in: b.startIndex + 8 ..< b.startIndex + 12) == Data("WEBP".utf8) { return .webp }
+            if b.count >= 12, b.subdata(in: b.startIndex + 4 ..< b.startIndex + 8) == Data("ftyp".utf8) {
+                let brand = String(decoding: b.subdata(in: b.startIndex + 8 ..< b.startIndex + 12), as: UTF8.self)
+                // Marki HEIC/HEVC (mif1/msf1 dzieli z AVIF — bez zgadywania).
+                if ["heic", "heix", "hevc", "hevx"].contains(brand) { return .heic }
+            }
+            if b.starts(with: [0x1F, 0x8B]) { return .gzip }
+            if b.starts(with: [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1]) {
+                // Stary Office (OLE): rodzaj z nazwy strumienia w katalogu pliku — UTF-16LE zakończona NUL (nie dowolny
+                // tekst w treści); w pierwszych 256 KB (stały koszt w panelu wartości); nieznany — dane binarne.
+                // Katalog: pierwszy sektor z nagłówka (0x30), rozmiar sektora 2^(0x1E); przeszukiwane 64 KB katalogu
+                // i 256 KB od początku — stały koszt niezależnie od rozmiaru pliku.
+                var areas = [b.prefix(256 * 1024)]
+                if b.count >= 0x34 {
+                    let shift = u16(0x1E), sector = u32(0x30)
+                    if (7...16).contains(shift), sector < 0xFFFF_FFFA {
+                        let start = (sector + 1) << shift
+                        if start < b.count { areas.append(b[(b.startIndex + start)...].prefix(64 * 1024)) }
+                    }
+                }
+                func has(_ name: String) -> Bool {
+                    let pattern = Data((name.utf16 + [0]).flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] })
+                    return areas.contains { $0.range(of: pattern) != nil }
+                }
+                // Najpierw nazwy jednoznaczne; „Book” (Excel 5/95) na końcu — mogłoby wystąpić w treści innych plików.
+                if has("WordDocument") { return .doc }
+                if has("PowerPoint Document") { return .ppt }
+                if has("Workbook") || has("Book") { return .xls }
+                return .binary
+            }
+            if b.starts(with: [0x50, 0x4B, 0x03, 0x04]) {
+                // Dokumenty Office Open XML to ZIP — katalog części w nazwach pierwszych wpisów.
+                // Nazwy części: nagłówki lokalne na początku i katalog centralny na końcu archiwum (64 KB z każdej strony).
+                let head = b.prefix(64 * 1024), tail = b.suffix(64 * 1024)
+                func has(_ s: String) -> Bool { head.range(of: Data(s.utf8)) != nil || tail.range(of: Data(s.utf8)) != nil }
+                if has("[Content_Types].xml") || has("_rels/") {
+                    if has("word/document") { return .docx }
+                    if has("xl/workbook") { return .xlsx }
+                    if has("ppt/presentation") { return .pptx }
+                }
+                return .zip
+            }
             if let s = String(data: b.prefix(4096), encoding: .utf8), !s.contains("\0") { return detect(text: s, bytes: nil) }
             return .binary
         }
@@ -54,8 +117,11 @@ extension ResultGridModel {
         return fullLOBs.last { $0.0 == loc }?.1
     }
 
+    /// Największa pełna treść w pamięci (panel wartości, Large Data Editor); dłuższą zapisuje się do pliku porcjami.
+    public nonisolated static let fullLOBLimit: UInt64 = 256 << 20
+
     /// Pełna treść obciętego LOB-a z lokatora (bez ROWID — także widoki, złączenia, funkcje), do `limit` jednostek.
-    public func fullLOB(_ l: LOBValue, limit: UInt64 = 256 << 20) async throws -> LOBValue {
+    public func fullLOB(_ l: LOBValue, limit: UInt64 = ResultGridModel.fullLOBLimit) async throws -> LOBValue {
         if let c = cachedFullLOB(l), !c.truncated || c.length > limit { return c }
         let full = try await session.fullLOB(l, limit: limit)
         if let loc = l.locator {
@@ -90,13 +156,16 @@ public final class LargeDataModel {
     public let grid: ResultGridModel
     public let row: Int
     public let column: Int
-    public private(set) var text: String?
-    public private(set) var bytes: Data?
+    public private(set) var text: String? { didSet { contentVersion &+= 1 } }
+    public private(set) var bytes: Data? { didSet { contentVersion &+= 1 } }
     public private(set) var totalLength: UInt64
     public private(set) var truncated: Bool
     public private(set) var format: LargeDataFormat
     public private(set) var isLoading = false
     public var modified = false
+    /// Zmienia się przy każdej zmianie treści (dociągnięcie całości, edycja, wczytanie z pliku) — tożsamość treści
+    /// dla podglądów bez porównywania dużych danych.
+    public private(set) var contentVersion = 0
 
     public var columnName: String { grid.columns[column].name }
     public var typeName: String { grid.columns[column].typeName }
@@ -128,9 +197,15 @@ public final class LargeDataModel {
         format = LargeDataFormat.detect(text: t, bytes: b)
     }
 
+    /// Komórka ma lokator LOB-a — pełna treść dostępna z bazy (do pamięci do limitu, do pliku w całości).
+    public var hasLocator: Bool {
+        if case .lob(let l) = grid.value(row: row, column: column) { return l.locator != nil }
+        return false
+    }
+
     /// Pełna treść LOB (siatka pobiera do limitu): z lokatora zachowanego przez sterownik, a bez niego (np. wartość
     /// spoza sterownika) — ponowne zapytanie po ROWID; bez obu zostaje obcięta.
-    public func loadFull(limit: Int = 256 << 20) async throws {
+    public func loadFull(limit: Int = Int(ResultGridModel.fullLOBLimit)) async throws {
         guard truncated else { return }
         if case .lob(let l) = grid.value(row: row, column: column), l.locator != nil {
             isLoading = true

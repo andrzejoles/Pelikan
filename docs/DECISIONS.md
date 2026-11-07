@@ -3980,13 +3980,75 @@ Właściciel: „Wszędzie tam, gdzie to możliwe daj osobną sesję”. Dodatko
   w trakcie zapytania (ODPI kończy zapytanie przed zamknięciem), rzadkie wyścigi z rozłączeniem w chwili rejestracji
   sesji, porządki nazw.
 
-### D235 · 2026-11-07 — Narzędzia przy limicie sesji: sesja główna (decyzja właściciela)
+### D235 · 2026-11-07 — Narzędzia przy limicie sesji: sesja główna dla narzędzi odczytu (decyzja właściciela)
 
-Właściciel: „Dodaj powrót do sesji głównej przy limicie także dla narzędzi”. `Workspace.toolSession`: odmowa nowej
-sesji z powodu limitu (ORA-02391, ORA-00018, ORA-00020, listener ORA-12516/12519/12520 —
-`SessionManager.isSessionLimit`) — narzędzie dostaje sesję główną połączenia, a przez 5 minut kolejne narzędzia bez
-własnej sesji idą od razu do głównej (bez serii nieudanych logowań). Zabezpieczenie: narzędzia danych zatwierdzają
-własne zmiany, więc w sesji z otwartą transakcją (okno w trybie Dual/jednej sesji albo DBMS_TRANSACTION) zatwierdziłyby
-też cudzą — wtedy zamiast sesji głównej komunikat (zatwierdź/wycofaj albo zamknij nieużywane okna i narzędzia).
-Rozłączenie kasuje stan limitu.
+Właściciel: „Dodaj powrót do sesji głównej przy limicie także dla narzędzi”. `Workspace.toolSession`: gdy baza odmówi
+nowej sesji z powodu limitu (ORA-02391, ORA-00018, ORA-00020, listener ORA-12516/12519/12520 —
+`SessionManager.isSessionLimit`), narzędzie z **krótkimi, bezstanowymi odczytami** (`readOnlyToolPurposes`: lista
+sesji i jej szczegóły, lista raportów wydajności, SQL Monitor, Instance Viewer — podgląd bazy przy limicie) dostaje
+sesję główną, tylko w trybie Multi i bez otwartej transakcji. Pozostałe narzędzia — komunikat: zmiany danych
+(COMMIT/ROLLBACK, DDL), zmiany stanu sesji (ALTER SESSION, transformacje DBMS_METADATA w eksporcie DDL), doradcy
+(raporty wydajności, SQL Tuning) i długie operacje (eksport, porównania) w sesji współdzielonej sięgałyby cudzej pracy
+albo blokowałyby sesję główną (okna w trybie Dual/jednej sesji, metadane przy limicie, drugie narzędzie) — zawężane
+w 4 rundach code review. Każde otwarcie narzędzia najpierw próbuje własnej sesji; po odmowie narzędzia odczytu przez
+minutę idą od razu do głównej (odświeżanie co kilka sekund bez serii nieudanych logowań), a komunikat pozostałych
+podaje kod błędu (limit profilu albo chwilowa odmowa listenera).
+
+### D236 · 2026-11-07 — Dane binarne: format po sygnaturze i podgląd Quick Look; Large Data Editor z menu siatki
+
+- **Format po sygnaturze** (`LargeDataFormat.detect`): oprócz PNG, JPEG, GIF, PDF — TIFF, BMP, WebP, HEIC, GZIP,
+  ZIP i dokumenty Office Open XML (DOCX/XLSX/PPTX — ZIP z `[Content_Types].xml` i `word/document`, `xl/workbook`,
+  `ppt/presentation`), stary Office (OLE: DOC/XLS/PPT po nazwie strumienia; nieznany — dane binarne); BMP po nagłówku
+  (rozmiar pliku i nagłówka DIB), nie po samym „BM”.
+  Rozpoznany format daje rozszerzenie przy zapisie do pliku i w programie zewnętrznym.
+- **Podgląd Quick Look** zamiast przeglądarki (właściciel: „zrób podgląd przez Quick Look”): `QLPreviewView` w panelu
+  wartości (tryb „Podgląd”) i w Large Data Editor (karta „Podgląd”) dla formatów nietekstowych. Generatory Quick Look
+  działają poza procesem aplikacji, bez skryptów i sieci (treść z bazy jest niezaufana); plik tymczasowy 0600
+  (`PrivateFile`, D186) w katalogu uruchomienia (0700) z blokadą `flock`, zapisywany w tle, usuwany przy zmianie
+  treści i zamknięciu, a po awarii — przy następnym starcie w tle (katalogi bez trzymanej blokady). Stary Office:
+  katalog pliku z nagłówka OLE (sektor 0x30), nie tylko początek pliku. W panelu dane binarne nadal tylko na żądanie —
+  podgląd po „Pobierz całość” (z ucięciem byłby uszkodzony).
+- **Large Data Editor z menu kontekstowego siatki** („jest teraz niedostępne” mimo zaznaczonej komórki): komenda
+  szukała siatki w aktywnej karcie wyniku aktywnego okna, a nie w siatce, w której kliknięto (inna karta wyniku,
+  karta bez siatki, okno w tle). Menu kontekstowe, dwuklik i panel wartości przekazują teraz swoją kartę wyniku jako
+  cel komendy (`grid.largeData`, `grid.saveValue`, `grid.openValueExternally`); bez zaznaczenia (wstążka zaraz po
+  wykonaniu) — pierwszy wiersz i pierwsza kolumna LOB.
+
+### D237 · 2026-11-07 — Przegląd końcowy: błędy, stabilność, bezpieczeństwo, wydajność, ergonomia
+
+Na prośbę właściciela („przegląd ostateczny”, tylko poprawki zauważalne w danej kategorii, bez materiału na kolejne
+CR). Oprócz przeglądu wzorców w kodzie (~100 tys. linii) — narzędzia: Thread Sanitizer (testy jednostkowe i na bazie),
+Address Sanitizer (testy na bazie — styk z biblioteką C ODPI), testy wydajności release z progami
+(`PELIKAN_PERF_STRICT`), czyste budowanie aplikacji (zero ostrzeżeń). Wyniki narzędzi: bez wyścigów danych i błędów
+pamięci w kodzie Pelikana, budżety czasowe dotrzymane. Jedyne zgłoszenie Thread Sanitizera (testy na bazie) dotyczy
+dołączonej biblioteki ODPI-C (`dpiGlobal.c` — zapis wskaźnika nazwy funkcji do globalnego bufora diagnostycznego, zanim
+wątek przejdzie na własny bufor błędów): nieszkodliwe, zachowanie biblioteki u źródła — bez zmian w kodzie zewnętrznym.
+
+Poprawione:
+- **Stabilność — okno poleceń:** `REPEAT n sekundy` z wartością nieskończoną, NaN albo ogromną kończyło proces
+  (konwersja na milisekundy) — odstęp ograniczony do 0…86 400 s.
+- **Stabilność / zasoby serwera — lokatory LOB (D230):** lokatory obciętych LOB-ów trzymane do zamknięcia sesji
+  utrzymywały LOB-y tymczasowe (XMLAGG, JSON … RETURNING CLOB, DBMS_METADATA) w przestrzeni TEMP serwera; wynik
+  zamknięty albo zastąpiony (`ResultGridModel` — `isolated deinit`, także oryginały komórek zmienionych w edycji)
+  zwalnia teraz swoje lokatory (`DatabaseSession.releaseLOBs`: ODPI — `dpiLob_release`, thin — `LOB.free`, które
+  zwalnia na serwerze tylko LOB-y tymczasowe).
+- **Bezpieczeństwo — Large Data Editor:** zmiana z edytora zewnętrznego zebrana przy zamykaniu mogła zapisać nową kopię
+  wartości z bazy do katalogu podglądu już po zamknięciu okna — kolejność zamykania i blokada odświeżeń po zamknięciu.
+- **Stabilność — podgląd Quick Look:** katalog podglądów usunięty w trakcie wielodniowej pracy (sprzątanie katalogu
+  tymczasowego) — odtwarzany z nową blokadą zamiast trwałego braku podglądu do ponownego uruchomienia.
+- **Ergonomia — komunikaty obcięcia LOB:** Large Data Editor podczas dociągania i przy wartości ponad limit pamięci
+  pisał „pełna treść niedostępna (brak ROWID)”, a panel wartości po pobraniu wartości ponad limit wciąż proponował
+  „Pobierz całość” (ten sam ucięty wynik) — komunikaty mówią, co widać (pierwsze 256 MB) i jak dostać całość (zapis
+  do pliku, program zewnętrzny).
+
+Sprawdzone bez zmian (dojrzałe): granice agenta (READ ONLY, blokada `WITH FUNCTION`, limity, maskowanie, brak HOST,
+gniazdo 0600 z `getpeereid` i tokenem, limit ramek), widoki HTML (bez JavaScriptu i nawigacji), polecenia powłoki
+(cytowanie), zapis plików (atomowo, dowiązania i prawa, kodowanie), konwersje liczb i dostęp do tablic (sprawdzane).
+
+Świadomie bez zmian — do decyzji właściciela: **sterownik thin kończy proces na kolumnie INTERVAL YEAR TO MONTH albo
+BFILE** (`fatalError` w dekoderze wierszy OracleNIO, zanim wartość dotrze do Pelikana). Próba ominięcia
+(`prefetchRows = 0` — najpierw opis kolumn) zapętla OracleNIO przy zapytaniach wymagających definicji kolumn (LOB) —
+wycofana. Możliwe drogi: własna kopia OracleNIO z dekoderem rzucającym błąd (albo obsługą tych typów) i zgłoszenie
+u autora, albo sprawdzanie typów przed zapytaniem (DBMS_SQL.DESCRIBE_COLUMNS — dodatkowy obieg sieci przy każdym
+zapytaniu thin). Instant Client tego problemu nie ma.
 

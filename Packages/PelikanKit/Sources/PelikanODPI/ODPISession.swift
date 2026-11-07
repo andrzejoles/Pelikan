@@ -46,7 +46,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     /// otwiera kursor w sesji serwera; trzymanie wszystkich kończyło się ORA-01000 (R8-02) — najstarsze ponad limit są
     /// zamykane (ich komórka zgłasza wtedy nieznany wynik).
     private var pendingNested: [UInt64] = []
-    /// Lokatory obciętych LOB-ów (pełna treść na żądanie, `readLOB`), od najstarszego; ponad limit najstarsze zwalniane.
+    /// Lokatory obciętych LOB-ów (pełna treść na żądanie, `readLOB`), od najstarszego; ponad limit najstarsze zwalniane,
+    /// a wynik zamknięty zwalnia swoje (`releaseLOBs`) — LOB tymczasowy zajmuje TEMP na serwerze, dopóki ma referencję.
     private var lobRefs: [UInt64: OpaquePointer] = [:]
     private var lobOrder: [UInt64] = []
     private var nextLOBRef: UInt64 = 1
@@ -722,6 +723,16 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             lobOrder.removeFirst(drop)
         }
         return LOBLocator(id)
+    }
+
+    public func releaseLOBs(_ locators: [LOBLocator]) async {
+        guard !locators.isEmpty else { return }
+        // Sesja zamknięta — `close` zwolniła już wszystkie.
+        _ = try? await onQueue { [self] in
+            let ids = Set(locators.map(\.id))
+            for id in ids { if let l = lobRefs.removeValue(forKey: id) { dpiLob_release(l) } }
+            lobOrder.removeAll { ids.contains($0) }
+        }
     }
 
     public func readLOB(_ locator: LOBLocator, offset: UInt64, amount: UInt64) async throws -> LOBValue {

@@ -1,6 +1,7 @@
 import AppKit
 import PDFKit
 import PelikanWorkspace
+import Quartz
 import UniformTypeIdentifiers
 import WebKit
 
@@ -14,6 +15,10 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
     private let textView = NSTextView.scrollableTextView()
     private let imageView = NSImageView()
     private let pdfView = PDFView()
+    /// Podgląd Quick Look (dokumenty Office, archiwa, obrazy i PDF — formaty rozpoznane po sygnaturze).
+    /// Tworzony przy pierwszym użyciu karty „Podgląd” (bez widoku Quick Look w oknie, które go nie pokazuje).
+    private var quickLook: QLPreviewView?
+    private let quickLookFile = QuickLookFile()
     /// Podgląd HTML (PD-LDE-001): bez JavaScriptu, CSP bez zasobów zewnętrznych, bez nawigacji.
     private lazy var webView = WKWebView.localHTML()
     private let autoFormat = NSButton(checkboxWithTitle: "", target: nil, action: nil)
@@ -46,10 +51,10 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
     required init?(coder: NSCoder) { fatalError() }
 
     private func build() {
-        mode.segmentCount = 5
-        for (i, title) in [L10n.tr("Tekst"), L10n.tr("Hex"), L10n.tr("Obraz"), L10n.tr("PDF"), "HTML"].enumerated() { mode.setLabel(title, forSegment: i) }
+        mode.segmentCount = 6
+        for (i, title) in [L10n.tr("Tekst"), L10n.tr("Hex"), L10n.tr("Obraz"), L10n.tr("PDF"), "HTML", L10n.tr("Podgląd")].enumerated() { mode.setLabel(title, forSegment: i) }
         mode.target = self
-        mode.action = #selector(modeChanged)
+        mode.action = #selector(userModeChanged)
         let tv = textView.documentView as! NSTextView
         tv.font = InterfaceFonts.shared.editor
         tv.isRichText = false
@@ -104,7 +109,7 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         root.widthAnchor.constraint(greaterThanOrEqualToConstant: 480).isActive = true
         root.heightAnchor.constraint(greaterThanOrEqualToConstant: 320).isActive = true
         view = root
-        mode.selectedSegment = model.format.isImage ? 2 : model.format == .pdf ? 3 : (model.isBinary && !model.format.isText ? 1 : 0)
+        mode.selectedSegment = preferredSegment
         modeChanged()
     }
 
@@ -141,14 +146,64 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         }
     }
 
+    /// Karta dla treści: obraz, PDF, podgląd Quick Look (pełna treść), hex dla danych binarnych, inaczej tekst.
+    private var preferredSegment: Int {
+        model.format.isImage ? 2 : model.format == .pdf ? 3 : model.format.isPreviewable && !model.truncated ? 5
+            : (model.isBinary && !model.format.isText ? 1 : 0)
+    }
+
+    /// Karta pasuje do bieżącej treści (te same warunki co dostępność kart).
+    private func segmentFits(_ i: Int) -> Bool {
+        switch i {
+        case 2: model.format.isImage
+        case 3: model.format == .pdf
+        case 4: model.format.isText
+        case 5: model.format.isPreviewable && !model.truncated
+        default: true
+        }
+    }
+
+    /// Jednorazowa zmiana karty po dociągnięciu całej treści (edytor otwiera się z treścią obciętą do limitu siatki);
+    /// wyłączona, gdy użytkownik sam wybierze kartę, i po pierwszej zmianie — nie przy edycji zmieniającej format.
+    private lazy var autoTabArmed = model.truncated
+
+    @objc private func userModeChanged() {
+        autoTabArmed = false
+        modeChanged()
+    }
+
     private func refresh() {
+        guard !closed else { return }
         let loading = model.isLoading
+        // Edytor otwiera się z treścią obciętą do limitu siatki; po dociągnięciu całości (np. DOCX) — karta dla pełnej
+        // treści, o ile użytkownik nie wybrał innej.
+        var rebuilt = false
+        // Wybrana karta przestała pasować do treści (np. wczytany plik tekstowy na karcie Podgląd) — karta dla treści.
+        if !segmentFits(mode.selectedSegment) {
+            mode.selectedSegment = preferredSegment
+            modeChanged()
+            rebuilt = true
+        }
+        if autoTabArmed, !loading, !model.truncated {
+            autoTabArmed = false
+            if mode.selectedSegment != preferredSegment {
+                mode.selectedSegment = preferredSegment
+                modeChanged()
+                rebuilt = true
+            }
+        }
         let format = model.format
         _ = model.text
         _ = model.bytes
         var parts = [model.typeName, L10n.tr("format: \(format.rawValue.uppercased())"), L10n.tr("długość: \(model.totalLength)")]
-        if model.truncated { parts.append(L10n.tr("obcięte — pełna treść niedostępna (brak ROWID)")) }
-        if loading { parts.append(L10n.tr("pobieranie…")) }
+        if loading {
+            parts.append(L10n.tr("pobieranie…"))
+        } else if model.truncated {
+            // Z lokatorem obcięta tylko wartość ponad limit pamięci — całość zapisuje się do pliku porcjami.
+            let mb = ResultGridModel.fullLOBLimit >> 20
+            parts.append(model.hasLocator ? L10n.tr("pokazano pierwsze \(mb) MB — całość: Zapisz do pliku…")
+                                          : L10n.tr("obcięte — pełna treść niedostępna (brak ROWID)"))
+        }
         if !model.isEditable { parts.append(L10n.tr("tylko do odczytu")) }
         let binaryText = model.editableText == nil
         if model.isEditable, binaryText { parts.append(L10n.tr("dane binarne — zmiana przez Wczytaj z pliku")) }
@@ -157,10 +212,8 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         (textView.documentView as? NSTextView)?.isEditable = model.isEditable && mode.selectedSegment == 0 && !binaryText
         // Edycja w widoku zmienia model, a śledzenie ponawia `refresh` asynchronicznie — już po zdjęciu `updating`.
         // Widok, który pokazuje dokładnie treść modelu, zostaje bez przebudowy (fokus, kursor, cofanie — R4-03).
-        if !updating, !textViewShowsModel { modeChanged() }
-        mode.setEnabled(format.isImage, forSegment: 2)
-        mode.setEnabled(format == .pdf, forSegment: 3)
-        mode.setEnabled(format.isText, forSegment: 4)
+        if !rebuilt, !updating, !textViewShowsModel { modeChanged() }
+        for i in 2...5 { mode.setEnabled(segmentFits(i), forSegment: i) }
     }
 
     /// Widok tekstu jest w oknie i ma tę samą treść co model (np. właśnie wpisaną).
@@ -171,6 +224,14 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
     }
 
     @objc private func modeChanged() {
+        // Podgląd już pokazany — tylko treść (bez zdejmowania widoku: Quick Look nie miga i nie traci pozycji).
+        if mode.selectedSegment == 5, let ql = quickLook, ql.superview === content {
+            // Ta sama treść — bez odczytu `fileData` (przy tekście byłaby to kopia całej wartości).
+            if quickLookFile.currentKey != "\(model.contentVersion)" {
+                quickLookFile.show(model.fileData, format: model.format, key: "\(model.contentVersion)", in: ql)
+            }
+            return
+        }
         content.subviews.forEach { $0.removeFromSuperview() }
         let view: NSView
         let tv = textView.documentView as! NSTextView
@@ -187,6 +248,12 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         case 3:
             pdfView.document = PDFDocument(data: model.fileData)
             view = pdfView
+        case 5:
+            let ql = quickLook ?? QuickLookFile.makeView()
+            quickLook = ql
+            // Klucz: wersja treści modelu (dociągnięcie, edycja, plik) — ten sam plik przy zwykłym odświeżeniu.
+            quickLookFile.show(model.fileData, format: model.format, key: "\(model.contentVersion)", in: ql)
+            view = ql
         case 4:
             webView.loadHTMLString(LargeDataModel.htmlPreviewDocument(model.text ?? String(decoding: model.fileData, as: UTF8.self)), baseURL: nil)
             view = webView
@@ -269,10 +336,19 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
 
     @objc private func closeWindow() { ToolDockManager.shared.close(key: key) }
 
+    /// Edytor zamknięty — odświeżenia (np. po zmianie z edytora zewnętrznego zebranej przy zamykaniu) nie budują już
+    /// widoków ani plików podglądu.
+    private var closed = false
+
     /// Zamknięcie narzędzia: ostatnie zmiany z edytora zewnętrznego i koniec jego śledzenia.
     private func finish() {
+        // Najpierw ostatnia zmiana z edytora zewnętrznego (zmienia model), potem zamknięcie: plik podglądu nie powstaje
+        // ponownie po zamknięciu okna (wartość z bazy nie zostaje na dysku).
         externalTimer?.invalidate()
         externalEdit?.checkForChanges()
         externalEdit?.finish()
+        closed = true
+        quickLook?.close()
+        quickLookFile.remove()
     }
 }

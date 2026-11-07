@@ -334,6 +334,19 @@ struct LargeDataIntegrationTests {
         let tab = try #require(doc.results.first)
         let grid = try #require(tab.grid)
         #expect(grid.text(row: 0, column: 2) == "<CLOB>")
+        // Bez zaznaczenia (zaraz po wykonaniu, wstążka): pierwszy wiersz i pierwsza kolumna LOB — nie „niedostępne”.
+        #expect(tab.selectedRows == nil && ws.isEnabled("grid.largeData"))
+        try await ws.invoke("grid.largeData")
+        #expect(ui.largeData?.columnName == "BODY")
+        // Z menu kontekstowego siatki: karta wyniku jako cel — także gdy aktywne jest inne okno.
+        ui.largeData = nil
+        let other = ws.newDocument(.sql)
+        #expect(ws.activeDocumentID == other.id && !ws.isEnabled("grid.largeData"))
+        tab.currentColumn = 2
+        tab.selectedRows = [0]
+        try await ws.invoke("grid.largeData", target: tab)
+        #expect(ui.largeData?.columnName == "BODY")
+        ws.activeDocumentID = doc.id
         tab.selectedRows = [0]
         tab.currentColumn = 2
         try await ws.invoke("grid.largeData")

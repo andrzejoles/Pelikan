@@ -2,10 +2,19 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.22.0 — podgląd danych binarnych, Large Data Editor z menu siatki
+
+- **Large Data Editor** otwiera się z menu kontekstowego siatki dla klikniętej komórki (wcześniej bywał „niedostępny”).
+- **Podgląd Quick Look** w panelu wartości i w Large Data Editor: PDF, obrazy (także TIFF, WebP, HEIC), dokumenty
+  Word, Excel, PowerPoint i archiwa rozpoznawane po zawartości; zapis do pliku z właściwym rozszerzeniem.
+- **Przegląd końcowy:** zamknięty albo ponownie wykonany wynik zwalnia LOB-y tymczasowe na serwerze (TEMP); okno
+  poleceń nie kończy pracy przy nietypowym odstępie `REPEAT`; czytelniejsze komunikaty przy bardzo dużych LOB-ach.
+
 ## 1.21.8 — narzędzia przy limicie sesji
 
-- **Limit sesji konta** (SESSIONS_PER_USER i podobne): narzędzie, któremu baza odmówi nowej sesji, pracuje w sesji
-  głównej połączenia — chyba że ta ma otwartą transakcję (wtedy komunikat, co zrobić).
+- **Limit sesji konta** (SESSIONS_PER_USER i podobne): lista sesji, Instance Viewer, lista raportów wydajności
+  i SQL Monitor działają wtedy w sesji głównej (tryb Multi, bez otwartej transakcji); pozostałe narzędzia pokazują
+  komunikat, co zrobić.
 
 ## 1.21.6 — narzędzia nie blokują się nawzajem
 
