@@ -67005,6 +67005,34 @@
         }
       }
     },
+    "Podgląd po pobraniu całej wartości — „Pobierz całość”" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview after fetching the whole value — “Fetch All”"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorschau nach dem Laden des ganzen Werts — „Alles laden“"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista previa tras obtener el valor completo — «Obtener todo»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перегляд після отримання всього значення — «Отримати все»"
+          }
+        }
+      }
+    },
     "Podgląd początku wartości — całość: „Pobierz całość” albo zapis do pliku" : {
       "localizations" : {
         "en" : {

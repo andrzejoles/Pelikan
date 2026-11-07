@@ -64,9 +64,9 @@ struct CellValuePanelView: View {
                             Button(L10n.tr("Pobierz całość")) { requested = key }
                                 .help(L10n.tr("Pobiera całą wartość binarną z bazy do podglądu"))
                         }
-                        Button { _ = workspace.perform("grid.saveValue") } label: { Image(systemName: "square.and.arrow.down") }
+                        Button { _ = workspace.perform("grid.saveValue", target: tab) } label: { Image(systemName: "square.and.arrow.down") }
                             .iconLabel(L10n.tr("Zapisz wartość komórki do pliku…"))
-                        Button { _ = workspace.perform("grid.openValueExternally") } label: { Image(systemName: "arrow.up.forward.app") }
+                        Button { _ = workspace.perform("grid.openValueExternally", target: tab) } label: { Image(systemName: "arrow.up.forward.app") }
                             .iconLabel(L10n.tr("Otwórz wartość komórki w programie zewnętrznym"))
                     }
                     .controlSize(.small)
@@ -124,6 +124,7 @@ struct CellValuePanelView: View {
         case .xml: "XML"
         case .html: "HTML"
         case .image: L10n.tr("Obraz")
+        case .preview: L10n.tr("Podgląd")
         case .hex: "Hex"
         }
     }
@@ -138,6 +139,13 @@ struct CellValuePanelView: View {
             }
         case .html:
             HTMLPreview(html: p.text)
+        case .preview:
+            if let d = p.data, !p.truncated {
+                QuickLookPreview(data: d, format: p.format, id: "\(key)|\(d.count)")
+            } else {
+                Text(L10n.tr("Podgląd po pobraniu całej wartości — „Pobierz całość”")).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         default:
             ReadOnlyTextView(text: p.rendered(m), id: "\(key)|\(m.rawValue)|\(p.text.utf16.count)|\(p.data?.count ?? 0)")
         }

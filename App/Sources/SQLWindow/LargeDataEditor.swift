@@ -1,6 +1,7 @@
 import AppKit
 import PDFKit
 import PelikanWorkspace
+import Quartz
 import UniformTypeIdentifiers
 import WebKit
 
@@ -14,6 +15,9 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
     private let textView = NSTextView.scrollableTextView()
     private let imageView = NSImageView()
     private let pdfView = PDFView()
+    /// Podgląd Quick Look (dokumenty Office, archiwa, obrazy i PDF — formaty rozpoznane po sygnaturze).
+    private lazy var quickLook: QLPreviewView = QLPreviewView(frame: .zero, style: .normal)!
+    private let quickLookFile = QuickLookFile()
     /// Podgląd HTML (PD-LDE-001): bez JavaScriptu, CSP bez zasobów zewnętrznych, bez nawigacji.
     private lazy var webView = WKWebView.localHTML()
     private let autoFormat = NSButton(checkboxWithTitle: "", target: nil, action: nil)
@@ -46,8 +50,8 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
     required init?(coder: NSCoder) { fatalError() }
 
     private func build() {
-        mode.segmentCount = 5
-        for (i, title) in [L10n.tr("Tekst"), L10n.tr("Hex"), L10n.tr("Obraz"), L10n.tr("PDF"), "HTML"].enumerated() { mode.setLabel(title, forSegment: i) }
+        mode.segmentCount = 6
+        for (i, title) in [L10n.tr("Tekst"), L10n.tr("Hex"), L10n.tr("Obraz"), L10n.tr("PDF"), "HTML", L10n.tr("Podgląd")].enumerated() { mode.setLabel(title, forSegment: i) }
         mode.target = self
         mode.action = #selector(modeChanged)
         let tv = textView.documentView as! NSTextView
@@ -104,7 +108,8 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         root.widthAnchor.constraint(greaterThanOrEqualToConstant: 480).isActive = true
         root.heightAnchor.constraint(greaterThanOrEqualToConstant: 320).isActive = true
         view = root
-        mode.selectedSegment = model.format.isImage ? 2 : model.format == .pdf ? 3 : (model.isBinary && !model.format.isText ? 1 : 0)
+        mode.selectedSegment = model.format.isImage ? 2 : model.format == .pdf ? 3 : model.format.isPreviewable ? 5
+            : (model.isBinary && !model.format.isText ? 1 : 0)
         modeChanged()
     }
 
@@ -161,6 +166,7 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         mode.setEnabled(format.isImage, forSegment: 2)
         mode.setEnabled(format == .pdf, forSegment: 3)
         mode.setEnabled(format.isText, forSegment: 4)
+        mode.setEnabled(format.isPreviewable && !model.truncated, forSegment: 5)
     }
 
     /// Widok tekstu jest w oknie i ma tę samą treść co model (np. właśnie wpisaną).
@@ -187,6 +193,12 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         case 3:
             pdfView.document = PDFDocument(data: model.fileData)
             view = pdfView
+        case 5:
+            let data = model.fileData
+            if let url = quickLookFile.file(for: data, format: model.format, key: "\(data.count)|\(data.hashValue)") {
+                quickLook.previewItem = url as NSURL
+            }
+            view = quickLook
         case 4:
             webView.loadHTMLString(LargeDataModel.htmlPreviewDocument(model.text ?? String(decoding: model.fileData, as: UTF8.self)), baseURL: nil)
             view = webView
@@ -271,6 +283,8 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
 
     /// Zamknięcie narzędzia: ostatnie zmiany z edytora zewnętrznego i koniec jego śledzenia.
     private func finish() {
+        quickLook.close()
+        quickLookFile.remove()
         externalTimer?.invalidate()
         externalEdit?.checkForChanges()
         externalEdit?.finish()

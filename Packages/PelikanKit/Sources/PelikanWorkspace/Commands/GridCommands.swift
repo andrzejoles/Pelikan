@@ -37,6 +37,19 @@ public enum GridCommands {
         }
     }
 
+    /// Komórka komend jednej komórki: zaznaczony wiersz i bieżąca kolumna; bez zaznaczenia (zaraz po wykonaniu
+    /// zapytania, wstążka) — pierwszy wiersz i pierwsza kolumna LOB (inaczej pierwsza kolumna).
+    /// `target` — karta wyniku, z której wywołano komendę (menu kontekstowe, dwuklik, panel wartości): ta siatka,
+    /// a nie aktywna karta aktywnego okna (inna karta wyniku, karta bez siatki, okno w tle).
+    @MainActor
+    static func currentCell(_ ws: Workspace, target: AnyObject? = nil) -> (ResultTab, ResultGridModel, row: Int, column: Int)? {
+        let resolved: (ResultTab, ResultGridModel)? = (target as? ResultTab).flatMap { t in t.grid.map { (t, $0) } } ?? activeGrid(ws)
+        guard let (tab, grid) = resolved, grid.rowCount > 0, !grid.columns.isEmpty else { return nil }
+        let row = tab.selectedRows?.first ?? 0
+        let column = tab.currentColumn ?? grid.columns.firstIndex { $0.type.isLOB } ?? 0
+        return (tab, grid, row, column)
+    }
+
     @MainActor
     static func activeGrid(_ ws: Workspace) -> (ResultTab, ResultGridModel)? {
         guard let tab = activeTab(ws), let grid = tab.grid else { return nil }
@@ -196,8 +209,8 @@ public enum GridCommands {
                                       mac: ["cmd+alt+l"], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera bieżącą komórkę (LOB, LONG, RAW, długi tekst) w edytorze dużych danych."),
                                       feature: "PD-GRID-003"),
-                    validate: { ws in activeGrid(ws).map { $0.0.selectedRows?.first != nil && $0.0.currentColumn != nil } ?? false }) { ctx in
-                guard let (tab, grid) = activeGrid(ctx.workspace), let row = tab.selectedRows?.first, let col = tab.currentColumn else { return .ok }
+                    validate: { ws in currentCell(ws) != nil }, acceptsTarget: true) { ctx in
+                guard let (_, grid, row, col) = currentCell(ctx.workspace, target: ctx.target) else { return .ok }
                 let model = LargeDataModel(grid: grid, row: row, column: col)
                 ctx.workspace.ui?.showLargeDataEditor(model)
                 try await model.loadFull()
@@ -208,8 +221,8 @@ public enum GridCommands {
                                       agent: .none, effect: .external,
                                       summary: L10n.tr("Zapisuje pełną wartość bieżącej komórki (CLOB w UTF-8, BLOB bez zmian) do pliku — LOB pobierany z bazy porcjami, bez limitu siatki."),
                                       feature: "PD-GRID-023"),
-                    validate: { ws in activeGrid(ws).map { $0.0.selectedRows?.first != nil && $0.0.currentColumn != nil } ?? false }) { ctx in
-                guard let (tab, grid) = activeGrid(ctx.workspace), let row = tab.selectedRows?.first, let col = tab.currentColumn else { return .ok }
+                    validate: { ws in currentCell(ws) != nil }, acceptsTarget: true) { ctx in
+                guard let (_, grid, row, col) = currentCell(ctx.workspace, target: ctx.target) else { return .ok }
                 let v = grid.value(row: row, column: col)
                 var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
                 if url == nil { url = await ctx.ui?.chooseSaveURL(suggestedName: grid.columns[col].name, fileExtension: Self.valueFileExtension(v)) }
@@ -221,8 +234,8 @@ public enum GridCommands {
                                       agent: .none, effect: .external,
                                       summary: L10n.tr("Zapisuje pełną wartość bieżącej komórki do pliku tymczasowego i otwiera go w edytorze zewnętrznym z ustawień (tekst) albo w programie skojarzonym z formatem. Zmiany w pliku nie wracają do bazy."),
                                       feature: "PD-GRID-023"),
-                    validate: { ws in activeGrid(ws).map { $0.0.selectedRows?.first != nil && $0.0.currentColumn != nil } ?? false }) { ctx in
-                guard let (tab, grid) = activeGrid(ctx.workspace), let row = tab.selectedRows?.first, let col = tab.currentColumn else { return .ok }
+                    validate: { ws in currentCell(ws) != nil }, acceptsTarget: true) { ctx in
+                guard let (_, grid, row, col) = currentCell(ctx.workspace, target: ctx.target) else { return .ok }
                 let v = grid.value(row: row, column: col)
                 let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-value-\(UUID().uuidString.prefix(8))", isDirectory: true)
                 try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

@@ -166,7 +166,7 @@ sobre la cuadrícula. Con resultados muy grandes, Pelikan pregunta antes de supe
   funciones); un valor binario (BLOB), solo a petición: **Obtener todo** o guardar en archivo. Botones del panel y menú
   contextual de la cuadrícula: **Guardar valor de la celda en archivo…** (valor completo, leído por partes) y **Abrir
   valor de la celda en una aplicación externa** (texto en el editor externo de Preferencias, p. ej. BBEdit; los cambios
-  no vuelven a la base de datos).
+  no vuelven a la base de datos). Datos binarios reconocidos por su contenido (PDF, imágenes, documentos de Office, archivos) — modo **Vista previa** (Quick Look).
 - La **Vista de registro único** muestra la fila actual en vertical con los tipos y comentarios de las columnas. La
   activa y desactiva el botón de la barra sobre la cuadrícula o **Registro** en la pestaña **Resultado** de la cinta;
   cada pestaña de resultado recuerda su estado.

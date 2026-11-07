@@ -95,3 +95,24 @@ struct FullLOBTests {
         #expect(s.reads.withLock { $0 } == 0)
     }
 }
+
+@Suite("Rozpoznanie formatu danych binarnych po sygnaturze (podgląd Quick Look)")
+struct BinaryFormatTests {
+    @Test("Obrazy, PDF, Office (ZIP), GZIP, stary Office (OLE); nieznane — hex")
+    func signatures() {
+        func f(_ b: [UInt8]) -> LargeDataFormat { LargeDataFormat.detect(text: nil, bytes: Data(b)) }
+        #expect(f([0x49, 0x49, 0x2A, 0x00, 1]) == .tiff)
+        #expect(f(Array("RIFF".utf8) + [0, 0, 0, 0] + Array("WEBP".utf8)) == .webp)
+        #expect(f([0, 0, 0, 24] + Array("ftypheic".utf8)) == .heic)
+        #expect(f([0x1F, 0x8B, 8, 0]) == .gzip)
+        #expect(f([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1, 0]) == .ole)
+        #expect(f([0x50, 0x4B, 0x03, 0x04] + Array("....[Content_Types].xml....word/document.xml".utf8)) == .docx)
+        #expect(f([0x50, 0x4B, 0x03, 0x04] + Array("....xl/workbook.xml".utf8)) == .xlsx)
+        #expect(f([0x50, 0x4B, 0x03, 0x04, 0, 0]) == .zip)
+        #expect(f([0x00, 0x01, 0x02, 0xFF]) == .binary)
+        #expect(LargeDataFormat.docx.isPreviewable && !LargeDataFormat.binary.isPreviewable && !LargeDataFormat.json.isPreviewable)
+        let p = CellValuePresentation.make(.lob(LOBValue(kind: .blob, bytes: Data(Array("%PDF-1.7".utf8)), length: 8, truncated: false)),
+                                           column: ColumnInfo(name: "D", type: .blob, typeName: "BLOB"), format: ValueFormat())
+        #expect(p.detected == .preview && p.format == .pdf && p.modes.contains(.hex))
+    }
+}

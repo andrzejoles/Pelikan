@@ -4,10 +4,12 @@ import PelikanDB
 
 /// Rozpoznany format treści (UG 27: Large Data Editor — tekst, RTF/XML/HTML, obraz, hex).
 public enum LargeDataFormat: String, Sendable {
-    case text, xml, json, html, rtf, png, jpeg, gif, pdf, binary
+    case text, xml, json, html, rtf, png, jpeg, gif, tiff, bmp, webp, heic, pdf, zip, docx, xlsx, pptx, gzip, ole, binary
 
-    public var isImage: Bool { [.png, .jpeg, .gif].contains(self) }
+    public var isImage: Bool { [.png, .jpeg, .gif, .tiff, .bmp, .webp, .heic].contains(self) }
     public var isText: Bool { [.text, .xml, .json, .html, .rtf].contains(self) }
+    /// Rozpoznany format pliku, który Quick Look umie pokazać (obrazy, PDF, dokumenty Office, archiwa).
+    public var isPreviewable: Bool { !isText && self != .binary }
 
     public var fileExtension: String {
         switch self {
@@ -19,18 +21,45 @@ public enum LargeDataFormat: String, Sendable {
         case .png: "png"
         case .jpeg: "jpg"
         case .gif: "gif"
+        case .tiff: "tiff"
+        case .bmp: "bmp"
+        case .webp: "webp"
+        case .heic: "heic"
         case .pdf: "pdf"
+        case .zip: "zip"
+        case .docx: "docx"
+        case .xlsx: "xlsx"
+        case .pptx: "pptx"
+        case .gzip: "gz"
+        case .ole: "doc"
         case .binary: "bin"
         }
     }
 
-    /// Rozpoznanie po sygnaturze bajtów i początku tekstu.
+    /// Rozpoznanie po sygnaturze bajtów (magic number) i początku tekstu.
     public static func detect(text: String?, bytes: Data?) -> LargeDataFormat {
         if let b = bytes, !b.isEmpty {
             if b.starts(with: [0x89, 0x50, 0x4E, 0x47]) { return .png }
             if b.starts(with: [0xFF, 0xD8, 0xFF]) { return .jpeg }
             if b.starts(with: Array("GIF8".utf8)) { return .gif }
             if b.starts(with: Array("%PDF".utf8)) { return .pdf }
+            if b.starts(with: [0x49, 0x49, 0x2A, 0x00]) || b.starts(with: [0x4D, 0x4D, 0x00, 0x2A]) { return .tiff }
+            if b.starts(with: Array("BM".utf8)), b.count > 14 { return .bmp }
+            if b.starts(with: Array("RIFF".utf8)), b.count >= 12, b.subdata(in: b.startIndex + 8 ..< b.startIndex + 12) == Data("WEBP".utf8) { return .webp }
+            if b.count >= 12, b.subdata(in: b.startIndex + 4 ..< b.startIndex + 8) == Data("ftyp".utf8) {
+                let brand = String(decoding: b.subdata(in: b.startIndex + 8 ..< b.startIndex + 12), as: UTF8.self)
+                if ["heic", "heix", "mif1", "msf1", "hevc"].contains(brand) { return .heic }
+            }
+            if b.starts(with: [0x1F, 0x8B]) { return .gzip }
+            if b.starts(with: [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1]) { return .ole }
+            if b.starts(with: [0x50, 0x4B, 0x03, 0x04]) {
+                // Dokumenty Office Open XML to ZIP — katalog części w nazwach pierwszych wpisów.
+                let head = String(decoding: b.prefix(64 * 1024), as: UTF8.self)
+                if head.contains("word/") { return .docx }
+                if head.contains("xl/") { return .xlsx }
+                if head.contains("ppt/") { return .pptx }
+                return .zip
+            }
             if let s = String(data: b.prefix(4096), encoding: .utf8), !s.contains("\0") { return detect(text: s, bytes: nil) }
             return .binary
         }

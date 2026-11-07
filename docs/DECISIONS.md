@@ -3990,3 +3990,19 @@ własne zmiany, więc w sesji z otwartą transakcją (okno w trybie Dual/jednej 
 też cudzą — wtedy zamiast sesji głównej komunikat (zatwierdź/wycofaj albo zamknij nieużywane okna i narzędzia).
 Rozłączenie kasuje stan limitu.
 
+### D236 · 2026-11-07 — Dane binarne: format po sygnaturze i podgląd Quick Look; Large Data Editor z menu siatki
+
+- **Format po sygnaturze** (`LargeDataFormat.detect`): oprócz PNG, JPEG, GIF, PDF — TIFF, BMP, WebP, HEIC, GZIP,
+  ZIP i dokumenty Office Open XML (DOCX/XLSX/PPTX — ZIP z katalogiem `word/`, `xl/`, `ppt/`), stary Office (OLE).
+  Rozpoznany format daje rozszerzenie przy zapisie do pliku i w programie zewnętrznym.
+- **Podgląd Quick Look** zamiast przeglądarki (właściciel: „zrób podgląd przez Quick Look”): `QLPreviewView` w panelu
+  wartości (tryb „Podgląd”) i w Large Data Editor (karta „Podgląd”) dla formatów nietekstowych. Generatory Quick Look
+  działają poza procesem aplikacji, bez skryptów i sieci (treść z bazy jest niezaufana); plik tymczasowy 0600
+  w katalogu tymczasowym, usuwany przy zmianie treści i zamknięciu. W panelu dane binarne nadal tylko na żądanie —
+  podgląd po „Pobierz całość” (z ucięciem byłby uszkodzony).
+- **Large Data Editor z menu kontekstowego siatki** („jest teraz niedostępne” mimo zaznaczonej komórki): komenda
+  szukała siatki w aktywnej karcie wyniku aktywnego okna, a nie w siatce, w której kliknięto (inna karta wyniku,
+  karta bez siatki, okno w tle). Menu kontekstowe, dwuklik i panel wartości przekazują teraz swoją kartę wyniku jako
+  cel komendy (`grid.largeData`, `grid.saveValue`, `grid.openValueExternally`); bez zaznaczenia (wstążka zaraz po
+  wykonaniu) — pierwszy wiersz i pierwsza kolumna LOB.
+

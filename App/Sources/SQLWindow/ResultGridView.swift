@@ -370,7 +370,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         tab.currentColumn = c
         let type = grid.columns[c].type
         let large = type.isLOB || [.long, .longRaw, .raw, .json, .xmltype].contains(type) || grid.text(row: table.clickedRow, column: c).count > 20
-        if large, !grid.isEditable(column: c) || type.isLOB { workspace.perform("grid.largeData") }
+        if large, !grid.isEditable(column: c) || type.isLOB { workspace.perform("grid.largeData", target: tab) }
     }
 
     private func visibleColumns() -> [Int] {
@@ -689,8 +689,17 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
 
     @objc private func contextCommand(_ sender: NSMenuItem) {
         guard let id = sender.representedObject as? String else { return }
-        workspace.perform(CommandID(rawValue: id))
+        // Komendy jednej komórki działają na komórce spod kursora — prawy klik nie zaznacza jej w tabeli (dawniej
+        // „Large Data Editor… jest teraz niedostępne” bez wcześniejszego zaznaczenia). Eksport i reszta — zaznaczenie.
+        if Self.cellCommands.contains(id) {
+            adoptClickedCell()
+            workspace.perform(CommandID(rawValue: id), target: tab)
+        } else {
+            workspace.perform(CommandID(rawValue: id))
+        }
     }
+
+    static let cellCommands: Set<String> = ["grid.largeData", "grid.saveValue", "grid.openValueExternally"]
 
     @objc private func copyAsFormat(_ sender: NSMenuItem) {
         guard let raw = sender.representedObject as? String else { return }

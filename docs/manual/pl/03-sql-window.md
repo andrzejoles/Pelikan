@@ -151,7 +151,7 @@ wynikach Pelikan pyta przed przekroczeniem limitu rozmiaru z Ustawień.
   HTML, obraz albo hex. CLOB jest pobierany w całości (także z zapytań bez ROWID: widoki, złączenia, funkcje);
   wartość binarna (BLOB) — tylko na żądanie: **Pobierz całość** albo zapis do pliku. Przyciski panelu i menu
   kontekstowe siatki: **Zapisz wartość komórki do pliku…** (pełna wartość, porcjami z bazy) i **Otwórz wartość komórki
-  w programie zewnętrznym** (tekst w edytorze zewnętrznym z Ustawień, np. BBEdit; zmiany nie wracają do bazy).
+  w programie zewnętrznym** (tekst w edytorze zewnętrznym z Ustawień, np. BBEdit; zmiany nie wracają do bazy). Dane binarne rozpoznane po zawartości (PDF, obrazy, dokumenty Office, archiwa) — tryb **Podgląd** (Quick Look).
 - **Widok pojedynczego rekordu** pokazuje bieżący wiersz w pionie z typami i komentarzami kolumn. Włącza go i wyłącza
   przycisk w pasku nad siatką albo **Rekord** na karcie wstążki **Wynik**; stan zapamiętuje każda karta wyniku osobno.
 - **Kursor zagnieżdżony** (`CURSOR(…)` w zapytaniu) otwiera się w nowej karcie wyniku.

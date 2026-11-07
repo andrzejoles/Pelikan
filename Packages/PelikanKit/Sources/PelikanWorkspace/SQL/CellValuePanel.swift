@@ -7,7 +7,7 @@ import PelikanDB
 /// Zawartość panelu wartości obok siatki (DB-PANEL-001) dla bieżącej komórki: tekst, JSON i XML z wcięciami,
 /// HTML do podglądu, obraz z BLOB/RAW, hex dla danych binarnych. Wartość z siatki (LOB-y w pobranej długości).
 public struct CellValuePresentation: Sendable, Equatable {
-    public enum Mode: String, Sendable, CaseIterable { case text, json, xml, html, image, hex }
+    public enum Mode: String, Sendable, CaseIterable { case text, json, xml, html, image, preview, hex }
 
     public var column: String
     public var typeName: String
@@ -19,6 +19,8 @@ public struct CellValuePresentation: Sendable, Equatable {
     public var text: String
     public var data: Data?
     public var truncated: Bool
+    /// Rozpoznany format (rozszerzenie pliku podglądu Quick Look).
+    public var format: LargeDataFormat = .text
 
     public static func make(_ value: OracleValue, column: ColumnInfo, format: ValueFormat) -> CellValuePresentation {
         var text = ""
@@ -41,16 +43,19 @@ public struct CellValuePresentation: Sendable, Equatable {
         case .json: detected = .json
         case .xml: detected = .xml
         case .html: detected = .html
-        case .png, .jpeg, .gif: detected = .image
-        case .binary, .pdf: detected = .hex
+        case _ where kind.isImage: detected = .image
+        case _ where kind.isPreviewable: detected = .preview     // PDF, Office, archiwa — Quick Look
+        case .binary: detected = .hex
         default: detected = .text
         }
         if detected != .text, !modes.contains(detected) { modes.append(detected) }
         if data != nil, !modes.contains(.hex) { modes.append(.hex) }
         if kind == .html, !modes.contains(.text) { modes.insert(.text, at: 0) }
         if let d = data, text.isEmpty, kind.isText { text = String(decoding: d, as: UTF8.self) }
-        return CellValuePresentation(column: column.name, typeName: column.typeName, isNull: isNull, detected: detected, modes: modes,
-                                     text: text, data: data, truncated: truncated)
+        var p = CellValuePresentation(column: column.name, typeName: column.typeName, isNull: isNull, detected: detected, modes: modes,
+                                      text: text, data: data, truncated: truncated)
+        p.format = kind
+        return p
     }
 
     /// Tekst dla trybu (JSON/XML z wcięciami, hex z offsetami i ASCII).
@@ -61,7 +66,7 @@ public struct CellValuePresentation: Sendable, Equatable {
         // XML bez parsera (żadnych encji zewnętrznych z niezaufanych danych) — ten sam formater co Large Data Editor.
         case .xml: return LargeDataModel.prettyXML(text) ?? text
         case .hex: return LargeDataModel.hexDump(data ?? Data(text.utf8), limit: 64 * 1024)
-        case .text, .html, .image: return text
+        case .text, .html, .image, .preview: return text
         }
     }
 }
