@@ -255,6 +255,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
                 add(b, to: &column, in: items)
             case .menu(let title, let symbol, let commands, let large):
                 let b = RibbonButton(style: large ? .large : .small, title: title, symbol: symbol, dropdown: true)
+                b.tint = commands.first.flatMap { IconStyle.color(for: $0) }
                 b.toolTip = title
                 b.onPress = { [weak self] sender in self?.popUp(commands, from: sender) }
                 if large { flushColumn(); items.addArrangedSubview(b) } else { add(b, to: &column, in: items) }
@@ -297,6 +298,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         let title = label ?? d.title.replacingOccurrences(of: "…", with: "")
         let b = RibbonButton(style: style, title: title, symbol: CommandSymbols.symbol(for: id) ?? "circle.dashed", dropdown: false)
         b.commandID = d.id
+        b.tint = IconStyle.color(for: id)
         // Komenda-przełącznik: stan od razu (nil — bez stanu; odświeżane potem tylko przyciski ze stanem).
         b.toggleState = workspace.toggleState(d.id)
         b.toolTip = tooltip(for: d)
@@ -537,6 +539,8 @@ final class RibbonButton: NSControl {
     }
 
     var commandID: CommandID?
+    /// PROTOTYP: kolor ikony (nil — jak etykieta).
+    var tint: NSColor? { didSet { imageView.contentTintColor = isEnabled ? (tint ?? .labelColor) : .tertiaryLabelColor } }
     var onPress: ((RibbonButton) -> Void)?
     var contextMenuProvider: (() -> NSMenu?)?
     private let style: Style
@@ -607,7 +611,7 @@ final class RibbonButton: NSControl {
 
     override var isEnabled: Bool {
         didSet {
-            imageView.contentTintColor = isEnabled ? .labelColor : .tertiaryLabelColor
+            imageView.contentTintColor = isEnabled ? (tint ?? .labelColor) : .tertiaryLabelColor
             label.textColor = isEnabled ? .labelColor : .tertiaryLabelColor
             if !isEnabled { hovering = false }
         }
@@ -771,7 +775,7 @@ final class RibbonSearchResults: NSObject, NSTableViewDataSource, NSTableViewDel
         let d = items[row]
         let enabled = workspace.isEnabled(d.id)
         let icon = NSImageView(image: NSImage(systemSymbolName: CommandSymbols.symbol(for: d.id.rawValue) ?? "command", accessibilityDescription: nil) ?? NSImage())
-        icon.contentTintColor = enabled ? .labelColor : .tertiaryLabelColor
+        icon.contentTintColor = enabled ? (IconStyle.color(for: d.id.rawValue) ?? .labelColor) : .tertiaryLabelColor
         let title = NSTextField(labelWithString: d.title)
         title.font = InterfaceFonts.shared.body
         title.textColor = enabled ? .labelColor : .tertiaryLabelColor

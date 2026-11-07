@@ -528,7 +528,9 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             color = workspace.indicatorColor(forConnection: n.connection).map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? .systemGray
             font = AppFonts.font(family: font.familyName ?? "", size: font.pointSize, weight: isMain ? .bold : .semibold)
             cell.setAccessibilityLabel(isMain ? L10n.tr("Połączenie główne: \(def?.displayName ?? "")") : L10n.tr("Połączenie: \(def?.displayName ?? "")"))
-        case .folder(let t): title = t.folderName
+        case .folder(let t):
+            title = t.folderName
+            if IconStyle.current != .mono { symbol = ObjectSymbols.symbol(for: t); color = Self.color(t) }
         case .recent: title = L10n.tr("Ostatnie"); symbol = "clock"
         case .systemFolder(let f):
             title = f.rawValue

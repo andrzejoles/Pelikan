@@ -89,6 +89,9 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
         item.paletteLabel = c.descriptor.title
         item.toolTip = c.descriptor.summary
         item.image = NSImage(systemSymbolName: ToolbarModel.symbol(for: command), accessibilityDescription: c.descriptor.title)
+        if let tint = IconStyle.color(for: command) {
+            item.image = item.image?.withSymbolConfiguration(NSImage.SymbolConfiguration(paletteColors: [tint]))
+        }
         item.target = self
         item.action = #selector(runCommand(_:))
         return item

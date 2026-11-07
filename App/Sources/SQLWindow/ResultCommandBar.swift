@@ -81,6 +81,7 @@ final class ResultCommandBar: NSView {
                 case .large(let id, _), .small(let id, _):
                     guard let d = workspace.registry.command(CommandID(rawValue: id))?.descriptor else { continue }
                     let b = iconButton(CommandSymbols.symbol(for: id) ?? "circle.dashed", tooltip: tooltip(for: d), label: d.title)
+                    b.contentTintColor = IconStyle.color(for: id)
                     b.identifier = NSUserInterfaceItemIdentifier(id)
                     b.target = self
                     b.action = #selector(commandPressed(_:))

@@ -45,6 +45,7 @@
 		418A381EE70A26F88F29B1F1 /* QuickLookPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1039C246E3B95C0338C0F4A9 /* QuickLookPreview.swift */; };
 		41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */; };
 		44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */; };
+		48447683D981471D4DBE489D /* IconStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB79F6B326A2415659A3038 /* IconStyle.swift */; };
 		4B2E4E88BF993838C0CB2BB9 /* PelikanQuickLook.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F146BB88877192EE38E4B80D /* PelikanQuickLook.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4DF0333531870281AF6B3CF0 /* ToolDock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369A71A0156A1C021DAA7137 /* ToolDock.swift */; };
 		4E6C1F4B9021333960429A50 /* CodeContentsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAFF1A479CCAE5CDB17784FF /* CodeContentsPanel.swift */; };
@@ -275,6 +276,7 @@
 		E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramWindowViewController.swift; sourceTree = "<group>"; };
 		E41B68045DB74053B692C853 /* ProjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectView.swift; sourceTree = "<group>"; };
 		E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplainPlanViewController.swift; sourceTree = "<group>"; };
+		EEB79F6B326A2415659A3038 /* IconStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconStyle.swift; sourceTree = "<group>"; };
 		F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultGridView.swift; sourceTree = "<group>"; };
 		F146BB88877192EE38E4B80D /* PelikanQuickLook.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PelikanQuickLook.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1892296F597E772265A2D4D /* BrowserPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPane.swift; sourceTree = "<group>"; };
@@ -518,6 +520,7 @@
 				DC46AF5BAABF755F3D8B53EE /* CodePreview.swift */,
 				CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */,
 				CC82F76EB775852356F7D08E /* DataTable.swift */,
+				EEB79F6B326A2415659A3038 /* IconStyle.swift */,
 				8CCD8DCD02E96AFEB6162242 /* LocalHTMLView.swift */,
 				763E3F551A3684075944A130 /* main.swift */,
 				16B2BB118EADAF6ADD890DD1 /* MainToolbar.swift */,
@@ -923,6 +926,7 @@
 				85D7D2C4AF2796E156679AA2 /* GraphView.swift in Sources */,
 				FAD1F211CE8B500424B14AA7 /* GridStage8Views.swift in Sources */,
 				3155D9F0BF642BB198068577 /* GridToolViews.swift in Sources */,
+				48447683D981471D4DBE489D /* IconStyle.swift in Sources */,
 				E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */,
 				D088DC8F6180DBA2F87F4D37 /* LocalDocsView.swift in Sources */,
 				60E876C2683DB098B85C39A8 /* LocalHTMLView.swift in Sources */,
