@@ -216,6 +216,9 @@ struct ThinSessionTests {
                 var streamed = Data()
                 try await s.streamLOB(l, chunk: 10_000) { part in streamed.append(part.bytes ?? Data((part.text ?? "").utf8)) }
                 #expect(streamed == (full.bytes ?? Data((full.text ?? "").utf8)))
+                // Zwolniony lokator (wynik zamknięty) — odczyt kończy się błędem, nie odczytem zwolnionego uchwytu.
+                await s.releaseLOBs([try #require(l.locator)])
+                await #expect(throws: DatabaseError.self) { _ = try await s.readLOB(l.locator!, offset: 1, amount: 10) }
             }
         }
         await thin.close()

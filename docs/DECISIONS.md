@@ -4014,3 +4014,41 @@ podaje kod błędu (limit profilu albo chwilowa odmowa listenera).
   cel komendy (`grid.largeData`, `grid.saveValue`, `grid.openValueExternally`); bez zaznaczenia (wstążka zaraz po
   wykonaniu) — pierwszy wiersz i pierwsza kolumna LOB.
 
+### D237 · 2026-11-07 — Przegląd końcowy: błędy, stabilność, bezpieczeństwo, wydajność, ergonomia
+
+Na prośbę właściciela („przegląd ostateczny”, tylko poprawki zauważalne w danej kategorii, bez materiału na kolejne
+CR). Oprócz przeglądu wzorców w kodzie (~100 tys. linii) — narzędzia: Thread Sanitizer (testy jednostkowe i na bazie),
+Address Sanitizer (testy na bazie — styk z biblioteką C ODPI), testy wydajności release z progami
+(`PELIKAN_PERF_STRICT`), czyste budowanie aplikacji (zero ostrzeżeń). Wyniki narzędzi: bez wyścigów danych i błędów
+pamięci w kodzie Pelikana, budżety czasowe dotrzymane. Jedyne zgłoszenie Thread Sanitizera (testy na bazie) dotyczy
+dołączonej biblioteki ODPI-C (`dpiGlobal.c` — zapis wskaźnika nazwy funkcji do globalnego bufora diagnostycznego, zanim
+wątek przejdzie na własny bufor błędów): nieszkodliwe, zachowanie biblioteki u źródła — bez zmian w kodzie zewnętrznym.
+
+Poprawione:
+- **Stabilność — okno poleceń:** `REPEAT n sekundy` z wartością nieskończoną, NaN albo ogromną kończyło proces
+  (konwersja na milisekundy) — odstęp ograniczony do 0…86 400 s.
+- **Stabilność / zasoby serwera — lokatory LOB (D230):** lokatory obciętych LOB-ów trzymane do zamknięcia sesji
+  utrzymywały LOB-y tymczasowe (XMLAGG, JSON … RETURNING CLOB, DBMS_METADATA) w przestrzeni TEMP serwera; wynik
+  zamknięty albo zastąpiony (`ResultGridModel` — `isolated deinit`, także oryginały komórek zmienionych w edycji)
+  zwalnia teraz swoje lokatory (`DatabaseSession.releaseLOBs`: ODPI — `dpiLob_release`, thin — `LOB.free`, które
+  zwalnia na serwerze tylko LOB-y tymczasowe).
+- **Bezpieczeństwo — Large Data Editor:** zmiana z edytora zewnętrznego zebrana przy zamykaniu mogła zapisać nową kopię
+  wartości z bazy do katalogu podglądu już po zamknięciu okna — kolejność zamykania i blokada odświeżeń po zamknięciu.
+- **Stabilność — podgląd Quick Look:** katalog podglądów usunięty w trakcie wielodniowej pracy (sprzątanie katalogu
+  tymczasowego) — odtwarzany z nową blokadą zamiast trwałego braku podglądu do ponownego uruchomienia.
+- **Ergonomia — komunikaty obcięcia LOB:** Large Data Editor podczas dociągania i przy wartości ponad limit pamięci
+  pisał „pełna treść niedostępna (brak ROWID)”, a panel wartości po pobraniu wartości ponad limit wciąż proponował
+  „Pobierz całość” (ten sam ucięty wynik) — komunikaty mówią, co widać (pierwsze 256 MB) i jak dostać całość (zapis
+  do pliku, program zewnętrzny).
+
+Sprawdzone bez zmian (dojrzałe): granice agenta (READ ONLY, blokada `WITH FUNCTION`, limity, maskowanie, brak HOST,
+gniazdo 0600 z `getpeereid` i tokenem, limit ramek), widoki HTML (bez JavaScriptu i nawigacji), polecenia powłoki
+(cytowanie), zapis plików (atomowo, dowiązania i prawa, kodowanie), konwersje liczb i dostęp do tablic (sprawdzane).
+
+Świadomie bez zmian — do decyzji właściciela: **sterownik thin kończy proces na kolumnie INTERVAL YEAR TO MONTH albo
+BFILE** (`fatalError` w dekoderze wierszy OracleNIO, zanim wartość dotrze do Pelikana). Próba ominięcia
+(`prefetchRows = 0` — najpierw opis kolumn) zapętla OracleNIO przy zapytaniach wymagających definicji kolumn (LOB) —
+wycofana. Możliwe drogi: własna kopia OracleNIO z dekoderem rzucającym błąd (albo obsługą tych typów) i zgłoszenie
+u autora, albo sprawdzanie typów przed zapytaniem (DBMS_SQL.DESCRIBE_COLUMNS — dodatkowy obieg sieci przy każdym
+zapytaniu thin). Instant Client tego problemu nie ma.
+

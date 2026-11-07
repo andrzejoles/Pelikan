@@ -117,8 +117,11 @@ extension ResultGridModel {
         return fullLOBs.last { $0.0 == loc }?.1
     }
 
+    /// Największa pełna treść w pamięci (panel wartości, Large Data Editor); dłuższą zapisuje się do pliku porcjami.
+    public nonisolated static let fullLOBLimit: UInt64 = 256 << 20
+
     /// Pełna treść obciętego LOB-a z lokatora (bez ROWID — także widoki, złączenia, funkcje), do `limit` jednostek.
-    public func fullLOB(_ l: LOBValue, limit: UInt64 = 256 << 20) async throws -> LOBValue {
+    public func fullLOB(_ l: LOBValue, limit: UInt64 = ResultGridModel.fullLOBLimit) async throws -> LOBValue {
         if let c = cachedFullLOB(l), !c.truncated || c.length > limit { return c }
         let full = try await session.fullLOB(l, limit: limit)
         if let loc = l.locator {
@@ -194,9 +197,15 @@ public final class LargeDataModel {
         format = LargeDataFormat.detect(text: t, bytes: b)
     }
 
+    /// Komórka ma lokator LOB-a — pełna treść dostępna z bazy (do pamięci do limitu, do pliku w całości).
+    public var hasLocator: Bool {
+        if case .lob(let l) = grid.value(row: row, column: column) { return l.locator != nil }
+        return false
+    }
+
     /// Pełna treść LOB (siatka pobiera do limitu): z lokatora zachowanego przez sterownik, a bez niego (np. wartość
     /// spoza sterownika) — ponowne zapytanie po ROWID; bez obu zostaje obcięta.
-    public func loadFull(limit: Int = 256 << 20) async throws {
+    public func loadFull(limit: Int = Int(ResultGridModel.fullLOBLimit)) async throws {
         guard truncated else { return }
         if case .lob(let l) = grid.value(row: row, column: column), l.locator != nil {
             isLoading = true

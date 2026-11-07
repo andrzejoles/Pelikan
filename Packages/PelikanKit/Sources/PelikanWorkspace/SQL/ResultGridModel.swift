@@ -34,6 +34,20 @@ public final class ResultGridModel {
     /// Pobieranie wstrzymane na limicie rozmiaru (odmowa dalszego pobierania).
     public private(set) var stoppedAtSizeLimit = false
 
+    /// Wynik zamknięty albo zastąpiony (ponowne wykonanie, zamknięta karta) — lokatory jego LOB-ów zwolnione w sesji
+    /// (LOB-y tymczasowe nie zajmują dalej TEMP na serwerze; D230).
+    isolated deinit {
+        guard columns.contains(where: { $0.type.isLOB }) else { return }
+        var locators: [LOBLocator] = []
+        func collect(_ v: OracleValue) { if case .lob(let l) = v, let loc = l.locator { locators.append(loc) } }
+        for row in rows { row.forEach(collect) }
+        // Oryginały komórek zmienionych w edycji (wartości z bazy sprzed zmiany).
+        for cols in edit.changed.values { cols.values.forEach(collect) }
+        guard !locators.isEmpty else { return }
+        let s = session, ids = locators
+        Task.detached { await s.releaseLOBs(ids) }
+    }
+
     public init(columns: [ColumnInfo], resultSet: ResultSetID, session: any DatabaseSession, sql: String, format: ValueFormat) {
         self.columns = columns
         self.resultSet = resultSet

@@ -7,6 +7,8 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
 - **Large Data Editor** otwiera się z menu kontekstowego siatki dla klikniętej komórki (wcześniej bywał „niedostępny”).
 - **Podgląd Quick Look** w panelu wartości i w Large Data Editor: PDF, obrazy (także TIFF, WebP, HEIC), dokumenty
   Word, Excel, PowerPoint i archiwa rozpoznawane po zawartości; zapis do pliku z właściwym rozszerzeniem.
+- **Przegląd końcowy:** zamknięty albo ponownie wykonany wynik zwalnia LOB-y tymczasowe na serwerze (TEMP); okno
+  poleceń nie kończy pracy przy nietypowym odstępie `REPEAT`; czytelniejsze komunikaty przy bardzo dużych LOB-ach.
 
 ## 1.21.8 — narzędzia przy limicie sesji
 

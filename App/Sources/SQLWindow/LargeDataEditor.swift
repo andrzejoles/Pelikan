@@ -173,6 +173,7 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
     }
 
     private func refresh() {
+        guard !closed else { return }
         let loading = model.isLoading
         // Edytor otwiera się z treścią obciętą do limitu siatki; po dociągnięciu całości (np. DOCX) — karta dla pełnej
         // treści, o ile użytkownik nie wybrał innej.
@@ -195,8 +196,14 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         _ = model.text
         _ = model.bytes
         var parts = [model.typeName, L10n.tr("format: \(format.rawValue.uppercased())"), L10n.tr("długość: \(model.totalLength)")]
-        if model.truncated { parts.append(L10n.tr("obcięte — pełna treść niedostępna (brak ROWID)")) }
-        if loading { parts.append(L10n.tr("pobieranie…")) }
+        if loading {
+            parts.append(L10n.tr("pobieranie…"))
+        } else if model.truncated {
+            // Z lokatorem obcięta tylko wartość ponad limit pamięci — całość zapisuje się do pliku porcjami.
+            let mb = ResultGridModel.fullLOBLimit >> 20
+            parts.append(model.hasLocator ? L10n.tr("pokazano pierwsze \(mb) MB — całość: Zapisz do pliku…")
+                                          : L10n.tr("obcięte — pełna treść niedostępna (brak ROWID)"))
+        }
         if !model.isEditable { parts.append(L10n.tr("tylko do odczytu")) }
         let binaryText = model.editableText == nil
         if model.isEditable, binaryText { parts.append(L10n.tr("dane binarne — zmiana przez Wczytaj z pliku")) }
@@ -329,12 +336,19 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
 
     @objc private func closeWindow() { ToolDockManager.shared.close(key: key) }
 
+    /// Edytor zamknięty — odświeżenia (np. po zmianie z edytora zewnętrznego zebranej przy zamykaniu) nie budują już
+    /// widoków ani plików podglądu.
+    private var closed = false
+
     /// Zamknięcie narzędzia: ostatnie zmiany z edytora zewnętrznego i koniec jego śledzenia.
     private func finish() {
-        quickLook?.close()
-        quickLookFile.remove()
+        // Najpierw ostatnia zmiana z edytora zewnętrznego (zmienia model), potem zamknięcie: plik podglądu nie powstaje
+        // ponownie po zamknięciu okna (wartość z bazy nie zostaje na dysku).
         externalTimer?.invalidate()
         externalEdit?.checkForChanges()
         externalEdit?.finish()
+        closed = true
+        quickLook?.close()
+        quickLookFile.remove()
     }
 }

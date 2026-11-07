@@ -2,6 +2,7 @@ import AppKit
 import PelikanWorkspace
 import Quartz
 import SwiftUI
+import Synchronization
 
 /// Plik tymczasowy podglądu Quick Look (QLPreviewView pokazuje plik, nie dane w pamięci): właściwe rozszerzenie
 /// z rozpoznanego formatu, prawa tylko dla użytkownika, usuwany przy zmianie treści i zamknięciu widoku. Zapis poza
@@ -23,20 +24,21 @@ final class QuickLookFile {
         }
         remove()
         self.key = key
-        let file = Self.processDirectory?.appendingPathComponent(UUID().uuidString).appendingPathExtension(format.fileExtension)
+        let name = UUID().uuidString + "." + format.fileExtension
         writing = Task { [weak self] in
             // Plik 0600 od chwili utworzenia (PrivateFile, D186) w katalogu procesu 0700; inny system plików — bez podglądu.
-            let ok = await Task.detached(priority: .userInitiated) { () -> Bool in
-                guard let file else { return false }
-                guard (try? PrivateFile.write(data, to: file)) == true else { try? FileManager.default.removeItem(at: file); return false }
-                return true
+            let file = await Task.detached(priority: .userInitiated) { () -> URL? in
+                guard let dir = QuickLookFile.processDirectory() else { return nil }
+                let file = dir.appendingPathComponent(name)
+                guard (try? PrivateFile.write(data, to: file)) == true else { try? FileManager.default.removeItem(at: file); return nil }
+                return file
             }.value
             guard let self, !Task.isCancelled, self.key == key else {
                 if let file { try? FileManager.default.removeItem(at: file) }
                 return
             }
             // Nieudany zapis (brak miejsca, uprawnienia) — bez klucza, żeby następne odświeżenie spróbowało ponownie.
-            guard ok, let file else { self.key = nil; return }
+            guard let file else { self.key = nil; return }
             self.url = file
             ready(file)
         }
@@ -48,21 +50,31 @@ final class QuickLookFile {
 
     /// Katalog podglądów tego uruchomienia (0700) z plikiem blokady trzymanym do końca procesu (`flock`): druga kopia
     /// aplikacji ma własny, a katalog po awarii rozpoznaje się po zwolnionej blokadzie (bez zgadywania po numerze
-    /// procesu, który system mógł już przydzielić innemu programowi). nil — katalogu nie da się utworzyć.
-    nonisolated static let processDirectory: URL? = {
-        let fm = FileManager.default
-        try? fm.createDirectory(at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        _ = chmod(root.path, 0o700)
-        let dir = root.appendingPathComponent("\(ProcessInfo.processInfo.processIdentifier)-\(UUID().uuidString.prefix(8))", isDirectory: true)
-        guard (try? fm.createDirectory(at: dir, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])) != nil else { return nil }
-        let fd = open(dir.appendingPathComponent(".lock").path, O_CREAT | O_RDWR | O_CLOEXEC, 0o600)
-        guard fd >= 0, flock(fd, LOCK_EX | LOCK_NB) == 0 else {
-            if fd >= 0 { close(fd) }
-            try? fm.removeItem(at: dir)
-            return nil
+    /// procesu, który system mógł już przydzielić innemu programowi). Katalog usunięty w trakcie pracy (sprzątanie
+    /// katalogu tymczasowego przy wielodniowej pracy) — odtworzony z nową blokadą. nil — katalogu nie da się utworzyć.
+    nonisolated static func processDirectory() -> URL? {
+        directoryState.withLock { state -> URL? in
+            let fm = FileManager.default
+            if let dir = state.url, fm.fileExists(atPath: dir.appendingPathComponent(".lock").path) { return dir }
+            if state.lock >= 0 { close(state.lock); state.lock = -1 }
+            state.url = nil
+            try? fm.createDirectory(at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            _ = chmod(root.path, 0o700)
+            let dir = root.appendingPathComponent("\(ProcessInfo.processInfo.processIdentifier)-\(UUID().uuidString.prefix(8))", isDirectory: true)
+            guard (try? fm.createDirectory(at: dir, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])) != nil else { return nil }
+            let fd = open(dir.appendingPathComponent(".lock").path, O_CREAT | O_RDWR | O_CLOEXEC, 0o600)
+            guard fd >= 0, flock(fd, LOCK_EX | LOCK_NB) == 0 else {
+                if fd >= 0 { close(fd) }
+                try? fm.removeItem(at: dir)
+                return nil
+            }
+            state.url = dir
+            state.lock = fd     // deskryptor otwarty do końca procesu (albo odtworzenia katalogu) — trzyma blokadę
+            return dir
         }
-        return dir     // deskryptor celowo otwarty do końca procesu — trzyma blokadę
-    }()
+    }
+
+    private nonisolated static let directoryState = Mutex<(url: URL?, lock: Int32)>((nil, -1))
 
     /// Start aplikacji: katalogi podglądów po awarii albo wymuszonym zamknięciu (treść z bazy nie zostaje na dysku) —
     /// te, których blokady nikt nie trzyma. W tle (pliki mogą mieć setki MB).

@@ -67929,6 +67929,34 @@
         }
       }
     },
+    "Pokazano pierwsze %@ MB wartości — całość: zapis do pliku albo program zewnętrzny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Showing the first %@ MB of the value — whole value: save to file or external application"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die ersten %@ MB des Werts werden angezeigt — ganzer Wert: in Datei speichern oder externe Anwendung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se muestran los primeros %@ MB del valor — valor completo: guardar en archivo o aplicación externa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показано перші %@ МБ значення — усе значення: збереження у файл або зовнішня програма"
+          }
+        }
+      }
+    },
     "Pokazano pierwsze %@ tabel — zawęź maskę nazw" : {
       "localizations" : {
         "en" : {
@@ -136385,6 +136413,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "початок %@ має бути раніше за кінець %@"
+          }
+        }
+      }
+    },
+    "pokazano pierwsze %@ MB — całość: Zapisz do pliku…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "showing the first %@ MB — whole value: Save to File…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "die ersten %@ MB werden angezeigt — ganzer Wert: In Datei speichern…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "se muestran los primeros %@ MB — valor completo: Guardar en archivo…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "показано перші %@ МБ — усе значення: Зберегти у файл…"
           }
         }
       }

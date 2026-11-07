@@ -34,6 +34,23 @@ struct CellValuePanelView: View {
         return "\(c.row):\(c.column):\(lob?.locator?.id ?? 0)"
     }
 
+    /// Pełna treść już pobrana (albo w pamięci siatki) — obcięta wtedy tylko ponad limit pamięci.
+    private var fullLoaded: Bool {
+        guard let l = lob else { return false }
+        return full?.key == key || grid.cachedFullLOB(l) != nil
+    }
+
+    /// Opis obciętej wartości: co widać i jak dostać całość.
+    private var truncationNote: String {
+        if lob?.locator == nil { return L10n.tr("Wartość obcięta do pobranej długości — pełna w Large Data Editor") }
+        if fullLoaded {
+            let mb = ResultGridModel.fullLOBLimit >> 20
+            return L10n.tr("Pokazano pierwsze \(mb) MB wartości — całość: zapis do pliku albo program zewnętrzny")
+        }
+        if isText { return L10n.tr("Pobieranie pełnej wartości…") }
+        return L10n.tr("Podgląd początku wartości — całość: „Pobierz całość” albo zapis do pliku")
+    }
+
     /// Komórka panelu jako argumenty komend jednej komórki.
     private var cellArguments: CommandArguments {
         guard let c = cell else { return .empty }
@@ -66,7 +83,7 @@ struct CellValuePanelView: View {
                     HStack(spacing: 6) {
                         Text(sizeText(l)).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(1)
                         Spacer()
-                        if p.truncated, !isText, l.locator != nil, loading != key {
+                        if p.truncated, !isText, l.locator != nil, loading != key, !fullLoaded {
                             Button(L10n.tr("Pobierz całość")) { requested = key }
                                 .help(L10n.tr("Pobiera całą wartość binarną z bazy do podglądu"))
                         }
@@ -85,9 +102,7 @@ struct CellValuePanelView: View {
                 } else if let e = loadError {
                     Text(e).font(.uiSecondary).foregroundStyle(.red)
                 } else if p.truncated {
-                    Text(lob?.locator == nil ? L10n.tr("Wartość obcięta do pobranej długości — pełna w Large Data Editor")
-                                             : L10n.tr("Podgląd początku wartości — całość: „Pobierz całość” albo zapis do pliku"))
-                        .font(.uiSecondary).foregroundStyle(.orange)
+                    Text(truncationNote).font(.uiSecondary).foregroundStyle(.orange)
                 }
                 content(p, mode.flatMap { p.modes.contains($0) ? $0 : nil } ?? p.detected)
             } else {

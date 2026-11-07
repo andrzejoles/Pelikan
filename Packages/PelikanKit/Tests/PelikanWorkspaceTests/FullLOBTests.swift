@@ -12,6 +12,8 @@ final class LocatorSession: DatabaseSession, @unchecked Sendable {
     let bytes: Data?
     let row: [[OracleValue]]
     let reads = Mutex(0)
+    let released = Mutex<[LOBLocator]>([])
+    func releaseLOBs(_ locators: [LOBLocator]) async { released.withLock { $0 += locators } }
     init(text: String? = nil, bytes: Data? = nil, preview: Int) {
         self.text = text; self.bytes = bytes
         let kind: LOBValue.Kind = text != nil ? .clob : .blob
@@ -85,6 +87,17 @@ struct FullLOBTests {
         #expect(try Data(contentsOf: url) == bytes)
         #expect(s.reads.withLock { $0 } == 3)
         #expect(g.cachedFullLOB(l) == nil)
+    }
+
+    @Test("Wynik zamknięty albo zastąpiony zwalnia lokatory swoich LOB-ów (LOB-y tymczasowe nie zajmują TEMP)")
+    func locatorsReleasedWithGrid() async throws {
+        let s = LocatorSession(text: String(repeating: "x", count: 10_000), preview: 4000)
+        do {
+            let g = await grid(s, type: .clob)
+            #expect(g.rowCount == 1)
+        }
+        for _ in 0..<200 where s.released.withLock({ $0.isEmpty }) { try await Task.sleep(for: .milliseconds(10)) }
+        #expect(s.released.withLock { $0 } == [LOBLocator(7)])
     }
 
     @Test("Wartość nieobcięta: bez odczytu z bazy")

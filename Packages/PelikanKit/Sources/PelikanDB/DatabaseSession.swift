@@ -263,6 +263,9 @@ public protocol DatabaseSession: AnyObject, Sendable {
     /// Porcja LOB z lokatora (`LOBValue.locator`): od `offset` (od 1; znaki dla CLOB/NCLOB, bajty dla BLOB/BFILE)
     /// najwyżej `amount` jednostek. Pusta porcja — koniec. Lokator nieznany (zwolniony) — `DatabaseError.unsupported`.
     func readLOB(_ locator: LOBLocator, offset: UInt64, amount: UInt64) async throws -> LOBValue
+    /// Zwalnia lokatory wyniku zamkniętego albo zastąpionego — LOB-y tymczasowe (XMLAGG, JSON … RETURNING CLOB,
+    /// DBMS_METADATA) przestają zajmować przestrzeń TEMP na serwerze. Nieznane lokatory są pomijane.
+    func releaseLOBs(_ locators: [LOBLocator]) async
     /// Połączenie utracone (ORA-03113, ORA-00028 po zakończeniu sesji, DPI-1080…) albo sesja zamknięta — kolejne
     /// wywołania zawiodą; `SessionManager` zastępuje taką sesję nową przy następnym użyciu.
     var connectionLost: Bool { get }
@@ -277,6 +280,8 @@ public extension DatabaseSession {
     func readLOB(_ locator: LOBLocator, offset: UInt64, amount: UInt64) async throws -> LOBValue {
         throw DatabaseError.unsupported("Sterownik nie odczytuje LOB po lokatorze")
     }
+
+    func releaseLOBs(_ locators: [LOBLocator]) async {}
 
     /// Cała treść LOB porcjami (`chunk` znaków albo bajtów): wartość nieobcięta — jedna porcja; obcięta — odczyt
     /// z lokatora od początku. Bez lokatora — `DatabaseError.unsupported`.
