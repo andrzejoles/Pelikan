@@ -1,5 +1,5 @@
 {
-  "originHash" : "42a616d1a55d0d5ffd8089e14970d8ffbd5b715111485e20eb72266930dcd71d",
+  "originHash" : "846555239275bd906ea3848554069756ed456f42083e51414c806d7693acf1ed",
   "pins" : [
     {
       "identity" : "eventsource",
@@ -8,14 +8,6 @@
       "state" : {
         "revision" : "86b5096ac59ab46e66bd1f6377c604bc1dab0bc2",
         "version" : "1.5.1"
-      }
-    },
-    {
-      "identity" : "oracle-nio",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/lovetodream/oracle-nio.git",
-      "state" : {
-        "revision" : "7cda9e0c416a0cb21acf070ba70ce4ff575121b0"
       }
     },
     {
@@ -68,8 +60,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-distributed-tracing.git",
       "state" : {
-        "revision" : "297b5b9c82a5631e3199ce3ec0993a3cfb0fbb84",
-        "version" : "1.7.2"
+        "revision" : "9f982a7ec8dd815bf57024e39de592813ca14399",
+        "version" : "1.7.4"
       }
     },
     {
@@ -95,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-nio-ssl.git",
       "state" : {
-        "revision" : "322f3c2a4a21df31c84ca416bf65ee5e9059e440",
-        "version" : "2.37.5"
+        "revision" : "15e0b9e495786807272dd4891fa4bac76aa43034",
+        "version" : "2.37.6"
       }
     },
     {
@@ -124,15 +116,6 @@
       "state" : {
         "revision" : "a18ee16b8039866fd919bdb4e8e906882d4ecc75",
         "version" : "2.13.0"
-      }
-    },
-    {
-      "identity" : "swift-syntax",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftlang/swift-syntax.git",
-      "state" : {
-        "revision" : "050f1a346fbbac0ca2cfb15a95274f7bd1cf0ccf",
-        "version" : "604.0.0"
       }
     },
     {

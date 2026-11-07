@@ -225,26 +225,229 @@ struct ThinSessionTests {
         await odpi.close()
     }
 
-    @Test("Kolumny, których OracleNIO nie dekoduje (INTERVAL YEAR TO MONTH, BFILE, UROWID): czytelny błąd zamiast końca procesu; sesja dalej działa")
-    func undecodableColumns() async throws {
-        let s = try await connect()
-        let cases = [("select interval '1-2' year to month iv from dual", "INTERVAL YEAR TO MONTH"),
-                     ("select bfilename('DATA_PUMP_DIR', 'x.txt') bf from dual", "BFILE"),
-                     ("select cast(rowid as urowid) ur from dual", "UROWID")]
-        for (sql, type) in cases {
-            do {
-                _ = try await s.execute(sql)
-                Issue.record("bez błędu: \(sql)")
-            } catch let e as DatabaseError {
-                #expect(e.localizedDescription.contains(type), "\(e.localizedDescription)")
+    @Test("INTERVAL YEAR TO MONTH, UROWID (także tabel IOT, ponad 253 bajty) i BFILE (ponad 1 MB, porcjami) jak w Instant Client", .enabled(if: TestDatabase.isAvailable))
+    func extraTypesLikeInstantClient() async throws {
+        let odpi = try await TestDatabase.connect()
+        let thin = try await connect()
+        for ddl in ["drop table pelikan_thin_iot purge", "drop table pelikan_thin_iot2 purge"] { _ = try? await odpi.execute(ddl) }
+        _ = try await odpi.execute("create table pelikan_thin_iot (id number primary key, v varchar2(20)) organization index")
+        _ = try await odpi.execute("insert into pelikan_thin_iot select level, 'w' || level from dual connect by level <= 3")
+        _ = try await odpi.execute("create table pelikan_thin_iot2 (k varchar2(1000) primary key, v varchar2(20)) organization index")
+        _ = try await odpi.execute("insert into pelikan_thin_iot2 values (rpad('k', 900, 'x'), 'długi')")
+        _ = try await odpi.execute("commit")
+        // Plik 46 × 25 600 bajtów (wzór 0…255) — ponad największą porcję odczytu BFILE (1 MB).
+        let expected = Data((0..<46 * 25_600).map { UInt8($0 % 256) })
+        _ = try await odpi.execute("""
+            declare
+              f utl_file.file_type;
+              b raw(256) := hextoraw('00');
+              r raw(25600);
+            begin
+              for i in 1 .. 255 loop b := utl_raw.concat(b, hextoraw(to_char(i, 'FM0X'))); end loop;
+              for i in 1 .. 100 loop r := utl_raw.concat(r, b); end loop;
+              f := utl_file.fopen('DATA_PUMP_DIR', 'pelikan_thin.bin', 'wb', 32767);
+              for i in 1 .. 46 loop utl_file.put_raw(f, r, true); end loop;
+              utl_file.fclose(f);
+            end;
+            """)
+
+        // INTERVAL YEAR TO MONTH: dodatnie, ujemne, z większą precyzją, NULL; kolumna po nim odczytana poprawnie.
+        let interval = """
+            select interval '1-2' year to month a, interval '-3-4' year to month b, interval '123-11' year(3) to month c,
+                   cast(null as interval year to month) d, 'po' e from dual
+            """
+        let (ivCols, ivThin) = try await thin.queryAll(interval)
+        let (ivOdpiCols, ivOdpi) = try await odpi.queryAll(interval)
+        #expect(ivThin == ivOdpi && ivCols.map(\.type) == ivOdpiCols.map(\.type))
+        #expect(ivThin.first == [.intervalYM(years: 1, months: 2), .intervalYM(years: -3, months: -4),
+                                 .intervalYM(years: 123, months: 11), .null, .text("po")])
+
+        // UROWID: fizyczny (tabela zwykła) i logiczny (IOT; długi klucz — postać z porcjami).
+        for sql in ["select rowid r, cast(rowid as urowid) u, 'po' e from dept where deptno = 10",
+                    "select rowid, id, v from pelikan_thin_iot order by id",
+                    "select rowid, v from pelikan_thin_iot2"] {
+            let (tc, t) = try await thin.queryAll(sql)
+            let (oc, o) = try await odpi.queryAll(sql)
+            #expect(!t.isEmpty && t == o && tc.map(\.type) == oc.map(\.type), "\(sql)")
+        }
+        let (_, physical) = try await thin.queryAll("select rowid r, cast(rowid as urowid) u from dept where deptno = 10")
+        #expect(physical.first?[0] == physical.first?[1])
+        let (_, logical) = try await thin.queryAll("select rowid, v from pelikan_thin_iot2")
+        let rid = try #require(logical.first?.first?.displayText)
+        #expect(rid.hasPrefix("*") && rid.utf8.count > 253)
+        let (_, found) = try await thin.queryAll("select v from pelikan_thin_iot2 where rowid = :r",
+                                                 binds: [BindVariable(name: "r", value: .text(rid))])
+        #expect(found.first?.first == .text("długi"))
+
+        // BFILE: obcięty do limitu z lokatorem, całość i strumień porcjami (odczyt od miejsca) — thin i Instant Client.
+        for s in [thin, odpi] as [any DatabaseSession] {
+            let r = try await s.execute("select bfilename('DATA_PUMP_DIR', 'pelikan_thin.bin') b, 'po' e from dual",
+                                        binds: [], options: ExecuteOptions(lobLimit: 4000))
+            let id = try #require(r.resultSet).id
+            let batch = try await s.fetch(id, maxRows: 1)
+            await s.closeResultSet(id)
+            guard case .lob(let l) = batch.rows.first?.first else { Issue.record("BFILE \(s.info.driver)"); continue }
+            #expect(batch.rows.first?[1] == .text("po"))
+            #expect(l.kind == .bfile && l.length == UInt64(expected.count) && l.truncated && l.locator != nil, "\(s.info.driver)")
+            #expect(l.bytes == expected.prefix(4000), "\(s.info.driver)")
+            let full = try await s.fullLOB(l)
+            #expect(full.bytes == expected && !full.truncated, "\(s.info.driver): \(full.bytes?.count ?? 0) z \(expected.count)")
+            var streamed = Data()
+            try await s.streamLOB(l, chunk: 300_000) { part in streamed.append(part.bytes ?? Data()) }
+            #expect(streamed == expected, "\(s.info.driver): \(streamed.count)")
+            await s.releaseLOBs([try #require(l.locator)])
+        }
+        // BFILE do katalogu (ORA-22288 w komórce), do brakującego pliku i NULL — jak Instant Client.
+        let odd = """
+            select n, case n when 1 then bfilename('DATA_PUMP_DIR', '.')
+                             when 2 then bfilename('DATA_PUMP_DIR', 'pelikan_nie_ma_takiego_pliku.bin') end b
+              from (select level n from dual connect by level <= 3) order by n
+            """
+        let (_, oddThin) = try await thin.queryAll(odd)
+        let (_, oddOdpi) = try await odpi.queryAll(odd)
+        #expect(oddThin.count == 3 && oddThin.map { $0[0] } == oddOdpi.map { $0[0] })
+        for (t, o) in zip(oddThin, oddOdpi) {
+            switch (t[1], o[1]) {
+            case (.lob(let a), .lob(let b)):
+                #expect(a.kind == b.kind && a.length == b.length && (a.readError == nil) == (b.readError == nil),
+                        "thin \(a.length) \(a.readError ?? "-") / Instant Client \(b.length) \(b.readError ?? "-")")
+                #expect(a.readError.map { $0.hasPrefix("ORA-22288") } ?? true, "\(a.readError ?? "")")
+            default:
+                #expect(t[1] == o[1], "\(t[1]) / \(o[1])")
             }
         }
-        // Obsługiwane typy, zmienne wiązane i błąd składni — bez zmian (błąd z wykonania, nie ze sprawdzenia).
-        let (_, rows) = try await s.queryAll("select 1 n, :x t, systimestamp ts, interval '1' day id from dual",
-                                             binds: [BindVariable(name: "x", value: .text("a"))])
+
+        // Sesja dalej działa: obsługiwane typy, zmienne wiązane i błąd składni (z wykonania).
+        let (_, rows) = try await thin.queryAll("select 1 n, :x t, systimestamp ts, interval '1' day id from dual",
+                                                binds: [BindVariable(name: "x", value: .text("a"))])
         #expect(rows.first?.first == .number("1") && rows.first?[1] == .text("a"))
-        await #expect(throws: OracleError.self) { _ = try await s.execute("select nieistniejaca_kolumna from dual") }
+        await #expect(throws: OracleError.self) { _ = try await thin.execute("select nieistniejaca_kolumna from dual") }
+
+        _ = try? await odpi.execute("begin utl_file.fremove('DATA_PUMP_DIR', 'pelikan_thin.bin'); end;")
+        for ddl in ["drop table pelikan_thin_iot purge", "drop table pelikan_thin_iot2 purge"] { _ = try? await odpi.execute(ddl) }
+        await thin.close()
+        await odpi.close()
+    }
+
+    @Test("Kolumna typu REF przez thin: utrata połączenia z wyjaśnieniem zamiast końca procesu; nowe połączenie działa", .enabled(if: TestDatabase.isAvailable))
+    func refColumnClosesConnection() async throws {
+        let odpi = try await TestDatabase.connect()
+        for ddl in ["drop table pelikan_thin_ot purge", "drop type pelikan_thin_t force"] { _ = try? await odpi.execute(ddl) }
+        _ = try await odpi.execute("create type pelikan_thin_t as object (n number)")
+        _ = try await odpi.execute("create table pelikan_thin_ot of pelikan_thin_t")
+        _ = try await odpi.execute("insert into pelikan_thin_ot values (pelikan_thin_t(1))")
+        _ = try await odpi.execute("commit")
+        let thin = try await connect()
+        do {
+            _ = try await thin.queryAll("select ref(o) r, 'po' e from pelikan_thin_ot o")
+            Issue.record("REF bez błędu")
+        } catch let e as OracleError {
+            #expect(e.isConnectionLost && e.message.contains("typu danych REF") && !e.message.contains("payload"), "\(e.message)")
+        }
+        #expect(thin.connectionLost)
+        await thin.close()
+        let again = try await connect()
+        #expect(try await again.queryAll("select 1 from dual").rows.first?.first == .number("1"))
+        await again.close()
+        for ddl in ["drop table pelikan_thin_ot purge", "drop type pelikan_thin_t force"] { _ = try? await odpi.execute(ddl) }
+        await odpi.close()
+    }
+
+    @Test("Niepełny wynik nie blokuje sesji: inne polecenie, COMMIT i odczyt dalszych wierszy z bufora (D240)")
+    func partialResultDoesNotBlock() async throws {
+        let s = try await connect()
+        let r = try await s.execute("select level n from dual connect by level <= 10000", binds: [],
+                                    options: ExecuteOptions(fetchArraySize: 100))
+        let id = try #require(r.resultSet).id
+        var rows = try await s.fetch(id, maxRows: 100).rows
+        #expect(rows.count == 100)
+        // Wcześniej: kolejne polecenie czekało w OracleNIO na koniec strumienia — w nieskończoność.
+        #expect(try await s.queryAll("select 1 from dual").rows.first?.first == .number("1"))
+        try await s.commit()
+        try await s.ping()
+        while true {
+            let b = try await s.fetch(id, maxRows: 3000)
+            rows += b.rows
+            #expect(b.limitedTo == nil)
+            if !b.hasMore { break }
+        }
+        #expect(rows.count == 10000 && rows.first?.first == .number("1") && rows.last?.first == .number("10000"))
         await s.close()
+    }
+
+    @Test("CLOB w wyniku ponad porcję pobierania (300 wierszy po 50): treść LOB-ów bez zakleszczenia (D240)")
+    func lobsAcrossFetchBatches() async throws {
+        let s = try await connect()
+        let r = try await s.execute("select level n, rpad(to_clob('x'), 5000, 'x') c from dual connect by level <= 300",
+                                    binds: [], options: ExecuteOptions(fetchArraySize: 50))
+        let id = try #require(r.resultSet).id
+        var rows: [[OracleValue]] = []
+        while true {
+            let b = try await s.fetch(id, maxRows: 100)
+            rows += b.rows
+            if !b.hasMore { break }
+        }
+        #expect(rows.count == 300 && rows.last?.first == .number("300"))
+        #expect(rows.allSatisfy { if case .lob(let l) = $0[1] { l.text?.count == 5000 && !l.truncated } else { false } })
+        await s.close()
+    }
+
+    @Test("Dobieranie wyniku przed innym poleceniem: najwyżej 100 000 wierszy, wynik oznaczony jako ucięty (D240)")
+    func settleLimit() async throws {
+        let s = try await connect()
+        let r = try await s.execute("select level n from dual connect by level <= 100050", binds: [],
+                                    options: ExecuteOptions(fetchArraySize: 5000))
+        let id = try #require(r.resultSet).id
+        var count = try await s.fetch(id, maxRows: 10).rows.count
+        _ = try await s.queryAll("select 1 from dual")
+        var last: RowBatch?
+        while true {
+            let b = try await s.fetch(id, maxRows: 20_000)
+            count += b.rows.count
+            last = b
+            if !b.hasMore { break }
+        }
+        #expect(count == ThinSession.settleRowLimit && last?.limitedTo == ThinSession.settleRowLimit)
+        // Bez innego polecenia w trakcie — wynik pełny (strumień czytany na bieżąco).
+        let full = try await s.queryAll("select level n from dual connect by level <= 100050", limit: 200_000).rows
+        #expect(full.count == 100050)
+        await s.close()
+    }
+
+    @Test("Pusty wynik z opisem kolumn jak w Instant Client (wcześniej siatka bez nagłówków)", .enabled(if: TestDatabase.isAvailable))
+    func emptyResultColumns() async throws {
+        let odpi = try await TestDatabase.connect()
+        let thin = try await connect()
+        let sql = "select deptno, dname, sysdate d from dept where 1 = 0"
+        let (tc, t) = try await thin.queryAll(sql)
+        let (oc, o) = try await odpi.queryAll(sql)
+        #expect(t.isEmpty && o.isEmpty && tc.map(\.name) == ["DEPTNO", "DNAME", "D"] && tc.map(\.name) == oc.map(\.name)
+                && tc.map(\.type) == oc.map(\.type))
+        await thin.close()
+        await odpi.close()
+    }
+
+    @Test("Zamknięte niepełne wyniki zamykają kursory serwera: 350 wyników (ponad OPEN_CURSORS) bez ORA-01000")
+    func closedPartialResultsReleaseCursors() async throws {
+        let s = try await connect()
+        for _ in 0..<350 {
+            let r = try await s.execute("select level n from dual connect by level <= 10000", binds: [],
+                                        options: ExecuteOptions(fetchArraySize: 100))
+            let id = try #require(r.resultSet).id
+            #expect(try await s.fetch(id, maxRows: 10).rows.count == 10)
+            await s.closeResultSet(id)
+        }
+        #expect(try await s.queryAll("select 1 from dual").rows.first?.first == .number("1"))
+        await s.close()
+    }
+
+    @Test("Polecenie po zamknięciu połączenia: błąd od razu zamiast czekania bez końca", .timeLimit(.minutes(1)))
+    func operationAfterClose() async throws {
+        let s = try await connect()
+        await s.close()
+        await #expect(throws: (any Error).self) { _ = try await s.execute("select 1 from dual") }
+        await #expect(throws: (any Error).self) { try await s.commit() }
+        #expect(s.connectionLost)
     }
 
     @Test("Równoległe pobieranie z jednego wyniku: wiersze bez powtórzeń i braków")
@@ -361,6 +564,13 @@ struct ThinSQLWindowTests {
         doc.text = "select brak from dual"
         try await ws.invoke("sql.execute")
         #expect(doc.results.first?.message?.contains("ORA-00904") == true)
+        // Wynik ponad porcję pobierania: DBMS_OUTPUT po zapytaniu nie czeka na koniec strumienia (D240), siatka
+        // dociąga resztę.
+        doc.text = "select level n from dual connect by level <= 5000"
+        try await ws.invoke("sql.execute")
+        let big = try #require(doc.results.first?.grid)
+        await big.fetchAll()
+        #expect(big.rowCount == 5000 && big.driverRowLimit == nil)
         doc.text = "select count(*) from big_rows a, big_rows b where rownum < 2000000"
         let run = Task { try await ws.invoke("sql.execute") }
         while !doc.isExecuting { await Task.yield() }

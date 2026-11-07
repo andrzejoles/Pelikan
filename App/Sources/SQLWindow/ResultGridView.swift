@@ -266,6 +266,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             + (edit.hasChanges ? "  ·  " + (grid.pendingSummary.isEmpty ? L10n.tr("zmiany do zatwierdzenia") : grid.pendingSummary.text) : "")
             + (tab.totals.isEmpty ? "" : "   ·   " + ColumnTotals.summary(grid, totals: tab.totals))
             + (grid.stoppedAtSizeLimit ? "   ·   " + L10n.tr("zatrzymano na limicie rozmiaru") : "")
+            + (grid.driverRowLimit.map { "   ·   " + L10n.tr("sterownik thin: tylko pierwsze \($0) wierszy (całość — Instant Client)") } ?? "")
             + (grid.isSorting ? "   ·   " + L10n.tr("sortowanie…") : "")
         bar.needsLayout = true
         if edit.isEditing != lastEditing {

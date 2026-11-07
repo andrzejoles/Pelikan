@@ -18,7 +18,7 @@ Pelikan/
 │   │   ├── PelikanDB/          # protokół DatabaseSession, wartości, błędy, Oracle Net (tnsnames, LDAP, sqlnet.ora)
 │   │   ├── CODPI/              # ODPI-C 26.0 (C, dołączone źródła)
 │   │   ├── PelikanODPI/        # sterownik Instant Client (thick)
-│   │   ├── PelikanThin/        # sterownik OracleNIO (thin)
+│   │   ├── PelikanThin/        # sterownik OracleNIO (thin); OracleNIO z poprawkami w Packages/Vendor/oracle-nio (D239)
 │   │   ├── PelikanWorkspace/   # model stanu i komendy: Model, Commands, Connections, SQL, Editor, Metadata
 │   │   │                       # (MetadataProvider), Debug (DebuggerEngine), UtPLSQL, Agent (baza agenta), Tools…
 │   │   ├── PelikanAgent/       # serwer gniazda, polityka uprawnień, katalog narzędzi MCP (tylko macOS)

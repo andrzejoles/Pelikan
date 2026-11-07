@@ -210,9 +210,12 @@ public struct RowBatch: Sendable {
     public var rows: [[OracleValue]]
     /// false — kursor wyczerpany (i zamknięty po stronie sterownika).
     public var hasMore: Bool
+    /// Sterownik zakończył wynik po tylu wierszach (thin: limit dobierania wyniku przed innym poleceniem w sesji),
+    /// dalsze odrzucił; nil — wynik pełny.
+    public var limitedTo: Int?
 
-    public init(rows: [[OracleValue]], hasMore: Bool) {
-        self.rows = rows; self.hasMore = hasMore
+    public init(rows: [[OracleValue]], hasMore: Bool, limitedTo: Int? = nil) {
+        self.rows = rows; self.hasMore = hasMore; self.limitedTo = limitedTo
     }
 }
 

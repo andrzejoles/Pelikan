@@ -1,0 +1,197 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the OracleNIO open source project
+//
+// Copyright (c) 2024 Timo Zacherl and the OracleNIO project authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE for license information
+// See CONTRIBUTORS.md for the list of OracleNIO project authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+// Zmienione dla Pelikana (2026-11): liczby UB dowolnej długości (bez fatalError/preconditionFailure) (PELIKAN.md).
+//
+//===----------------------------------------------------------------------===//
+
+public import struct NIOCore.ByteBuffer
+
+extension ByteBuffer {
+    mutating func throwingSkipUB1(file: String = #fileID, line: Int = #line) throws {
+        // this is different to all the other throwing skips
+        // as UB1 has a fixed length (1 byte)
+        try self.throwingMoveReaderIndex(forwardBy: 1, file: file, line: line)
+    }
+
+    @inlinable
+    mutating func throwingSkipUB2(file: String = #fileID, line: Int = #line) throws(OraclePartialDecodingError) {
+        try throwingSkipBytes(2, file: file, line: line)
+    }
+
+    @inlinable
+    mutating func readUB2() -> UInt16? {
+        guard let length = readUBLength() else { return nil }
+        return self.readOracleMagnitude(length: Int(length)).map { UInt16(truncatingIfNeeded: $0) }
+    }
+
+    @inlinable
+    mutating func throwingReadUB2(
+        file: String = #fileID, line: Int = #line
+    ) throws -> UInt16 {
+        try self.readUB2().value(
+            or: OraclePartialDecodingError.expectedAtLeastNRemainingBytes(
+                MemoryLayout<UInt16>.size, actual: self.readableBytes,
+                file: file, line: line
+            )
+        )
+    }
+
+    @inlinable
+    mutating func readUB4() -> UInt32? {
+        guard let length = readUBLength() else { return nil }
+        return self.readOracleMagnitude(length: Int(length)).map { UInt32(truncatingIfNeeded: $0) }
+    }
+
+    @inlinable
+    mutating func throwingReadUB4(
+        file: String = #fileID, line: Int = #line
+    ) throws(OraclePartialDecodingError) -> UInt32 {
+        try self.readUB4().value(
+            or: OraclePartialDecodingError.expectedAtLeastNRemainingBytes(
+                MemoryLayout<Int8>.size, actual: self.readableBytes,
+                file: file, line: line
+            )
+        )
+    }
+
+    mutating func throwingSkipUB4(file: String = #fileID, line: Int = #line) throws(OraclePartialDecodingError) {
+        try throwingSkipBytes(4, file: file, line: line)
+    }
+
+    mutating func readUB8() -> UInt64? {
+        guard let length = readUBLength() else { return nil }
+        return self.readOracleMagnitude(length: Int(length))
+    }
+
+    mutating func throwingReadUB8(
+        file: String = #fileID, line: Int = #line
+    ) throws(OraclePartialDecodingError) -> UInt64 {
+        try self.readUB8().value(
+            or: OraclePartialDecodingError.expectedAtLeastNRemainingBytes(
+                MemoryLayout<UInt8>.size, actual: self.readableBytes,
+                file: file, line: line
+            )
+        )
+    }
+
+    mutating func throwingSkipUB8(file: String = #fileID, line: Int = #line) throws(OraclePartialDecodingError) {
+        try throwingSkipBytes(8, file: file, line: line)
+    }
+
+    /// Pelikan: wartość bez znaku na `length` bajtach (big endian) — każda długość jak `decode_integer` w python-oracledb
+    /// (dawniej tylko 1, 2, 4, 8 i 3 — inne kończyły proces, np. rozmiar LOB-a od 4 GB); nil — za mało bajtów.
+    @inlinable
+    mutating func readOracleMagnitude(length: Int) -> UInt64? {
+        switch length {
+        case 0:
+            return 0
+        case 1:
+            return self.readInteger(as: UInt8.self).map(UInt64.init)
+        case 2:
+            return self.readInteger(as: UInt16.self).map(UInt64.init)
+        case 4:
+            return self.readInteger(as: UInt32.self).map(UInt64.init)
+        case 8:
+            return self.readInteger(as: UInt64.self)
+        default:
+            guard let bytes = self.readBytes(length: length) else { return nil }
+            return bytes.reduce(0) { $0 << 8 | UInt64($1) }
+        }
+    }
+
+    @inlinable
+    mutating func readUBLength() -> UInt8? {
+        guard var length = self.readInteger(as: UInt8.self) else { return nil }
+        if length & 0x80 != 0 {
+            length = length & 0x7f
+        }
+        return length
+    }
+
+    mutating func writeUB2(_ integer: UInt16) {
+        switch integer {
+        case 0:
+            self.writeInteger(UInt8(0))
+        case 1...UInt16(UInt8.max):
+            self.writeInteger(UInt8(1))
+            self.writeInteger(UInt8(integer))
+        default:
+            self.writeInteger(UInt8(2))
+            self.writeInteger(integer)
+        }
+    }
+
+    @inlinable
+    mutating func writeUB4(_ integer: UInt32) {
+        switch integer {
+        case 0:
+            self.writeInteger(UInt8(0))
+        case 1...UInt32(UInt8.max):
+            self.writeInteger(UInt8(1))
+            self.writeInteger(UInt8(integer))
+        case (UInt32(UInt8.max) + 1)...UInt32(UInt16.max):
+            self.writeInteger(UInt8(2))
+            self.writeInteger(UInt16(integer))
+        default:
+            self.writeInteger(UInt8(4))
+            self.writeInteger(integer)
+        }
+    }
+
+    mutating func writeUB8(_ integer: UInt64) {
+        switch integer {
+        case 0:
+            self.writeInteger(UInt8(0))
+        case 1...UInt64(UInt8.max):
+            self.writeInteger(UInt8(1))
+            self.writeInteger(UInt8(integer))
+        case (UInt64(UInt8.max) + 1)...UInt64(UInt16.max):
+            self.writeInteger(UInt8(2))
+            self.writeInteger(UInt16(integer))
+        case (UInt64(UInt16.max) + 1)...UInt64(UInt32.max):
+            self.writeInteger(UInt8(4))
+            self.writeInteger(UInt32(integer))
+        default:
+            self.writeInteger(UInt8(8))
+            self.writeInteger(integer)
+        }
+    }
+}
+
+extension ByteBuffer {
+    /// Skip a number of bytes that may or may not be chunked in the buffer.
+    /// The first byte gives the length. If the length is
+    /// TNS_LONG_LENGTH_INDICATOR, however, chunks are read and discarded.
+    /// - Returns: `true` if all bytes could be skipped,
+    /// `false` if more bytes have to be retrieved from the server in order to continue.
+    @discardableResult
+    mutating func skipRawBytesChunked() -> Bool {
+        guard
+            let length = self.readInteger(as: UInt8.self),
+            readableBytes >= length
+        else { return false }
+        if length != Constants.TNS_LONG_LENGTH_INDICATOR {
+            moveReaderIndex(forwardBy: Int(length))
+        } else {
+            while true {
+                guard let tmp = self.readUB4() else {
+                    return false
+                }
+                if tmp == 0 { break }
+                guard readableBytes > tmp else { return false }
+                moveReaderIndex(forwardBy: Int(tmp))
+            }
+        }
+        return true
+    }
+}

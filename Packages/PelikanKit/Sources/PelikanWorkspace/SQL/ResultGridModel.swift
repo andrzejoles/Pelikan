@@ -33,6 +33,8 @@ public final class ResultGridModel {
     public private(set) var approximateBytes = 0
     /// Pobieranie wstrzymane na limicie rozmiaru (odmowa dalszego pobierania).
     public private(set) var stoppedAtSizeLimit = false
+    /// Wynik ucięty przez sterownik po tylu wierszach (`RowBatch.limitedTo`).
+    public private(set) var driverRowLimit: Int?
 
     /// Wynik zamknięty albo zastąpiony (ponowne wykonanie, zamknięta karta) — lokatory jego LOB-ów zwolnione w sesji
     /// (LOB-y tymczasowe nie zajmują dalej TEMP na serwerze; D230).
@@ -271,6 +273,7 @@ public final class ResultGridModel {
             approximateBytes += batch.rows.reduce(0) { $0 + ResultSize.bytes($1) }
             rows.append(contentsOf: batch.rows)
             hasMore = batch.hasMore
+            if let n = batch.limitedTo { driverRowLimit = n }
             if resort, !sortKeys.isEmpty || filter != nil { applySort() }   // sortowane są pobrane wiersze — po dociągnięciu na nowo
             if !batch.hasMore { sessionRef = nil }
         } catch let e as OracleError {
