@@ -150,8 +150,74 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
         /// Lokatory obciętych LOB-ów (pełna treść na żądanie, `readLOB`), od najstarszego; ponad limit najstarsze odrzucane.
         var lobs: [UInt64: (lob: LOB, kind: LOBValue.Kind)] = [:]
         var lobOrder: [UInt64] = []
+        /// DBMS_SQL niedostępny dla użytkownika (odebrany PUBLIC) — sprawdzanie typów kolumn wyłączone do końca sesji.
+        var describeUnavailable = false
     }
     static let maxLOBLocators = 20_000
+
+    /// Kody typów kolumn (wewnętrzne kody Oracle z DBMS_SQL.DESCRIBE_COLUMNS2), które dekoder wierszy OracleNIO
+    /// obsługuje: VARCHAR2/NVARCHAR2, NUMBER, BINARY_INTEGER, LONG, ROWID, DATE, RAW, LONG RAW, CHAR/NCHAR,
+    /// BINARY_FLOAT, BINARY_DOUBLE, kursor, typy obiektowe i XMLTYPE, CLOB/NCLOB, BLOB, JSON, VECTOR, TIMESTAMP (także
+    /// WITH [LOCAL] TIME ZONE), INTERVAL DAY TO SECOND, BOOLEAN. Każdy inny (INTERVAL YEAR TO MONTH 182, BFILE 114,
+    /// UROWID 208, REF 111…) kończy proces w bibliotece (`fatalError` „not implemented”), zanim wartość dotrze do
+    /// Pelikana — takie zapytanie jest odrzucane przed wykonaniem.
+    static let decodableTypeCodes: [Int] = [1, 2, 3, 8, 11, 12, 23, 24, 96, 100, 101, 102, 109, 112, 113, 119, 127, 180, 181, 183, 231, 252]
+
+    /// Opis kolumn zapytania bez jego wykonania (DBMS_SQL.PARSE nie wykonuje SELECT) — pierwsza kolumna typu spoza
+    /// `decodableTypeCodes` jako „nazwa|kod”, nil — wszystkie obsługiwane.
+    static let describeBlock = """
+        declare
+          c integer;
+          n integer;
+          d dbms_sql.desc_tab2;
+          r varchar2(300);
+        begin
+          c := dbms_sql.open_cursor;
+          begin
+            dbms_sql.parse(c, :q, dbms_sql.native);
+            dbms_sql.describe_columns2(c, n, d);
+            for i in 1 .. n loop
+              if d(i).col_type not in (\(decodableTypeCodes.map(String.init).joined(separator: ", "))) then
+                r := substr(d(i).col_name, 1, 128) || '|' || d(i).col_type;
+                exit;
+              end if;
+            end loop;
+          exception when others then
+            dbms_sql.close_cursor(c);
+            raise;
+          end;
+          dbms_sql.close_cursor(c);
+          :bad := r;
+        end;
+        """
+
+    /// Pierwsza kolumna zapytania, której OracleNIO nie dekoduje (nazwa, kod typu); nil — można wykonać. Błąd
+    /// sprawdzenia (składnia, uprawnienia, za długi tekst) nie blokuje: zwykłe wykonanie poda właściwy błąd.
+    func undecodableColumn(_ sql: String) async -> (name: String, code: Int)? {
+        guard !state.withLock({ $0.describeUnavailable }) else { return nil }
+        var b = OracleBindings(capacity: 2)
+        b.append(sql, context: .default, bindName: "q")
+        let out = OracleRef(dataType: .varchar)
+        b.append(out, bindName: "bad", isReturning: false)
+        do {
+            _ = try await connection.execute(OracleStatement(unsafeSQL: Self.describeBlock, binds: b))
+        } catch {
+            let e = failure(error)
+            // PLS-00201 (DBMS_SQL niezadeklarowany — brak uprawnienia): bez kolejnych prób w tej sesji.
+            if let o = e as? OracleError, o.code == 6550, o.message.uppercased().contains("DBMS_SQL") {
+                state.withLock { $0.describeUnavailable = true }
+            }
+            return nil
+        }
+        guard let r = try? out.decode(as: String.self), let bar = r.lastIndex(of: "|"), let code = Int(r[r.index(after: bar)...]) else { return nil }
+        return (String(r[..<bar]), code)
+    }
+
+    /// Komunikat odrzucenia (PelikanDB i sterowniki nie mają katalogu tekstów interfejsu — jak komunikaty lokatorów).
+    static func undecodableMessage(column: String, code: Int) -> String {
+        let type = [182: "INTERVAL YEAR TO MONTH", 114: "BFILE", 208: "UROWID", 111: "REF"][code].map { "typu \($0)" } ?? "typu o kodzie \(code)"
+        return "Sterownik thin nie odczytuje kolumny \(column) \(type) — użyj połączenia przez Instant Client albo przekształć kolumnę w zapytaniu (np. TO_CHAR(\(column)))."
+    }
 
     func keep(_ lob: LOB, kind: LOBValue.Kind) -> LOBLocator {
         state.withLock { s in
@@ -483,6 +549,11 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
 
     public func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult {
         let start = ContinuousClock.now
+        // Zapytanie z kolumną, której OracleNIO nie dekoduje, zakończyłoby proces aplikacji — odrzucane przed wykonaniem
+        // (jeden dodatkowy obieg sieci na zapytanie; decyzja właściciela, D238).
+        if Self.kind(sql) == .query, let bad = await undecodableColumn(sql) {
+            throw DatabaseError.unsupported(Self.undecodableMessage(column: bad.name, code: bad.code))
+        }
         let (b, refs) = try bindings(binds)
         let stmt = OracleStatement(unsafeSQL: sql, binds: b)
         let rows: OracleRowSequence

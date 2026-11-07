@@ -2,6 +2,11 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.22.1 — sterownik thin bez awarii na nietypowych kolumnach
+
+- **Sterownik thin:** zapytanie z kolumną INTERVAL YEAR TO MONTH, BFILE albo UROWID (ROWID tabel IOT) pokazuje błąd
+  z nazwą kolumny i radą (Instant Client albo TO_CHAR) zamiast zamykać aplikację.
+
 ## 1.22.0 — podgląd danych binarnych, Large Data Editor z menu siatki
 
 - **Large Data Editor** otwiera się z menu kontekstowego siatki dla klikniętej komórki (wcześniej bywał „niedostępny”).
