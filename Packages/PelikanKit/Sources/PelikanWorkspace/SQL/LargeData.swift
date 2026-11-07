@@ -49,7 +49,8 @@ public enum LargeDataFormat: String, Sendable {
             // BMP: „BM”, rozmiar pliku z nagłówka zgodny z długością i znany rozmiar nagłówka DIB (sam „BM” to też tekst).
             if b.starts(with: Array("BM".utf8)), b.count > 18 {
                 func u32(_ o: Int) -> Int { (0..<4).reduce(0) { $0 | Int(b[b.startIndex + o + $1]) << (8 * $1) } }
-                if u32(2) == b.count, [12, 40, 52, 56, 108, 124].contains(u32(14)) { return .bmp }
+                // Rozmiar z nagłówka ≥ dostępne bajty (wartość może być ucięta do limitu siatki).
+                if u32(2) >= b.count, [12, 40, 52, 56, 108, 124].contains(u32(14)) { return .bmp }
             }
             if b.starts(with: Array("RIFF".utf8)), b.count >= 12, b.subdata(in: b.startIndex + 8 ..< b.startIndex + 12) == Data("WEBP".utf8) { return .webp }
             if b.count >= 12, b.subdata(in: b.startIndex + 4 ..< b.startIndex + 8) == Data("ftyp".utf8) {
@@ -58,9 +59,12 @@ public enum LargeDataFormat: String, Sendable {
             }
             if b.starts(with: [0x1F, 0x8B]) { return .gzip }
             if b.starts(with: [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1]) {
-                // Stary Office (OLE): rodzaj z nazwy strumienia w katalogu pliku (UTF-16LE); nieznany — dane binarne.
-                let head = b.prefix(1 << 20)
-                func has(_ name: String) -> Bool { head.range(of: Data(name.utf16.flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] })) != nil }
+                // Stary Office (OLE): rodzaj z nazwy strumienia w katalogu pliku — UTF-16LE zakończona NUL (nie dowolny
+                // tekst w treści); w pierwszych 256 KB (stały koszt w panelu wartości); nieznany — dane binarne.
+                let head = b.prefix(256 * 1024)
+                func has(_ name: String) -> Bool {
+                    head.range(of: Data((name.utf16 + [0]).flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] })) != nil
+                }
                 // Najpierw nazwy jednoznaczne; „Book” (Excel 5/95) na końcu — mogłoby wystąpić w treści innych plików.
                 if has("WordDocument") { return .doc }
                 if has("PowerPoint Document") { return .ppt }
@@ -69,11 +73,12 @@ public enum LargeDataFormat: String, Sendable {
             }
             if b.starts(with: [0x50, 0x4B, 0x03, 0x04]) {
                 // Dokumenty Office Open XML to ZIP — katalog części w nazwach pierwszych wpisów.
-                let head = String(decoding: b.prefix(64 * 1024), as: UTF8.self)
-                if head.contains("[Content_Types].xml") || head.contains("_rels/") {
-                    if head.contains("word/document") { return .docx }
-                    if head.contains("xl/workbook") { return .xlsx }
-                    if head.contains("ppt/presentation") { return .pptx }
+                let head = b.prefix(64 * 1024)
+                func has(_ s: String) -> Bool { head.range(of: Data(s.utf8)) != nil }
+                if has("[Content_Types].xml") || has("_rels/") {
+                    if has("word/document") { return .docx }
+                    if has("xl/workbook") { return .xlsx }
+                    if has("ppt/presentation") { return .pptx }
                 }
                 return .zip
             }

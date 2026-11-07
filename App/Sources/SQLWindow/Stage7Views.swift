@@ -112,6 +112,16 @@ struct CellValuePanelView: View {
         }
     }
 
+    /// Odcisk treści: rozmiar i skrót pierwszych i ostatnich 64 KB (stały koszt także dla dużych wartości).
+    static func fingerprint(_ d: Data) -> Int {
+        // `combine(bytes:)` — wszystkie bajty (skrót `Data` jako wartości obejmuje tylko jej początek).
+        var h = Hasher()
+        h.combine(d.count)
+        d.prefix(65_536).withUnsafeBytes { h.combine(bytes: $0) }
+        d.suffix(65_536).withUnsafeBytes { h.combine(bytes: $0) }
+        return h.finalize()
+    }
+
     private func sizeText(_ l: LOBValue) -> String {
         let n = ByteCountFormatter.string(fromByteCount: Int64(l.length), countStyle: .file)
         return l.kind == .clob || l.kind == .nclob ? L10n.tr("\(l.length) znaków") : n
@@ -141,11 +151,15 @@ struct CellValuePanelView: View {
             HTMLPreview(html: p.text)
         case .preview:
             if let d = p.data, !p.truncated {
-                // Nowa siatka po ponownym wykonaniu — nowy podgląd (bez skrótu dużych danych przy każdym odświeżeniu).
-                QuickLookPreview(data: d, format: p.format, id: "\(ObjectIdentifier(grid).hashValue)|\(key)|\(d.count)")
-            } else {
+                // Tożsamość treści: siatka (nowa po ponownym wykonaniu), komórka i odcisk danych (rozmiar, początek
+                // i koniec — zmiana wartości tej samej długości) bez skrótu całych danych przy każdym odświeżeniu.
+                QuickLookPreview(data: d, format: p.format, id: "\(ObjectIdentifier(grid).hashValue)|\(key)|\(Self.fingerprint(d))")
+            } else if lob?.locator != nil {
                 Text(L10n.tr("Podgląd po pobraniu całej wartości — „Pobierz całość”")).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                // Wartość ucięta bez możliwości pobrania całości — zrzut szesnastkowy pobranej części, jak dotąd.
+                ReadOnlyTextView(text: p.rendered(.hex), id: "\(key)|hex|\(p.data?.count ?? 0)")
             }
         default:
             ReadOnlyTextView(text: p.rendered(m), id: "\(key)|\(m.rawValue)|\(p.text.utf16.count)|\(p.data?.count ?? 0)")

@@ -54,7 +54,7 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         mode.segmentCount = 6
         for (i, title) in [L10n.tr("Tekst"), L10n.tr("Hex"), L10n.tr("Obraz"), L10n.tr("PDF"), "HTML", L10n.tr("Podgląd")].enumerated() { mode.setLabel(title, forSegment: i) }
         mode.target = self
-        mode.action = #selector(modeChanged)
+        mode.action = #selector(userModeChanged)
         let tv = textView.documentView as! NSTextView
         tv.font = InterfaceFonts.shared.editor
         tv.isRichText = false
@@ -109,8 +109,7 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         root.widthAnchor.constraint(greaterThanOrEqualToConstant: 480).isActive = true
         root.heightAnchor.constraint(greaterThanOrEqualToConstant: 320).isActive = true
         view = root
-        mode.selectedSegment = model.format.isImage ? 2 : model.format == .pdf ? 3 : model.format.isPreviewable && !model.truncated ? 5
-            : (model.isBinary && !model.format.isText ? 1 : 0)
+        mode.selectedSegment = preferredSegment
         modeChanged()
     }
 
@@ -147,8 +146,28 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         }
     }
 
+    /// Karta dla treści: obraz, PDF, podgląd Quick Look (pełna treść), hex dla danych binarnych, inaczej tekst.
+    private var preferredSegment: Int {
+        model.format.isImage ? 2 : model.format == .pdf ? 3 : model.format.isPreviewable && !model.truncated ? 5
+            : (model.isBinary && !model.format.isText ? 1 : 0)
+    }
+
+    /// Użytkownik sam wybrał kartę — bez automatycznej zmiany po dociągnięciu całej treści.
+    private var userChoseMode = false
+
+    @objc private func userModeChanged() {
+        userChoseMode = true
+        modeChanged()
+    }
+
     private func refresh() {
         let loading = model.isLoading
+        // Edytor otwiera się z treścią obciętą do limitu siatki; po dociągnięciu całości (np. DOCX) — karta dla pełnej
+        // treści, o ile użytkownik nie wybrał innej.
+        if !userChoseMode, !loading, mode.selectedSegment != preferredSegment {
+            mode.selectedSegment = preferredSegment
+            modeChanged()
+        }
         let format = model.format
         _ = model.text
         _ = model.bytes
@@ -195,14 +214,10 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
             pdfView.document = PDFDocument(data: model.fileData)
             view = pdfView
         case 5:
-            let ql = quickLook ?? QLPreviewView(frame: .zero, style: .normal)!
+            let ql = quickLook ?? QuickLookFile.makeView()
             quickLook = ql
-            let data = model.fileData
             // Klucz: wersja treści modelu (dociągnięcie, edycja, plik) — ten sam plik przy zwykłym odświeżeniu.
-            quickLookFile.prepare(data, format: model.format, key: "\(model.contentVersion)|\(data.count)") { [weak ql] url in
-                guard let ql, (ql.previewItem as? URL) != url else { return }
-                ql.previewItem = url as NSURL
-            }
+            quickLookFile.show(model.fileData, format: model.format, key: "\(model.contentVersion)", in: ql)
             view = ql
         case 4:
             webView.loadHTMLString(LargeDataModel.htmlPreviewDocument(model.text ?? String(decoding: model.fileData, as: UTF8.self)), baseURL: nil)

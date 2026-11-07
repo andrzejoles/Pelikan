@@ -107,13 +107,19 @@ struct BinaryFormatTests {
         #expect(f([0x1F, 0x8B, 8, 0]) == .gzip)
         let ole: [UInt8] = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1, 0]
         #expect(f(ole) == .binary)
-        #expect(f(ole + "Workbook".utf16.flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] }) == .xls)
-        #expect(f(ole + "WordDocument".utf16.flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] }) == .doc)
+        #expect(f(ole + ("Workbook".utf16 + [0]).flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] }) == .xls)
+        #expect(f(ole + ("WordDocument".utf16 + [0]).flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] }) == .doc)
         #expect(f(Array("BMW zamówienie 123 dla klienta".utf8)) == .text)
         var bmp: [UInt8] = Array("BM".utf8) + [30, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 12, 0, 0, 0]
         bmp += [UInt8](repeating: 0, count: 30 - bmp.count)
         #expect(f(bmp) == .bmp)
         #expect(f([0x50, 0x4B, 0x03, 0x04] + Array("password/notes.txt".utf8)) == .zip)
+        // BMP ucięty do limitu siatki (rozmiar z nagłówka większy niż pobrane bajty) — nadal BMP.
+        var cut = bmp
+        cut[2] = 0xFF; cut[3] = 0xFF
+        #expect(f(cut) == .bmp)
+        // „Book” w treści pliku OLE (nie nazwa strumienia zakończona NUL) — bez zgadywania Excela.
+        #expect(f(ole + "Booking".utf16.flatMap { [UInt8($0 & 0xFF), UInt8($0 >> 8)] }) == .binary)
         #expect(f([0x50, 0x4B, 0x03, 0x04] + Array("....[Content_Types].xml....word/document.xml".utf8)) == .docx)
         #expect(f([0x50, 0x4B, 0x03, 0x04] + Array("....[Content_Types].xml....xl/workbook.xml".utf8)) == .xlsx)
         #expect(f([0x50, 0x4B, 0x03, 0x04, 0, 0]) == .zip)

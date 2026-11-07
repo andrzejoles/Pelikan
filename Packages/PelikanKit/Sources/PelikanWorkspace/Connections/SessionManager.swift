@@ -220,8 +220,6 @@ public final class SessionManager {
             : SessionKey(connectionID: connection, purpose: .main)
     }
 
-    /// Połączenia, na których osobnej sesji metadanych nie da się otworzyć (limit sesji profilu: ORA-02391, ORA-00018,
-    /// ORA-00020) — metadane wracają do sesji głównej do rozłączenia, zamiast przestać działać.
     /// Odmowa nowej sesji z powodu limitu: profil (SESSIONS_PER_USER), sesje i procesy instancji, listener.
     public nonisolated static func isSessionLimit(_ e: OracleError) -> Bool {
         [2391, 18, 20, 12516, 12519, 12520].contains(e.code)
@@ -233,7 +231,8 @@ public final class SessionManager {
     public func toolLimitActive(_ connection: UUID) -> Bool { toolLimit[connection].map { Date().timeIntervalSince($0) < 300 } ?? false }
     public func noteToolLimit(_ connection: UUID) { toolLimit[connection] = Date() }
 
-    /// Chwila przejścia na sesję główną — po 5 minutach ponowna próba osobnej sesji (błędy listenera bywają chwilowe).
+    /// Połączenia, na których osobnej sesji metadanych nie dało się otworzyć z powodu limitu sesji — metadane w sesji
+    /// głównej zamiast błędu; chwila przejścia, po 5 minutach ponowna próba (błędy listenera bywają chwilowe).
     @ObservationIgnored private var metadataFallback: [UUID: Date] = [:]
 
     /// Sesja metadanych (otwierana na żądanie użytkownika); przy limicie sesji — sesja główna.

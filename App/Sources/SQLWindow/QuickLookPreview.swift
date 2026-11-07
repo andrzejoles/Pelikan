@@ -29,9 +29,25 @@ final class QuickLookFile {
                 return FileManager.default.createFile(atPath: file.path, contents: data, attributes: [.posixPermissions: 0o600])
             }.value
             guard let self, !Task.isCancelled, self.key == key else { try? FileManager.default.removeItem(at: file); return }
-            guard ok else { return }
+            // Nieudany zapis (brak miejsca, uprawnienia) — bez klucza, żeby następne odświeżenie spróbowało ponownie.
+            guard ok else { self.key = nil; return }
             self.url = file
             ready(file)
+        }
+    }
+
+    /// Widok podglądu z tymi samymi ustawieniami w panelu wartości i w Large Data Editor.
+    static func makeView() -> QLPreviewView {
+        let v = QLPreviewView(frame: .zero, style: .normal)!
+        v.autostarts = true
+        return v
+    }
+
+    /// Treść w widoku: plik zapisany w tle, przypisany po zapisie (bez ponownego ładowania tego samego pliku).
+    func show(_ data: Data, format: LargeDataFormat, key: String, in view: QLPreviewView) {
+        prepare(data, format: format, key: key) { [weak view] url in
+            guard let view, (view.previewItem as? URL) != url else { return }
+            view.previewItem = url as NSURL
         }
     }
 
@@ -53,17 +69,10 @@ struct QuickLookPreview: NSViewRepresentable {
     let format: LargeDataFormat
     let id: String
 
-    func makeNSView(context: Context) -> QLPreviewView {
-        let v = QLPreviewView(frame: .zero, style: .normal)!
-        v.autostarts = true
-        return v
-    }
+    func makeNSView(context: Context) -> QLPreviewView { QuickLookFile.makeView() }
 
     func updateNSView(_ view: QLPreviewView, context: Context) {
-        context.coordinator.file.prepare(data, format: format, key: id) { [weak view] url in
-            guard let view, (view.previewItem as? URL) != url else { return }
-            view.previewItem = url as NSURL
-        }
+        context.coordinator.file.show(data, format: format, key: id, in: view)
     }
 
     static func dismantleNSView(_ view: QLPreviewView, coordinator: Coordinator) {
